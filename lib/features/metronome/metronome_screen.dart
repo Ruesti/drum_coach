@@ -95,6 +95,11 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen>
                 onSelected: notifier.setSubdivision,
                 colorScheme: colorScheme,
               ),
+              const SizedBox(height: 16),
+              _SoundTypeToggle(
+                selected: state.soundType,
+                onSelected: notifier.setSoundType,
+              ),
               const Spacer(),
               _TapTempoButton(onTap: notifier.tap),
               const SizedBox(height: 16),
@@ -296,6 +301,51 @@ class _TapTempoButton extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
+    );
+  }
+}
+
+class _SoundTypeToggle extends StatelessWidget {
+  final SoundType selected;
+  final ValueChanged<SoundType> onSelected;
+
+  const _SoundTypeToggle({required this.selected, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: SoundType.values.map((t) {
+        final isSelected = t == selected;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: GestureDetector(
+            onTap: () => onSelected(t),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.deepOrange.withValues(alpha: 0.18)
+                    : Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isSelected ? Colors.deepOrange : Colors.white24,
+                  width: isSelected ? 1.5 : 1,
+                ),
+              ),
+              child: Text(
+                t.label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? Colors.deepOrange : Colors.white54,
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

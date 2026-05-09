@@ -16,6 +16,14 @@ enum Subdivision {
   const Subdivision({required this.factor, required this.label, required this.name});
 }
 
+enum SoundType {
+  click(label: 'Click'),
+  snare(label: 'Snare');
+
+  final String label;
+  const SoundType({required this.label});
+}
+
 class BeatEvent {
   final int beatIndex;
   final bool isAccent;
@@ -34,9 +42,12 @@ class MetronomeEngine {
 
   AudioSource? _clickAccent;
   AudioSource? _clickNormal;
+  AudioSource? _snareAccent;
+  AudioSource? _snareNormal;
 
   int _bpm = 100;
   Subdivision _subdivision = Subdivision.quarter;
+  SoundType _soundType = SoundType.click;
   bool _isPlaying = false;
   int _beatCount = 0;
   DateTime? _startTime;
@@ -45,11 +56,19 @@ class MetronomeEngine {
   Future<void> init() async {
     _clickAccent = await SoLoud.instance.loadMem(
       'click_accent',
-      _buildClickWav(frequency: 1200, amplitude: 0.9),
+      _buildClickWav(frequency: 1200, amplitude: 0.95),
     );
     _clickNormal = await SoLoud.instance.loadMem(
       'click_normal',
-      _buildClickWav(frequency: 800, amplitude: 0.6),
+      _buildClickWav(frequency: 800, amplitude: 0.55),
+    );
+    _snareAccent = await SoLoud.instance.loadMem(
+      'snare_accent',
+      _buildSnareWav(amplitude: 0.95),
+    );
+    _snareNormal = await SoLoud.instance.loadMem(
+      'snare_normal',
+      _buildSnareWav(amplitude: 0.50),
     );
   }
 
@@ -68,14 +87,15 @@ class MetronomeEngine {
   }
 
   void setBpm(int bpm) => _bpm = bpm.clamp(40, 240);
-
   void setSubdivision(Subdivision subdivision) => _subdivision = subdivision;
+  void setSoundType(SoundType soundType) => _soundType = soundType;
 
   void dispose() {
     stop();
     if (!_beatController.isClosed) _beatController.close();
-    _clickAccent?.let((s) => SoLoud.instance.disposeSource(s).ignore());
-    _clickNormal?.let((s) => SoLoud.instance.disposeSource(s).ignore());
+    for (final s in [_clickAccent, _clickNormal, _snareAccent, _snareNormal]) {
+      s?.let((src) => SoLoud.instance.disposeSource(src).ignore());
+    }
   }
 
   void _scheduleNext() {
@@ -91,14 +111,21 @@ class MetronomeEngine {
   void _onBeat() {
     if (!_isPlaying) return;
     final isAccent = _beatCount % _subdivision.factor == 0;
-    final source = isAccent ? _clickAccent : _clickNormal;
-    if (source != null) {
-      SoLoud.instance.play(source).then((handle) {
-        Future.delayed(const Duration(milliseconds: 30), () {
-          SoLoud.instance.stop(handle).ignore();
-        });
-      }).ignore();
+
+    final source = switch ((_soundType, isAccent)) {
+      (SoundType.click, true) => _clickAccent,
+      (SoundType.click, false) => _clickNormal,
+      (SoundType.snare, true) => _snareAccent,
+      (SoundType.snare, false) => _snareNormal,
+    };
+
+    // Accents are notably louder than normal beats
+    final volume = isAccent ? 2.0 : 0.7;
+
+    if (source != null && SoLoud.instance.isInitialized) {
+      SoLoud.instance.play(source, volume: volume).ignore();
     }
+
     _beatController.add(BeatEvent(
       beatIndex: _beatCount,
       isAccent: isAccent,
@@ -108,30 +135,54 @@ class MetronomeEngine {
     _scheduleNext();
   }
 
-  // Generates a short decaying sine wave as a WAV byte buffer.
+  // Short decaying sine wave (click sound).
   static Uint8List _buildClickWav({
     required double frequency,
-    double durationSeconds = 0.025,
+    double durationSeconds = 0.030,
     double amplitude = 0.8,
   }) {
     const sampleRate = 44100;
     final numSamples = (sampleRate * durationSeconds).round();
+    return _buildWav(numSamples, (i) {
+      final t = i / sampleRate;
+      final decay = math.exp(-140.0 * t);
+      return amplitude * decay * math.sin(2 * math.pi * frequency * t);
+    });
+  }
+
+  // Noise burst + tonal body + attack click (snare-like sound).
+  static Uint8List _buildSnareWav({double amplitude = 0.8}) {
+    const sampleRate = 44100;
+    const durationSeconds = 0.07;
+    final numSamples = (sampleRate * durationSeconds).round();
+    final rng = math.Random(42);
+    return _buildWav(numSamples, (i) {
+      final t = i / sampleRate;
+      final noise = (rng.nextDouble() * 2 - 1) * math.exp(-55.0 * t);
+      final body = math.sin(2 * math.pi * 220 * t) * math.exp(-90.0 * t) * 0.3;
+      final crack =
+          math.sin(2 * math.pi * 1600 * t) * math.exp(-200.0 * t) * 0.45;
+      return amplitude * (0.5 * noise + body + crack);
+    });
+  }
+
+  static Uint8List _buildWav(int numSamples, double Function(int i) sample) {
     final dataSize = numSamples * 2;
     final bd = ByteData(44 + dataSize);
-
     void str(int off, String s) {
       for (var i = 0; i < s.length; i++) {
         bd.setUint8(off + i, s.codeUnitAt(i));
       }
     }
 
+    const sampleRate = 44100;
     str(0, 'RIFF');
     bd.setUint32(4, 36 + dataSize, Endian.little);
     str(8, 'WAVE');
     str(12, 'fmt ');
     bd.setUint32(16, 16, Endian.little);
-    bd.setUint16(20, 1, Endian.little); // PCM
-    bd.setUint16(22, 1, Endian.little); // mono
+    bd.setUint16(20, 1, Endian.little);
+    bd.setUint16(22, 1, Endian.little);
     bd.setUint32(24, sampleRate, Endian.little);
     bd.setUint32(28, sampleRate * 2, Endian.little);
     bd.setUint16(32, 2, Endian.little);
@@ -140,13 +191,9 @@ class MetronomeEngine {
     bd.setUint32(40, dataSize, Endian.little);
 
     for (var i = 0; i < numSamples; i++) {
-      final t = i / sampleRate;
-      final decay = math.exp(-150.0 * t);
-      final sample = amplitude * decay * math.sin(2 * math.pi * frequency * t);
-      final s16 = (sample * 32767).round().clamp(-32768, 32767);
+      final s16 = (sample(i) * 32767).round().clamp(-32768, 32767);
       bd.setInt16(44 + i * 2, s16, Endian.little);
     }
-
     return bd.buffer.asUint8List();
   }
 }

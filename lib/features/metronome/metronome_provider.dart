@@ -14,6 +14,7 @@ class MetronomeState {
   final bool isPlaying;
   final int bpm;
   final Subdivision subdivision;
+  final SoundType soundType;
   final int currentBeatIndex;
   final bool isAccent;
 
@@ -21,6 +22,7 @@ class MetronomeState {
     this.isPlaying = false,
     this.bpm = 100,
     this.subdivision = Subdivision.quarter,
+    this.soundType = SoundType.click,
     this.currentBeatIndex = -1,
     this.isAccent = false,
   });
@@ -29,6 +31,7 @@ class MetronomeState {
     bool? isPlaying,
     int? bpm,
     Subdivision? subdivision,
+    SoundType? soundType,
     int? currentBeatIndex,
     bool? isAccent,
   }) {
@@ -36,6 +39,7 @@ class MetronomeState {
       isPlaying: isPlaying ?? this.isPlaying,
       bpm: bpm ?? this.bpm,
       subdivision: subdivision ?? this.subdivision,
+      soundType: soundType ?? this.soundType,
       currentBeatIndex: currentBeatIndex ?? this.currentBeatIndex,
       isAccent: isAccent ?? this.isAccent,
     );
@@ -97,6 +101,11 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   void setBpm(int bpm) {
     _engine?.setBpm(bpm);
     state = state.copyWith(bpm: bpm);
+  }
+
+  void setSoundType(SoundType soundType) {
+    _engine?.setSoundType(soundType);
+    state = state.copyWith(soundType: soundType);
   }
 
   void setSubdivision(Subdivision subdivision) {

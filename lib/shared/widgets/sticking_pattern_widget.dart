@@ -18,9 +18,8 @@ class StickingPatternWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: List.generate(pattern.length, (i) {
             return Padding(
@@ -32,7 +31,6 @@ class StickingPatternWidget extends StatelessWidget {
               ),
             );
           }),
-        ),
       ),
     );
   }
