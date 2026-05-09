@@ -6,7 +6,22 @@
       "Read(//home/uli/.pub-cache/**)",
       "Bash(flutter test *)",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git branch *)",
+      "Bash(git commit -m ' *)",
+      "Bash(gh repo *)",
+      "Bash(git commit -m 'Fix namespace error for older plugins \\(isar_flutter_libs 3.x\\) on newer AGP *)",
+      "Bash(git commit -m 'Fix afterEvaluate on already-evaluated :app project *)",
+      "Bash(git push *)",
+      "Read(//home/uli/Projects/sourced/**)",
+      "Bash(git commit -m 'Enable core library desugaring for flutter_local_notifications *)",
+      "Bash(git commit -m 'Fix desugar_jdk_libs dependency coordinate \\(group:artifact:version\\) *)",
+      "Bash(git commit -m 'Metronome: click/snare toggle, louder accents, sticking pattern clip fix *)",
+      "Bash(git commit -m 'Add technique descriptions to all 16 rudiments *)",
+      "Bash(git commit -m 'Add Settings screen with Buy me a Beer button \\(Ko-fi link\\) *)"
+    ],
+    "additionalDirectories": [
+      "/home/uli/Projects/sourced"
     ]
   }
 }
