@@ -44,7 +44,22 @@ class LessonDetailScreen extends ConsumerWidget {
             StickingPatternWidget(pattern: rudiment.sticking),
             const SizedBox(height: 12),
             _Legend(),
-            const SizedBox(height: 40),
+            if (rudiment.technique.isNotEmpty) ...[
+              const SizedBox(height: 32),
+              Text(
+                'TECHNIK',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.deepOrange,
+                      letterSpacing: 2,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              ...rudiment.technique.map(
+                (s) => _TechniqueCard(section: s),
+              ),
+            ],
+            const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () => context.push('/practice/${rudiment.id}'),
               icon: const Icon(Icons.play_arrow_rounded),
@@ -115,6 +130,49 @@ class _InfoChip extends StatelessWidget {
           const SizedBox(width: 5),
           Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500)),
         ],
+      ),
+    );
+  }
+}
+
+class _TechniqueCard extends StatelessWidget {
+  final TechniqueSection section;
+  const _TechniqueCard({required this.section});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              section.title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              section.body,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.white70,
+                height: 1.55,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

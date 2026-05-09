@@ -25,6 +25,12 @@ class StrokeBeat {
   });
 }
 
+class TechniqueSection {
+  final String title;
+  final String body;
+  const TechniqueSection({required this.title, required this.body});
+}
+
 class Rudiment {
   final String id;
   final String name;
@@ -34,6 +40,7 @@ class Rudiment {
   final int targetBpm;
   final Difficulty difficulty;
   final List<StrokeBeat> sticking;
+  final List<TechniqueSection> technique;
   final String? svgAssetPath;
 
   const Rudiment({
@@ -45,6 +52,7 @@ class Rudiment {
     required this.targetBpm,
     required this.difficulty,
     required this.sticking,
+    this.technique = const [],
     this.svgAssetPath,
   });
 }

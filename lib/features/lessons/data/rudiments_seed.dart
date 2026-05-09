@@ -23,6 +23,35 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.right),
       StrokeBeat(hand: Hand.left),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Lass den Stock nach dem Aufprall natürlich zurückfedern — kein aktives Hochziehen. '
+            'Die Bewegung kommt aus dem Handgelenk, der Arm bleibt entspannt. '
+            'Beide Hände sollten identisch aussehen und klingen.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Zu festes Greifen beim Rebound — der Stock braucht Spielraum\n'
+            '• Ungleiche Lautstärke zwischen rechts und links\n'
+            '• Schultern hochziehen bei höherem Tempo',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Beginne mit 60 BPM als Achtelnoten. Steigere erst wenn beide Hände '
+            'klingen wie eine. Nutze ein Metronom und höre auf Lücken oder Rushes. '
+            'Übe vor einem Spiegel um die Handhaltung zu vergleichen.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Grundlage für alles — Fills, Hi-Hat-Patterns, Ghostnote-Grooves. '
+            'Ohne einen soliden Single Stroke Roll funktioniert kein anderes Rudiment.',
+      ),
+    ],
   ),
 
   Rudiment(
@@ -45,6 +74,37 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left, isAccent: true),
       StrokeBeat(hand: Hand.left),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Erster Schlag: volle Stockhöhe, aktiver Handgelenksschwung. '
+            'Zweiter Schlag: kontrollierter Rebound — der Stock "fällt" zurück. '
+            'Bei langsamem Tempo: zwei bewusste Schläge. Bei Geschwindigkeit: '
+            'Rebound übernimmt den zweiten Schlag automatisch.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Zweiter Schlag leiser als der erste\n'
+            '• Zu wenig Fingerkontrolle — Finger helfen dem Rebound\n'
+            '• Beide Schläge gleich weit auseinander statt eng beieinander',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Übe zunächst jeden Doppelschlag extrem langsam als zwei separate, '
+            'bewusste Bewegungen. Steigere das Tempo schrittweise. '
+            'Das "Klick-Klick" muss sich wie ein "Klack" anfühlen.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Kern des Buzz Rolls bei Höchstgeschwindigkeit. '
+            'Doppelschläge auf Snare und Toms für Fills. '
+            'Wichtig in Latin-Rhythmen (Conga-Transfers).',
+      ),
+    ],
   ),
 
   Rudiment(
@@ -62,6 +122,36 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left, isGhost: true),
       StrokeBeat(hand: Hand.right, isGhost: true),
       StrokeBeat(hand: Hand.left, isGhost: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Drücke den Stock leicht in das Fell — nicht festhalten, sondern '
+            'geführt drücken. Der Stock bounced mehrfach unkontrolliert. '
+            'Der Druck bestimmt die Dichte der Bounces. '
+            'Wechsle beide Hände so, dass kein Unterbruch hörbar ist.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Stock zwischen den Schlägen anheben (hörbare Lücken)\n'
+            '• Zu viel oder zu wenig Druck\n'
+            '• Hände nicht gleichmäßig wechseln',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Finde zunächst mit einer Hand die richtige Druckstärke. '
+            'Dann übe beide Hände einzeln. Erst wenn jede Hand allein '
+            'einen gleichmäßigen Buzz erzeugt, kombiniere sie.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Crescendo-Rolls und Fermatenschläge. Unverzichtbar im Orchester '
+            'und Marching Band. Gibt Snare-Solos dramatischen Ausdruck.',
+      ),
     ],
   ),
 
@@ -86,6 +176,37 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.right),
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Akzent auf Schlag 1 jeder Gruppe (R und L abwechselnd). '
+            'Die Doppelschläge am Ende jeder Gruppe (RR / LL) wechseln '
+            'automatisch die führende Hand beim nächsten Durchgang. '
+            'Sprich das Pattern laut: "Para-did-dle, para-did-dle".',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Akzent nur auf der rechten Hand\n'
+            '• Doppelschläge ungleichmäßig (zweiter Schlag zu leise)\n'
+            '• Tempo beim Wechsel der führenden Hand instabil',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Übe zunächst nur R–L–R–R, dann nur L–R–L–L. '
+            'Dann verbinde beide. Variante: Akzente auf den Doubles (RL**RR** / LR**LL**) '
+            'für einen anderen Groove-Charakter.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Eines der vielseitigsten Rudiments. Fills, Grooves, Solo-Patterns. '
+            'Über das Drumset verteilt ergibt jeder Schlag einen anderen Klang. '
+            'Eines der 40 PAS-Rudiments die jeder Schlagzeuger kennen muss.',
+      ),
     ],
   ),
 
@@ -113,6 +234,35 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.left),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            '12 Noten pro Zyklus: RLRLRR / LRLRLL. '
+            'Vier Einzelschläge, dann ein Doppelschlag. '
+            'Akzent auf Note 1 wechselt automatisch zwischen R und L. '
+            'Denke: "Para-para-diddle".',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Den Überblick verlieren welche Hand führt\n'
+            '• Ungleichmäßige Unterteilungen\n'
+            '• Doppelschlag bricht das Groove-Gefühl',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Zähle "1-e-+-a-2-+" um die 12er-Gruppe in 12/8-Feeling einzubetten. '
+            'Übe zunächst extrem langsam mit Akzenten, dann steigere das Tempo.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Funktioniert natürlich über Triolen-Rhythmen (12/8, Shuffle). '
+            'Häufig in Jazz und Fusion. Gut für Fills über drei Beats.',
+      ),
+    ],
   ),
 
   Rudiment(
@@ -139,6 +289,34 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.right),
       StrokeBeat(hand: Hand.right),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            '6 Noten: R-L-RR-LL. Denke: "Para-did-dle-did-dle". '
+            'Das Pattern teilt sich in drei 2er-Gruppen, was bei '
+            'Wiederholung einen 3-gegen-2 Polyrhythmus erzeugt.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Doppelschläge in unterschiedlichen Lautstärken\n'
+            '• Zweiter Doppelschlag (LL) wird hastig gespielt\n'
+            '• Akzent geht verloren bei höherem Tempo',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Denke in 6er-Gruppen. Übe als Triolen (3+3 über 4/4) '
+            'um das Polyrhythmus-Gefühl zu entwickeln.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Erzeugt bei Geschwindigkeit ein polyrhythmisches Gefühl. '
+            'Sehr effektiv in Drum-Solos und für komplexe Fills.',
+      ),
+    ],
   ),
 
   // ─── FLAMS ────────────────────────────────────────────────────────────────
@@ -163,6 +341,37 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.right, isGhost: true),
       StrokeBeat(hand: Hand.left, isAccent: true),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Stockhaltung',
+        body:
+            'Grace-Note-Hand: Stock 2–3 cm über dem Fell halten. '
+            'Hauptschlag-Hand: Stock 20–25 cm hoch. '
+            'Beide Stöcke landen fast gleichzeitig — Grace Note knapp vorher. '
+            'Nach dem Flam wechseln die Hände die Höhe.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Grace Note zu laut — klingt wie zwei separate Schläge\n'
+            '• Beide Hände auf gleicher Höhe\n'
+            '• Flam zu "offen" (zu viel Zeit zwischen Grace Note und Hauptschlag)',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Übe extrem langsam. Halte die Grace-Note-Hand dicht am Fell '
+            'und bewege nur die Hauptschlag-Hand. '
+            'Akzeptiere anfangs einen "offenen" Flam und schließe ihn schrittweise.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Fügt Snare-Akzenten Gewicht und Textur hinzu. '
+            'Klassisch in Rock, Rudimental- und Marching-Drumming. '
+            'Macht Fills dramatischer und "fetter".',
+      ),
+    ],
   ),
 
   Rudiment(
@@ -184,6 +393,34 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left, isAccent: true),
       StrokeBeat(hand: Hand.right),
       StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Jede Gruppe: Flam (lR oder rL) gefolgt von zwei Taps. '
+            'Der Flam ist der Akzent, die zwei Taps sind leise. '
+            'Sprich: "FLAM-tap-tap, FLAM-tap-tap".',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Taps nach dem Flam zu laut\n'
+            '• Flam nicht eng genug\n'
+            '• Tempo bricht nach dem Flam ein',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Übe zunächst jede Gruppe einzeln: Flam, Tap, Tap — Pause. '
+            'Dann verbinde. Akzentiere den Flam stark, spiele die Taps sehr leise.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Klassisches Rudimental-Pattern. Ideal für Snare-Solos und Fills. '
+            'In der Marching-Percussion allgegenwärtig.',
+      ),
     ],
   ),
 
@@ -209,6 +446,35 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.left),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Ein Paradiddle mit Flam auf dem ersten Schlag jeder Gruppe. '
+            'lRLRR: Grace Note links, Hauptschlag rechts, dann L-R-R weiter. '
+            'Die Grace Note muss trotz nachfolgender Schläge eng am Flam bleiben.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Grace Note geht im Rest des Patterns unter\n'
+            '• Tempo nach dem Flam instabil\n'
+            '• Doppelschlag am Ende verliert Kontrolle',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Beherrsche zuerst den Single Paradiddle ohne Flam. '
+            'Füge dann langsam die Grace Note hinzu. '
+            'Sehr langsames Üben (40 BPM) ist hier essenziell.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Hohes Niveau der Stockkontrolle. Eindrucksvolle Textur für '
+            'Drum-Solos und komplexe Fills. Setzt Paradiddle und Flam-Kontrolle voraus.',
+      ),
+    ],
   ),
 
   // ─── RUFFS / DRAGS ────────────────────────────────────────────────────────
@@ -231,6 +497,36 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.right, isGhost: true),
       StrokeBeat(hand: Hand.left, isAccent: true),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Was ist ein Drag?',
+        body:
+            'Ein Drag besteht aus zwei Ghost Notes (ll oder rr) direkt vor '
+            'dem Hauptschlag. Sie klingen wie ein miniatur Doppelschlag. '
+            'Der Drag soll sich wie ein einzelnes Ereignis anfühlen, nicht drei.',
+      ),
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Die zwei Ghost Notes sehr eng und leise, fast gleichzeitig. '
+            'Dann der Hauptschlag mit voller Lautstärke. '
+            'Denke: "drr-SCHLAG, drr-SCHLAG" nicht "l-l-R".',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Drag-Noten zu laut oder zu weit auseinander\n'
+            '• Drag klingt wie drei separate Schläge\n'
+            '• Timing des Hauptschlags durch den Drag versetzt',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Übe zunächst nur den Drag (ll) ohne Hauptschlag. '
+            'Dann füge den Hauptschlag hinzu. Der Drag muss "zerquetscht" '
+            'klingen — dicht vor dem Akzent.',
+      ),
+    ],
   ),
 
   Rudiment(
@@ -252,6 +548,35 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left, isGhost: true),
       StrokeBeat(hand: Hand.right, isAccent: true),
       StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Aufbau',
+        body:
+            'Drag + Akzent + Tap, dann wiederholen: llR L / llR L. '
+            'Insgesamt vier Schläge pro Gruppe: zwei Ghost-Noten, ein Akzent, ein Tap. '
+            'Der Tap nach dem Akzent ist mittelstark.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Hetzen nach dem Drag\n'
+            '• Tap nach dem Akzent zu laut oder zu leise\n'
+            '• Drags werden breiter bei höherem Tempo',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Zähle in 4er-Gruppen. Der Drag nimmt fast keine Zeit ein — '
+            'er wird direkt vor Beat 1 "gequetscht". '
+            'Übe den Drag separat bis er automatisch sitzt.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Komplexes Rudimental-Pattern. Taucht in Snare-Drum-Etüden '
+            'und Drum-Corps-Musik auf.',
+      ),
     ],
   ),
 
@@ -281,6 +606,36 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left, isAccent: true),
       StrokeBeat(hand: Hand.left),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Herkunft',
+        body:
+            '"Lesson 25" stammt aus dem traditionellen Drum-Corps-Unterricht. '
+            'Zwei Drags gefolgt von einem Doppelschlag: llR llR R. '
+            'Der Name kommt von der Lektion Nr. 25 in klassischen Unterrichtswerken.',
+      ),
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Erster Drag + Akzent, zweiter Drag + Akzent, dann Doppelschlag. '
+            'Alle Drags bleiben eng und leise. Der abschließende Doppelschlag '
+            'hat dieselbe Lautstärke wie die Akzente.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Doppelschlag am Ende zu laut oder zu leise\n'
+            '• Drags werden breiter und lauter unter Druck\n'
+            '• Timing driftet im zweiten Drag',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Dieses Pattern braucht viel Zeit. '
+            'Beginne bei 40 BPM und steigere erst nach Wochen. '
+            'Übe jeden Drag separat bis er sitzt.',
+      ),
+    ],
   ),
 
   // ─── GHOST NOTES ──────────────────────────────────────────────────────────
@@ -306,6 +661,38 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.right, isAccent: true),
       StrokeBeat(hand: Hand.left, isGhost: true),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Das Konzept',
+        body:
+            'Ghost Notes sind so leise, dass sie kaum hörbar sind — '
+            'sie "fühlen" den Groove, anstatt ihn zu bestimmen. '
+            'Die Dynamikdifferenz zwischen Akzent und Ghost Note '
+            'muss dramatisch sein: Akzente 20–25 cm Stockhöhe, '
+            'Ghost Notes 1–2 cm.',
+      ),
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Akzent-Hand: Handgelenk schnappt nach unten aus voller Höhe. '
+            'Ghost-Note-Hand: Stock liegt fast auf dem Fell, '
+            'minimale Bewegung, kein Handgelenkschwung.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Ghost Notes zu laut — dominieren den Groove\n'
+            '• Stockhöhe bei Akzenten zu niedrig\n'
+            '• Timing der Ghost Notes ungenau',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Grundlage von Funk und R&B-Drumming. '
+            'Ghost Notes geben dem Groove Tiefe und "Feel". '
+            'Denk an Steve Gadd, Vinnie Colaiuta, Questlove.',
+      ),
+    ],
   ),
 
   Rudiment(
@@ -328,6 +715,37 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.right, isGhost: true),
       StrokeBeat(hand: Hand.left, isAccent: true),
       StrokeBeat(hand: Hand.right, isGhost: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Grundprinzip',
+        body:
+            'Lautstärke kommt aus der Stockhöhe, nicht aus der Kraft. '
+            'Forte = hoher Stock (20–25 cm), lockeres Handgelenk, '
+            'schneller Schwung. Piano = niedriger Stock (2–3 cm), '
+            'kontrollierte, kleine Bewegung.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Lautstärke durch Griffdruck steuern (falsch!)\n'
+            '• Forte-Schläge zu verkrampft\n'
+            '• Piano-Schläge zittern oder sind ungleichmäßig',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Übe beide Schlagtypen separat bis jede Höhe konsistent ist. '
+            'Dann wechsle zwischen beiden. Aufnehmen und zurückhören '
+            'hilft extrem um den Dynamikunterschied objektiv zu beurteilen.',
+      ),
+      TechniqueSection(
+        title: 'Warum ist das wichtig?',
+        body:
+            'Dynamikkontrolle ist Musikalität. Wer Lautstärke kontrollieren kann, '
+            'kann jeden Stil bedienen — von leisem Jazz bis hartem Rock. '
+            'Es ist die grundlegendste Ausdrucksmöglichkeit am Schlagzeug.',
+      ),
     ],
   ),
 
@@ -356,6 +774,36 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left, isGhost: true),
       StrokeBeat(hand: Hand.left),
     ],
+    technique: [
+      TechniqueSection(
+        title: 'Was ist Linear?',
+        body:
+            'Linear bedeutet: es schlägt immer nur eine Hand gleichzeitig. '
+            'Keine Unisono-Hits. Die Hände füllen gegenseitig die Lücken '
+            'und erzeugen so einen fließenden, gleichmäßigen Strom von Noten.',
+      ),
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Akzente von 20 cm Höhe, Taps von 10 cm, Ghost Notes von 2 cm. '
+            'Die verschiedenen Höhen innerhalb des Patterns geben ihm '
+            'Tiefe und Groove. Kein Schlag gleicht dem anderen.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Zögern zwischen den Noten — das Pattern muss fließen\n'
+            '• Alle Noten auf gleicher Lautstärke\n'
+            '• Tempo bricht bei Handwechsel von R zu R oder L zu L',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Beginne bei 50 BPM und spiele das Pattern bis es sich automatisch '
+            'anfühlt. Dann steigere. Übertragen auf das Drumset: '
+            'jede Hand auf ein anderes Instrument verteilen.',
+      ),
+    ],
   ),
 
   Rudiment(
@@ -380,6 +828,37 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.right, isAccent: true),
       StrokeBeat(hand: Hand.left, isGhost: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Aufbau',
+        body:
+            'Eine andere Gruppierung als Linear Beat 1. '
+            'Doppelschläge derselben Hand (RR, LL) sind erlaubt — '
+            'das unterscheidet es vom reinen Alternating-Linear-Pattern. '
+            'Akzente auf Positionen 1, 5, 9 erzeugen eine 10-Noten-Phrase.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Doppelschläge (RR, LL) zu laut oder ungleich\n'
+            '• Akzentmuster geht verloren\n'
+            '• Ghost Notes fehlen oder sind zu laut',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Lerne zunächst das Akzentmuster allein. '
+            'Dann füge die Ghost Notes und Taps hinzu. '
+            'Zähle die 10-Noten-Gruppe bewusst, um den Einstiegspunkt '
+            'beim Loop zu finden.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Funk- und Fusion-Grooves. Erzeugt Komplexität ohne Schwere. '
+            'Inspirationsquellen: Tony Williams, Vinnie Colaiuta.',
+      ),
     ],
   ),
 ];
