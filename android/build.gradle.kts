@@ -19,6 +19,18 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Fix for older Flutter plugins that don't declare a namespace (e.g. isar_flutter_libs 3.x)
+subprojects {
+    afterEvaluate {
+        if (extensions.findByName("android") != null) {
+            val android = extensions.getByType<com.android.build.gradle.BaseExtension>()
+            if (android.namespace == null) {
+                android.namespace = group.toString()
+            }
+        }
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
