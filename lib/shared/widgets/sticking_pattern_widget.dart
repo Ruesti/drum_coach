@@ -5,7 +5,7 @@ import '../../features/lessons/models/rudiment.dart';
 class StickingPatternWidget extends StatelessWidget {
   final List<StrokeBeat> pattern;
   final int? activeBeatIndex;
-  // kept for API compatibility — now used as row height
+  // kept for API compatibility — used as row/cell size
   final double beatBoxSize;
 
   const StickingPatternWidget({
@@ -17,17 +17,40 @@ class StickingPatternWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const headerStyle = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.bold,
+      color: Colors.white38,
+      letterSpacing: 1,
+    );
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
-      children: List.generate(pattern.length, (i) {
-        return _BeatRow(
-          beat: pattern[i],
-          beatNumber: i + 1,
-          isActive: activeBeatIndex != null && i == activeBeatIndex,
-          rowHeight: beatBoxSize,
-        );
-      }),
+      children: [
+        // Column headers
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            children: [
+              const SizedBox(width: 28),
+              Expanded(child: Center(child: Text('R', style: headerStyle))),
+              const SizedBox(width: 4),
+              Expanded(child: Center(child: Text('L', style: headerStyle))),
+              const SizedBox(width: 6),
+            ],
+          ),
+        ),
+
+        // Beat rows
+        ...List.generate(pattern.length, (i) {
+          return _BeatRow(
+            beat: pattern[i],
+            beatNumber: i + 1,
+            isActive: activeBeatIndex != null && i == activeBeatIndex,
+            cellSize: beatBoxSize,
+          );
+        }),
+      ],
     );
   }
 }
@@ -36,46 +59,27 @@ class _BeatRow extends StatelessWidget {
   final StrokeBeat beat;
   final int beatNumber;
   final bool isActive;
-  final double rowHeight;
+  final double cellSize;
 
   const _BeatRow({
     required this.beat,
     required this.beatNumber,
     required this.isActive,
-    required this.rowHeight,
+    required this.cellSize,
   });
 
   @override
   Widget build(BuildContext context) {
     final isRight = beat.hand == Hand.right;
-    final label = isRight ? 'R' : 'L';
-
-    // Colours
-    final accentColor = Colors.deepOrange;
-    final activeColor = Colors.amber;
-
-    final barColor = isActive
-        ? activeColor
-        : beat.isAccent
-            ? accentColor
-            : beat.isGhost
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.white.withValues(alpha: 0.14);
-
-    final textColor = isActive
-        ? Colors.black
-        : beat.isGhost
-            ? Colors.white.withValues(alpha: 0.28)
-            : Colors.white.withValues(alpha: 0.9);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 70),
-        height: rowHeight,
+        height: cellSize,
         decoration: BoxDecoration(
           color: isActive
-              ? activeColor.withValues(alpha: 0.12)
+              ? Colors.amber.withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
@@ -90,64 +94,98 @@ class _BeatRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   color: isActive
-                      ? activeColor.withValues(alpha: 0.9)
+                      ? Colors.amber.withValues(alpha: 0.9)
                       : Colors.white.withValues(alpha: 0.18),
-                  fontWeight:
-                      isActive ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
 
-            // Accent dot column
-            SizedBox(
-              width: 14,
-              child: beat.isAccent
-                  ? Text(
-                      '●',
-                      style: TextStyle(
-                        fontSize: 7,
-                        color: isActive ? activeColor : accentColor,
-                      ),
-                    )
-                  : null,
-            ),
-
-            // Coloured bar with hand label
+            // R cell
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 70),
-                  decoration: BoxDecoration(
-                    color: barColor,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: isActive
-                          ? activeColor
-                          : beat.isAccent
-                              ? accentColor.withValues(alpha: 0.45)
-                              : Colors.white.withValues(alpha: 0.08),
-                      width: isActive ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: beat.isGhost
-                            ? rowHeight * 0.28
-                            : rowHeight * 0.38,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                  ),
-                ),
+              child: _StrokeCell(
+                hasStroke: isRight,
+                isAccent: beat.isAccent,
+                isGhost: beat.isGhost,
+                isActive: isActive,
+                size: cellSize,
               ),
             ),
+            const SizedBox(width: 4),
 
+            // L cell
+            Expanded(
+              child: _StrokeCell(
+                hasStroke: !isRight,
+                isAccent: beat.isAccent,
+                isGhost: beat.isGhost,
+                isActive: isActive,
+                size: cellSize,
+              ),
+            ),
             const SizedBox(width: 6),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StrokeCell extends StatelessWidget {
+  final bool hasStroke;
+  final bool isAccent;
+  final bool isGhost;
+  final bool isActive;
+  final double size;
+
+  const _StrokeCell({
+    required this.hasStroke,
+    required this.isAccent,
+    required this.isGhost,
+    required this.isActive,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cellSize = size - 8; // vertical padding
+
+    Color? fillColor;
+    Color borderColor;
+    double borderWidth;
+
+    if (!hasStroke) {
+      // Empty cell — subtle box outline
+      fillColor = null;
+      borderColor = Colors.white.withValues(alpha: 0.06);
+      borderWidth = 1;
+    } else if (isActive) {
+      fillColor = Colors.amber;
+      borderColor = Colors.amber;
+      borderWidth = 1.5;
+    } else if (isAccent) {
+      fillColor = Colors.deepOrange;
+      borderColor = Colors.deepOrange;
+      borderWidth = 1.5;
+    } else if (isGhost) {
+      fillColor = null;
+      borderColor = Colors.white.withValues(alpha: 0.22);
+      borderWidth = 1;
+    } else {
+      fillColor = null;
+      borderColor = Colors.white.withValues(alpha: 0.65);
+      borderWidth = 1.5;
+    }
+
+    return Center(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 70),
+        width: cellSize * 0.72,
+        height: cellSize * 0.72,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: fillColor,
+          border: Border.all(color: borderColor, width: borderWidth),
         ),
       ),
     );
