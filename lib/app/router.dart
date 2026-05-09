@@ -9,6 +9,7 @@ import '../features/lessons/lessons_screen.dart';
 import '../features/metronome/metronome_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/practice/practice_session_screen.dart';
+import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 
 final router = GoRouter(
@@ -83,6 +84,10 @@ final router = GoRouter(
     GoRoute(
       path: '/metronome',
       builder: (_, __) => const MetronomeScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (_, __) => const SettingsScreen(),
     ),
   ],
 );

@@ -22,7 +22,15 @@ class DashboardScreen extends ConsumerWidget {
             : 'Good evening';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('DrumCoach')),
+      appBar: AppBar(
+        title: const Text('DrumCoach'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
