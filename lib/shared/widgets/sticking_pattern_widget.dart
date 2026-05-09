@@ -5,110 +5,151 @@ import '../../features/lessons/models/rudiment.dart';
 class StickingPatternWidget extends StatelessWidget {
   final List<StrokeBeat> pattern;
   final int? activeBeatIndex;
+  // kept for API compatibility — now used as row height
   final double beatBoxSize;
 
   const StickingPatternWidget({
     super.key,
     required this.pattern,
     this.activeBeatIndex,
-    this.beatBoxSize = 48,
+    this.beatBoxSize = 44,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: List.generate(pattern.length, (i) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: _BeatBox(
-                beat: pattern[i],
-                isActive: activeBeatIndex != null && i == activeBeatIndex,
-                size: beatBoxSize,
-              ),
-            );
-          }),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(pattern.length, (i) {
+        return _BeatRow(
+          beat: pattern[i],
+          beatNumber: i + 1,
+          isActive: activeBeatIndex != null && i == activeBeatIndex,
+          rowHeight: beatBoxSize,
+        );
+      }),
     );
   }
 }
 
-class _BeatBox extends StatelessWidget {
+class _BeatRow extends StatelessWidget {
   final StrokeBeat beat;
+  final int beatNumber;
   final bool isActive;
-  final double size;
+  final double rowHeight;
 
-  const _BeatBox({
+  const _BeatRow({
     required this.beat,
+    required this.beatNumber,
     required this.isActive,
-    required this.size,
+    required this.rowHeight,
   });
 
   @override
   Widget build(BuildContext context) {
-    final label = beat.hand == Hand.right ? 'R' : 'L';
+    final isRight = beat.hand == Hand.right;
+    final label = isRight ? 'R' : 'L';
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Accent dot — always reserve height for alignment
-        SizedBox(
-          height: 14,
-          child: beat.isAccent
-              ? const Text(
-                  '●',
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: Colors.deepOrange,
-                    height: 1,
-                  ),
-                )
-              : null,
+    // Colours
+    final accentColor = Colors.deepOrange;
+    final activeColor = Colors.amber;
+
+    final barColor = isActive
+        ? activeColor
+        : beat.isAccent
+            ? accentColor
+            : beat.isGhost
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.white.withValues(alpha: 0.14);
+
+    final textColor = isActive
+        ? Colors.black
+        : beat.isGhost
+            ? Colors.white.withValues(alpha: 0.28)
+            : Colors.white.withValues(alpha: 0.9);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 70),
+        height: rowHeight,
+        decoration: BoxDecoration(
+          color: isActive
+              ? activeColor.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
         ),
-        const SizedBox(height: 2),
-        // Beat box with scale animation
-        AnimatedScale(
-          scale: isActive ? 1.15 : 1.0,
-          duration: const Duration(milliseconds: 60),
-          curve: Curves.easeOut,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 60),
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: isActive
-                  ? Colors.amber.withValues(alpha: 0.85)
-                  : beat.isGhost
-                      ? Colors.white.withValues(alpha: 0.07)
-                      : Colors.white.withValues(alpha: 0.13),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isActive
-                    ? Colors.amber
-                    : Colors.white.withValues(alpha: isActive ? 0.6 : 0.15),
-                width: isActive ? 2 : 1,
-              ),
-            ),
-            child: Center(
+        child: Row(
+          children: [
+            // Beat number
+            SizedBox(
+              width: 28,
               child: Text(
-                label,
+                '$beatNumber',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: beat.isGhost ? size * 0.28 : size * 0.38,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
                   color: isActive
-                      ? Colors.black87
-                      : beat.isGhost
-                          ? Colors.white.withValues(alpha: 0.35)
-                          : Colors.white.withValues(alpha: 0.88),
+                      ? activeColor.withValues(alpha: 0.9)
+                      : Colors.white.withValues(alpha: 0.18),
+                  fontWeight:
+                      isActive ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
-          ),
+
+            // Accent dot column
+            SizedBox(
+              width: 14,
+              child: beat.isAccent
+                  ? Text(
+                      '●',
+                      style: TextStyle(
+                        fontSize: 7,
+                        color: isActive ? activeColor : accentColor,
+                      ),
+                    )
+                  : null,
+            ),
+
+            // Coloured bar with hand label
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 70),
+                  decoration: BoxDecoration(
+                    color: barColor,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isActive
+                          ? activeColor
+                          : beat.isAccent
+                              ? accentColor.withValues(alpha: 0.45)
+                              : Colors.white.withValues(alpha: 0.08),
+                      width: isActive ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: beat.isGhost
+                            ? rowHeight * 0.28
+                            : rowHeight * 0.38,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 6),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
