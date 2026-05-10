@@ -176,24 +176,29 @@ class _PracticeSessionScreenState
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
             children: [
-              // Live sticking pattern
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: StickingPatternWidget(
-                  pattern: rudiment.sticking,
-                  activeBeatIndex: activeBeat,
-                  beatBoxSize: 40,
+              // Live sticking pattern — scrollable so long patterns never overflow
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16, horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A1A1A),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: StickingPatternWidget(
+                      pattern: rudiment.sticking,
+                      activeBeatIndex: activeBeat,
+                      beatBoxSize: 40,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Metronome controls
               _CompactMetronome(
@@ -204,16 +209,19 @@ class _PracticeSessionScreenState
                 onToggle: notifier.toggle,
                 onSoundTypeChanged: notifier.setSoundType,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
-              // Timer goal chips
+              // Timer goal chips (only before session starts)
               if (!metState.isPlaying && _elapsedSeconds == 0)
-                _TimerGoalRow(
-                  selected: _goalSeconds,
-                  onSelected: (s) => setState(() => _goalSeconds = s),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _TimerGoalRow(
+                    selected: _goalSeconds,
+                    onSelected: (s) => setState(() => _goalSeconds = s),
+                  ),
                 ),
 
-              const Spacer(),
+              const SizedBox(height: 4),
               ElevatedButton.icon(
                 onPressed: _showRatingSheet,
                 icon: const Icon(Icons.check_circle_outline),
