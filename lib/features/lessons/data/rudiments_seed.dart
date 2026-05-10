@@ -861,6 +861,312 @@ const rudimentsSeedData = <Rudiment>[
       ),
     ],
   ),
+
+  // ─── ÜBUNGEN ──────────────────────────────────────────────────────────────
+
+  Rudiment(
+    id: 'akzent_alle_viertel',
+    name: 'Akzent auf allen Vierteln',
+    category: 'Übungen',
+    description:
+        'Jeder Schlag wird akzentuiert. Gleiche Lautstärke und Rebound beider '
+        'Hände trainieren. Ideal zum Aufwärmen.',
+    minBpm: 50,
+    targetBpm: 160,
+    difficulty: Difficulty.beginner,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Beide Hände sollen identisch klingen. Höre auf Lautstärkenunterschiede '
+            'zwischen rechts und links und gleiche sie aktiv aus.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Starte bei 50–60 BPM. Erhöhe erst, wenn beide Hände wirklich '
+            'gleich klingen. Übe auch mit geschlossenen Augen.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'akzent_zwei_vier',
+    name: 'Akzent auf 2 und 4',
+    category: 'Übungen',
+    description:
+        'Backbeat-Training: Schläge auf Zählzeit 2 und 4 werden akzentuiert, '
+        '1 und 3 bleiben leise. Grundlage für Snare-Backbeats.',
+    minBpm: 50,
+    targetBpm: 160,
+    difficulty: Difficulty.beginner,
+    sticking: [
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Den Backbeat internalisieren. Der Akzent auf 2 und 4 muss automatisch '
+            'sitzen, ohne nachzudenken. Das ist die Basis aller Rock- und Pop-Grooves.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Zähle laut "1-2-3-4" mit, während du spielst. Fühle den Puls auf '
+            '2 und 4. Viele Schlagzeugschüler trainieren dies täglich.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'akzent_wandernd',
+    name: 'Wandernder Akzent',
+    category: 'Übungen',
+    description:
+        'Der Akzent wandert von Schlag zu Schlag durch alle acht Positionen. '
+        'Fördert das Denken in Grooves und Phrasierungen.',
+    minBpm: 50,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Übe dasselbe Muster mit dem Akzent auf 1, dann auf 2, dann auf 3 usw. '
+            'Jede Position fühlt sich anders an — das trainiert Flexibilität.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Spiele 4 Takte mit Akzent auf Position 1, dann 4 Takte auf Position 2 '
+            'usw., ohne anzuhalten. Metronom läuft durch.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'ghostnote_training',
+    name: 'Ghostnote-Training',
+    category: 'Übungen',
+    description:
+        'Wechsel zwischen lauten Akzentschlägen und sehr leisen Ghostnotes. '
+        'Dynamik-Kontrolle ist das Kernziel.',
+    minBpm: 50,
+    targetBpm: 140,
+    difficulty: Difficulty.intermediate,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left, isGhost: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isGhost: true),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left, isGhost: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Akzente: Stock hoch, volles Handgelenk. Ghostnotes: Stock bleibt '
+            'nah am Fell, ca. 2–3 cm Stockhöhe. Der Kontrast macht den Groove.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Ghostnotes zu laut (unkontrollierter Rebound)\n'
+            '• Akzente zu leise (Angst den Rhythmus zu verlieren)\n'
+            '• Tempo schwankt bei Wechseln zwischen Ghost und Akzent',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Erst nur Akzente, dann nur Ghostnotes üben. Dann kombinieren. '
+            'Ziel: der Hörer soll nur die Akzente klar hören, Ghostnotes im '
+            'Hintergrund fühlen.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'paradiddle_diddle',
+    name: 'Paradiddle-Diddle',
+    category: 'Übungen',
+    description:
+        'Erweiterung des Paradiddles: RLRRLL LRLLRR. Sechs Noten pro Gruppe — '
+        'ideal für Triolen und 6/8-Anwendungen.',
+    minBpm: 50,
+    targetBpm: 150,
+    difficulty: Difficulty.intermediate,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Die Doppelschläge am Ende (RRLL) nutzen Rebound. Der erste der '
+            'Doppelschläge ist aktiv, der zweite "fällt" zurück.',
+      ),
+      TechniqueSection(
+        title: 'Musikalische Anwendung',
+        body:
+            'Perfekt für Triolen-Fills. Aus RLRRLL entsteht über drei Toms '
+            'eine aufsteigende Phrasen. Beliebt in Fusion und Latin.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'six_stroke_roll',
+    name: 'Six Stroke Roll',
+    category: 'Übungen',
+    description:
+        'RLLRRL — sechs Schläge mit zwei Doppelschlägen in der Mitte. '
+        'Verbindet Einzel- und Doppelschläge zu einem fließenden Muster.',
+    minBpm: 50,
+    targetBpm: 160,
+    difficulty: Difficulty.intermediate,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Erster und letzter Schlag sind Akzente mit vollem Schwung. '
+            'Die vier mittleren Schläge (LLRR) nutzen Rebound und bleiben leiser.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Langsam starten: Akzent — Double — Double — Akzent. '
+            'Dann Tempo erhöhen bis der Übergang nahtlos wirkt.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'gleichmaessigkeit_16tel',
+    name: 'Gleichmäßigkeit — Sechzehntel',
+    category: 'Übungen',
+    description:
+        'Sechzehntel-Noten in strenger Alternation, ohne Akzente. '
+        'Reines Kontroll- und Ausdauertraining für beide Hände.',
+    minBpm: 60,
+    targetBpm: 200,
+    difficulty: Difficulty.beginner,
+    sticking: [
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Perfekte zeitliche Gleichmäßigkeit. Metronom genau in der Mitte '
+            'zwischen zwei Schlägen. Höre auf Lücken oder Rushes.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Aufnahme mit Handy machen und zurückhören. Übe Abschnitte von '
+            '2–5 Minuten ohne Unterbrechung. Ausdauer ist das Ziel.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'moeller_motion',
+    name: 'Moeller-Bewegung',
+    category: 'Übungen',
+    description:
+        'Arm-Peitschenbewegung für effizienten Energiefluss. Erzeugt mehrere '
+        'Schläge aus einer Armbewegung: Akzent — Tap — Tap.',
+    minBpm: 40,
+    targetBpm: 120,
+    difficulty: Difficulty.advanced,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left, isGhost: true),
+      StrokeBeat(hand: Hand.left, isGhost: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Arm hebt sich für den Akzent (Down Stroke). Der Arm fällt und '
+            'erzeugt automatisch zwei weitere leise Schläge (Tap + Up). '
+            'Keine Muskelkraft — Schwerkraft und Rebound machen die Arbeit.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Arm aktiv anheben statt fallen lassen\n'
+            '• Taps zu laut (kein Unterschied zur Akzent-Lautstärke)\n'
+            '• Tempo zu hoch am Anfang — langsam ist hier schwerer',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Extrem langsam beginnen (40 BPM). Erst wenn die Bewegung sich '
+            '"von selbst" anfühlt, Tempo erhöhen. Täglich 5 Minuten.',
+      ),
+    ],
+  ),
 ];
 
 /// Ordered list of all categories for consistent display.
@@ -871,4 +1177,5 @@ const rudimentCategories = [
   'Ruffs',
   'Ghost Notes',
   'Linear Patterns',
+  'Übungen',
 ];
