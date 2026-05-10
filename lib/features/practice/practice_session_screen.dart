@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/widgets/sticking_pattern_widget.dart';
 import '../lessons/lessons_provider.dart';
+import '../lessons/models/rudiment.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import 'practice_provider.dart';
@@ -33,9 +34,29 @@ class _PracticeSessionScreenState
   bool _sessionFinished = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+      ref.read(metronomeNotifierProvider.notifier)
+          .setPatternVolumes(_volumesFor(rudiment.sticking));
+    });
+  }
+
+  static List<double> _volumesFor(List<StrokeBeat> sticking) =>
+      sticking.map((b) {
+        if (b.isAccent) return 2.0;
+        if (b.isGhost) return 0.25;
+        return 0.85;
+      }).toList();
+
+  @override
   void dispose() {
     _ticker?.cancel();
-    ref.read(metronomeNotifierProvider.notifier).stop();
+    final notifier = ref.read(metronomeNotifierProvider.notifier);
+    notifier
+      ..stop()
+      ..setPatternVolumes(null); // restore subdivision-based accents
     super.dispose();
   }
 

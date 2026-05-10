@@ -52,6 +52,7 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   StreamSubscription<BeatEvent>? _beatSub;
   bool _disposed = false;
   final List<DateTime> _tapTimestamps = [];
+  List<double>? _pendingVolumes;
 
   @override
   MetronomeState build() {
@@ -68,6 +69,7 @@ class MetronomeNotifier extends _$MetronomeNotifier {
       return;
     }
     if (_disposed) return;
+    if (_pendingVolumes != null) _engine!.setBeatVolumes(_pendingVolumes);
     _beatSub = _engine!.beatStream.listen((event) {
       if (_disposed) return;
       if (event.isAccent && SettingsService.hapticsEnabled) {
@@ -106,6 +108,11 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   void setSoundType(SoundType soundType) {
     _engine?.setSoundType(soundType);
     state = state.copyWith(soundType: soundType);
+  }
+
+  void setPatternVolumes(List<double>? volumes) {
+    _pendingVolumes = volumes;
+    _engine?.setBeatVolumes(volumes);
   }
 
   void setSubdivision(Subdivision subdivision) {

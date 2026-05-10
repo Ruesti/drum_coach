@@ -51,6 +51,7 @@ class MetronomeEngine {
   int _bpm = 100;
   Subdivision _subdivision = Subdivision.quarter;
   SoundType _soundType = SoundType.click;
+  List<double>? _beatVolumes; // null = use subdivision-based accent logic
   bool _isPlaying = false;
   int _beatCount = 0;
   final Stopwatch _stopwatch = Stopwatch();
@@ -103,6 +104,7 @@ class MetronomeEngine {
   void setBpm(int bpm) => _bpm = bpm.clamp(40, 240);
   void setSubdivision(Subdivision subdivision) => _subdivision = subdivision;
   void setSoundType(SoundType soundType) => _soundType = soundType;
+  void setBeatVolumes(List<double>? volumes) => _beatVolumes = volumes;
 
   void dispose() {
     stop();
@@ -127,7 +129,18 @@ class MetronomeEngine {
 
   void _onBeat() {
     if (!_isPlaying) return;
-    final isAccent = _beatCount % _subdivision.factor == 0;
+
+    // Pattern-based volume takes priority; fall back to subdivision accent.
+    final double volume;
+    final bool isAccent;
+    if (_beatVolumes != null && _beatVolumes!.isNotEmpty) {
+      volume = _beatVolumes![_beatCount % _beatVolumes!.length];
+      // Treat any beat louder than the normal threshold as an accent.
+      isAccent = volume >= 1.2;
+    } else {
+      isAccent = _beatCount % _subdivision.factor == 0;
+      volume = isAccent ? 2.0 : 0.7;
+    }
 
     final source = switch ((_soundType, isAccent)) {
       (SoundType.click, true)  => _clickAccent,
@@ -137,9 +150,6 @@ class MetronomeEngine {
       (SoundType.snare, true)  => _snareAccent,
       (SoundType.snare, false) => _snareNormal,
     };
-
-    // Accents are notably louder than normal beats
-    final volume = isAccent ? 2.0 : 0.7;
 
     if (source != null && SoLoud.instance.isInitialized) {
       SoLoud.instance.play(source, volume: volume).ignore();
