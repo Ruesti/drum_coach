@@ -18,6 +18,7 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
   String _filter = 'all';
 
   static const _uebungenCategory = 'Übungen';
+  static const _marchingCategory = 'Marching Snare';
   static const _rudimentCategories = [
     'Rolls', 'Paradiddles', 'Flams', 'Ruffs', 'Ghost Notes', 'Linear Patterns',
   ];
@@ -29,6 +30,7 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
     final showCategories = switch (_filter) {
       'rudiments' => _rudimentCategories,
       'uebungen'  => [_uebungenCategory],
+      'marching'  => [_marchingCategory],
       _           => rudimentCategories,
     };
 
@@ -37,7 +39,8 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
       body: Column(
         children: [
           // Filter bar
-          Padding(
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Row(
               children: [
@@ -51,6 +54,12 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
                   label: 'Rudiments',
                   selected: _filter == 'rudiments',
                   onTap: () => setState(() => _filter = 'rudiments'),
+                ),
+                const SizedBox(width: 8),
+                _FilterChip(
+                  label: 'Marching',
+                  selected: _filter == 'marching',
+                  onTap: () => setState(() => _filter = 'marching'),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(

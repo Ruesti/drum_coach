@@ -1167,6 +1167,244 @@ const rudimentsSeedData = <Rudiment>[
       ),
     ],
   ),
+
+  // ─── MARCHING SNARE ─────────────────────────────────────────────────────────
+
+  Rudiment(
+    id: 'eight_on_a_hand',
+    name: 'Eight on a Hand',
+    category: 'Marching Snare',
+    description:
+        'Acht Sechzehntel pro Hand mit Akzent auf jeder Zählzeit. '
+        'Grundlegendes Marching-Warm-up für Kontrolle und gleichmäßigen Anschlag.',
+    minBpm: 60,
+    targetBpm: 160,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 4,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Gleichmäßige Sechzehntel mit klarem Akzent auf 1, 2, 3, 4. '
+            'Die unbetonten Noten bleiben tief und locker.',
+      ),
+      TechniqueSection(
+        title: 'Tipp',
+        body:
+            'Handgelenk führt die Akzente, Finger kontrollieren die tiefen Töne. '
+            'Beide Hände sollen identisch klingen.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'flam_accent',
+    name: 'Flam Accent',
+    category: 'Marching Snare',
+    description:
+        'Flam auf der betonten Zählzeit, gefolgt von zwei Tap-Noten — '
+        'im Triolen-Feel. Ein Eckpfeiler der Marching-Rudiments.',
+    minBpm: 50,
+    targetBpm: 140,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    beatsPerBar: 2,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Der Flam landet als kräftiger Akzent, die beiden folgenden Taps '
+            'bleiben tief. Hände wechseln nach jeder Triole.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'flam_tap',
+    name: 'Flam Tap',
+    category: 'Marching Snare',
+    description:
+        'Flam gefolgt von einem Tap derselben Hand: lR-R rL-L. '
+        'Trainiert den Down-Up-Stroke und Doppelschläge mit Flam.',
+    minBpm: 50,
+    targetBpm: 150,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.eighth,
+    beatsPerBar: 4,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Down-Up',
+        body:
+            'Der Flam ist ein Down-Stroke (laut, bleibt unten), der Tap ein '
+            'tiefer Up-Stroke, der die nächste Hand vorbereitet.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'flamacue',
+    name: 'Flamacue',
+    category: 'Marching Snare',
+    description:
+        'Flam, danach ein Akzent auf der zweiten Note, zwei Taps und ein '
+        'abschließender Flam. Klassisches, ausdrucksstarkes Rudiment.',
+    minBpm: 50,
+    targetBpm: 130,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 2,
+    sticking: [
+      StrokeBeat(hand: Hand.right, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Akzent',
+        body:
+            'Der Akzent liegt nicht auf dem Flam, sondern auf der Note direkt '
+            'danach. Genau diese Verschiebung macht den Flamacue aus.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'flam_paradiddle',
+    name: 'Flam Paradiddle',
+    category: 'Marching Snare',
+    description:
+        'Ein Paradiddle, dessen erste Note ein Flam mit Akzent ist: '
+        'lR-L-R-R rL-R-L-L. Verbindet Flam-Kontrolle mit Doppelschlägen.',
+    minBpm: 50,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 2,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Tipp',
+        body:
+            'Der Flam-Akzent eröffnet jeden Paradiddle, der abschließende '
+            'Diddle (RR bzw. LL) bleibt tief und kontrolliert.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'cheese',
+    name: 'Cheese (Flam Diddle)',
+    category: 'Marching Snare',
+    description:
+        'Ein Flam direkt gefolgt von einem Diddle: lR-R rL-L. '
+        'Hybrid-Rudiment, das Flam und Doppelschlag in einer Bewegung verbindet.',
+    minBpm: 50,
+    targetBpm: 130,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 2,
+    sticking: [
+      StrokeBeat(hand: Hand.right, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Idee',
+        body:
+            'Der Flam und der erste Diddle-Schlag verschmelzen fast zu einem '
+            'Klang. Locker bleiben, der Diddle kommt aus den Fingern.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'inverted_flam_tap',
+    name: 'Inverted Flam Tap',
+    category: 'Marching Snare',
+    description:
+        'Flam Tap, bei dem der Flam auf den Off-Beat fällt: R lR L rL. '
+        'Anspruchsvolle Variante für Timing und Handabwechslung.',
+    minBpm: 50,
+    targetBpm: 130,
+    difficulty: Difficulty.professional,
+    gridUnit: NoteGrid.eighth,
+    beatsPerBar: 4,
+    sticking: [
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Achtung',
+        body:
+            'Der Flam liegt auf dem "und" der Zählzeit. Erst sehr langsam üben, '
+            'damit der versetzte Akzent sauber sitzt.',
+      ),
+    ],
+  ),
 ];
 
 /// Ordered list of all categories for consistent display.
@@ -1177,5 +1415,6 @@ const rudimentCategories = [
   'Ruffs',
   'Ghost Notes',
   'Linear Patterns',
+  'Marching Snare',
   'Übungen',
 ];

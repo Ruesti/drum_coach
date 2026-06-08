@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/widgets/sticking_pattern_widget.dart';
+import '../../shared/widgets/notation_staff_widget.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/rudiment.dart';
 import '../metronome/metronome_engine.dart';
@@ -39,12 +39,21 @@ class _PracticeSessionScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
       ref.read(metronomeNotifierProvider.notifier)
-          .setPatternVolumes(_volumesFor(rudiment.sticking));
+        ..setSubdivision(_subdivisionFor(rudiment.gridUnit))
+        ..setPatternVolumes(_volumesFor(rudiment.sticking));
     });
   }
 
+  static Subdivision _subdivisionFor(NoteGrid grid) => switch (grid) {
+        NoteGrid.quarter => Subdivision.quarter,
+        NoteGrid.eighth => Subdivision.eighth,
+        NoteGrid.triplet => Subdivision.triplet,
+        NoteGrid.sixteenth => Subdivision.sixteenth,
+      };
+
   static List<double> _volumesFor(List<StrokeBeat> sticking) =>
       sticking.map((b) {
+        if (b.isRest) return 0.0;
         if (b.isAccent) return 2.0;
         if (b.isGhost) return 0.25;
         return 0.85;
@@ -56,7 +65,8 @@ class _PracticeSessionScreenState
     final notifier = ref.read(metronomeNotifierProvider.notifier);
     notifier
       ..stop()
-      ..setPatternVolumes(null); // restore subdivision-based accents
+      ..setPatternVolumes(null) // restore subdivision-based accents
+      ..setSubdivision(Subdivision.quarter);
     super.dispose();
   }
 
@@ -190,10 +200,9 @@ class _PracticeSessionScreenState
                       color: const Color(0xFF1A1A1A),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: StickingPatternWidget(
-                      pattern: rudiment.sticking,
-                      activeBeatIndex: activeBeat,
-                      beatBoxSize: 40,
+                    child: NotationStaffWidget(
+                      rudiment: rudiment,
+                      activeIndex: activeBeat,
                     ),
                   ),
                 ),

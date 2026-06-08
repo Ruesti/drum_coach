@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/widgets/sticking_pattern_widget.dart';
+import '../../shared/widgets/notation_staff_widget.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
 
@@ -41,7 +41,7 @@ class LessonDetailScreen extends ConsumerWidget {
                   ),
             ),
             const SizedBox(height: 12),
-            StickingPatternWidget(pattern: rudiment.sticking),
+            NotationStaffWidget(rudiment: rudiment),
             const SizedBox(height: 12),
             _Legend(),
             if (rudiment.technique.isNotEmpty) ...[
@@ -181,18 +181,25 @@ class _TechniqueCard extends StatelessWidget {
 class _Legend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: 16,
+      runSpacing: 8,
       children: [
         _LegendItem(
-          symbol: '●',
+          symbol: '>',
           color: Colors.deepOrange,
-          label: 'Accent',
+          label: 'Akzent',
         ),
-        const SizedBox(width: 16),
         _LegendItem(
-          symbol: 'R',
-          color: Colors.white.withValues(alpha: 0.35),
-          label: 'Ghost note',
+          symbol: '( )',
+          color: Colors.white.withValues(alpha: 0.4),
+          label: 'Ghost Note',
+          small: true,
+        ),
+        _LegendItem(
+          symbol: '♪',
+          color: Colors.white.withValues(alpha: 0.4),
+          label: 'Vorschlag (Flam/Drag)',
           small: true,
         ),
       ],

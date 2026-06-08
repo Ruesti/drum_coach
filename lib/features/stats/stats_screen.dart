@@ -20,6 +20,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   Widget build(BuildContext context) {
     final dailyAsync = ref.watch(last14DaysMinutesProvider);
     final streakAsync = ref.watch(streakDaysProvider);
+    final bestAsync = ref.watch(longestStreakProvider);
+    final todayAsync = ref.watch(todayStatusProvider);
+    final calendarAsync = ref.watch(practiceCalendarProvider());
     final sessionsAsync = ref.watch(allSessionsProvider);
     final rudiments = ref.watch(rudimentsProvider);
 
@@ -38,12 +41,21 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             padding: const EdgeInsets.all(16),
             children: [
               // Streak
-              streakAsync.when(
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-                data: (streak) => _StreakCard(streak: streak),
+              _StreakCard(
+                current: streakAsync.valueOrNull ?? 0,
+                best: bestAsync.valueOrNull ?? 0,
+                today: todayAsync.valueOrNull,
               ),
               const SizedBox(height: 16),
+              // Calendar heatmap
+              _SectionLabel('PRACTICE CALENDAR'),
+              const SizedBox(height: 8),
+              calendarAsync.when(
+                loading: () => const SizedBox(height: 96),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (days) => _CalendarHeatmap(days: days),
+              ),
+              const SizedBox(height: 20),
               // Bar chart
               _SectionLabel('DAILY PRACTICE (last 14 days)'),
               const SizedBox(height: 8),
@@ -85,8 +97,10 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 }
 
 class _StreakCard extends StatelessWidget {
-  final int streak;
-  const _StreakCard({required this.streak});
+  final int current;
+  final int best;
+  final TodayStatus? today;
+  const _StreakCard({required this.current, required this.best, this.today});
 
   @override
   Widget build(BuildContext context) {
@@ -100,16 +114,115 @@ class _StreakCard extends StatelessWidget {
         children: [
           const Text('🔥', style: TextStyle(fontSize: 32)),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('$streak day streak',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              const Text('Keep it going!',
-                  style: TextStyle(color: Colors.white54, fontSize: 13)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$current day streak',
+                    style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.bold)),
+                Text('Best: $best ${best == 1 ? "day" : "days"}',
+                    style:
+                        const TextStyle(color: Colors.white54, fontSize: 13)),
+              ],
+            ),
           ),
+          if (today != null) _TodayBadge(status: today!),
         ],
+      ),
+    );
+  }
+}
+
+class _TodayBadge extends StatelessWidget {
+  final TodayStatus status;
+  const _TodayBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final done = status.goalMet;
+    final practiced = status.practiced;
+    final color = done
+        ? Colors.green
+        : practiced
+            ? Colors.amber
+            : Colors.white38;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(done ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: color, size: 24),
+        const SizedBox(height: 4),
+        Text('Heute', style: TextStyle(color: color, fontSize: 11)),
+        Text('${status.minutes}/${status.goalMinutes}m',
+            style: const TextStyle(color: Colors.white38, fontSize: 10)),
+      ],
+    );
+  }
+}
+
+class _CalendarHeatmap extends StatelessWidget {
+  final List<DailyMinutes> days;
+  const _CalendarHeatmap({required this.days});
+
+  static const _cell = 13.0;
+  static const _gap = 3.0;
+
+  Color _colorFor(int minutes) {
+    if (minutes <= 0) return Colors.white.withValues(alpha: 0.06);
+    if (minutes < 10) return Colors.deepOrange.withValues(alpha: 0.30);
+    if (minutes < 20) return Colors.deepOrange.withValues(alpha: 0.55);
+    if (minutes < 40) return Colors.deepOrange.withValues(alpha: 0.80);
+    return Colors.deepOrange;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (days.isEmpty) return const SizedBox.shrink();
+
+    // Pad with leading blanks so each column is a Mon→Sun week.
+    final leading = days.first.date.weekday - 1; // Mon=1 → 0 blanks
+    final cells = <DailyMinutes?>[
+      ...List.filled(leading, null),
+      ...days,
+    ];
+    final weeks = (cells.length / 7).ceil();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(weeks, (w) {
+            return Padding(
+              padding: const EdgeInsets.only(right: _gap),
+              child: Column(
+                children: List.generate(7, (d) {
+                  final idx = w * 7 + d;
+                  final cell = idx < cells.length ? cells[idx] : null;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: _gap),
+                    child: Container(
+                      width: _cell,
+                      height: _cell,
+                      decoration: BoxDecoration(
+                        color: cell == null
+                            ? Colors.transparent
+                            : _colorFor(cell.minutes),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            );
+          }),
+        ),
       ),
     );
   }

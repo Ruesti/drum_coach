@@ -6,7 +6,7 @@ part of 'stats_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$allSessionsHash() => r'3561c477faabe83d749b04357923b78642273ce2';
+String _$allSessionsHash() => r'52ec019b1f899f368001b187c5059ddeaa040d5e';
 
 /// See also [allSessions].
 @ProviderFor(allSessions)
@@ -21,7 +21,7 @@ final allSessionsProvider =
 );
 
 typedef AllSessionsRef = AutoDisposeFutureProviderRef<List<PracticeSession>>;
-String _$allProgressHash() => r'dc665154fca0f401183105b21789f0d63d33013e';
+String _$allProgressHash() => r'0a5ab76926af1c0277e7927492858487a73be734';
 
 /// See also [allProgress].
 @ProviderFor(allProgress)
@@ -52,9 +52,14 @@ final last14DaysMinutesProvider =
 );
 
 typedef Last14DaysMinutesRef = AutoDisposeFutureProviderRef<List<DailyMinutes>>;
-String _$streakDaysHash() => r'286e6c3c9848c1115a299ea16eb22b28e4597a21';
+String _$streakDaysHash() => r'2d53b857e9a5cb86b15cf055b25ca392aba7bef1';
 
-/// See also [streakDays].
+/// Current streak with a one-day grace: a single missed day does not reset the
+/// streak (it consumes the "freeze"), but two missed days in a row do. This also
+/// means the streak still shows the day after practicing, even before you've
+/// practiced again today.
+///
+/// Copied from [streakDays].
 @ProviderFor(streakDays)
 final streakDaysProvider = AutoDisposeFutureProvider<int>.internal(
   streakDays,
@@ -66,8 +71,40 @@ final streakDaysProvider = AutoDisposeFutureProvider<int>.internal(
 );
 
 typedef StreakDaysRef = AutoDisposeFutureProviderRef<int>;
-String _$bpmHistoryForRudimentHash() =>
-    r'96b03be252e41835b8c9ba1b785b30ad23944ff0';
+String _$longestStreakHash() => r'002c483d175f81929a0ce2526892e8320b302874';
+
+/// The longest consecutive-day run ever recorded (no grace — true record).
+///
+/// Copied from [longestStreak].
+@ProviderFor(longestStreak)
+final longestStreakProvider = AutoDisposeFutureProvider<int>.internal(
+  longestStreak,
+  name: r'longestStreakProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$longestStreakHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef LongestStreakRef = AutoDisposeFutureProviderRef<int>;
+String _$todayStatusHash() => r'da0a2897529d8adb80d68ea7124263e3f4985691';
+
+/// Today's minutes vs. the user's daily goal.
+///
+/// Copied from [todayStatus].
+@ProviderFor(todayStatus)
+final todayStatusProvider = AutoDisposeFutureProvider<TodayStatus>.internal(
+  todayStatus,
+  name: r'todayStatusProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$todayStatusHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef TodayStatusRef = AutoDisposeFutureProviderRef<TodayStatus>;
+String _$practiceCalendarHash() => r'79eae58fbc3f283416a167d963cc2f654e0524f8';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -89,6 +126,155 @@ class _SystemHash {
     return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
   }
 }
+
+/// Per-day practice minutes for the last [days] days (oldest first), for the
+/// calendar heatmap.
+///
+/// Copied from [practiceCalendar].
+@ProviderFor(practiceCalendar)
+const practiceCalendarProvider = PracticeCalendarFamily();
+
+/// Per-day practice minutes for the last [days] days (oldest first), for the
+/// calendar heatmap.
+///
+/// Copied from [practiceCalendar].
+class PracticeCalendarFamily extends Family<AsyncValue<List<DailyMinutes>>> {
+  /// Per-day practice minutes for the last [days] days (oldest first), for the
+  /// calendar heatmap.
+  ///
+  /// Copied from [practiceCalendar].
+  const PracticeCalendarFamily();
+
+  /// Per-day practice minutes for the last [days] days (oldest first), for the
+  /// calendar heatmap.
+  ///
+  /// Copied from [practiceCalendar].
+  PracticeCalendarProvider call({
+    int days = 119,
+  }) {
+    return PracticeCalendarProvider(
+      days: days,
+    );
+  }
+
+  @override
+  PracticeCalendarProvider getProviderOverride(
+    covariant PracticeCalendarProvider provider,
+  ) {
+    return call(
+      days: provider.days,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'practiceCalendarProvider';
+}
+
+/// Per-day practice minutes for the last [days] days (oldest first), for the
+/// calendar heatmap.
+///
+/// Copied from [practiceCalendar].
+class PracticeCalendarProvider
+    extends AutoDisposeFutureProvider<List<DailyMinutes>> {
+  /// Per-day practice minutes for the last [days] days (oldest first), for the
+  /// calendar heatmap.
+  ///
+  /// Copied from [practiceCalendar].
+  PracticeCalendarProvider({
+    int days = 119,
+  }) : this._internal(
+          (ref) => practiceCalendar(
+            ref as PracticeCalendarRef,
+            days: days,
+          ),
+          from: practiceCalendarProvider,
+          name: r'practiceCalendarProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$practiceCalendarHash,
+          dependencies: PracticeCalendarFamily._dependencies,
+          allTransitiveDependencies:
+              PracticeCalendarFamily._allTransitiveDependencies,
+          days: days,
+        );
+
+  PracticeCalendarProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.days,
+  }) : super.internal();
+
+  final int days;
+
+  @override
+  Override overrideWith(
+    FutureOr<List<DailyMinutes>> Function(PracticeCalendarRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: PracticeCalendarProvider._internal(
+        (ref) => create(ref as PracticeCalendarRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        days: days,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<List<DailyMinutes>> createElement() {
+    return _PracticeCalendarProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PracticeCalendarProvider && other.days == days;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, days.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+mixin PracticeCalendarRef on AutoDisposeFutureProviderRef<List<DailyMinutes>> {
+  /// The parameter `days` of this provider.
+  int get days;
+}
+
+class _PracticeCalendarProviderElement
+    extends AutoDisposeFutureProviderElement<List<DailyMinutes>>
+    with PracticeCalendarRef {
+  _PracticeCalendarProviderElement(super.provider);
+
+  @override
+  int get days => (origin as PracticeCalendarProvider).days;
+}
+
+String _$bpmHistoryForRudimentHash() =>
+    r'96b03be252e41835b8c9ba1b785b30ad23944ff0';
 
 /// See also [bpmHistoryForRudiment].
 @ProviderFor(bpmHistoryForRudiment)
