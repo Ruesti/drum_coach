@@ -14,10 +14,9 @@ class LessonsScreen extends ConsumerStatefulWidget {
 }
 
 class _LessonsScreenState extends ConsumerState<LessonsScreen> {
-  // null = all, 'rudiments' = standard rudiments only, 'uebungen' = free exercises
+  // 'all' | 'rudiments' | 'marching' | 'uebungen' (browse by focus) | 'plan'
   String _filter = 'all';
 
-  static const _uebungenCategory = 'Übungen';
   static const _marchingCategory = 'Marching Snare';
   static const _rudimentCategories = [
     'Rolls', 'Paradiddles', 'Flams', 'Ruffs', 'Ghost Notes', 'Linear Patterns',
@@ -29,7 +28,7 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
 
     final showCategories = switch (_filter) {
       'rudiments' => _rudimentCategories,
-      'uebungen'  => [_uebungenCategory],
+      'uebungen'  => exerciseCategories,
       'marching'  => [_marchingCategory],
       _           => rudimentCategories,
     };
@@ -67,21 +66,29 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
                   selected: _filter == 'uebungen',
                   onTap: () => setState(() => _filter = 'uebungen'),
                 ),
+                const SizedBox(width: 8),
+                _FilterChip(
+                  label: 'Plan',
+                  selected: _filter == 'plan',
+                  onTap: () => setState(() => _filter = 'plan'),
+                ),
               ],
             ),
           ),
           const Divider(height: 1, color: Colors.white12),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.only(bottom: 24),
-              children: [
-                for (final category in showCategories) ...[
-                  _CategoryHeader(category: category),
-                  for (final rudiment in grouped[category] ?? [])
-                    _RudimentTile(rudiment: rudiment),
-                ],
-              ],
-            ),
+            child: _filter == 'plan'
+                ? const _PracticePlanList()
+                : ListView(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    children: [
+                      for (final category in showCategories) ...[
+                        _CategoryHeader(category: category),
+                        for (final rudiment in grouped[category] ?? [])
+                          _RudimentTile(rudiment: rudiment),
+                      ],
+                    ],
+                  ),
           ),
         ],
       ),
@@ -158,6 +165,9 @@ class _RudimentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: rudiment.level != null
+          ? _LevelBadge(level: rudiment.level!)
+          : null,
       title: Text(
         rudiment.name,
         style: const TextStyle(fontWeight: FontWeight.w600),
@@ -176,6 +186,63 @@ class _RudimentTile extends StatelessWidget {
         ],
       ),
       onTap: () => context.push('/lessons/${rudiment.id}'),
+    );
+  }
+}
+
+/// The guided practice plan: every exercise in level order.
+class _PracticePlanList extends ConsumerWidget {
+  const _PracticePlanList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final plan = ref.watch(practicePlanProvider);
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        const _CategoryHeader(category: 'Übungsplan — Schritt für Schritt'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Text(
+            'Arbeite die Übungen der Reihe nach durch. Jede Stufe baut auf der '
+            'vorherigen auf — erhöhe das Tempo erst, wenn eine Übung sauber '
+            'sitzt.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.45),
+              fontSize: 12,
+              height: 1.5,
+            ),
+          ),
+        ),
+        for (final rudiment in plan) _RudimentTile(rudiment: rudiment),
+      ],
+    );
+  }
+}
+
+class _LevelBadge extends StatelessWidget {
+  final int level;
+  const _LevelBadge({required this.level});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 30,
+      height: 30,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.deepOrange.withValues(alpha: 0.12),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.deepOrange.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        '$level',
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          color: Colors.deepOrange,
+        ),
+      ),
     );
   }
 }

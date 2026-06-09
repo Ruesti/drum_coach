@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../features/lessons/models/rudiment.dart';
 
-/// Renders a pattern as an engraved single-line percussion staff:
-/// noteheads + stems + beams/flags, accents (>), ghost notes, grace notes,
-/// rests, and R/L sticking letters beneath each note. When [activeIndex] is
-/// set (during playback) a running cursor highlights that note.
+/// Renders a pattern as an engraved five-line drum staff: a percussion clef,
+/// time signature, noteheads on the middle line (snare) + stems + beams/flags,
+/// accents (>), ghost notes, grace notes, rests, and R/L sticking letters
+/// beneath each note. When [activeIndex] is set (during playback) a running
+/// cursor highlights that note.
 class NotationStaffWidget extends StatelessWidget {
   final Rudiment rudiment;
   final int? activeIndex;
@@ -56,16 +57,23 @@ class _StaffPainter extends CustomPainter {
 
   // ── Layout metrics ────────────────────────────────────────────────────────
   static const double _cellW = 30;
-  static const double _leftPad = 14;
+  static const double _leftPad = 10;
   static const double _rightPad = 14;
   static const double _barGap = 14; // extra space after a barline
   static const double _rowH = 104;
 
+  // Space reserved at the left of each system for the clef (+ time signature).
+  static const double _systemPad = 40;
+
+  // Five-line staff geometry.
+  static const double _lineGap = 6; // vertical gap between adjacent staff lines
+  // Middle (3rd) line = snare = notehead center.
+
   // Vertical positions within a row.
-  static const double _accentY = 18; // accents / triplet marks / grace tops
-  static const double _stemTopY = 26;
-  static const double _staffY = 60; // notehead center / staff line
-  static const double _letterY = 84; // R/L letters
+  static const double _accentY = 8; // accents / triplet marks / grace tops
+  static const double _stemTopY = 18;
+  static const double _midY = 54; // middle staff line / notehead center
+  static const double _letterY = 90; // R/L letters (below the bottom line)
 
   static const double _headRx = 6;
   static const double _headRy = 4.6;
@@ -91,7 +99,7 @@ class _StaffPainter extends CustomPainter {
 
   /// Cells that fit per row, snapped down to a whole number of bars.
   int get _cellsPerRow {
-    final usable = maxWidth - _leftPad - _rightPad;
+    final usable = maxWidth - _leftPad - _rightPad - _systemPad;
     final bars = (usable / (_cellsPerBar * _cellW + _barGap)).floor();
     if (bars < 1) {
       // Fall back to as many cells as fit, at least one.
@@ -107,7 +115,11 @@ class _StaffPainter extends CustomPainter {
   // Horizontal x of a cell within its row (0-based position in the row).
   double _xForPosInRow(int posInRow) {
     final bar = posInRow ~/ _cellsPerBar;
-    return _leftPad + posInRow * _cellW + bar * _barGap + _cellW / 2;
+    return _leftPad +
+        _systemPad +
+        posInRow * _cellW +
+        bar * _barGap +
+        _cellW / 2;
   }
 
   @override
@@ -122,25 +134,35 @@ class _StaffPainter extends CustomPainter {
 
   void _paintRow(Canvas canvas, int row, int start, int end) {
     final baseY = row * _rowH;
-    final staffY = baseY + _staffY;
+    final staffY = baseY + _midY; // middle line = snare = notehead center
     final count = end - start;
+    final topLineY = staffY - 2 * _lineGap;
+    final bottomLineY = staffY + 2 * _lineGap;
 
-    // Staff line spanning this row's used width.
+    // Five staff lines spanning this row's used width.
     final lineEndX = _xForPosInRow(count - 1) + _cellW / 2;
     final staffPaint = Paint()
       ..color = _staffColor
-      ..strokeWidth = 1.5;
-    canvas.drawLine(
-        Offset(_leftPad / 2, staffY), Offset(lineEndX, staffY), staffPaint);
+      ..strokeWidth = 1.2;
+    const lineStartX = _leftPad / 2;
+    for (var l = 0; l < 5; l++) {
+      final y = topLineY + l * _lineGap;
+      canvas.drawLine(
+          Offset(lineStartX, y), Offset(lineEndX, y), staffPaint);
+    }
 
-    // Barlines.
+    // Percussion clef + time signature (time signature only on the first row).
+    _drawClef(canvas, staffY);
+    if (row == 0) _drawTimeSignature(canvas, staffY);
+
+    // Barlines (full staff height).
     final barPaint = Paint()
       ..color = _staffColor
       ..strokeWidth = 1.2;
     for (var pos = _cellsPerBar; pos < count; pos += _cellsPerBar) {
       final x = _xForPosInRow(pos) - _cellW / 2 - _barGap / 2;
       canvas.drawLine(
-          Offset(x, staffY - 14), Offset(x, staffY + 14), barPaint);
+          Offset(x, topLineY), Offset(x, bottomLineY), barPaint);
     }
 
     // Active cursor band.
@@ -276,6 +298,32 @@ class _StaffPainter extends CustomPainter {
   }
 
   // ── Glyph helpers ───────────────────────────────────────────────────────--
+  /// Neutral percussion clef: two thick vertical bars centred on the staff.
+  void _drawClef(Canvas canvas, double staffY) {
+    final paint = Paint()..color = _inkColor.withValues(alpha: 0.85);
+    final top = staffY - _lineGap * 1.3;
+    final h = _lineGap * 2.6;
+    for (final bx in const [_leftPad + 14.0, _leftPad + 19.0]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(bx, top, 3.0, h),
+          const Radius.circular(1.2),
+        ),
+        paint,
+      );
+    }
+  }
+
+  /// Time signature: [beatsPerBar] over 4 (quarter-note pulse), stacked.
+  void _drawTimeSignature(Canvas canvas, double staffY) {
+    const x = _leftPad + 30.0;
+    _drawText(canvas, '$beatsPerBar', Offset(x, staffY - _lineGap), _inkColor,
+        15,
+        bold: true);
+    _drawText(canvas, '4', Offset(x, staffY + _lineGap), _inkColor, 15,
+        bold: true);
+  }
+
   void _drawHead(Canvas canvas, Offset c, Color color,
       {bool ghost = false, bool active = false}) {
     final rx = ghost ? _headRx * 0.78 : _headRx;

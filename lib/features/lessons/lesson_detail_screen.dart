@@ -181,26 +181,41 @@ class _TechniqueCard extends StatelessWidget {
 class _Legend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 8,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _LegendItem(
-          symbol: '>',
-          color: Colors.deepOrange,
-          label: 'Akzent',
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            'Snare auf der mittleren Linie; die Taktart steht am Anfang.',
+            style: Theme.of(context)
+                .textTheme
+                .labelSmall
+                ?.copyWith(color: Colors.white38),
+          ),
         ),
+        Wrap(
+          spacing: 16,
+          runSpacing: 8,
+          children: [
+            _LegendItem(
+              symbol: '>',
+              color: Colors.deepOrange,
+              label: 'Akzent',
+            ),
         _LegendItem(
           symbol: '( )',
           color: Colors.white.withValues(alpha: 0.4),
           label: 'Ghost Note',
           small: true,
         ),
-        _LegendItem(
-          symbol: '♪',
-          color: Colors.white.withValues(alpha: 0.4),
-          label: 'Vorschlag (Flam/Drag)',
-          small: true,
+            _LegendItem(
+              symbol: '♪',
+              color: Colors.white.withValues(alpha: 0.4),
+              label: 'Vorschlag (Flam/Drag)',
+              small: true,
+            ),
+          ],
         ),
       ],
     );

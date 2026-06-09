@@ -24,3 +24,19 @@ Rudiment rudimentById(RudimentByIdRef ref, String id) {
         orElse: () => throw ArgumentError('Unknown rudiment id: $id'),
       );
 }
+
+/// The free exercises ("Übungen") as a single ordered progression, sorted by
+/// [Rudiment.level] then [Difficulty] — the guided practice plan.
+@riverpod
+List<Rudiment> practicePlan(PracticePlanRef ref) {
+  final plan = ref
+      .watch(rudimentsProvider)
+      .where((r) => exerciseCategories.contains(r.category))
+      .toList()
+    ..sort((a, b) {
+      final byLevel = (a.level ?? 1 << 20).compareTo(b.level ?? 1 << 20);
+      if (byLevel != 0) return byLevel;
+      return a.difficulty.index.compareTo(b.difficulty.index);
+    });
+  return plan;
+}

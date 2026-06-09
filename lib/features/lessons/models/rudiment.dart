@@ -79,6 +79,10 @@ class Rudiment {
   final List<TechniqueSection> technique;
   final String? svgAssetPath;
 
+  /// Position in the curated practice-plan progression (1 = first). Used by the
+  /// "Übungen" exercises to order the plan; `null` for standard rudiments.
+  final int? level;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -92,5 +96,6 @@ class Rudiment {
     this.beatsPerBar = 4,
     this.technique = const [],
     this.svgAssetPath,
+    this.level,
   });
 }

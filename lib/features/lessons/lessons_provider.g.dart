@@ -185,5 +185,23 @@ class _RudimentByIdProviderElement extends AutoDisposeProviderElement<Rudiment>
   @override
   String get id => (origin as RudimentByIdProvider).id;
 }
+
+String _$practicePlanHash() => r'c89e61c83fba9bd27af8f72c95038618ad818d67';
+
+/// The free exercises ("Übungen") as a single ordered progression, sorted by
+/// [Rudiment.level] then [Difficulty] — the guided practice plan.
+///
+/// Copied from [practicePlan].
+@ProviderFor(practicePlan)
+final practicePlanProvider = AutoDisposeProvider<List<Rudiment>>.internal(
+  practicePlan,
+  name: r'practicePlanProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$practicePlanHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef PracticePlanRef = AutoDisposeProviderRef<List<Rudiment>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
