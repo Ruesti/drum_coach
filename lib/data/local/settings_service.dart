@@ -30,4 +30,13 @@ class SettingsService {
   static bool get reminderEnabled => _prefs.getBool('reminder_enabled') ?? true;
   static Future<void> setReminderEnabled(bool v) =>
       _prefs.setBool('reminder_enabled', v);
+
+  static String get claudeApiKey => _prefs.getString('claude_api_key') ?? '';
+  static Future<void> setClaudeApiKey(String v) =>
+      _prefs.setString('claude_api_key', v);
+
+  static bool get micAnalysisEnabled =>
+      _prefs.getBool('mic_analysis_enabled') ?? false;
+  static Future<void> setMicAnalysisEnabled(bool v) =>
+      _prefs.setBool('mic_analysis_enabled', v);
 }

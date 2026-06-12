@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/local/settings_service.dart';
 import '../../services/notification_service.dart';
 
-// Replace with your own Ko-fi / Buy Me a Coffee URL
 const _donationUrl = 'https://ko-fi.com/drumcoach';
 
 class SettingsScreen extends StatefulWidget {
@@ -18,6 +18,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late int _targetMin;
   late bool _haptics;
   late bool _reminders;
+  late bool _micEnabled;
+  final _apiKeyController = TextEditingController();
+  bool _apiKeyObscured = true;
 
   @override
   void initState() {
@@ -25,6 +28,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _targetMin = SettingsService.practiceTargetMinutes;
     _haptics = SettingsService.hapticsEnabled;
     _reminders = SettingsService.reminderEnabled;
+    _micEnabled = SettingsService.micAnalysisEnabled;
+    _apiKeyController.text = SettingsService.claudeApiKey;
+  }
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
   }
 
   Future<void> _setTarget(int min) async {
@@ -45,6 +56,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await NotificationService.cancelReminder();
     }
     setState(() => _reminders = v);
+  }
+
+  Future<void> _setMicEnabled(bool v) async {
+    await SettingsService.setMicAnalysisEnabled(v);
+    setState(() => _micEnabled = v);
+  }
+
+  Future<void> _saveApiKey() async {
+    await SettingsService.setClaudeApiKey(_apiKeyController.text.trim());
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('API key saved')),
+      );
+    }
   }
 
   Future<void> _openDonation() async {
@@ -74,10 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ── Übungsziel ────────────────────────────────────────────────
           _SectionLabel('ÜBUNGSZIEL PRO TAG'),
           const SizedBox(height: 10),
-          _TargetRow(
-            value: _targetMin,
-            onChanged: _setTarget,
-          ),
+          _TargetRow(value: _targetMin, onChanged: _setTarget),
           const SizedBox(height: 28),
 
           // ── Gerät ─────────────────────────────────────────────────────
@@ -97,6 +119,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: 'Erinnert dich täglich ans Üben',
             value: _reminders,
             onChanged: _setReminders,
+          ),
+          const SizedBox(height: 28),
+
+          // ── AI Coaching ────────────────────────────────────────────────
+          _SectionLabel('AI COACHING'),
+          const SizedBox(height: 10),
+          _SettingsTile(
+            icon: Icons.mic_outlined,
+            title: 'Mikrofon-Analyse',
+            subtitle: 'Misst Timing & Dynamik während der Session',
+            value: _micEnabled,
+            onChanged: _setMicEnabled,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Claude API Key',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Get a key at console.anthropic.com',
+                  style: TextStyle(color: Colors.white38, fontSize: 11),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _apiKeyController,
+                  obscureText: _apiKeyObscured,
+                  style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
+                  decoration: InputDecoration(
+                    hintText: 'sk-ant-…',
+                    hintStyle: const TextStyle(color: Colors.white24),
+                    filled: true,
+                    fillColor: const Color(0xFF151515),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _apiKeyObscured ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.white38,
+                        size: 18,
+                      ),
+                      onPressed: () =>
+                          setState(() => _apiKeyObscured = !_apiKeyObscured),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _saveApiKey,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.deepOrange,
+                      side: const BorderSide(color: Colors.deepOrange),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    child: const Text('Save API Key'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          ListTile(
+            tileColor: const Color(0xFF1E1E1E),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            leading: const Icon(Icons.auto_awesome, color: Colors.white54),
+            title: const Text('Exercise Generator',
+                style: TextStyle(fontSize: 14)),
+            subtitle: const Text('AI-generated custom patterns',
+                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+            onTap: () => context.push('/coaching/exercise-generator'),
           ),
         ],
       ),

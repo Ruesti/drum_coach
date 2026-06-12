@@ -3,8 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../../data/local/settings_service.dart';
 import '../../shared/widgets/sticking_pattern_widget.dart';
+import '../coaching/models/session_analysis.dart';
+import '../coaching/services/ai_coaching_service.dart';
+import '../coaching/services/mic_analysis_service.dart';
+import '../coaching/widgets/coach_feedback_card.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/rudiment.dart';
 import '../metronome/metronome_engine.dart';
@@ -29,9 +35,18 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
 class _PracticeSessionScreenState
     extends ConsumerState<PracticeSessionScreen> {
   int _elapsedSeconds = 0;
-  int? _goalSeconds; // null = no limit
+  int? _goalSeconds;
   Timer? _ticker;
   bool _sessionFinished = false;
+
+  // Beat log for mic correlation: recorded in build via ref.listen
+  final List<BeatRecord> _beatLog = [];
+
+  // Mic analysis
+  MicAnalysisService? _micService;
+  bool _micRecording = false;
+
+  final _aiService = AICoachingService();
 
   @override
   void initState() {
@@ -40,7 +55,16 @@ class _PracticeSessionScreenState
       final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
       ref.read(metronomeNotifierProvider.notifier)
           .setPatternVolumes(_volumesFor(rudiment.sticking));
+      _initMicIfEnabled();
     });
+  }
+
+  Future<void> _initMicIfEnabled() async {
+    if (!SettingsService.micAnalysisEnabled) return;
+    final status = await Permission.microphone.request();
+    if (status.isGranted && mounted) {
+      _micService = MicAnalysisService();
+    }
   }
 
   static List<double> _volumesFor(List<StrokeBeat> sticking) =>
@@ -56,7 +80,9 @@ class _PracticeSessionScreenState
     final notifier = ref.read(metronomeNotifierProvider.notifier);
     notifier
       ..stop()
-      ..setPatternVolumes(null); // restore subdivision-based accents
+      ..setPatternVolumes(null);
+    _micService?.stopRecording();
+    _micService?.dispose();
     super.dispose();
   }
 
@@ -76,9 +102,26 @@ class _PracticeSessionScreenState
     _ticker = null;
   }
 
+  Future<void> _startMicRecording() async {
+    if (_micService == null || _micRecording) return;
+    try {
+      await _micService!.startRecording();
+      if (mounted) setState(() => _micRecording = true);
+    } catch (_) {}
+  }
+
+  Future<void> _stopMicRecording() async {
+    if (!_micRecording) return;
+    try {
+      await _micService!.stopRecording();
+      _micRecording = false;
+    } catch (_) {}
+  }
+
   String get _timerLabel {
-    final remaining =
-        _goalSeconds != null ? (_goalSeconds! - _elapsedSeconds).clamp(0, _goalSeconds!) : null;
+    final remaining = _goalSeconds != null
+        ? (_goalSeconds! - _elapsedSeconds).clamp(0, _goalSeconds!)
+        : null;
     final seconds = remaining ?? _elapsedSeconds;
     final m = seconds ~/ 60;
     final s = seconds % 60;
@@ -90,6 +133,7 @@ class _PracticeSessionScreenState
     final metronome = ref.read(metronomeNotifierProvider.notifier);
     metronome.stop();
     _stopTicker();
+    await _stopMicRecording();
 
     if (!mounted) return;
     await showModalBottomSheet<void>(
@@ -99,11 +143,11 @@ class _PracticeSessionScreenState
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _RatingSheet(onRating: _saveAndPop),
+      builder: (_) => _RatingSheet(onRating: _saveAndShowFeedback),
     );
   }
 
-  Future<void> _saveAndPop(int rating) async {
+  Future<void> _saveAndShowFeedback(int rating) async {
     if (_sessionFinished) return;
     _sessionFinished = true;
 
@@ -118,6 +162,36 @@ class _PracticeSessionScreenState
           targetBpm: rudiment.targetBpm,
         );
 
+    // Analyse mic data if available
+    SessionAnalysis? analysis;
+    if (_micService != null && _beatLog.isNotEmpty) {
+      analysis = _micService!.analyze(
+        beatLog: _beatLog,
+        sticking: rudiment.sticking,
+        bpm: metState.bpm,
+      );
+    }
+
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _FeedbackSheet(
+        rudimentName: rudiment.name,
+        achievedBpm: metState.bpm,
+        targetBpm: rudiment.targetBpm,
+        durationSeconds: _elapsedSeconds,
+        rating: rating,
+        analysis: analysis,
+        aiService: _aiService,
+        onClose: () => Navigator.pop(context),
+      ),
+    );
+
     if (mounted) context.pop();
   }
 
@@ -128,8 +202,20 @@ class _PracticeSessionScreenState
     final notifier = ref.read(metronomeNotifierProvider.notifier);
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
+      // Record beat timestamps for mic correlation
+      if (next.isPlaying &&
+          next.currentBeatIndex >= 0 &&
+          next.currentBeatIndex != (prev?.currentBeatIndex ?? -2)) {
+        _beatLog.add((
+          beatIndex: next.currentBeatIndex,
+          timestamp: DateTime.now(),
+        ));
+      }
+
+      // Start/stop ticker and mic with metronome
       if (next.isPlaying && !(prev?.isPlaying ?? false)) {
         _startTicker();
+        _startMicRecording();
       } else if (!next.isPlaying && (prev?.isPlaying ?? false)) {
         _stopTicker();
       }
@@ -149,6 +235,15 @@ class _PracticeSessionScreenState
       appBar: AppBar(
         title: Text(rudiment.name),
         actions: [
+          if (SettingsService.micAnalysisEnabled)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(
+                _micRecording ? Icons.mic : Icons.mic_off,
+                size: 18,
+                color: _micRecording ? Colors.deepOrange : Colors.white24,
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
@@ -179,7 +274,6 @@ class _PracticeSessionScreenState
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
             children: [
-              // Live sticking pattern — scrollable so long patterns never overflow
               Expanded(
                 child: SingleChildScrollView(
                   child: Container(
@@ -199,8 +293,6 @@ class _PracticeSessionScreenState
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Metronome controls
               _CompactMetronome(
                 bpm: metState.bpm,
                 isPlaying: metState.isPlaying,
@@ -210,8 +302,6 @@ class _PracticeSessionScreenState
                 onSoundTypeChanged: notifier.setSoundType,
               ),
               const SizedBox(height: 10),
-
-              // Timer goal chips (only before session starts)
               if (!metState.isPlaying && _elapsedSeconds == 0)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -220,7 +310,6 @@ class _PracticeSessionScreenState
                     onSelected: (s) => setState(() => _goalSeconds = s),
                   ),
                 ),
-
               const SizedBox(height: 4),
               ElevatedButton.icon(
                 onPressed: _showRatingSheet,
@@ -244,7 +333,7 @@ class _PracticeSessionScreenState
   }
 }
 
-// ── Timer goal row ────────────────────────────────────────────────────────────
+// ── Timer goal row ─────────────────────────────────────────────────────────────
 
 class _TimerGoalRow extends StatelessWidget {
   final int? selected;
@@ -256,7 +345,7 @@ class _TimerGoalRow extends StatelessWidget {
     (label: '5 min', seconds: 5 * 60),
     (label: '10 min', seconds: 10 * 60),
     (label: '15 min', seconds: 15 * 60),
-    (label: '∞', seconds: 0), // 0 = no limit sentinel
+    (label: '∞', seconds: 0),
   ];
 
   @override
@@ -289,8 +378,7 @@ class _TimerGoalRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color:
-                      isSelected ? Colors.deepOrange : Colors.white54,
+                  color: isSelected ? Colors.deepOrange : Colors.white54,
                 ),
               ),
             ),
@@ -301,7 +389,7 @@ class _TimerGoalRow extends StatelessWidget {
   }
 }
 
-// ── Compact metronome ─────────────────────────────────────────────────────────
+// ── Compact metronome ──────────────────────────────────────────────────────────
 
 class _CompactMetronome extends StatelessWidget {
   final int bpm;
@@ -330,7 +418,6 @@ class _CompactMetronome extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Play/stop + BPM + slider
           Row(
             children: [
               GestureDetector(
@@ -353,7 +440,9 @@ class _CompactMetronome extends StatelessWidget {
               Text(
                 '$bpm',
                 style: const TextStyle(
-                    fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white),
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
               const SizedBox(width: 4),
               const Text('BPM',
@@ -371,7 +460,6 @@ class _CompactMetronome extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Sound type toggle
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: SoundType.values.map((t) {
@@ -413,7 +501,7 @@ class _CompactMetronome extends StatelessWidget {
   }
 }
 
-// ── Rating sheet ──────────────────────────────────────────────────────────────
+// ── Rating sheet ───────────────────────────────────────────────────────────────
 
 class _RatingSheet extends StatelessWidget {
   final void Function(int rating) onRating;
@@ -523,6 +611,208 @@ class _RatingButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Feedback sheet ─────────────────────────────────────────────────────────────
+
+class _FeedbackSheet extends StatefulWidget {
+  final String rudimentName;
+  final int achievedBpm;
+  final int targetBpm;
+  final int durationSeconds;
+  final int rating;
+  final SessionAnalysis? analysis;
+  final AICoachingService aiService;
+  final VoidCallback onClose;
+
+  const _FeedbackSheet({
+    required this.rudimentName,
+    required this.achievedBpm,
+    required this.targetBpm,
+    required this.durationSeconds,
+    required this.rating,
+    required this.analysis,
+    required this.aiService,
+    required this.onClose,
+  });
+
+  @override
+  State<_FeedbackSheet> createState() => _FeedbackSheetState();
+}
+
+class _FeedbackSheetState extends State<_FeedbackSheet> {
+  String? _feedback;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final apiKey = SettingsService.claudeApiKey;
+    if (apiKey.isNotEmpty) _fetchFeedback(apiKey);
+  }
+
+  Future<void> _fetchFeedback(String apiKey) async {
+    setState(() => _loading = true);
+    final result = await widget.aiService.getCoachingFeedback(
+      apiKey: apiKey,
+      rudimentName: widget.rudimentName,
+      achievedBpm: widget.achievedBpm,
+      targetBpm: widget.targetBpm,
+      durationSeconds: widget.durationSeconds,
+      rating: widget.rating,
+      analysis: widget.analysis,
+    );
+    if (mounted) {
+      setState(() {
+        _feedback = result;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasMicData = widget.analysis?.hasData ?? false;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+          24, 24, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text('Session complete',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(
+            '${widget.achievedBpm} BPM  ·  '
+            '${widget.durationSeconds ~/ 60}min ${widget.durationSeconds % 60}s',
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+          if (hasMicData && widget.analysis?.timing != null) ...[
+            const SizedBox(height: 16),
+            _AnalysisSummary(analysis: widget.analysis!),
+          ],
+          CoachFeedbackCard(
+            feedback: _feedback,
+            isLoading: _loading,
+            hasAnalysis: hasMicData,
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: widget.onClose,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepOrange,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Done'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnalysisSummary extends StatelessWidget {
+  final SessionAnalysis analysis;
+  const _AnalysisSummary({required this.analysis});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = analysis.timing!;
+    final d = analysis.dynamics;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Mic Analysis',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Colors.white70)),
+          const SizedBox(height: 10),
+          _Row(
+            label: 'Overall timing',
+            value:
+                '${t.overallDeviationMs > 0 ? '+' : ''}${t.overallDeviationMs.toStringAsFixed(1)} ms '
+                '(${t.overallDeviationMs > 0 ? 'late' : 'early'})',
+          ),
+          _Row(
+            label: 'R hand',
+            value:
+                '${t.rightHandDeviationMs > 0 ? '+' : ''}${t.rightHandDeviationMs.toStringAsFixed(1)} ms',
+          ),
+          _Row(
+            label: 'L hand',
+            value:
+                '${t.leftHandDeviationMs > 0 ? '+' : ''}${t.leftHandDeviationMs.toStringAsFixed(1)} ms',
+          ),
+          _Row(
+            label: 'Consistency',
+            value: '±${t.jitterMs.toStringAsFixed(1)} ms jitter',
+          ),
+          if (d != null)
+            _Row(
+              label: 'Dynamics R / L',
+              value:
+                  '${(d.rightHandLevel * 100).round()}% / ${(d.leftHandLevel * 100).round()}%',
+            ),
+          _Row(
+            label: 'Hits detected',
+            value:
+                '${analysis.detectedHits} / ${analysis.expectedHits} expected',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  final String label;
+  final String value;
+  const _Row({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Text(label,
+              style: const TextStyle(color: Colors.white38, fontSize: 12)),
+          const Spacer(),
+          Text(value,
+              style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }
