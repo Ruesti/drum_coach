@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../data/local/settings_service.dart';
-import '../../shared/widgets/sticking_pattern_widget.dart';
+import '../../shared/widgets/notation_staff_widget.dart';
 import '../coaching/models/session_analysis.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
@@ -54,7 +54,8 @@ class _PracticeSessionScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
       ref.read(metronomeNotifierProvider.notifier)
-          .setPatternVolumes(_volumesFor(rudiment.sticking));
+        ..setSubdivision(_subdivisionFor(rudiment.gridUnit))
+        ..setPatternVolumes(_volumesFor(rudiment.sticking));
       _initMicIfEnabled();
     });
   }
@@ -67,8 +68,16 @@ class _PracticeSessionScreenState
     }
   }
 
+  static Subdivision _subdivisionFor(NoteGrid grid) => switch (grid) {
+        NoteGrid.quarter => Subdivision.quarter,
+        NoteGrid.eighth => Subdivision.eighth,
+        NoteGrid.triplet => Subdivision.triplet,
+        NoteGrid.sixteenth => Subdivision.sixteenth,
+      };
+
   static List<double> _volumesFor(List<StrokeBeat> sticking) =>
       sticking.map((b) {
+        if (b.isRest) return 0.0;
         if (b.isAccent) return 2.0;
         if (b.isGhost) return 0.25;
         return 0.85;
@@ -80,7 +89,8 @@ class _PracticeSessionScreenState
     final notifier = ref.read(metronomeNotifierProvider.notifier);
     notifier
       ..stop()
-      ..setPatternVolumes(null);
+      ..setPatternVolumes(null)
+      ..setSubdivision(Subdivision.quarter);
     _micService?.stopRecording();
     _micService?.dispose();
     super.dispose();
@@ -284,10 +294,9 @@ class _PracticeSessionScreenState
                       color: const Color(0xFF1A1A1A),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: StickingPatternWidget(
-                      pattern: rudiment.sticking,
-                      activeBeatIndex: activeBeat,
-                      beatBoxSize: 40,
+                    child: NotationStaffWidget(
+                      rudiment: rudiment,
+                      activeIndex: activeBeat,
                     ),
                   ),
                 ),

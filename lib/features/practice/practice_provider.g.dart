@@ -6,7 +6,7 @@ part of 'practice_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$recentSessionsHash() => r'bc6a5934d5b645761fd5f584a296467bf3af579b';
+String _$recentSessionsHash() => r'1d78965a8c4ea5726375813397648cebd55e722c';
 
 /// See also [recentSessions].
 @ProviderFor(recentSessions)
@@ -22,7 +22,7 @@ final recentSessionsProvider =
 );
 
 typedef RecentSessionsRef = AutoDisposeFutureProviderRef<List<PracticeSession>>;
-String _$practiceNotifierHash() => r'2e3c0556569a80849f5bc968300c50098498e4ad';
+String _$practiceNotifierHash() => r'df8d10b45d323e9837af2ff1cfa485f7167b32df';
 
 /// See also [PracticeNotifier].
 @ProviderFor(PracticeNotifier)

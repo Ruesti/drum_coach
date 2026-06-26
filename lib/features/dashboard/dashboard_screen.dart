@@ -11,6 +11,8 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final streakAsync = ref.watch(streakDaysProvider);
+    final bestAsync = ref.watch(longestStreakProvider);
+    final todayAsync = ref.watch(todayStatusProvider);
     final routineAsync = ref.watch(dailyRoutineProvider);
     final sessionsAsync = ref.watch(allSessionsProvider);
 
@@ -35,10 +37,11 @@ class DashboardScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           // Greeting + streak
-          streakAsync.when(
-            loading: () => _GreetingCard(greeting: greeting, streak: 0),
-            error: (_, __) => _GreetingCard(greeting: greeting, streak: 0),
-            data: (streak) => _GreetingCard(greeting: greeting, streak: streak),
+          _GreetingCard(
+            greeting: greeting,
+            streak: streakAsync.valueOrNull ?? 0,
+            best: bestAsync.valueOrNull ?? 0,
+            today: todayAsync.valueOrNull,
           ),
           const SizedBox(height: 16),
 
@@ -93,10 +96,18 @@ class DashboardScreen extends ConsumerWidget {
 class _GreetingCard extends StatelessWidget {
   final String greeting;
   final int streak;
-  const _GreetingCard({required this.greeting, required this.streak});
+  final int best;
+  final TodayStatus? today;
+  const _GreetingCard({
+    required this.greeting,
+    required this.streak,
+    this.best = 0,
+    this.today,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final today = this.today;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -107,8 +118,36 @@ class _GreetingCard extends StatelessWidget {
                 ?.copyWith(fontWeight: FontWeight.bold)),
         if (streak > 0) ...[
           const SizedBox(height: 4),
-          Text('🔥 $streak day streak',
-              style: const TextStyle(color: Colors.deepOrange, fontSize: 14)),
+          Row(
+            children: [
+              Text('🔥 $streak day streak',
+                  style:
+                      const TextStyle(color: Colors.deepOrange, fontSize: 14)),
+              if (best > streak) ...[
+                const SizedBox(width: 10),
+                Text('Best $best',
+                    style:
+                        const TextStyle(color: Colors.white38, fontSize: 13)),
+              ],
+            ],
+          ),
+        ],
+        if (today != null && today.practiced) ...[
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(today.goalMet ? Icons.check_circle : Icons.timelapse_outlined,
+                  size: 14,
+                  color: today.goalMet ? Colors.green : Colors.amber),
+              const SizedBox(width: 4),
+              Text(
+                today.goalMet
+                    ? 'Tagesziel erreicht'
+                    : 'Heute ${today.minutes}/${today.goalMinutes} min',
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+            ],
+          ),
         ],
       ],
     );

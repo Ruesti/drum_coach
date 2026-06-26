@@ -867,7 +867,8 @@ const rudimentsSeedData = <Rudiment>[
   Rudiment(
     id: 'akzent_alle_viertel',
     name: 'Akzent auf allen Vierteln',
-    category: 'Übungen',
+    category: 'Akzente',
+    level: 1,
     description:
         'Jeder Schlag wird akzentuiert. Gleiche Lautstärke und Rebound beider '
         'Hände trainieren. Ideal zum Aufwärmen.',
@@ -899,7 +900,8 @@ const rudimentsSeedData = <Rudiment>[
   Rudiment(
     id: 'akzent_zwei_vier',
     name: 'Akzent auf 2 und 4',
-    category: 'Übungen',
+    category: 'Akzente',
+    level: 2,
     description:
         'Backbeat-Training: Schläge auf Zählzeit 2 und 4 werden akzentuiert, '
         '1 und 3 bleiben leise. Grundlage für Snare-Backbeats.',
@@ -931,7 +933,8 @@ const rudimentsSeedData = <Rudiment>[
   Rudiment(
     id: 'akzent_wandernd',
     name: 'Wandernder Akzent',
-    category: 'Übungen',
+    category: 'Akzente',
+    level: 4,
     description:
         'Der Akzent wandert von Schlag zu Schlag durch alle acht Positionen. '
         'Fördert das Denken in Grooves und Phrasierungen.',
@@ -967,7 +970,8 @@ const rudimentsSeedData = <Rudiment>[
   Rudiment(
     id: 'ghostnote_training',
     name: 'Ghostnote-Training',
-    category: 'Übungen',
+    category: 'Dynamik & Ghost Notes',
+    level: 2,
     description:
         'Wechsel zwischen lauten Akzentschlägen und sehr leisen Ghostnotes. '
         'Dynamik-Kontrolle ist das Kernziel.',
@@ -1011,7 +1015,8 @@ const rudimentsSeedData = <Rudiment>[
   Rudiment(
     id: 'paradiddle_diddle',
     name: 'Paradiddle-Diddle',
-    category: 'Übungen',
+    category: 'Stockkontrolle',
+    level: 3,
     description:
         'Erweiterung des Paradiddles: RLRRLL LRLLRR. Sechs Noten pro Gruppe — '
         'ideal für Triolen und 6/8-Anwendungen.',
@@ -1051,7 +1056,8 @@ const rudimentsSeedData = <Rudiment>[
   Rudiment(
     id: 'six_stroke_roll',
     name: 'Six Stroke Roll',
-    category: 'Übungen',
+    category: 'Stockkontrolle',
+    level: 2,
     description:
         'RLLRRL — sechs Schläge mit zwei Doppelschlägen in der Mitte. '
         'Verbindet Einzel- und Doppelschläge zu einem fließenden Muster.',
@@ -1085,7 +1091,8 @@ const rudimentsSeedData = <Rudiment>[
   Rudiment(
     id: 'gleichmaessigkeit_16tel',
     name: 'Gleichmäßigkeit — Sechzehntel',
-    category: 'Übungen',
+    category: 'Timing & Gleichmäßigkeit',
+    level: 1,
     description:
         'Sechzehntel-Noten in strenger Alternation, ohne Akzente. '
         'Reines Kontroll- und Ausdauertraining für beide Hände.',
@@ -1129,7 +1136,8 @@ const rudimentsSeedData = <Rudiment>[
   Rudiment(
     id: 'moeller_motion',
     name: 'Moeller-Bewegung',
-    category: 'Übungen',
+    category: 'Dynamik & Ghost Notes',
+    level: 4,
     description:
         'Arm-Peitschenbewegung für effizienten Energiefluss. Erzeugt mehrere '
         'Schläge aus einer Armbewegung: Akzent — Tap — Tap.',
@@ -1167,9 +1175,688 @@ const rudimentsSeedData = <Rudiment>[
       ),
     ],
   ),
+
+  Rudiment(
+    id: 'doppelschlag_basis',
+    name: 'Doppelschläge (Basis)',
+    category: 'Stockkontrolle',
+    level: 1,
+    description:
+        'RRLL im gemächlichen Tempo. Grundlage jeder Stockkontrolle: zwei '
+        'kontrollierte Schläge pro Hand, der zweite aus dem Rebound.',
+    minBpm: 50,
+    targetBpm: 140,
+    difficulty: Difficulty.beginner,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Der erste Schlag jeder Hand ist aktiv aus dem Handgelenk, der zweite '
+            '"fällt" aus dem Rebound nach. Beide sollen gleich laut klingen.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Langsam beginnen (50 BPM) und auf einen sauberen zweiten Schlag '
+            'achten. Erst erhöhen, wenn beide Schläge gleichmäßig klingen.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'speed_singles_basis',
+    name: 'Single-Stroke-Tempo (Basis)',
+    category: 'Geschwindigkeit',
+    level: 1,
+    description:
+        'Gleichmäßige Sechzehntel-Einzelschläge zum schrittweisen Tempoaufbau. '
+        'Locker bleiben — Geschwindigkeit kommt aus Entspannung, nicht aus Kraft.',
+    minBpm: 60,
+    targetBpm: 200,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: [
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Das höchste Tempo finden, bei dem du noch entspannt und gleichmäßig '
+            'spielst. Sobald es verkrampft, einen Schritt zurück.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'In 5-BPM-Schritten steigern. Jede Stufe 1 Minute halten. Notiere '
+            'dir dein aktuelles Maximaltempo und vergleiche über Wochen.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'speed_bursts',
+    name: 'Speed Bursts',
+    category: 'Geschwindigkeit',
+    level: 3,
+    description:
+        'Vier schnelle Sechzehntel, dann Pause. Trainiert kurze Schnelligkeits-'
+        'spitzen mit Entspannung dazwischen.',
+    minBpm: 70,
+    targetBpm: 180,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat.rest(),
+      StrokeBeat.rest(),
+      StrokeBeat.rest(),
+      StrokeBeat.rest(),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Den Burst bewusst locker explodieren lassen und in der Pause '
+            'komplett entspannen. Die Pause ist Teil der Übung.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• In der Pause angespannt bleiben\n'
+            '• Den Burst überhasten und ungleichmäßig spielen',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'speed_doubles',
+    name: 'Double-Stroke-Tempo',
+    category: 'Geschwindigkeit',
+    level: 4,
+    description:
+        'Schnelle Doppelschläge (RRLL) als Sechzehntel. Tempo basiert auf '
+        'sauberem Rebound — nicht auf Kraft.',
+    minBpm: 60,
+    targetBpm: 170,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Bei hohem Tempo wird der zweite Schlag fast nur durch den Rebound '
+            'erzeugt. Druck mit den Fingern statt Armkraft.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Erst langsam mit gleich lauten Schlägen. Tempo nur erhöhen, wenn '
+            'der zweite Schlag nicht in der Lautstärke abfällt.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'ausdauer_dauerlauf',
+    name: 'Sechzehntel-Dauerlauf',
+    category: 'Ausdauer',
+    level: 2,
+    description:
+        'Durchgehende Sechzehntel über mehrere Minuten ohne Pause. '
+        'Baut Kondition und gleichbleibende Klangqualität auf.',
+    minBpm: 70,
+    targetBpm: 150,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: [
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Über die gesamte Dauer gleich laut und gleichmäßig bleiben. '
+            'Achte auf den Moment, in dem die Hände müde werden.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Mit 2 Minuten starten und wöchentlich verlängern. Bei nachlassender '
+            'Qualität bewusst entspannen statt aufzuhören.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'ausdauer_doubles',
+    name: 'Doppelschlag-Ausdauer',
+    category: 'Ausdauer',
+    level: 3,
+    description:
+        'Durchgehende Doppelschläge (RRLL) zum Aufbau von Unterarm- und '
+        'Fingerausdauer bei gleichbleibendem Klang.',
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: [
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Der zweite Schlag wird mit zunehmender Müdigkeit leiser\n'
+            '• Verkrampfen im Unterarm — Schultern locker lassen',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Moderate 2–3 Minuten am Stück. Lieber sauber und kürzer als lang '
+            'und ungleichmäßig.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'akzent_offbeat',
+    name: 'Akzent auf dem Offbeat',
+    category: 'Akzente',
+    level: 3,
+    description:
+        'Achtel mit Akzent auf dem "und" (Offbeat). Trainiert das Gefühl für '
+        'Synkopen und gegen-den-Puls-Phrasierung.',
+    minBpm: 50,
+    targetBpm: 150,
+    difficulty: Difficulty.intermediate,
+    sticking: [
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Der Akzent liegt zwischen den Zählzeiten ("und"). Zähle "1-und-2-und" '
+            'und betone konsequent das "und".',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Erst laut mitzählen, dann nur denken. Das Offbeat-Gefühl ist die '
+            'Grundlage für Funk- und Reggae-Phrasierung.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'ghost_um_akzent',
+    name: 'Ghostnotes um den Akzent',
+    category: 'Dynamik & Ghost Notes',
+    level: 3,
+    description:
+        'Ein lauter Akzent eingebettet in leise Ghostnotes. Maximaler Dynamik-'
+        'kontrast auf engem Raum.',
+    minBpm: 50,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: [
+      StrokeBeat(hand: Hand.left, isGhost: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isGhost: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isGhost: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isGhost: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right, isGhost: true),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Ghostnotes bleiben 2–3 cm über dem Fell, der Akzent kommt von oben. '
+            'Der Höhenunterschied der Stöcke erzeugt die Dynamik automatisch.',
+      ),
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Der Hörer soll nur den Akzent klar wahrnehmen, die Ghostnotes als '
+            'leises Brodeln im Hintergrund.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'timing_achtel_triolen',
+    name: 'Achtel-Triolen gleichmäßig',
+    category: 'Timing & Gleichmäßigkeit',
+    level: 2,
+    description:
+        'Triolen mit Akzent auf jeder Zählzeit. Schult das gleichmäßige Dritteln '
+        'des Pulses — Grundlage für Shuffle und Swing.',
+    minBpm: 50,
+    targetBpm: 150,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Alle drei Triolen-Noten exakt gleich weit auseinander. Zähle '
+            '"1-trio-le, 2-trio-le" und lege den Akzent genau auf die Zählzeit.',
+      ),
+      TechniqueSection(
+        title: 'Übungsplan',
+        body:
+            'Mit dem Metronom auf die Viertel spielen und prüfen, ob die '
+            'mittlere Triolennote sauber in der Mitte sitzt.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'timing_galopp',
+    name: 'Galopp-Rhythmus',
+    category: 'Timing & Gleichmäßigkeit',
+    level: 3,
+    description:
+        'Achtel gefolgt von zwei Sechzehnteln pro Zählzeit ("Galopp"). '
+        'Schult präzise Subdivision innerhalb des Beats.',
+    minBpm: 50,
+    targetBpm: 140,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat.rest(),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat.rest(),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat.rest(),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat.rest(),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Der erste Schlag ist lang (Achtel), darauf folgen zwei schnelle '
+            'Sechzehntel. Das "da-da-dim"-Gefühl muss gleichmäßig bleiben.',
+      ),
+      TechniqueSection(
+        title: 'Häufige Fehler',
+        body:
+            '• Die beiden Sechzehntel werden zu früh gespielt (Triole statt Galopp)\n'
+            '• Ungleiche Pause nach dem ersten Schlag',
+      ),
+    ],
+  ),
+
+  // ─── MARCHING SNARE ─────────────────────────────────────────────────────────
+
+  Rudiment(
+    id: 'eight_on_a_hand',
+    name: 'Eight on a Hand',
+    category: 'Marching Snare',
+    description:
+        'Acht Sechzehntel pro Hand mit Akzent auf jeder Zählzeit. '
+        'Grundlegendes Marching-Warm-up für Kontrolle und gleichmäßigen Anschlag.',
+    minBpm: 60,
+    targetBpm: 160,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 4,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Ziel',
+        body:
+            'Gleichmäßige Sechzehntel mit klarem Akzent auf 1, 2, 3, 4. '
+            'Die unbetonten Noten bleiben tief und locker.',
+      ),
+      TechniqueSection(
+        title: 'Tipp',
+        body:
+            'Handgelenk führt die Akzente, Finger kontrollieren die tiefen Töne. '
+            'Beide Hände sollen identisch klingen.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'flam_accent',
+    name: 'Flam Accent',
+    category: 'Marching Snare',
+    description:
+        'Flam auf der betonten Zählzeit, gefolgt von zwei Tap-Noten — '
+        'im Triolen-Feel. Ein Eckpfeiler der Marching-Rudiments.',
+    minBpm: 50,
+    targetBpm: 140,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    beatsPerBar: 2,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Bewegung',
+        body:
+            'Der Flam landet als kräftiger Akzent, die beiden folgenden Taps '
+            'bleiben tief. Hände wechseln nach jeder Triole.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'flam_tap',
+    name: 'Flam Tap',
+    category: 'Marching Snare',
+    description:
+        'Flam gefolgt von einem Tap derselben Hand: lR-R rL-L. '
+        'Trainiert den Down-Up-Stroke und Doppelschläge mit Flam.',
+    minBpm: 50,
+    targetBpm: 150,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.eighth,
+    beatsPerBar: 4,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Down-Up',
+        body:
+            'Der Flam ist ein Down-Stroke (laut, bleibt unten), der Tap ein '
+            'tiefer Up-Stroke, der die nächste Hand vorbereitet.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'flamacue',
+    name: 'Flamacue',
+    category: 'Marching Snare',
+    description:
+        'Flam, danach ein Akzent auf der zweiten Note, zwei Taps und ein '
+        'abschließender Flam. Klassisches, ausdrucksstarkes Rudiment.',
+    minBpm: 50,
+    targetBpm: 130,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 2,
+    sticking: [
+      StrokeBeat(hand: Hand.right, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Akzent',
+        body:
+            'Der Akzent liegt nicht auf dem Flam, sondern auf der Note direkt '
+            'danach. Genau diese Verschiebung macht den Flamacue aus.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'flam_paradiddle',
+    name: 'Flam Paradiddle',
+    category: 'Marching Snare',
+    description:
+        'Ein Paradiddle, dessen erste Note ein Flam mit Akzent ist: '
+        'lR-L-R-R rL-R-L-L. Verbindet Flam-Kontrolle mit Doppelschlägen.',
+    minBpm: 50,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 2,
+    sticking: [
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Tipp',
+        body:
+            'Der Flam-Akzent eröffnet jeden Paradiddle, der abschließende '
+            'Diddle (RR bzw. LL) bleibt tief und kontrolliert.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'cheese',
+    name: 'Cheese (Flam Diddle)',
+    category: 'Marching Snare',
+    description:
+        'Ein Flam direkt gefolgt von einem Diddle: lR-R rL-L. '
+        'Hybrid-Rudiment, das Flam und Doppelschlag in einer Bewegung verbindet.',
+    minBpm: 50,
+    targetBpm: 130,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 2,
+    sticking: [
+      StrokeBeat(hand: Hand.right, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.right, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.left, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.left),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Idee',
+        body:
+            'Der Flam und der erste Diddle-Schlag verschmelzen fast zu einem '
+            'Klang. Locker bleiben, der Diddle kommt aus den Fingern.',
+      ),
+    ],
+  ),
+
+  Rudiment(
+    id: 'inverted_flam_tap',
+    name: 'Inverted Flam Tap',
+    category: 'Marching Snare',
+    description:
+        'Flam Tap, bei dem der Flam auf den Off-Beat fällt: R lR L rL. '
+        'Anspruchsvolle Variante für Timing und Handabwechslung.',
+    minBpm: 50,
+    targetBpm: 130,
+    difficulty: Difficulty.professional,
+    gridUnit: NoteGrid.eighth,
+    beatsPerBar: 4,
+    sticking: [
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.right),
+      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left),
+      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
+    ],
+    technique: [
+      TechniqueSection(
+        title: 'Achtung',
+        body:
+            'Der Flam liegt auf dem "und" der Zählzeit. Erst sehr langsam üben, '
+            'damit der versetzte Akzent sauber sitzt.',
+      ),
+    ],
+  ),
 ];
 
 /// Ordered list of all categories for consistent display.
+/// Focus areas for the free practice exercises ("Übungen"), ordered as the
+/// guided practice plan presents them.
+const exerciseCategories = [
+  'Geschwindigkeit',
+  'Stockkontrolle',
+  'Ausdauer',
+  'Akzente',
+  'Dynamik & Ghost Notes',
+  'Timing & Gleichmäßigkeit',
+];
+
 const rudimentCategories = [
   'Rolls',
   'Paradiddles',
@@ -1177,5 +1864,6 @@ const rudimentCategories = [
   'Ruffs',
   'Ghost Notes',
   'Linear Patterns',
-  'Übungen',
+  'Marching Snare',
+  ...exerciseCategories,
 ];

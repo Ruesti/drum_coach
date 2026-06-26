@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/local/settings_service.dart';
-import '../../shared/widgets/sticking_pattern_widget.dart';
+import '../../shared/widgets/notation_staff_widget.dart';
 import '../lessons/models/rudiment.dart';
 import 'services/ai_coaching_service.dart';
 
@@ -145,10 +145,19 @@ class _ExerciseGeneratorScreenState extends State<ExerciseGeneratorScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: StickingPatternWidget(
-                      pattern: _pattern!,
-                      beatBoxSize: 44,
+                    child: NotationStaffWidget(
+                      rudiment: Rudiment(
+                        id: 'generated',
+                        name: 'Generated',
+                        category: '',
+                        description: '',
+                        minBpm: 80,
+                        targetBpm: 120,
+                        difficulty: Difficulty.beginner,
+                        sticking: _pattern!,
+                        gridUnit: NoteGrid.eighth,
+                        beatsPerBar: 4,
+                      ),
                     ),
                   ),
                 ),
