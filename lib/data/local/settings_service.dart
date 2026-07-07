@@ -12,6 +12,19 @@ class SettingsService {
   static bool get isOnboardingDone => _prefs.getBool('onboarding_done') ?? false;
   static Future<void> setOnboardingDone() => _prefs.setBool('onboarding_done', true);
 
+  /// Day 1 anchor of the training program. `null` = program not started.
+  /// Stored as an ISO-8601 string (matching the string-value style here).
+  static DateTime? get programStartDate {
+    final s = _prefs.getString('program_start_date');
+    return s == null ? null : DateTime.tryParse(s);
+  }
+
+  static Future<void> setProgramStartDate(DateTime d) =>
+      _prefs.setString('program_start_date', d.toIso8601String());
+
+  static Future<void> clearProgramStartDate() =>
+      _prefs.remove('program_start_date');
+
   static int get practiceTargetMinutes => _prefs.getInt('practice_target_min') ?? 20;
   static Future<void> setPracticeTargetMinutes(int v) =>
       _prefs.setInt('practice_target_min', v);

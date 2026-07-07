@@ -12,8 +12,9 @@ enum DayType { practice, light, rest }
 /// The kind of an exercise block inside a practice/light day.
 enum BlockType { warmup, technique, tempoLadder, endurance }
 
-/// A practice variation applied to the day's single line.
-enum Variant { even, pp, ff, crescendo, fingers, rebound, accentTap }
+/// A practice variation applied to the day's single line. `endurance` is used
+/// by phase 4's technique block (§5); the others come from §4.
+enum Variant { even, pp, ff, crescendo, fingers, rebound, accentTap, endurance }
 
 /// One block within a [ProgramDay] (e.g. warmup, technique, tempo ladder).
 class ExerciseBlock {
