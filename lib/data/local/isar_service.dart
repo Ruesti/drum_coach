@@ -1,6 +1,7 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'models/clean_tempo.dart';
 import 'models/practice_session.dart';
 import 'models/rudiment_progress.dart';
 
@@ -11,7 +12,7 @@ class IsarService {
   static Future<void> init() async {
     final dir = await getApplicationDocumentsDirectory();
     _isar = await Isar.open(
-      [PracticeSessionSchema, RudimentProgressSchema],
+      [PracticeSessionSchema, RudimentProgressSchema, CleanTempoSchema],
       directory: dir.path,
     );
   }
