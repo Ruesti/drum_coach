@@ -45,6 +45,32 @@ class DashboardScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
+          // Training program entry
+          _DashCard(
+            onTap: () => context.push('/program'),
+            child: Row(
+              children: [
+                const Icon(Icons.fitness_center,
+                    color: Colors.deepOrange, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Trainingsprogramm',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Stick Control · 12 Wochen',
+                          style:
+                              TextStyle(color: Colors.white54, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: Colors.white38),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // Today's routine card
           routineAsync.when(
             loading: () => const _LoadingCard(),

@@ -21,10 +21,15 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   final String rudimentId;
   final bool isFromRoutine;
 
+  /// Optional target tempo to preset the metronome to (e.g. a program's tempo
+  /// ladder start). Null keeps the metronome's current BPM.
+  final int? targetBpm;
+
   const PracticeSessionScreen({
     super.key,
     required this.rudimentId,
     required this.isFromRoutine,
+    this.targetBpm,
   });
 
   @override
@@ -53,9 +58,12 @@ class _PracticeSessionScreenState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
-      ref.read(metronomeNotifierProvider.notifier)
+      final metronome = ref.read(metronomeNotifierProvider.notifier)
         ..setSubdivision(_subdivisionFor(rudiment.gridUnit))
         ..setPatternVolumes(_volumesFor(rudiment.sticking));
+      if (widget.targetBpm != null) {
+        metronome.setBpm(widget.targetBpm!);
+      }
       _initMicIfEnabled();
     });
   }

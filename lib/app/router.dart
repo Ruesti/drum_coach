@@ -9,6 +9,7 @@ import '../features/lessons/lessons_screen.dart';
 import '../features/metronome/metronome_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/practice/practice_session_screen.dart';
+import '../features/program/program_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
@@ -71,6 +72,7 @@ final router = GoRouter(
             builder: (_, state) => PracticeSessionScreen(
               rudimentId: state.pathParameters['rudimentId']!,
               isFromRoutine: false,
+              targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
             ),
           ),
         ]),
@@ -81,6 +83,10 @@ final router = GoRouter(
           ),
         ]),
       ],
+    ),
+    GoRoute(
+      path: '/program',
+      builder: (_, __) => const ProgramScreen(),
     ),
     GoRoute(
       path: '/metronome',
