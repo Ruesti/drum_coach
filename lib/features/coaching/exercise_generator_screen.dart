@@ -5,6 +5,25 @@ import '../../shared/widgets/notation_staff_widget.dart';
 import '../lessons/models/rudiment.dart';
 import 'services/ai_coaching_service.dart';
 
+/// Builds the [Rudiment] shown for a freshly AI-generated sticking
+/// [pattern]. Extracted from the widget so it's unit-testable without
+/// pumping the screen or mocking the network call.
+Rudiment buildGeneratedRudiment(List<StrokeBeat> pattern) {
+  return Rudiment(
+    id: 'generated',
+    name: 'Generated',
+    category: '',
+    description: '',
+    minBpm: 80,
+    targetBpm: 120,
+    difficulty: Difficulty.beginner,
+    sticking: pattern,
+    gridUnit: NoteGrid.eighth,
+    beatsPerBar: 4,
+    source: ExerciseSource.generated,
+  );
+}
+
 class ExerciseGeneratorScreen extends StatefulWidget {
   const ExerciseGeneratorScreen({super.key});
 
@@ -146,18 +165,7 @@ class _ExerciseGeneratorScreenState extends State<ExerciseGeneratorScreen> {
                   ),
                   child: SingleChildScrollView(
                     child: NotationStaffWidget(
-                      rudiment: Rudiment(
-                        id: 'generated',
-                        name: 'Generated',
-                        category: '',
-                        description: '',
-                        minBpm: 80,
-                        targetBpm: 120,
-                        difficulty: Difficulty.beginner,
-                        sticking: _pattern!,
-                        gridUnit: NoteGrid.eighth,
-                        beatsPerBar: 4,
-                      ),
+                      rudiment: buildGeneratedRudiment(_pattern!),
                     ),
                   ),
                 ),
