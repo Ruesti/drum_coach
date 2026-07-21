@@ -26,6 +26,17 @@ enum Difficulty {
   const Difficulty({required this.label, required this.color});
 }
 
+/// Where an exercise came from. `generated` = built from the sticking
+/// grammar at runtime; `authored` = hand-notated (today's seed data);
+/// `excerpt` = a pointer into an imported score (bar range, not a copy).
+enum ExerciseSource { generated, authored, excerpt }
+
+/// Which renderer/playback mode an exercise targets. `pad` = single-line
+/// sticking notation + click, fully offline (practice pad, on the go).
+/// `kit` = full kit notation with per-instrument voicing and synthetic
+/// drum sounds (at home).
+enum ExerciseVoicing { pad, kit }
+
 /// One grid cell of a pattern. Occupies exactly one metronome tick.
 /// A cell is either a struck note (default) or a [isRest] (silent) cell.
 /// [graces] are grace notes (flam = 1, drag = 2) drawn small *before* the main
@@ -83,6 +94,14 @@ class Rudiment {
   /// "Übungen" exercises to order the plan; `null` for standard rudiments.
   final int? level;
 
+  /// Origin of this exercise. Defaults to [ExerciseSource.authored] since
+  /// today's seed catalog is entirely hand-notated.
+  final ExerciseSource source;
+
+  /// Presentation/playback mode. Defaults to [ExerciseVoicing.pad] since
+  /// the current single-voice [NotationStaffWidget] is pad-shaped.
+  final ExerciseVoicing voicing;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -97,5 +116,7 @@ class Rudiment {
     this.technique = const [],
     this.svgAssetPath,
     this.level,
+    this.source = ExerciseSource.authored,
+    this.voicing = ExerciseVoicing.pad,
   });
 }
