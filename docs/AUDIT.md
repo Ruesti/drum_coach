@@ -186,3 +186,17 @@ Das Coaching-Feature (`exercise_generator_screen.dart` + `ai_coaching_service.da
 - Der größte Umbau ist nicht technische Migration, sondern der neue Generator (Schritt 4) und die Kategorie→Tag-Migration (Schritt 2) — beide sind primär Neubau/Datenarbeit, kein Ersetzen von funktionierendem Code.
 - Zwei offene Produktfragen sollten vor Baubeginn geklärt werden: (1) Verhältnis KI-Freitext-Generator vs. Grammatik-Generator (Abschnitt 5h/6), (2) Verhältnis `practicePlanProvider`s kuratierter Spur zu tag-basierter Organisation (Abschnitt 6, Schritt 2).
 - Plattform-Lücken (iOS/macOS-Permissions, Android-`applicationId`) sind unabhängig vom Brief bereits vorhandene Bugs und sollten früh mit angegangen werden, da sie sonst jeden Multi-Plattform-Test blockieren.
+
+---
+
+## Phase 0.5 — Entscheidungen zu den offenen Produktfragen
+
+Vom Auftraggeber geklärt, vor Migrationsstart:
+
+**1. KI-Freitext-Generator vs. Grammatik-Generator → beide behalten, komplementär.**
+Der bestehende KI-Generator (`features/coaching/exercise_generator_screen.dart` + `AICoachingService.generateExercise`, `features/coaching/services/ai_coaching_service.dart:68-98`) bleibt als eigener Eintrittspunkt für freie Texteingabe erhalten. Der neue parametrische Sticking-Grammatik-Generator (Brief-Abschnitt "Übungen: generieren statt katalogisieren") wird das systematische Rückgrat für Rudiments, Permutationen, Grooves, Fills, Koordination. Beide erzeugen denselben `Exercise`/Score-Output — kein Konflikt, keine Ablösung nötig. Konsequenz für die Migrationsreihenfolge: Schritt 4 (Grammatik-Generator bauen) muss den `AICoachingService`-Aufrufpfad nicht anfassen; beide Generatoren sollten aber dasselbe Zielformat (neutrales Score-Modell aus Schritt 3) ausgeben, damit Renderer und Lernlogik generatorunabhängig bleiben.
+
+**2. Kuratierte `practicePlanProvider`-Spur vs. Tag-Achsen → wird abgelöst.**
+Die statische, `level`-basierte lineare Übungs-Spur (`features/lessons/lessons_provider.dart:31-42`, `practicePlanProvider`) entfällt zugunsten der adaptiven, tag-/SM-2-basierten Tagesplanung (`dailyRoutineProvider`, `features/learning/routine_provider.dart:12-73`). Das `level`-Feld auf `Rudiment`/`Exercise` (`rudiment.dart:76`) wird bei der Tag-Migration (Schritt 2) entfernt bzw. nicht in die neue Achsen-Struktur übernommen. Konsequenz: `groupedRudimentsProvider` und `LessonsScreen` (kategoriebasierte Anzeige) werden bei Schritt 2 vollständig auf Tag-Filter umgestellt, nicht nur ergänzt — es gibt danach keine zwei parallelen Organisationssysteme mehr.
+
+**Damit ist Phase 0 (Bestandsaufnahme + offene Fragen) abgeschlossen. Migration kann mit Schritt 1 der Reihenfolge aus Abschnitt 6 beginnen, sobald der Auftraggeber grünes Licht gibt.**
