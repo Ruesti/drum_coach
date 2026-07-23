@@ -202,7 +202,7 @@ final currentProgramDayProvider =
 
 typedef CurrentProgramDayRef = AutoDisposeFutureProviderRef<ProgramDay?>;
 String _$cleanTempoNotifierHash() =>
-    r'6d1d74f1894d7a7e9f6fe0932068b3eaa7b182c9';
+    r'd7aa3ea7b962beb26a5cf6033b85e8afc3e0ee97';
 
 /// Stored clean tempos keyed by exercise key (the last clean tempo per line).
 ///
