@@ -48,4 +48,50 @@ void main() {
       expect(r.voicing, ExerciseVoicing.kit);
     });
   });
+
+  group('Rudiment.skill / .family / .genre / .limbs', () {
+    test('defaults to no skill, no family, general genre, hands', () {
+      final r = Rudiment(
+        id: 'defaults',
+        name: 'Defaults',
+        category: 'Rolls',
+        description: 'desc',
+        minBpm: 60,
+        targetBpm: 120,
+        difficulty: Difficulty.beginner,
+        sticking: const [StrokeBeat(hand: Hand.right)],
+      );
+      expect(r.skill, isEmpty);
+      expect(r.family, isNull);
+      expect(r.genre, Genre.general);
+      expect(r.limbs, [Limb.hands]);
+    });
+
+    test('accepts explicit skill, family, genre, limbs', () {
+      final r = Rudiment(
+        id: 'explicit',
+        name: 'Explicit',
+        category: 'Rolls',
+        description: 'desc',
+        minBpm: 60,
+        targetBpm: 120,
+        difficulty: Difficulty.beginner,
+        sticking: const [StrokeBeat(hand: Hand.right)],
+        skill: const [Skill.koordination, Skill.kontrolle],
+        family: RudimentFamily.paradiddle,
+        genre: Genre.drumCorps,
+        limbs: const [Limb.hands, Limb.feet],
+      );
+      expect(r.skill, [Skill.koordination, Skill.kontrolle]);
+      expect(r.family, RudimentFamily.paradiddle);
+      expect(r.genre, Genre.drumCorps);
+      expect(r.limbs, [Limb.hands, Limb.feet]);
+    });
+
+    test('enum labels are human-readable', () {
+      expect(Skill.kontrolle.label, 'Kontrolle');
+      expect(Genre.drumCorps.label, 'Drum Corps');
+      expect(RudimentFamily.paradiddle.label, 'Paradiddles');
+    });
+  });
 }

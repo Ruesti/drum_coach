@@ -37,6 +37,52 @@ enum ExerciseSource { generated, authored, excerpt }
 /// drum sounds (at home).
 enum ExerciseVoicing { pad, kit }
 
+/// What an exercise trains. Mirrors the brief's "Skill" axis
+/// (`docs/AUDIT.md` Phase 0.5b) — multi-value, since one exercise can train
+/// several things at once (e.g. a linear fill trains both `koordination`
+/// and `independence`).
+enum Skill {
+  groove(label: 'Groove'),
+  fill(label: 'Fill'),
+  koordination(label: 'Koordination'),
+  ausdauer(label: 'Ausdauer'),
+  kontrolle(label: 'Kontrolle'),
+  independence(label: 'Independence');
+
+  final String label;
+  const Skill({required this.label});
+}
+
+/// Musical/stylistic context. `general` covers today's pure hand-technique
+/// catalog (no groove content exists yet); `drumCorps` is the one genre
+/// value with real meaning today (Marching Snare rudiments).
+enum Genre {
+  general(label: 'Allgemein'),
+  drumCorps(label: 'Drum Corps');
+
+  final String label;
+  const Genre({required this.label});
+}
+
+/// Which limbs an exercise is played with. All of today's catalog is
+/// `hands` (no foot notation exists yet) — this exists so future kit-mode
+/// content (bass drum, doublebass, four-limb coordination) has somewhere
+/// to go without a model change.
+enum Limb { hands, feet, doublebass, allFour }
+
+/// The classic PAS rudiment family, for the four rudiment groups that have
+/// one. `null` on [Rudiment.family] means "not a classic PAS rudiment"
+/// (e.g. a Linear Pattern or a focused technique exercise).
+enum RudimentFamily {
+  roll(label: 'Rolls'),
+  paradiddle(label: 'Paradiddles'),
+  flam(label: 'Flams'),
+  ruff(label: 'Ruffs');
+
+  final String label;
+  const RudimentFamily({required this.label});
+}
+
 /// One grid cell of a pattern. Occupies exactly one metronome tick.
 /// A cell is either a struck note (default) or a [isRest] (silent) cell.
 /// [graces] are grace notes (flam = 1, drag = 2) drawn small *before* the main
@@ -102,6 +148,19 @@ class Rudiment {
   /// the current single-voice [NotationStaffWidget] is pad-shaped.
   final ExerciseVoicing voicing;
 
+  /// What this exercise trains. See [Skill]. Empty by default — only the
+  /// seed catalog (`rudiments_seed.dart`) is expected to populate this.
+  final List<Skill> skill;
+
+  /// Classic PAS rudiment family, if this is one. See [RudimentFamily].
+  final RudimentFamily? family;
+
+  /// Musical/stylistic context. See [Genre].
+  final Genre genre;
+
+  /// Which limbs this exercise is played with. See [Limb].
+  final List<Limb> limbs;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -118,5 +177,9 @@ class Rudiment {
     this.level,
     this.source = ExerciseSource.authored,
     this.voicing = ExerciseVoicing.pad,
+    this.skill = const [],
+    this.family,
+    this.genre = Genre.general,
+    this.limbs = const [Limb.hands],
   });
 }
