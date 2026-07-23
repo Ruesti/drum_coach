@@ -202,3 +202,121 @@ Der bestehende KI-Generator (`features/coaching/exercise_generator_screen.dart` 
 Die statische, `level`-basierte lineare Übungs-Spur (`features/lessons/lessons_provider.dart:31-42`, `practicePlanProvider`) entfällt zugunsten der adaptiven, tag-/SM-2-basierten Tagesplanung (`dailyRoutineProvider`, `features/learning/routine_provider.dart:12-73`). Das `level`-Feld auf `Rudiment`/`Exercise` (`rudiment.dart:76`) wird bei der Tag-Migration (Schritt 2) entfernt bzw. nicht in die neue Achsen-Struktur übernommen. Konsequenz: `groupedRudimentsProvider` und `LessonsScreen` (kategoriebasierte Anzeige) werden bei Schritt 2 vollständig auf Tag-Filter umgestellt, nicht nur ergänzt — es gibt danach keine zwei parallelen Organisationssysteme mehr.
 
 **Damit ist Phase 0 (Bestandsaufnahme + offene Fragen) abgeschlossen. Migration kann mit Schritt 1 der Reihenfolge aus Abschnitt 6 beginnen, sobald der Auftraggeber grünes Licht gibt.**
+
+---
+
+## Phase 0.5b — Schritt 1 Status + Tag-Achsen-Mapping-Vorschlag (Schritt 2)
+
+**Schritt 1 (Exercise-Typ, `source`/`voicing`) ist erledigt** — siehe
+`docs/superpowers/plans/2026-07-21-exercise-source-voicing.md`, Commits
+`9e8d1aa`/`c52b9bb`, 45/45 Tests grün, `flutter analyze` 0 Fehler. Offen aus
+Schritt 1 bleibt nur die `RudimentProgress`/`PracticeSession`-FK-Umbenennung
+auf `exerciseId` — bewusst verschoben auf den Schritt, der `Rudiment` →
+`Exercise` umbenennt (Begründung siehe Plan-Datei, Self-Review).
+
+### Vom Auftraggeber entschieden (vor Planerstellung Schritt 2)
+
+1. **Genre-Achse:** Jetzt seeden, nicht verschieben. Alle 41 heutigen
+   Rudiments bekommen einen Platzhalterwert, das Feld existiert von Anfang an.
+2. **Category-Mapping:** Vorschlag durch Claude Code, Freigabe durch Uli vor
+   dem Bauen (dieser Abschnitt).
+3. **UI:** Der Lessons-Screen wird in Schritt 2 direkt auf Tag-Filter
+   umgebaut (Mehrfachauswahl über Achsen), nicht erst in einem Folgeschritt.
+
+### Vereinfachungen gegenüber der Achsenliste im Brief (zu bestätigen)
+
+Beim Abgleich der Brief-Achsen (Abschnitt "Tags sind Achsen, keine Ordner")
+mit dem tatsächlichen Bestand (`rudiments_seed.dart`, 41 Einträge, 13
+`category`-Werte) fallen drei Redundanzen auf — Vorschlag, sie **nicht** als
+neue Tag-Felder zu duplizieren, sondern aus bereits Vorhandenem abzuleiten:
+
+- **Subdivision** deckt sich mit dem bereits existierenden `Rudiment.gridUnit`
+  (`NoteGrid`: quarter/eighth/triplet/sixteenth, siehe `rudiment.dart:8-16`).
+  Ein zweites Subdivision-Tag würde bei jeder Änderung an `gridUnit`
+  auseinanderlaufen können. Vorschlag: **kein neues Feld** — die
+  Achsen-Auswertung liest `gridUnit` direkt.
+- **Modus-Eignung** (pad-tauglich/set-erforderlich) ist bereits exakt
+  `ExerciseVoicing` aus Schritt 1 (`pad`/`kit`). Vorschlag: **kein neues
+  Feld** — `voicing` **ist** die Modus-Eignung-Achse.
+- **Tempo-Zone** (Kontrolle/Arbeitstempo/Chops) beschreibt laut Brief-Abschnitt
+  "Modi statt Kategorien" explizit **keine feste Eigenschaft der Übung**,
+  sondern eine Relation zwischen aktuell geübtem Tempo und
+  `minBpm`/`targetBpm` ("Dieselbe Übung bei 60 ist Kontrolle, bei 160 ist sie
+  Chops"). Ein statisches Tag wäre falsch (würde bei Fortschritt veralten) und
+  widerspricht dem eigenen Brief-Prinzip. Vorschlag: **kein Tag jetzt** —
+  wird bei Bedarf später als berechneter Wert (aus `currentBpm` vs.
+  `minBpm`/`targetBpm`) eingeführt, nicht als gespeichertes Feld.
+
+Damit bleiben von den sechs Brief-Achsen tatsächlich **drei neue Felder** zu
+bauen: `skill` (mehrwertig), `genre` (Platzhalter), `limbs`.
+
+- **Limbs (Gliedmaßen)** ist für alle 41 heutigen Einträge eindeutig `hands`
+  — `StrokeBeat.hand` kennt nur `Hand.right`/`Hand.left`, es gibt noch keine
+  Fuß-/Doublebass-Notation. Kein Bestandsproblem, aber das Feld muss trotzdem
+  existieren (Enum mit `hands`/`feet`/`doublebass`/`allFour`), damit spätere
+  Kit-Mode-Inhalte es befüllen können.
+
+### Vorgeschlagene zusätzliche Achse: `family` (nicht im Brief, Abweichung)
+
+Der Brief hat **keine** Achse für die klassische PAS-Rudiment-Familie
+(Roll/Paradiddle/Flam/Ruff). Die heutigen `category`-Werte `Rolls`,
+`Paradiddles`, `Flams`, `Ruffs` transportieren aber genau das — und das ist
+die Art, wie Schlagzeuger die 40 PAS-Rudiments tatsächlich suchen/browsen.
+Ohne diese Achse ginge eine heute vorhandene, sinnvolle Browsing-Dimension
+ersatzlos verloren. Vorschlag: **eine zusätzliche, optionale Achse
+`family`** (`roll | paradiddle | flam | ruff`, nullable — nur für klassische
+Rudiments gesetzt, bei den sechs "Übungen"-Kategorien `null`). Das ist eine
+bewusste Erweiterung über die Brief-Mindestliste hinaus ("Achsen
+**mindestens**: ...") — **braucht explizite Freigabe**, da sie vom Brief
+abweicht.
+
+### Skill-Werte: Deckungslücke zum Bestand
+
+Die Brief-Skill-Werte (`Groove, Fill, Koordination, Ausdauer, Kontrolle,
+Independence`) sind auf volles Kit-Spiel gemünzt. Der heutige Bestand ist
+ausschließlich Pad-/Handtechnik (kein Groove/Fill-Inhalt existiert vor
+Schritt 6 der Migration) — `Groove` und `Fill` werden entsprechend bei
+**keinem** der 41 heutigen Einträge vorkommen, das ist erwartet und kein
+Bug. `Kontrolle` wird der mit Abstand häufigste Wert, weil praktisch der
+gesamte heutige Bestand genau das trainiert (deckt sich mit der eigenen
+Programmphilosophie in `STICK_CONTROL_PROGRAM.md` §0: "Tempo ist
+Nebenprodukt von Evenness, nicht das Trainingsziel").
+
+### Mapping-Vorschlag: `category` → Achsen (pro der 13 heutigen Werte)
+
+| `category` (alt) | Typ | `skill` (neu, mehrwertig) | `family` (neu) | `genre` (neu, Platzhalter) | Begründung |
+|---|---|---|---|---|---|
+| Rolls | Rudiment | `[kontrolle]` | `roll` | `general` | Grundlage aller Rolls: gleichmäßiger Rebound |
+| Paradiddles | Rudiment | `[koordination, kontrolle]` | `paradiddle` | `general` | Sticking-Wechsel zwischen Händen = Koordination |
+| Flams | Rudiment | `[kontrolle]` | `flam` | `general` | Präzises Timing des Grace-Note-Versatzes |
+| Ruffs | Rudiment | `[kontrolle]` | `ruff` | `general` | Wie Flams, mehr Graces |
+| Ghost Notes | Rudiment | `[kontrolle]` | `null` | `general` | Dynamikkontrolle, keine PAS-Familie |
+| Linear Patterns | Rudiment | `[koordination, independence]` | `null` | `general` | Kein Schlag gleichzeitig auf zwei Stimmen = Independence-Vorstufe |
+| Marching Snare | Rudiment | `[ausdauer, kontrolle]` | `null` | **`drumCorps`** | Einzige Kategorie mit echtem Genre-Bezug (Brief nennt "Drum Corps" explizit als Genre-Beispiel) |
+| Geschwindigkeit | Übung | `[kontrolle]` | `null` | `general` | Speed als Kontrolle-Nebenprodukt, nicht Tempo-Zone (s.o.) |
+| Stockkontrolle | Übung | `[kontrolle]` | `null` | `general` | Namensgleich mit Skill-Wert |
+| Ausdauer | Übung | `[ausdauer]` | `null` | `general` | 1:1 |
+| Akzente | Übung | `[kontrolle]` | `null` | `general` | Akzent/Tap-Trennung ist Dynamikkontrolle |
+| Dynamik & Ghost Notes | Übung | `[kontrolle]` | `null` | `general` | Wie Ghost Notes (Rudiment-Kategorie) |
+| Timing & Gleichmäßigkeit | Übung | `[kontrolle]` | `null` | `general` | L/R-Gleichheit — Kernmetrik aus `STICK_CONTROL_PROGRAM.md` |
+
+**Auffällig:** `skill: kontrolle` dominiert (10 von 13). Das ist inhaltlich
+korrekt (siehe oben), macht `skill` allein aber zu einem schwachen Filter,
+solange kein Kit-Mode-Content existiert. Die UI-Umstellung auf Tag-Filter
+(Entscheidung 3 oben) sollte deshalb **`family` und `category`-Herkunft
+gemeinsam mit `skill`** als Filterachsen anbieten, sonst zeigt ein
+"Kontrolle"-Filter fast den ganzen Katalog.
+
+### Für Schritt 2 vorgeschlagene Enums
+
+```dart
+enum Skill { groove, fill, koordination, ausdauer, kontrolle, independence }
+enum Genre { general, drumCorps } // erweiterbar, sobald Groove-Content existiert
+enum Limb { hands, feet, doublebass, allFour }
+enum RudimentFamily { roll, paradiddle, flam, ruff } // nullable auf Rudiment
+```
+
+**Offen zur Freigabe, bevor der Implementierungsplan geschrieben wird:**
+1. Vereinfachungen (kein separates Subdivision-/Modus-Eignung-/Tempo-Zone-Tag) — ok?
+2. Zusätzliche `family`-Achse trotz Brief-Abweichung — ok?
+3. Obige 13-Zeilen-Mapping-Tabelle — ok, oder einzelne Zeilen ändern?
