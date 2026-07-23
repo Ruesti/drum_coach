@@ -13,6 +13,7 @@ class LessonsScreen extends ConsumerWidget {
     final filter = ref.watch(lessonsFilterProvider);
     final notifier = ref.read(lessonsFilterProvider.notifier);
     final rudiments = ref.watch(filteredRudimentsProvider);
+    final availableSkills = ref.watch(availableSkillsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Lessons')),
@@ -22,7 +23,12 @@ class LessonsScreen extends ConsumerWidget {
             selected: filter.family,
             onSelect: notifier.setFamily,
           ),
+          _GenreFilterRow(
+            selected: filter.genre,
+            onSelect: notifier.setGenre,
+          ),
           _SkillFilterRow(
+            skills: availableSkills,
             selected: filter.skills,
             onToggle: notifier.toggleSkill,
           ),
@@ -71,11 +77,44 @@ class _FamilyFilterRow extends StatelessWidget {
   }
 }
 
+class _GenreFilterRow extends StatelessWidget {
+  final Genre? selected;
+  final ValueChanged<Genre?> onSelect;
+
+  const _GenreFilterRow({required this.selected, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = <Genre?>[null, ...Genre.values];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      child: Row(
+        children: [
+          for (final option in options) ...[
+            _FilterChip(
+              label: option?.label ?? 'Alle',
+              selected: selected == option,
+              onTap: () => onSelect(option),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _SkillFilterRow extends StatelessWidget {
+  final List<Skill> skills;
   final Set<Skill> selected;
   final ValueChanged<Skill> onToggle;
 
-  const _SkillFilterRow({required this.selected, required this.onToggle});
+  const _SkillFilterRow({
+    required this.skills,
+    required this.selected,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +123,7 @@ class _SkillFilterRow extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Row(
         children: [
-          for (final skill in Skill.values) ...[
+          for (final skill in skills) ...[
             _FilterChip(
               label: skill.label,
               selected: selected.contains(skill),

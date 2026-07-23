@@ -169,7 +169,27 @@ class _RudimentByIdProviderElement extends AutoDisposeProviderElement<Rudiment>
   String get id => (origin as RudimentByIdProvider).id;
 }
 
-String _$filteredRudimentsHash() => r'8d0d8f95b3c84f66d4c9c22683515bdb47c23617';
+String _$availableSkillsHash() => r'9908e7093b80267c4a7faf7bd7b9e36daf8eae72';
+
+/// Skills actually present on at least one seed rudiment, in [Skill] enum
+/// order. Used to drive the skill filter chip row so chips that would
+/// always dead-end on an empty result (e.g. no rudiment is tagged
+/// `Skill.groove` or `Skill.fill` today) aren't rendered.
+///
+/// Copied from [availableSkills].
+@ProviderFor(availableSkills)
+final availableSkillsProvider = AutoDisposeProvider<List<Skill>>.internal(
+  availableSkills,
+  name: r'availableSkillsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$availableSkillsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef AvailableSkillsRef = AutoDisposeProviderRef<List<Skill>>;
+String _$filteredRudimentsHash() => r'c6232dd82b421c53ee11342091bb06d8ab58bff2';
 
 /// See also [filteredRudiments].
 @ProviderFor(filteredRudiments)
@@ -184,7 +204,7 @@ final filteredRudimentsProvider = AutoDisposeProvider<List<Rudiment>>.internal(
 );
 
 typedef FilteredRudimentsRef = AutoDisposeProviderRef<List<Rudiment>>;
-String _$lessonsFilterHash() => r'8f811838dace56a518ef0a6b8805973d08014768';
+String _$lessonsFilterHash() => r'd3710f75d6167680cb2244965d81672565b38f60';
 
 /// See also [LessonsFilter].
 @ProviderFor(LessonsFilter)
