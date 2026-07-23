@@ -20,23 +20,6 @@ final rudimentsProvider = AutoDisposeProvider<List<Rudiment>>.internal(
 );
 
 typedef RudimentsRef = AutoDisposeProviderRef<List<Rudiment>>;
-String _$groupedRudimentsHash() => r'60eced3bd6c1e2f0946872070e65f90f0fdead66';
-
-/// See also [groupedRudiments].
-@ProviderFor(groupedRudiments)
-final groupedRudimentsProvider =
-    AutoDisposeProvider<Map<String, List<Rudiment>>>.internal(
-  groupedRudiments,
-  name: r'groupedRudimentsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$groupedRudimentsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef GroupedRudimentsRef
-    = AutoDisposeProviderRef<Map<String, List<Rudiment>>>;
 String _$rudimentByIdHash() => r'bbc3e6a6c61a389a406561b782fa62c50f0200ed';
 
 /// Copied from Dart SDK
@@ -186,22 +169,56 @@ class _RudimentByIdProviderElement extends AutoDisposeProviderElement<Rudiment>
   String get id => (origin as RudimentByIdProvider).id;
 }
 
-String _$practicePlanHash() => r'c89e61c83fba9bd27af8f72c95038618ad818d67';
+String _$availableSkillsHash() => r'9908e7093b80267c4a7faf7bd7b9e36daf8eae72';
 
-/// The free exercises ("Übungen") as a single ordered progression, sorted by
-/// [Rudiment.level] then [Difficulty] — the guided practice plan.
+/// Skills actually present on at least one seed rudiment, in [Skill] enum
+/// order. Used to drive the skill filter chip row so chips that would
+/// always dead-end on an empty result (e.g. no rudiment is tagged
+/// `Skill.groove` or `Skill.fill` today) aren't rendered.
 ///
-/// Copied from [practicePlan].
-@ProviderFor(practicePlan)
-final practicePlanProvider = AutoDisposeProvider<List<Rudiment>>.internal(
-  practicePlan,
-  name: r'practicePlanProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$practicePlanHash,
+/// Copied from [availableSkills].
+@ProviderFor(availableSkills)
+final availableSkillsProvider = AutoDisposeProvider<List<Skill>>.internal(
+  availableSkills,
+  name: r'availableSkillsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$availableSkillsHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef PracticePlanRef = AutoDisposeProviderRef<List<Rudiment>>;
+typedef AvailableSkillsRef = AutoDisposeProviderRef<List<Skill>>;
+String _$filteredRudimentsHash() => r'c6232dd82b421c53ee11342091bb06d8ab58bff2';
+
+/// See also [filteredRudiments].
+@ProviderFor(filteredRudiments)
+final filteredRudimentsProvider = AutoDisposeProvider<List<Rudiment>>.internal(
+  filteredRudiments,
+  name: r'filteredRudimentsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$filteredRudimentsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef FilteredRudimentsRef = AutoDisposeProviderRef<List<Rudiment>>;
+String _$lessonsFilterHash() => r'd3710f75d6167680cb2244965d81672565b38f60';
+
+/// See also [LessonsFilter].
+@ProviderFor(LessonsFilter)
+final lessonsFilterProvider =
+    AutoDisposeNotifierProvider<LessonsFilter, LessonsFilterState>.internal(
+  LessonsFilter.new,
+  name: r'lessonsFilterProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$lessonsFilterHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$LessonsFilter = AutoDisposeNotifier<LessonsFilterState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

@@ -52,12 +52,10 @@ final last14DaysMinutesProvider =
 );
 
 typedef Last14DaysMinutesRef = AutoDisposeFutureProviderRef<List<DailyMinutes>>;
-String _$streakDaysHash() => r'2d53b857e9a5cb86b15cf055b25ca392aba7bef1';
+String _$streakDaysHash() => r'48e4f5e12a577c6380c2a0a9fb7c01c46a95ad5d';
 
-/// Current streak with a one-day grace: a single missed day does not reset the
-/// streak (it consumes the "freeze"), but two missed days in a row do. This also
-/// means the streak still shows the day after practicing, even before you've
-/// practiced again today.
+/// Current streak with a one-day grace, skipping scheduled program rest days.
+/// See [computeCurrentStreak].
 ///
 /// Copied from [streakDays].
 @ProviderFor(streakDays)
@@ -71,9 +69,10 @@ final streakDaysProvider = AutoDisposeFutureProvider<int>.internal(
 );
 
 typedef StreakDaysRef = AutoDisposeFutureProviderRef<int>;
-String _$longestStreakHash() => r'002c483d175f81929a0ce2526892e8320b302874';
+String _$longestStreakHash() => r'ee85bd5d57b208c10df5e1d2fded644361bfa8f2';
 
-/// The longest consecutive-day run ever recorded (no grace — true record).
+/// The longest consecutive-day run ever recorded (no grace), bridging
+/// scheduled program rest days. See [computeLongestStreak].
 ///
 /// Copied from [longestStreak].
 @ProviderFor(longestStreak)

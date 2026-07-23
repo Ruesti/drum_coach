@@ -1,0 +1,93 @@
+import 'package:drum_coach/features/lessons/models/rudiment.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+Rudiment _makeRudiment({ExerciseSource? source, ExerciseVoicing? voicing}) {
+  return Rudiment(
+    id: 'test_rudiment',
+    name: 'Test',
+    description: 'desc',
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.beginner,
+    sticking: const [StrokeBeat(hand: Hand.right)],
+    source: source ?? ExerciseSource.authored,
+    voicing: voicing ?? ExerciseVoicing.pad,
+  );
+}
+
+void main() {
+  group('Rudiment.source / Rudiment.voicing', () {
+    test('defaults to authored + pad when not specified', () {
+      final r = Rudiment(
+        id: 'defaults',
+        name: 'Defaults',
+        description: 'desc',
+        minBpm: 60,
+        targetBpm: 120,
+        difficulty: Difficulty.beginner,
+        sticking: const [StrokeBeat(hand: Hand.right)],
+      );
+      expect(r.source, ExerciseSource.authored);
+      expect(r.voicing, ExerciseVoicing.pad);
+    });
+
+    test('accepts an explicit generated source', () {
+      final r = _makeRudiment(source: ExerciseSource.generated);
+      expect(r.source, ExerciseSource.generated);
+    });
+
+    test('accepts an explicit excerpt source', () {
+      final r = _makeRudiment(source: ExerciseSource.excerpt);
+      expect(r.source, ExerciseSource.excerpt);
+    });
+
+    test('accepts an explicit kit voicing', () {
+      final r = _makeRudiment(voicing: ExerciseVoicing.kit);
+      expect(r.voicing, ExerciseVoicing.kit);
+    });
+  });
+
+  group('Rudiment.skill / .family / .genre / .limbs', () {
+    test('defaults to no skill, no family, general genre, hands', () {
+      final r = Rudiment(
+        id: 'defaults',
+        name: 'Defaults',
+        description: 'desc',
+        minBpm: 60,
+        targetBpm: 120,
+        difficulty: Difficulty.beginner,
+        sticking: const [StrokeBeat(hand: Hand.right)],
+      );
+      expect(r.skill, isEmpty);
+      expect(r.family, isNull);
+      expect(r.genre, Genre.general);
+      expect(r.limbs, [Limb.hands]);
+    });
+
+    test('accepts explicit skill, family, genre, limbs', () {
+      final r = Rudiment(
+        id: 'explicit',
+        name: 'Explicit',
+        description: 'desc',
+        minBpm: 60,
+        targetBpm: 120,
+        difficulty: Difficulty.beginner,
+        sticking: const [StrokeBeat(hand: Hand.right)],
+        skill: const [Skill.koordination, Skill.kontrolle],
+        family: RudimentFamily.paradiddle,
+        genre: Genre.drumCorps,
+        limbs: const [Limb.hands, Limb.feet],
+      );
+      expect(r.skill, [Skill.koordination, Skill.kontrolle]);
+      expect(r.family, RudimentFamily.paradiddle);
+      expect(r.genre, Genre.drumCorps);
+      expect(r.limbs, [Limb.hands, Limb.feet]);
+    });
+
+    test('enum labels are human-readable', () {
+      expect(Skill.kontrolle.label, 'Kontrolle');
+      expect(Genre.drumCorps.label, 'Drum Corps');
+      expect(RudimentFamily.paradiddle.label, 'Paradiddles');
+    });
+  });
+}
