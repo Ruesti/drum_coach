@@ -12,7 +12,6 @@ Rudiment buildGeneratedRudiment(List<StrokeBeat> pattern) {
   return Rudiment(
     id: 'generated',
     name: 'Generated',
-    category: '',
     description: '',
     minBpm: 80,
     targetBpm: 120,

@@ -6,7 +6,6 @@ Rudiment _r(String id, {RudimentFamily? family, List<Skill> skill = const []}) {
   return Rudiment(
     id: id,
     name: id,
-    category: 'x',
     description: '',
     minBpm: 60,
     targetBpm: 120,

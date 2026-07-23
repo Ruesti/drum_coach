@@ -120,7 +120,6 @@ class TechniqueSection {
 class Rudiment {
   final String id;
   final String name;
-  final String category;
   final String description;
   final int minBpm;
   final int targetBpm;
@@ -135,10 +134,6 @@ class Rudiment {
 
   final List<TechniqueSection> technique;
   final String? svgAssetPath;
-
-  /// Position in the curated practice-plan progression (1 = first). Used by the
-  /// "Übungen" exercises to order the plan; `null` for standard rudiments.
-  final int? level;
 
   /// Origin of this exercise. Defaults to [ExerciseSource.authored] since
   /// today's seed catalog is entirely hand-notated.
@@ -164,7 +159,6 @@ class Rudiment {
   const Rudiment({
     required this.id,
     required this.name,
-    required this.category,
     required this.description,
     required this.minBpm,
     required this.targetBpm,
@@ -174,7 +168,6 @@ class Rudiment {
     this.beatsPerBar = 4,
     this.technique = const [],
     this.svgAssetPath,
-    this.level,
     this.source = ExerciseSource.authored,
     this.voicing = ExerciseVoicing.pad,
     this.skill = const [],

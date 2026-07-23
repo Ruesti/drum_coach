@@ -5,7 +5,6 @@ Rudiment _makeRudiment({ExerciseSource? source, ExerciseVoicing? voicing}) {
   return Rudiment(
     id: 'test_rudiment',
     name: 'Test',
-    category: 'Rolls',
     description: 'desc',
     minBpm: 60,
     targetBpm: 120,
@@ -22,7 +21,6 @@ void main() {
       final r = Rudiment(
         id: 'defaults',
         name: 'Defaults',
-        category: 'Rolls',
         description: 'desc',
         minBpm: 60,
         targetBpm: 120,
@@ -54,7 +52,6 @@ void main() {
       final r = Rudiment(
         id: 'defaults',
         name: 'Defaults',
-        category: 'Rolls',
         description: 'desc',
         minBpm: 60,
         targetBpm: 120,
@@ -71,7 +68,6 @@ void main() {
       final r = Rudiment(
         id: 'explicit',
         name: 'Explicit',
-        category: 'Rolls',
         description: 'desc',
         minBpm: 60,
         targetBpm: 120,
