@@ -7,6 +7,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'single_stroke_roll',
     name: 'Single Stroke Roll',
     category: 'Rolls',
+    skill: const [Skill.kontrolle],
+    family: RudimentFamily.roll,
     description:
         'The most fundamental rudiment. Alternate single strokes between hands '
         'as fast and evenly as possible. Focus on equal pressure and rebound.',
@@ -58,6 +60,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'double_stroke_roll',
     name: 'Double Stroke Roll',
     category: 'Rolls',
+    skill: const [Skill.kontrolle],
+    family: RudimentFamily.roll,
     description:
         'Two consecutive strokes per hand. The second stroke uses the natural '
         'rebound of the stick. Keep both strokes even in volume and timing.',
@@ -111,6 +115,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'multiple_bounce_roll',
     name: 'Multiple Bounce Roll',
     category: 'Rolls',
+    skill: const [Skill.kontrolle],
+    family: RudimentFamily.roll,
     description:
         'Also called buzz roll. Press the stick into the drum head to create '
         'multiple uncontrolled bounces per stroke. Creates a sustained roll sound.',
@@ -161,6 +167,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'single_paradiddle',
     name: 'Single Paradiddle',
     category: 'Paradiddles',
+    skill: const [Skill.koordination, Skill.kontrolle],
+    family: RudimentFamily.paradiddle,
     description:
         'RLRR LRLL. One of the most important rudiments. The double stroke at '
         'the end shifts the leading hand on each repetition. Great for fills and grooves.',
@@ -214,6 +222,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'double_paradiddle',
     name: 'Double Paradiddle',
     category: 'Paradiddles',
+    skill: const [Skill.koordination, Skill.kontrolle],
+    family: RudimentFamily.paradiddle,
     description:
         'RLRLRR LRLRLL. Extends the paradiddle concept with two extra single '
         'strokes. Creates a 12-note phrase that works well over triplet-feel rhythms.',
@@ -269,6 +279,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'paradiddle_diddle',
     name: 'Paradiddle-Diddle',
     category: 'Paradiddles',
+    skill: const [Skill.koordination, Skill.kontrolle],
+    family: RudimentFamily.paradiddle,
     description:
         'RLRRLL LRLLRR. A 6-note phrase built from the paradiddle with a trailing '
         'double stroke. Creates a feeling of three over two when played at speed.',
@@ -325,6 +337,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'flam',
     name: 'Flam',
     category: 'Flams',
+    skill: const [Skill.kontrolle],
+    family: RudimentFamily.flam,
     description:
         'A grace note played just before the main stroke, creating a thicker '
         'sound. The grace note (shown smaller) is barely audible — keep it tight.',
@@ -378,6 +392,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'flam_accent',
     name: 'Flam Accent',
     category: 'Flams',
+    skill: const [Skill.kontrolle],
+    family: RudimentFamily.flam,
     description:
         'A flam followed by two taps: lR L R / rL R L. Each group of three '
         'starts with a flam accent. Common in rudimental and orchestral drumming.',
@@ -428,6 +444,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'flam_paradiddle',
     name: 'Flam Paradiddle',
     category: 'Flams',
+    skill: const [Skill.kontrolle],
+    family: RudimentFamily.flam,
     description:
         'lRLRR / rLRLL. A paradiddle with a flam on the leading stroke. '
         'The grace note adds texture and challenges your stick control significantly.',
@@ -483,6 +501,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'single_drag',
     name: 'Single Drag',
     category: 'Ruffs',
+    skill: const [Skill.kontrolle],
+    family: RudimentFamily.ruff,
     description:
         'Two grace notes preceding the main stroke: llR rRL. The drag (two ghost '
         'notes) sounds like a rapid roll before the accent. Keep the drags light.',
@@ -533,6 +553,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'double_drag',
     name: 'Double Drag',
     category: 'Ruffs',
+    skill: const [Skill.kontrolle],
+    family: RudimentFamily.ruff,
     description:
         'Two drag taps followed by an accent: llR L llR L / rrL R rrL R. '
         'Requires independent control of both hands to execute the drags cleanly.',
@@ -584,6 +606,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'lesson_25',
     name: 'Lesson 25',
     category: 'Ruffs',
+    skill: const [Skill.kontrolle],
+    family: RudimentFamily.ruff,
     description:
         'Also called the double drag tap. Two sets of drag taps ending with a '
         'double stroke: llR llR R / rrL rrL L. A classic rudimental pattern.',
@@ -644,6 +668,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'ghost_note_groove',
     name: 'Ghost Note Groove',
     category: 'Ghost Notes',
+    skill: const [Skill.kontrolle],
     description:
         'A groove built around accent and ghost note contrast. The accented '
         'strokes cut through while ghost notes fill the space between beats. '
@@ -699,6 +724,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'dynamics_control',
     name: 'Dynamics Control',
     category: 'Ghost Notes',
+    skill: const [Skill.kontrolle],
     description:
         'Systematic practice of forte and piano strokes in alternation. '
         'The goal is a clean, consistent contrast — not just louder and quieter, '
@@ -755,6 +781,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'linear_beat_1',
     name: 'Linear Beat 1',
     category: 'Linear Patterns',
+    skill: const [Skill.koordination, Skill.independence],
     description:
         'A linear pattern where only one hand plays at a time. No simultaneous '
         'strokes. Builds independence and creates a flowing, open texture. '
@@ -810,6 +837,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'linear_beat_2',
     name: 'Linear Beat 2',
     category: 'Linear Patterns',
+    skill: const [Skill.koordination, Skill.independence],
     description:
         'A second linear combination exploring a different grouping. '
         'Practice slowly to internalize the pattern before building speed. '
@@ -868,6 +896,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'akzent_alle_viertel',
     name: 'Akzent auf allen Vierteln',
     category: 'Akzente',
+    skill: const [Skill.kontrolle],
     level: 1,
     description:
         'Jeder Schlag wird akzentuiert. Gleiche Lautstärke und Rebound beider '
@@ -901,6 +930,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'akzent_zwei_vier',
     name: 'Akzent auf 2 und 4',
     category: 'Akzente',
+    skill: const [Skill.kontrolle],
     level: 2,
     description:
         'Backbeat-Training: Schläge auf Zählzeit 2 und 4 werden akzentuiert, '
@@ -934,6 +964,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'akzent_wandernd',
     name: 'Wandernder Akzent',
     category: 'Akzente',
+    skill: const [Skill.kontrolle],
     level: 4,
     description:
         'Der Akzent wandert von Schlag zu Schlag durch alle acht Positionen. '
@@ -971,6 +1002,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'ghostnote_training',
     name: 'Ghostnote-Training',
     category: 'Dynamik & Ghost Notes',
+    skill: const [Skill.kontrolle],
     level: 2,
     description:
         'Wechsel zwischen lauten Akzentschlägen und sehr leisen Ghostnotes. '
@@ -1016,6 +1048,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'paradiddle_diddle',
     name: 'Paradiddle-Diddle',
     category: 'Stockkontrolle',
+    skill: const [Skill.kontrolle],
     level: 3,
     description:
         'Erweiterung des Paradiddles: RLRRLL LRLLRR. Sechs Noten pro Gruppe — '
@@ -1057,6 +1090,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'six_stroke_roll',
     name: 'Six Stroke Roll',
     category: 'Stockkontrolle',
+    skill: const [Skill.kontrolle],
     level: 2,
     description:
         'RLLRRL — sechs Schläge mit zwei Doppelschlägen in der Mitte. '
@@ -1092,6 +1126,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'gleichmaessigkeit_16tel',
     name: 'Gleichmäßigkeit — Sechzehntel',
     category: 'Timing & Gleichmäßigkeit',
+    skill: const [Skill.kontrolle],
     level: 1,
     description:
         'Sechzehntel-Noten in strenger Alternation, ohne Akzente. '
@@ -1137,6 +1172,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'moeller_motion',
     name: 'Moeller-Bewegung',
     category: 'Dynamik & Ghost Notes',
+    skill: const [Skill.kontrolle],
     level: 4,
     description:
         'Arm-Peitschenbewegung für effizienten Energiefluss. Erzeugt mehrere '
@@ -1180,6 +1216,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'doppelschlag_basis',
     name: 'Doppelschläge (Basis)',
     category: 'Stockkontrolle',
+    skill: const [Skill.kontrolle],
     level: 1,
     description:
         'RRLL im gemächlichen Tempo. Grundlage jeder Stockkontrolle: zwei '
@@ -1217,6 +1254,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'speed_singles_basis',
     name: 'Single-Stroke-Tempo (Basis)',
     category: 'Geschwindigkeit',
+    skill: const [Skill.kontrolle],
     level: 1,
     description:
         'Gleichmäßige Sechzehntel-Einzelschläge zum schrittweisen Tempoaufbau. '
@@ -1263,6 +1301,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'speed_bursts',
     name: 'Speed Bursts',
     category: 'Geschwindigkeit',
+    skill: const [Skill.kontrolle],
     level: 3,
     description:
         'Vier schnelle Sechzehntel, dann Pause. Trainiert kurze Schnelligkeits-'
@@ -1301,6 +1340,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'speed_doubles',
     name: 'Double-Stroke-Tempo',
     category: 'Geschwindigkeit',
+    skill: const [Skill.kontrolle],
     level: 4,
     description:
         'Schnelle Doppelschläge (RRLL) als Sechzehntel. Tempo basiert auf '
@@ -1347,6 +1387,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'ausdauer_dauerlauf',
     name: 'Sechzehntel-Dauerlauf',
     category: 'Ausdauer',
+    skill: const [Skill.ausdauer],
     level: 2,
     description:
         'Durchgehende Sechzehntel über mehrere Minuten ohne Pause. '
@@ -1393,6 +1434,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'ausdauer_doubles',
     name: 'Doppelschlag-Ausdauer',
     category: 'Ausdauer',
+    skill: const [Skill.ausdauer],
     level: 3,
     description:
         'Durchgehende Doppelschläge (RRLL) zum Aufbau von Unterarm- und '
@@ -1439,6 +1481,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'akzent_offbeat',
     name: 'Akzent auf dem Offbeat',
     category: 'Akzente',
+    skill: const [Skill.kontrolle],
     level: 3,
     description:
         'Achtel mit Akzent auf dem "und" (Offbeat). Trainiert das Gefühl für '
@@ -1476,6 +1519,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'ghost_um_akzent',
     name: 'Ghostnotes um den Akzent',
     category: 'Dynamik & Ghost Notes',
+    skill: const [Skill.kontrolle],
     level: 3,
     description:
         'Ein lauter Akzent eingebettet in leise Ghostnotes. Maximaler Dynamik-'
@@ -1522,6 +1566,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'timing_achtel_triolen',
     name: 'Achtel-Triolen gleichmäßig',
     category: 'Timing & Gleichmäßigkeit',
+    skill: const [Skill.kontrolle],
     level: 2,
     description:
         'Triolen mit Akzent auf jeder Zählzeit. Schult das gleichmäßige Dritteln '
@@ -1564,6 +1609,7 @@ const rudimentsSeedData = <Rudiment>[
     id: 'timing_galopp',
     name: 'Galopp-Rhythmus',
     category: 'Timing & Gleichmäßigkeit',
+    skill: const [Skill.kontrolle],
     level: 3,
     description:
         'Achtel gefolgt von zwei Sechzehnteln pro Zählzeit ("Galopp"). '
@@ -1612,6 +1658,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'eight_on_a_hand',
     name: 'Eight on a Hand',
     category: 'Marching Snare',
+    skill: const [Skill.ausdauer, Skill.kontrolle],
+    genre: Genre.drumCorps,
     description:
         'Acht Sechzehntel pro Hand mit Akzent auf jeder Zählzeit. '
         'Grundlegendes Marching-Warm-up für Kontrolle und gleichmäßigen Anschlag.',
@@ -1658,6 +1706,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'flam_accent',
     name: 'Flam Accent',
     category: 'Marching Snare',
+    skill: const [Skill.ausdauer, Skill.kontrolle],
+    genre: Genre.drumCorps,
     description:
         'Flam auf der betonten Zählzeit, gefolgt von zwei Tap-Noten — '
         'im Triolen-Feel. Ein Eckpfeiler der Marching-Rudiments.',
@@ -1688,6 +1738,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'flam_tap',
     name: 'Flam Tap',
     category: 'Marching Snare',
+    skill: const [Skill.ausdauer, Skill.kontrolle],
+    genre: Genre.drumCorps,
     description:
         'Flam gefolgt von einem Tap derselben Hand: lR-R rL-L. '
         'Trainiert den Down-Up-Stroke und Doppelschläge mit Flam.',
@@ -1720,6 +1772,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'flamacue',
     name: 'Flamacue',
     category: 'Marching Snare',
+    skill: const [Skill.ausdauer, Skill.kontrolle],
+    genre: Genre.drumCorps,
     description:
         'Flam, danach ein Akzent auf der zweiten Note, zwei Taps und ein '
         'abschließender Flam. Klassisches, ausdrucksstarkes Rudiment.',
@@ -1752,6 +1806,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'flam_paradiddle',
     name: 'Flam Paradiddle',
     category: 'Marching Snare',
+    skill: const [Skill.ausdauer, Skill.kontrolle],
+    genre: Genre.drumCorps,
     description:
         'Ein Paradiddle, dessen erste Note ein Flam mit Akzent ist: '
         'lR-L-R-R rL-R-L-L. Verbindet Flam-Kontrolle mit Doppelschlägen.',
@@ -1784,6 +1840,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'cheese',
     name: 'Cheese (Flam Diddle)',
     category: 'Marching Snare',
+    skill: const [Skill.ausdauer, Skill.kontrolle],
+    genre: Genre.drumCorps,
     description:
         'Ein Flam direkt gefolgt von einem Diddle: lR-R rL-L. '
         'Hybrid-Rudiment, das Flam und Doppelschlag in einer Bewegung verbindet.',
@@ -1816,6 +1874,8 @@ const rudimentsSeedData = <Rudiment>[
     id: 'inverted_flam_tap',
     name: 'Inverted Flam Tap',
     category: 'Marching Snare',
+    skill: const [Skill.ausdauer, Skill.kontrolle],
+    genre: Genre.drumCorps,
     description:
         'Flam Tap, bei dem der Flam auf den Off-Beat fällt: R lR L rL. '
         'Anspruchsvolle Variante für Timing und Handabwechslung.',
