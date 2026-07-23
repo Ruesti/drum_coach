@@ -1,6 +1,6 @@
 # Exercise source/voicing fields Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add `source` (`generated | authored | excerpt`) and `voicing` (`pad | kit`) fields to the existing `Rudiment` model, per Migration Step 1 in `docs/AUDIT.md` — the first move toward the brief's unified `Exercise` type, done by extending `Rudiment` rather than replacing it.
 
@@ -27,7 +27,7 @@
 **Interfaces:**
 - Produces: `enum ExerciseSource { generated, authored, excerpt }`, `enum ExerciseVoicing { pad, kit }`, `Rudiment.source` (`ExerciseSource`, defaults to `ExerciseSource.authored`), `Rudiment.voicing` (`ExerciseVoicing`, defaults to `ExerciseVoicing.pad`) — both new named constructor params on the existing `Rudiment` class at `lib/features/lessons/models/rudiment.dart:63-101`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/lessons/rudiment_model_test.dart`:
 
@@ -85,12 +85,12 @@ void main() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/lessons/rudiment_model_test.dart`
 Expected: FAIL to compile — `ExerciseSource`, `ExerciseVoicing`, the `source` and `voicing` named parameters don't exist yet on `Rudiment`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 In `lib/features/lessons/models/rudiment.dart`, add the two enums after the existing `Difficulty` enum (after line 27, before the `StrokeBeat` class doc comment on line 29):
 
@@ -153,17 +153,17 @@ class Rudiment {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `flutter test test/lessons/rudiment_model_test.dart`
 Expected: PASS, 4/4 tests green.
 
-- [ ] **Step 5: Run the full test suite to confirm no regressions**
+- [x] **Step 5: Run the full test suite to confirm no regressions**
 
 Run: `flutter test`
 Expected: All existing tests (20 previously + 4 new = 24) PASS. The 46 seed rudiments in `rudiments_seed.dart` use named-parameter construction with no `source`/`voicing` args, so they compile unchanged and pick up the new defaults.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add lib/features/lessons/models/rudiment.dart test/lessons/rudiment_model_test.dart
@@ -190,7 +190,7 @@ changes."
 
 **Context:** `docs/AUDIT.md` §5h / Phase 0.5 decision: the Phase 8 AI free-text generator (`exercise_generator_screen.dart` + `AICoachingService.generateExercise`) stays as a separate, complementary generator alongside the future grammar-based one — both produce the same `Rudiment`/score output. This task makes that origin explicit in the data instead of implicit in "which screen built it."
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/coaching/exercise_generator_rudiment_test.dart`:
 
@@ -223,12 +223,12 @@ void main() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `flutter test test/coaching/exercise_generator_rudiment_test.dart`
 Expected: FAIL to compile — `buildGeneratedRudiment` doesn't exist yet in `exercise_generator_screen.dart`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 In `lib/features/coaching/exercise_generator_screen.dart`, add a top-level function (place it near the top of the file, after the imports and before the first class/widget declaration):
 
@@ -280,22 +280,22 @@ with:
                     ),
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `flutter test test/coaching/exercise_generator_rudiment_test.dart`
 Expected: PASS, 2/2 tests green.
 
-- [ ] **Step 5: Run the full test suite to confirm no regressions**
+- [x] **Step 5: Run the full test suite to confirm no regressions**
 
 Run: `flutter test`
 Expected: All tests (24 previously + 2 new = 26) PASS.
 
-- [ ] **Step 6: Run static analysis**
+- [x] **Step 6: Run static analysis**
 
 Run: `flutter analyze`
 Expected: Same 5 pre-existing warnings as documented in `docs/AUDIT.md` (unrelated `buildQuery` experimental-API usage), zero new issues.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add lib/features/coaching/exercise_generator_screen.dart test/coaching/exercise_generator_rudiment_test.dart
