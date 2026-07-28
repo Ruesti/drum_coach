@@ -12,7 +12,6 @@ Rudiment _r(
   return Rudiment(
     id: id,
     name: id,
-    category: 'Test',
     description: '',
     minBpm: 60,
     targetBpm: 120,

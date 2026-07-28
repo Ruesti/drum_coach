@@ -20,23 +20,6 @@ final rudimentsProvider = AutoDisposeProvider<List<Rudiment>>.internal(
 );
 
 typedef RudimentsRef = AutoDisposeProviderRef<List<Rudiment>>;
-String _$groupedRudimentsHash() => r'60eced3bd6c1e2f0946872070e65f90f0fdead66';
-
-/// See also [groupedRudiments].
-@ProviderFor(groupedRudiments)
-final groupedRudimentsProvider =
-    AutoDisposeProvider<Map<String, List<Rudiment>>>.internal(
-  groupedRudiments,
-  name: r'groupedRudimentsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$groupedRudimentsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef GroupedRudimentsRef
-    = AutoDisposeProviderRef<Map<String, List<Rudiment>>>;
 String _$rudimentByIdHash() => r'bbc3e6a6c61a389a406561b782fa62c50f0200ed';
 
 /// Copied from Dart SDK
@@ -185,23 +168,5 @@ class _RudimentByIdProviderElement extends AutoDisposeProviderElement<Rudiment>
   @override
   String get id => (origin as RudimentByIdProvider).id;
 }
-
-String _$practicePlanHash() => r'c89e61c83fba9bd27af8f72c95038618ad818d67';
-
-/// The free exercises ("Übungen") as a single ordered progression, sorted by
-/// [Rudiment.level] then [Difficulty] — the guided practice plan.
-///
-/// Copied from [practicePlan].
-@ProviderFor(practicePlan)
-final practicePlanProvider = AutoDisposeProvider<List<Rudiment>>.internal(
-  practicePlan,
-  name: r'practicePlanProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$practicePlanHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef PracticePlanRef = AutoDisposeProviderRef<List<Rudiment>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

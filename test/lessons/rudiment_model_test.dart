@@ -11,7 +11,6 @@ Rudiment _makeRudiment({
   return Rudiment(
     id: 'test_rudiment',
     name: 'Test',
-    category: 'Rolls',
     description: 'desc',
     minBpm: 60,
     targetBpm: 120,
@@ -31,7 +30,6 @@ void main() {
       final r = Rudiment(
         id: 'defaults',
         name: 'Defaults',
-        category: 'Rolls',
         description: 'desc',
         minBpm: 60,
         targetBpm: 120,
@@ -63,7 +61,6 @@ void main() {
       final r = Rudiment(
         id: 'defaults',
         name: 'Defaults',
-        category: 'Rolls',
         description: 'desc',
         minBpm: 60,
         targetBpm: 120,

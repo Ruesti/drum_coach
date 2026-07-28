@@ -93,11 +93,18 @@ class _MetaRow extends StatelessWidget {
           label: rudiment.difficulty.label,
           color: rudiment.difficulty.color,
         ),
-        _InfoChip(
-          icon: Icons.folder_outlined,
-          label: rudiment.category,
-          color: Colors.white38,
-        ),
+        for (final skill in rudiment.skills)
+          _InfoChip(
+            icon: Icons.label_outline,
+            label: skill.label,
+            color: Colors.white38,
+          ),
+        for (final genre in rudiment.genres)
+          _InfoChip(
+            icon: Icons.public,
+            label: genre.label,
+            color: Colors.white38,
+          ),
       ],
     );
   }
