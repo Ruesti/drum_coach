@@ -81,6 +81,8 @@ class _PracticeSessionScreenState
         NoteGrid.eighth => Subdivision.eighth,
         NoteGrid.triplet => Subdivision.triplet,
         NoteGrid.sixteenth => Subdivision.sixteenth,
+        NoteGrid.sixteenthTriplet => Subdivision.sixteenth,
+        NoteGrid.thirtySecond => Subdivision.sixteenth,
       };
 
   static List<double> _volumesFor(List<StrokeBeat> sticking) =>

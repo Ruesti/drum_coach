@@ -9,10 +9,24 @@ enum NoteGrid {
   quarter(cellsPerQuarter: 1),
   eighth(cellsPerQuarter: 2),
   triplet(cellsPerQuarter: 3),
-  sixteenth(cellsPerQuarter: 4);
+  sixteenth(cellsPerQuarter: 4),
+  sixteenthTriplet(cellsPerQuarter: 6),
+  thirtySecond(cellsPerQuarter: 8);
 
   final int cellsPerQuarter;
   const NoteGrid({required this.cellsPerQuarter});
+}
+
+/// Display label for the Subdivision filter axis (brief: "Subdivision").
+extension NoteGridLabel on NoteGrid {
+  String get label => switch (this) {
+        NoteGrid.quarter => 'Viertel',
+        NoteGrid.eighth => '8tel',
+        NoteGrid.triplet => 'Triolen',
+        NoteGrid.sixteenth => '16tel',
+        NoteGrid.sixteenthTriplet => '16tel-Triolen',
+        NoteGrid.thirtySecond => '32tel',
+      };
 }
 
 enum Difficulty {
@@ -36,6 +50,45 @@ enum ExerciseSource { generated, authored, excerpt }
 /// `kit` = full kit notation with per-instrument voicing and synthetic
 /// drum sounds (at home).
 enum ExerciseVoicing { pad, kit }
+
+/// Tag axis: what the exercise trains. Multiple values per exercise are
+/// normal — e.g. a linear fill trains both fill and coordination.
+enum Skill {
+  control(label: 'Kontrolle'),
+  coordination(label: 'Koordination'),
+  endurance(label: 'Ausdauer'),
+  groove(label: 'Groove'),
+  fill(label: 'Fill'),
+  independence(label: 'Independence');
+
+  final String label;
+  const Skill({required this.label});
+}
+
+/// Tag axis: stylistic context. Empty for most of today's pure-technique
+/// catalog — populated as genre-specific groove/fill content is added.
+enum Genre {
+  rock(label: 'Rock'),
+  funk(label: 'Funk'),
+  jazz(label: 'Jazz'),
+  latin(label: 'Latin'),
+  metal(label: 'Metal'),
+  drumCorps(label: 'Drum Corps');
+
+  final String label;
+  const Genre({required this.label});
+}
+
+/// Tag axis: which limbs the exercise engages.
+enum Limb {
+  hands(label: 'Hände'),
+  feet(label: 'Füße'),
+  doubleBass(label: 'Doublebass'),
+  allFour(label: 'Alle vier');
+
+  final String label;
+  const Limb({required this.label});
+}
 
 /// One grid cell of a pattern. Occupies exactly one metronome tick.
 /// A cell is either a struck note (default) or a [isRest] (silent) cell.
@@ -102,6 +155,16 @@ class Rudiment {
   /// the current single-voice [NotationStaffWidget] is pad-shaped.
   final ExerciseVoicing voicing;
 
+  /// Tag axis: what this exercise trains. See [Skill].
+  final Set<Skill> skills;
+
+  /// Tag axis: stylistic context. See [Genre]. Empty for most technique
+  /// exercises; populated for genre-specific content (e.g. drum corps).
+  final Set<Genre> genres;
+
+  /// Tag axis: which limbs this exercise engages. See [Limb].
+  final Set<Limb> limbs;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -118,5 +181,8 @@ class Rudiment {
     this.level,
     this.source = ExerciseSource.authored,
     this.voicing = ExerciseVoicing.pad,
+    this.skills = const {},
+    this.genres = const {},
+    this.limbs = const {Limb.hands},
   });
 }
