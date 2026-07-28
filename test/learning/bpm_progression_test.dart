@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 RudimentProgress _makeProgress({int currentBpm = 80, int bestBpm = 80}) {
   final p = RudimentProgress()
-    ..rudimentId = 'test'
+    ..exerciseId = 'test'
     ..currentBpm = currentBpm
     ..bestBpm = bestBpm
     ..mastery = MasteryLevel.beginner

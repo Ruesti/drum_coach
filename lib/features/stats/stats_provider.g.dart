@@ -274,7 +274,7 @@ class _PracticeCalendarProviderElement
 }
 
 String _$bpmHistoryForRudimentHash() =>
-    r'96b03be252e41835b8c9ba1b785b30ad23944ff0';
+    r'2faedd8a4917791c8d88e33c37f74ecaae7ee808';
 
 /// See also [bpmHistoryForRudiment].
 @ProviderFor(bpmHistoryForRudiment)

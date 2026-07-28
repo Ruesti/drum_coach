@@ -21,7 +21,7 @@ class PracticeNotifier extends _$PracticeNotifier {
     required int targetBpm,
   }) async {
     final session = PracticeSession()
-      ..rudimentId = rudimentId
+      ..exerciseId = rudimentId
       ..durationSeconds = durationSeconds
       ..achievedBpm = achievedBpm
       ..rating = rating
@@ -46,11 +46,11 @@ class PracticeNotifier extends _$PracticeNotifier {
         .buildQuery<RudimentProgress>()
         .findAll();
     var progress =
-        allProgress.where((p) => p.rudimentId == rudimentId).firstOrNull;
+        allProgress.where((p) => p.exerciseId == rudimentId).firstOrNull;
 
     final now = DateTime.now();
     progress ??= RudimentProgress()
-      ..rudimentId = rudimentId
+      ..exerciseId = rudimentId
       ..currentBpm = achievedBpm
       ..bestBpm = achievedBpm
       ..mastery = MasteryLevel.beginner

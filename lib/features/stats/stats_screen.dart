@@ -83,9 +83,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               const SizedBox(height: 8),
               ...sessions.take(10).map((s) {
                 final name = rudiments
-                    .where((r) => r.id == s.rudimentId)
+                    .where((r) => r.id == s.exerciseId)
                     .firstOrNull
-                    ?.name ?? s.rudimentId;
+                    ?.name ?? s.exerciseId;
                 return _SessionTile(session: s, rudimentName: name);
               }),
             ],

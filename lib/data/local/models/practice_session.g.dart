@@ -32,15 +32,15 @@ const PracticeSessionSchema = CollectionSchema(
       name: r'durationSeconds',
       type: IsarType.long,
     ),
-    r'rating': PropertySchema(
+    r'exerciseId': PropertySchema(
       id: 3,
+      name: r'exerciseId',
+      type: IsarType.string,
+    ),
+    r'rating': PropertySchema(
+      id: 4,
       name: r'rating',
       type: IsarType.long,
-    ),
-    r'rudimentId': PropertySchema(
-      id: 4,
-      name: r'rudimentId',
-      type: IsarType.string,
     )
   },
   estimateSize: _practiceSessionEstimateSize,
@@ -63,7 +63,7 @@ int _practiceSessionEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.rudimentId.length * 3;
+  bytesCount += 3 + object.exerciseId.length * 3;
   return bytesCount;
 }
 
@@ -76,8 +76,8 @@ void _practiceSessionSerialize(
   writer.writeLong(offsets[0], object.achievedBpm);
   writer.writeDateTime(offsets[1], object.date);
   writer.writeLong(offsets[2], object.durationSeconds);
-  writer.writeLong(offsets[3], object.rating);
-  writer.writeString(offsets[4], object.rudimentId);
+  writer.writeString(offsets[3], object.exerciseId);
+  writer.writeLong(offsets[4], object.rating);
 }
 
 PracticeSession _practiceSessionDeserialize(
@@ -90,9 +90,9 @@ PracticeSession _practiceSessionDeserialize(
   object.achievedBpm = reader.readLong(offsets[0]);
   object.date = reader.readDateTime(offsets[1]);
   object.durationSeconds = reader.readLong(offsets[2]);
+  object.exerciseId = reader.readString(offsets[3]);
   object.id = id;
-  object.rating = reader.readLong(offsets[3]);
-  object.rudimentId = reader.readString(offsets[4]);
+  object.rating = reader.readLong(offsets[4]);
   return object;
 }
 
@@ -110,9 +110,9 @@ P _practiceSessionDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
-    case 4:
       return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -382,6 +382,142 @@ extension PracticeSessionQueryFilter
   }
 
   QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'exerciseId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'exerciseId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'exerciseId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
+      exerciseIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'exerciseId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
       idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -492,142 +628,6 @@ extension PracticeSessionQueryFilter
       ));
     });
   }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'rudimentId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'rudimentId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'rudimentId',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterFilterCondition>
-      rudimentIdIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'rudimentId',
-        value: '',
-      ));
-    });
-  }
 }
 
 extension PracticeSessionQueryObject
@@ -679,6 +679,20 @@ extension PracticeSessionQuerySortBy
     });
   }
 
+  QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy>
+      sortByExerciseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy>
+      sortByExerciseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.desc);
+    });
+  }
+
   QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy> sortByRating() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rating', Sort.asc);
@@ -689,20 +703,6 @@ extension PracticeSessionQuerySortBy
       sortByRatingDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rating', Sort.desc);
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy>
-      sortByRudimentId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'rudimentId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy>
-      sortByRudimentIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'rudimentId', Sort.desc);
     });
   }
 }
@@ -750,6 +750,20 @@ extension PracticeSessionQuerySortThenBy
     });
   }
 
+  QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy>
+      thenByExerciseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy>
+      thenByExerciseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.desc);
+    });
+  }
+
   QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -772,20 +786,6 @@ extension PracticeSessionQuerySortThenBy
       thenByRatingDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rating', Sort.desc);
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy>
-      thenByRudimentId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'rudimentId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<PracticeSession, PracticeSession, QAfterSortBy>
-      thenByRudimentIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'rudimentId', Sort.desc);
     });
   }
 }
@@ -812,16 +812,16 @@ extension PracticeSessionQueryWhereDistinct
     });
   }
 
-  QueryBuilder<PracticeSession, PracticeSession, QDistinct> distinctByRating() {
+  QueryBuilder<PracticeSession, PracticeSession, QDistinct>
+      distinctByExerciseId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'rating');
+      return query.addDistinctBy(r'exerciseId', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<PracticeSession, PracticeSession, QDistinct>
-      distinctByRudimentId({bool caseSensitive = true}) {
+  QueryBuilder<PracticeSession, PracticeSession, QDistinct> distinctByRating() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'rudimentId', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'rating');
     });
   }
 }
@@ -853,15 +853,15 @@ extension PracticeSessionQueryProperty
     });
   }
 
-  QueryBuilder<PracticeSession, int, QQueryOperations> ratingProperty() {
+  QueryBuilder<PracticeSession, String, QQueryOperations> exerciseIdProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'rating');
+      return query.addPropertyName(r'exerciseId');
     });
   }
 
-  QueryBuilder<PracticeSession, String, QQueryOperations> rudimentIdProperty() {
+  QueryBuilder<PracticeSession, int, QQueryOperations> ratingProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'rudimentId');
+      return query.addPropertyName(r'rating');
     });
   }
 }
