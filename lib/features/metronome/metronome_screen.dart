@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,9 +19,14 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen>
   late Animation<double> _scaleAnim;
   late Animation<double> _opacityAnim;
 
+  /// Captured in [initState] because `ref` is unsafe to read fresh inside
+  /// [dispose] — by then the widget's Element may already be torn down.
+  late final MetronomeNotifier _metronomeNotifier;
+
   @override
   void initState() {
     super.initState();
+    _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 220),
@@ -50,6 +57,9 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen>
 
   @override
   void dispose() {
+    // Deferred: Riverpod forbids modifying provider state synchronously
+    // during a widget tree teardown (dispose runs mid-build/mid-unmount).
+    Future.microtask(_metronomeNotifier.stop);
     _pulseController.dispose();
     super.dispose();
   }
