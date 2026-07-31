@@ -37,3 +37,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+dependency_overrides:
+  # record_linux ^0.7.0 (pulled in by record ^5.1.2) predates the
+  # record_platform_interface ^1.5.0 abstract members (startStream, the
+  # extra hasPermission parameter), which breaks compilation once
+  # record_platform_interface resolves to 1.6.0. Force a record_linux
+  # release that actually implements that interface version.
+  record_linux: ^1.3.1
