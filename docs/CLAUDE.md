@@ -106,13 +106,15 @@ class PracticeSession {
 class Rudiment {
   final String id;
   final String name;
-  final String category;
   final String description;
   final int minBpm;
   final int targetBpm;
   final Difficulty difficulty;
   final List<StrokeBeat> sticking;   // R/L pattern definition
   final String? svgAssetPath;
+  final Set<Skill> skills;           // tag axis, see below
+  final Set<Genre> genres;           // tag axis, see below
+  final Set<Limb> limbs;             // tag axis, see below
 }
 
 class StrokeBeat {
@@ -128,14 +130,17 @@ enum Hand { right, left }
 // R● = StrokeBeat(hand: right, isAccent: true)
 ```
 
-## Rudiment Categories & Seed Data
-Include at minimum:
-- **Rolls**: Single Stroke Roll, Double Stroke Roll, Multiple Bounce Roll
-- **Paradiddles**: Single Paradiddle, Double Paradiddle, Paradiddle-diddle
-- **Flams**: Flam, Flam Accent, Flam Paradiddle
-- **Ruffs**: Single Drag, Double Drag, Lesson 25
-- **Ghost Notes**: Ghost Note Groove, Dynamics Control
-- **Linear Patterns**: Linear Beat 1, Linear Beat 2
+## Rudiment Tag Axes & Seed Data
+Rudiments are no longer organized in a single category tree — a rudiment can
+carry multiple tags across independent axes (see
+`docs/superpowers/specs/2026-07-28-category-to-tag-axes-design.md`):
+- **Skill**: control, coordination, endurance, groove, fill, independence
+- **Genre**: rock, funk, jazz, latin, metal, drumCorps
+- **Gliedmaßen (Limb)**: hands, feet, doubleBass, allFour
+- **Subdivision**: derived from `gridUnit` (`NoteGrid`), not a separate field
+
+The Lessons screen filters by these axes (OR within an axis, AND across
+axes) instead of grouping by category.
 
 ### `PracticeSession` (Isar collection)
 ```dart

@@ -16,7 +16,7 @@ Future<List<DailyRoutineItem>> dailyRoutine(DailyRoutineRef ref) async {
       await IsarService.instance.rudimentProgress
           .buildQuery<RudimentProgress>()
           .findAll();
-  final progressMap = {for (final p in allProgress) p.rudimentId: p};
+  final progressMap = {for (final p in allProgress) p.exerciseId: p};
   final today = DateTime.now();
   final items = <DailyRoutineItem>[];
 
@@ -25,10 +25,10 @@ Future<List<DailyRoutineItem>> dailyRoutine(DailyRoutineRef ref) async {
     if (items.length >= _maxItems) break;
     if (!p.nextReviewDate.isAfter(today) &&
         p.mastery != MasteryLevel.mastered) {
-      final r = allRudiments.where((r) => r.id == p.rudimentId).firstOrNull;
+      final r = allRudiments.where((r) => r.id == p.exerciseId).firstOrNull;
       if (r == null) continue;
       items.add(DailyRoutineItem(
-        rudimentId: p.rudimentId,
+        rudimentId: p.exerciseId,
         type: RoutineItemType.review,
         suggestedBpm: p.currentBpm,
         suggestedDurationMinutes: 6,
@@ -41,9 +41,9 @@ Future<List<DailyRoutineItem>> dailyRoutine(DailyRoutineRef ref) async {
     if (items.length >= _maxItems) break;
     if (p.mastery != MasteryLevel.mastered &&
         p.nextReviewDate.isAfter(today) &&
-        items.every((i) => i.rudimentId != p.rudimentId)) {
+        items.every((i) => i.rudimentId != p.exerciseId)) {
       items.add(DailyRoutineItem(
-        rudimentId: p.rudimentId,
+        rudimentId: p.exerciseId,
         type: RoutineItemType.progression,
         suggestedBpm: p.currentBpm,
         suggestedDurationMinutes: 5,

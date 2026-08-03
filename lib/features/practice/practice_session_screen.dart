@@ -53,12 +53,17 @@ class _PracticeSessionScreenState
 
   final _aiService = AICoachingService();
 
+  /// Captured in [initState] because `ref` is unsafe to read fresh inside
+  /// [dispose] — by then the widget's Element may already be torn down.
+  late final MetronomeNotifier _metronomeNotifier;
+
   @override
   void initState() {
     super.initState();
+    _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
-      final metronome = ref.read(metronomeNotifierProvider.notifier)
+      final metronome = _metronomeNotifier
         ..setSubdivision(_subdivisionFor(rudiment.gridUnit))
         ..setPatternVolumes(_volumesFor(rudiment.sticking));
       if (widget.targetBpm != null) {
@@ -81,6 +86,8 @@ class _PracticeSessionScreenState
         NoteGrid.eighth => Subdivision.eighth,
         NoteGrid.triplet => Subdivision.triplet,
         NoteGrid.sixteenth => Subdivision.sixteenth,
+        NoteGrid.sixteenthTriplet => Subdivision.sixteenth,
+        NoteGrid.thirtySecond => Subdivision.sixteenth,
       };
 
   static List<double> _volumesFor(List<StrokeBeat> sticking) =>
@@ -94,11 +101,14 @@ class _PracticeSessionScreenState
   @override
   void dispose() {
     _ticker?.cancel();
-    final notifier = ref.read(metronomeNotifierProvider.notifier);
-    notifier
-      ..stop()
-      ..setPatternVolumes(null)
-      ..setSubdivision(Subdivision.quarter);
+    // Deferred: Riverpod forbids modifying provider state synchronously
+    // during a widget tree teardown (dispose runs mid-build/mid-unmount).
+    Future.microtask(() {
+      _metronomeNotifier
+        ..stop()
+        ..setPatternVolumes(null)
+        ..setSubdivision(Subdivision.quarter);
+    });
     _micService?.stopRecording();
     _micService?.dispose();
     super.dispose();

@@ -95,6 +95,8 @@ class _StaffPainter extends CustomPainter {
         NoteGrid.eighth => 1,
         NoteGrid.triplet => 1,
         NoteGrid.sixteenth => 2,
+        NoteGrid.sixteenthTriplet => 2,
+        NoteGrid.thirtySecond => 3,
       };
 
   /// Cells that fit per row, snapped down to a whole number of bars.

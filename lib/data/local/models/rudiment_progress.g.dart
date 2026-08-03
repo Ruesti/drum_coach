@@ -27,26 +27,26 @@ const RudimentProgressSchema = CollectionSchema(
       name: r'currentBpm',
       type: IsarType.long,
     ),
-    r'lastPracticed': PropertySchema(
+    r'exerciseId': PropertySchema(
       id: 2,
+      name: r'exerciseId',
+      type: IsarType.string,
+    ),
+    r'lastPracticed': PropertySchema(
+      id: 3,
       name: r'lastPracticed',
       type: IsarType.dateTime,
     ),
     r'mastery': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'mastery',
       type: IsarType.string,
       enumMap: _RudimentProgressmasteryEnumValueMap,
     ),
     r'nextReviewDate': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'nextReviewDate',
       type: IsarType.dateTime,
-    ),
-    r'rudimentId': PropertySchema(
-      id: 5,
-      name: r'rudimentId',
-      type: IsarType.string,
     ),
     r'srInterval': PropertySchema(
       id: 6,
@@ -65,14 +65,14 @@ const RudimentProgressSchema = CollectionSchema(
   deserializeProp: _rudimentProgressDeserializeProp,
   idName: r'id',
   indexes: {
-    r'rudimentId': IndexSchema(
-      id: 3750639857380131923,
-      name: r'rudimentId',
+    r'exerciseId': IndexSchema(
+      id: -5431545612219001672,
+      name: r'exerciseId',
       unique: true,
       replace: false,
       properties: [
         IndexPropertySchema(
-          name: r'rudimentId',
+          name: r'exerciseId',
           type: IndexType.hash,
           caseSensitive: true,
         )
@@ -93,8 +93,8 @@ int _rudimentProgressEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.exerciseId.length * 3;
   bytesCount += 3 + object.mastery.name.length * 3;
-  bytesCount += 3 + object.rudimentId.length * 3;
   return bytesCount;
 }
 
@@ -106,10 +106,10 @@ void _rudimentProgressSerialize(
 ) {
   writer.writeLong(offsets[0], object.bestBpm);
   writer.writeLong(offsets[1], object.currentBpm);
-  writer.writeDateTime(offsets[2], object.lastPracticed);
-  writer.writeString(offsets[3], object.mastery.name);
-  writer.writeDateTime(offsets[4], object.nextReviewDate);
-  writer.writeString(offsets[5], object.rudimentId);
+  writer.writeString(offsets[2], object.exerciseId);
+  writer.writeDateTime(offsets[3], object.lastPracticed);
+  writer.writeString(offsets[4], object.mastery.name);
+  writer.writeDateTime(offsets[5], object.nextReviewDate);
   writer.writeLong(offsets[6], object.srInterval);
   writer.writeLong(offsets[7], object.srRepetitions);
 }
@@ -123,13 +123,13 @@ RudimentProgress _rudimentProgressDeserialize(
   final object = RudimentProgress();
   object.bestBpm = reader.readLong(offsets[0]);
   object.currentBpm = reader.readLong(offsets[1]);
+  object.exerciseId = reader.readString(offsets[2]);
   object.id = id;
-  object.lastPracticed = reader.readDateTime(offsets[2]);
+  object.lastPracticed = reader.readDateTime(offsets[3]);
   object.mastery = _RudimentProgressmasteryValueEnumMap[
-          reader.readStringOrNull(offsets[3])] ??
+          reader.readStringOrNull(offsets[4])] ??
       MasteryLevel.beginner;
-  object.nextReviewDate = reader.readDateTime(offsets[4]);
-  object.rudimentId = reader.readString(offsets[5]);
+  object.nextReviewDate = reader.readDateTime(offsets[5]);
   object.srInterval = reader.readLong(offsets[6]);
   object.srRepetitions = reader.readLong(offsets[7]);
   return object;
@@ -147,15 +147,15 @@ P _rudimentProgressDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 3:
+      return (reader.readDateTime(offset)) as P;
+    case 4:
       return (_RudimentProgressmasteryValueEnumMap[
               reader.readStringOrNull(offset)] ??
           MasteryLevel.beginner) as P;
-    case 4:
-      return (reader.readDateTime(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 6:
       return (reader.readLong(offset)) as P;
     case 7:
@@ -194,59 +194,59 @@ void _rudimentProgressAttach(
 }
 
 extension RudimentProgressByIndex on IsarCollection<RudimentProgress> {
-  Future<RudimentProgress?> getByRudimentId(String rudimentId) {
-    return getByIndex(r'rudimentId', [rudimentId]);
+  Future<RudimentProgress?> getByExerciseId(String exerciseId) {
+    return getByIndex(r'exerciseId', [exerciseId]);
   }
 
-  RudimentProgress? getByRudimentIdSync(String rudimentId) {
-    return getByIndexSync(r'rudimentId', [rudimentId]);
+  RudimentProgress? getByExerciseIdSync(String exerciseId) {
+    return getByIndexSync(r'exerciseId', [exerciseId]);
   }
 
-  Future<bool> deleteByRudimentId(String rudimentId) {
-    return deleteByIndex(r'rudimentId', [rudimentId]);
+  Future<bool> deleteByExerciseId(String exerciseId) {
+    return deleteByIndex(r'exerciseId', [exerciseId]);
   }
 
-  bool deleteByRudimentIdSync(String rudimentId) {
-    return deleteByIndexSync(r'rudimentId', [rudimentId]);
+  bool deleteByExerciseIdSync(String exerciseId) {
+    return deleteByIndexSync(r'exerciseId', [exerciseId]);
   }
 
-  Future<List<RudimentProgress?>> getAllByRudimentId(
-      List<String> rudimentIdValues) {
-    final values = rudimentIdValues.map((e) => [e]).toList();
-    return getAllByIndex(r'rudimentId', values);
+  Future<List<RudimentProgress?>> getAllByExerciseId(
+      List<String> exerciseIdValues) {
+    final values = exerciseIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'exerciseId', values);
   }
 
-  List<RudimentProgress?> getAllByRudimentIdSync(
-      List<String> rudimentIdValues) {
-    final values = rudimentIdValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'rudimentId', values);
+  List<RudimentProgress?> getAllByExerciseIdSync(
+      List<String> exerciseIdValues) {
+    final values = exerciseIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'exerciseId', values);
   }
 
-  Future<int> deleteAllByRudimentId(List<String> rudimentIdValues) {
-    final values = rudimentIdValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'rudimentId', values);
+  Future<int> deleteAllByExerciseId(List<String> exerciseIdValues) {
+    final values = exerciseIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'exerciseId', values);
   }
 
-  int deleteAllByRudimentIdSync(List<String> rudimentIdValues) {
-    final values = rudimentIdValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'rudimentId', values);
+  int deleteAllByExerciseIdSync(List<String> exerciseIdValues) {
+    final values = exerciseIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'exerciseId', values);
   }
 
-  Future<Id> putByRudimentId(RudimentProgress object) {
-    return putByIndex(r'rudimentId', object);
+  Future<Id> putByExerciseId(RudimentProgress object) {
+    return putByIndex(r'exerciseId', object);
   }
 
-  Id putByRudimentIdSync(RudimentProgress object, {bool saveLinks = true}) {
-    return putByIndexSync(r'rudimentId', object, saveLinks: saveLinks);
+  Id putByExerciseIdSync(RudimentProgress object, {bool saveLinks = true}) {
+    return putByIndexSync(r'exerciseId', object, saveLinks: saveLinks);
   }
 
-  Future<List<Id>> putAllByRudimentId(List<RudimentProgress> objects) {
-    return putAllByIndex(r'rudimentId', objects);
+  Future<List<Id>> putAllByExerciseId(List<RudimentProgress> objects) {
+    return putAllByIndex(r'exerciseId', objects);
   }
 
-  List<Id> putAllByRudimentIdSync(List<RudimentProgress> objects,
+  List<Id> putAllByExerciseIdSync(List<RudimentProgress> objects,
       {bool saveLinks = true}) {
-    return putAllByIndexSync(r'rudimentId', objects, saveLinks: saveLinks);
+    return putAllByIndexSync(r'exerciseId', objects, saveLinks: saveLinks);
   }
 }
 
@@ -329,44 +329,44 @@ extension RudimentProgressQueryWhere
   }
 
   QueryBuilder<RudimentProgress, RudimentProgress, QAfterWhereClause>
-      rudimentIdEqualTo(String rudimentId) {
+      exerciseIdEqualTo(String exerciseId) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'rudimentId',
-        value: [rudimentId],
+        indexName: r'exerciseId',
+        value: [exerciseId],
       ));
     });
   }
 
   QueryBuilder<RudimentProgress, RudimentProgress, QAfterWhereClause>
-      rudimentIdNotEqualTo(String rudimentId) {
+      exerciseIdNotEqualTo(String exerciseId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'rudimentId',
+              indexName: r'exerciseId',
               lower: [],
-              upper: [rudimentId],
+              upper: [exerciseId],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'rudimentId',
-              lower: [rudimentId],
+              indexName: r'exerciseId',
+              lower: [exerciseId],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'rudimentId',
-              lower: [rudimentId],
+              indexName: r'exerciseId',
+              lower: [exerciseId],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'rudimentId',
+              indexName: r'exerciseId',
               lower: [],
-              upper: [rudimentId],
+              upper: [exerciseId],
               includeUpper: false,
             ));
       }
@@ -484,6 +484,142 @@ extension RudimentProgressQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'exerciseId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'exerciseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'exerciseId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'exerciseId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
+      exerciseIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'exerciseId',
+        value: '',
       ));
     });
   }
@@ -793,142 +929,6 @@ extension RudimentProgressQueryFilter
   }
 
   QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'rudimentId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'rudimentId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'rudimentId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'rudimentId',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
-      rudimentIdIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'rudimentId',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterFilterCondition>
       srIntervalEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1078,6 +1078,20 @@ extension RudimentProgressQuerySortBy
   }
 
   QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
+      sortByExerciseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
+      sortByExerciseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
       sortByLastPracticed() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastPracticed', Sort.asc);
@@ -1116,20 +1130,6 @@ extension RudimentProgressQuerySortBy
       sortByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
-      sortByRudimentId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'rudimentId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
-      sortByRudimentIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'rudimentId', Sort.desc);
     });
   }
 
@@ -1192,6 +1192,20 @@ extension RudimentProgressQuerySortThenBy
     });
   }
 
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
+      thenByExerciseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
+      thenByExerciseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'exerciseId', Sort.desc);
+    });
+  }
+
   QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1248,20 +1262,6 @@ extension RudimentProgressQuerySortThenBy
   }
 
   QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
-      thenByRudimentId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'rudimentId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
-      thenByRudimentIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'rudimentId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QAfterSortBy>
       thenBySrInterval() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'srInterval', Sort.asc);
@@ -1307,6 +1307,13 @@ extension RudimentProgressQueryWhereDistinct
   }
 
   QueryBuilder<RudimentProgress, RudimentProgress, QDistinct>
+      distinctByExerciseId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'exerciseId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<RudimentProgress, RudimentProgress, QDistinct>
       distinctByLastPracticed() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastPracticed');
@@ -1324,13 +1331,6 @@ extension RudimentProgressQueryWhereDistinct
       distinctByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nextReviewDate');
-    });
-  }
-
-  QueryBuilder<RudimentProgress, RudimentProgress, QDistinct>
-      distinctByRudimentId({bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'rudimentId', caseSensitive: caseSensitive);
     });
   }
 
@@ -1369,6 +1369,13 @@ extension RudimentProgressQueryProperty
     });
   }
 
+  QueryBuilder<RudimentProgress, String, QQueryOperations>
+      exerciseIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'exerciseId');
+    });
+  }
+
   QueryBuilder<RudimentProgress, DateTime, QQueryOperations>
       lastPracticedProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -1387,13 +1394,6 @@ extension RudimentProgressQueryProperty
       nextReviewDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nextReviewDate');
-    });
-  }
-
-  QueryBuilder<RudimentProgress, String, QQueryOperations>
-      rudimentIdProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'rudimentId');
     });
   }
 

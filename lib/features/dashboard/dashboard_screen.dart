@@ -93,7 +93,7 @@ class DashboardScreen extends ConsumerWidget {
               if (sessions.isEmpty) return const _NoSessionsCard();
               final last = sessions.first;
               return _LastSessionCard(
-                rudimentId: last.rudimentId,
+                rudimentId: last.exerciseId,
                 bpm: last.achievedBpm,
               );
             },

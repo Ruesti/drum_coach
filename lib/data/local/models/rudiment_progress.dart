@@ -9,7 +9,7 @@ class RudimentProgress {
   Id id = Isar.autoIncrement;
 
   @Index(unique: true)
-  late String rudimentId;
+  late String exerciseId;
 
   late int currentBpm;
   late int bestBpm;

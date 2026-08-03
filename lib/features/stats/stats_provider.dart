@@ -195,7 +195,7 @@ Future<List<PracticeSession>> bpmHistoryForRudiment(
 ) async {
   final sessions = await ref.watch(allSessionsProvider.future);
   return sessions
-      .where((s) => s.rudimentId == rudimentId)
+      .where((s) => s.exerciseId == rudimentId)
       .toList()
     ..sort((a, b) => a.date.compareTo(b.date));
 }

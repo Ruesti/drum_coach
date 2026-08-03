@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 enum Subdivision {
@@ -49,6 +50,33 @@ const _cmdStop   = 1; // [1]
 const _cmdBpm    = 2; // [2, bpm]
 const _cmdFactor = 3; // [3, subdivisionFactor]
 
+/// Microsecond delay until beat [idx] should fire, given the current tempo
+/// ([bpm]/[factor]) and an anchor point ([anchorUs], [anchorIdx]) the
+/// schedule is measured from. Re-anchoring on every bpm/factor change (see
+/// `_cmdBpm`/`_cmdFactor` below) is what makes a live tempo change take
+/// effect from *now* instead of retroactively rewriting the timing of beats
+/// already played — using `idx * interval` unconditionally (anchored at
+/// idx=0) would compute a wildly wrong expected time for any idx reached
+/// under a *different*, earlier tempo.
+///
+/// Clamped so a beat never fires earlier than 100 µs from now (avoids a
+/// zero/negative `Timer` duration) and never waits longer than one full
+/// interval (avoids stalling if the clock is far behind schedule).
+///
+/// Pure and isolate-independent so it's unit-testable directly.
+int computeNextBeatDelayUs({
+  required int bpm,
+  required int factor,
+  required int idx,
+  required int anchorUs,
+  required int anchorIdx,
+  required int elapsedUs,
+}) {
+  final ivUs = 60000000.0 / bpm / factor;
+  final expUs = (anchorUs + (idx - anchorIdx) * ivUs).round();
+  return (expUs - elapsedUs).clamp(100, ivUs.ceil());
+}
+
 // Top-level required by Isolate.spawn.
 void _timingIsolateMain(SendPort replyPort) {
   final port = ReceivePort();
@@ -60,6 +88,10 @@ void _timingIsolateMain(SendPort replyPort) {
   var idx     = 0;
   final sw    = Stopwatch();
   Timer? t;
+
+  // See computeNextBeatDelayUs doc comment.
+  var anchorUs  = 0;
+  var anchorIdx = 0;
 
   // Mutual recursion via late variable — required because Dart forbids
   // a local function referencing another that isn't declared yet.
@@ -74,10 +106,14 @@ void _timingIsolateMain(SendPort replyPort) {
 
   sched = () {
     if (!playing) return;
-    final ivUs  = 60000000.0 / bpm / factor;
-    final expUs = (idx * ivUs).round();
-    // Clamp: never fire earlier than 100 µs, never defer past next interval.
-    final delayUs = (expUs - sw.elapsedMicroseconds).clamp(100, ivUs.ceil());
+    final delayUs = computeNextBeatDelayUs(
+      bpm: bpm,
+      factor: factor,
+      idx: idx,
+      anchorUs: anchorUs,
+      anchorIdx: anchorIdx,
+      elapsedUs: sw.elapsedMicroseconds,
+    );
     t = Timer(Duration(microseconds: delayUs), onBeat);
   };
 
@@ -88,13 +124,16 @@ void _timingIsolateMain(SendPort replyPort) {
         if (playing) return;
         bpm = msg[1]; factor = msg[2];
         playing = true; idx = 0;
+        anchorUs = 0; anchorIdx = 0;
         sw..reset()..start();
         onBeat(); // first beat fires immediately, rest are timer-driven
       case _cmdStop:
         playing = false; t?.cancel(); sw.stop();
       case _cmdBpm:
+        if (playing) { anchorUs = sw.elapsedMicroseconds; anchorIdx = idx; }
         bpm = msg[1];
       case _cmdFactor:
+        if (playing) { anchorUs = sw.elapsedMicroseconds; anchorIdx = idx; }
         factor = msg[1];
     }
   });
@@ -108,7 +147,7 @@ class MetronomeEngine {
 
   AudioSource? _clickAccent, _clickNormal;
   AudioSource? _rimAccent,   _rimNormal;
-  AudioSource? _snareAccent, _snareNormal;
+  AudioSource? _snareSample;
 
   int          _bpm        = 100;
   Subdivision  _subdivision = Subdivision.quarter;
@@ -130,10 +169,10 @@ class MetronomeEngine {
         'rim_accent',   _buildRimWav(amplitude: 0.95));
     _rimNormal   = await SoLoud.instance.loadMem(
         'rim_normal',   _buildRimWav(amplitude: 0.55));
-    _snareAccent = await SoLoud.instance.loadMem(
-        'snare_accent', _buildSnareWav(amplitude: 0.95));
-    _snareNormal = await SoLoud.instance.loadMem(
-        'snare_normal', _buildSnareWav(amplitude: 0.55));
+    final snareBytes = (await rootBundle.load('assets/audio/snare.mp3'))
+        .buffer
+        .asUint8List();
+    _snareSample = await SoLoud.instance.loadMem('snare.mp3', snareBytes);
 
     if (_disposed) return;
 
@@ -170,8 +209,8 @@ class MetronomeEngine {
       (SoundType.click, false) => _clickNormal,
       (SoundType.rim,   true)  => _rimAccent,
       (SoundType.rim,   false) => _rimNormal,
-      (SoundType.snare, true)  => _snareAccent,
-      (SoundType.snare, false) => _snareNormal,
+      (SoundType.snare, true)  => _snareSample,
+      (SoundType.snare, false) => _snareSample,
     };
 
     if (source != null && SoLoud.instance.isInitialized) {
@@ -219,7 +258,7 @@ class MetronomeEngine {
     for (final s in [
       _clickAccent, _clickNormal,
       _rimAccent,   _rimNormal,
-      _snareAccent, _snareNormal,
+      _snareSample,
     ]) {
       s?.let((src) => SoLoud.instance.disposeSource(src).ignore());
     }
@@ -249,31 +288,6 @@ class MetronomeEngine {
       final rim   = math.sin(2 * math.pi * 680  * t) * math.exp(-130.0 * t) * 0.60;
       final snap  = math.sin(2 * math.pi * 2100 * t) * math.exp(-600.0 * t) * 0.35;
       return amplitude * (shell + rim + snap);
-    });
-  }
-
-  static Uint8List _buildSnareWav({double amplitude = 0.8}) {
-    const sr = 44100;
-    final n  = (sr * 0.15).round();
-
-    // Coloured noise: simple IIR low-pass for warmth.
-    final noise = List<double>.filled(n, 0);
-    var p1 = 0.0, p2 = 0.0;
-    final rng = math.Random(42);
-    for (var i = 0; i < n; i++) {
-      final x = rng.nextDouble() * 2 - 1;
-      noise[i] = x * 0.6 + p1 * 0.3 + p2 * 0.1;
-      p2 = p1; p1 = x;
-    }
-    var mx = 0.0;
-    for (final v in noise) { if (v.abs() > mx) { mx = v.abs(); } }
-    if (mx > 0) { for (var i = 0; i < n; i++) { noise[i] /= mx; } }
-
-    return _buildWav(n, (i) {
-      final t         = i / sr;
-      final transient = t < 0.008 ? math.sin(math.pi * t / 0.008) * 0.75 : 0.0;
-      final body      = math.sin(2 * math.pi * 195 * t) * math.exp(-45.0 * t) * 0.28;
-      return amplitude * (transient + 0.55 * noise[i] + body);
     });
   }
 

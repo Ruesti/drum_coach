@@ -14,7 +14,10 @@ import '../features/coaching/exercise_generator_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
 final router = GoRouter(
+  navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   redirect: (context, state) {
     if (!SettingsService.isOnboardingDone && state.matchedLocation != '/onboarding') {
@@ -25,6 +28,7 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/onboarding',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (context, _) => OnboardingScreen(
         onComplete: () => context.go('/'),
       ),
@@ -86,18 +90,22 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/program',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const ProgramScreen(),
     ),
     GoRoute(
       path: '/metronome',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const MetronomeScreen(),
     ),
     GoRoute(
       path: '/settings',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const SettingsScreen(),
     ),
     GoRoute(
       path: '/coaching/exercise-generator',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const ExerciseGeneratorScreen(),
     ),
   ],

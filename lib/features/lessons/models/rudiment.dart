@@ -9,10 +9,24 @@ enum NoteGrid {
   quarter(cellsPerQuarter: 1),
   eighth(cellsPerQuarter: 2),
   triplet(cellsPerQuarter: 3),
-  sixteenth(cellsPerQuarter: 4);
+  sixteenth(cellsPerQuarter: 4),
+  sixteenthTriplet(cellsPerQuarter: 6),
+  thirtySecond(cellsPerQuarter: 8);
 
   final int cellsPerQuarter;
   const NoteGrid({required this.cellsPerQuarter});
+}
+
+/// Display label for the Subdivision filter axis (brief: "Subdivision").
+extension NoteGridLabel on NoteGrid {
+  String get label => switch (this) {
+        NoteGrid.quarter => 'Viertel',
+        NoteGrid.eighth => '8tel',
+        NoteGrid.triplet => 'Triolen',
+        NoteGrid.sixteenth => '16tel',
+        NoteGrid.sixteenthTriplet => '16tel-Triolen',
+        NoteGrid.thirtySecond => '32tel',
+      };
 }
 
 enum Difficulty {
@@ -24,6 +38,56 @@ enum Difficulty {
   final String label;
   final Color color;
   const Difficulty({required this.label, required this.color});
+}
+
+/// Where an exercise came from. `generated` = built from the sticking
+/// grammar at runtime; `authored` = hand-notated (today's seed data);
+/// `excerpt` = a pointer into an imported score (bar range, not a copy).
+enum ExerciseSource { generated, authored, excerpt }
+
+/// Which renderer/playback mode an exercise targets. `pad` = single-line
+/// sticking notation + click, fully offline (practice pad, on the go).
+/// `kit` = full kit notation with per-instrument voicing and synthetic
+/// drum sounds (at home).
+enum ExerciseVoicing { pad, kit }
+
+/// Tag axis: what the exercise trains. Multiple values per exercise are
+/// normal — e.g. a linear fill trains both fill and coordination.
+enum Skill {
+  control(label: 'Kontrolle'),
+  coordination(label: 'Koordination'),
+  endurance(label: 'Ausdauer'),
+  groove(label: 'Groove'),
+  fill(label: 'Fill'),
+  independence(label: 'Independence');
+
+  final String label;
+  const Skill({required this.label});
+}
+
+/// Tag axis: stylistic context. Empty for most of today's pure-technique
+/// catalog — populated as genre-specific groove/fill content is added.
+enum Genre {
+  rock(label: 'Rock'),
+  funk(label: 'Funk'),
+  jazz(label: 'Jazz'),
+  latin(label: 'Latin'),
+  metal(label: 'Metal'),
+  drumCorps(label: 'Drum Corps');
+
+  final String label;
+  const Genre({required this.label});
+}
+
+/// Tag axis: which limbs the exercise engages.
+enum Limb {
+  hands(label: 'Hände'),
+  feet(label: 'Füße'),
+  doubleBass(label: 'Doublebass'),
+  allFour(label: 'Alle vier');
+
+  final String label;
+  const Limb({required this.label});
 }
 
 /// One grid cell of a pattern. Occupies exactly one metronome tick.
@@ -63,7 +127,6 @@ class TechniqueSection {
 class Rudiment {
   final String id;
   final String name;
-  final String category;
   final String description;
   final int minBpm;
   final int targetBpm;
@@ -79,14 +142,27 @@ class Rudiment {
   final List<TechniqueSection> technique;
   final String? svgAssetPath;
 
-  /// Position in the curated practice-plan progression (1 = first). Used by the
-  /// "Übungen" exercises to order the plan; `null` for standard rudiments.
-  final int? level;
+  /// Origin of this exercise. Defaults to [ExerciseSource.authored] since
+  /// today's seed catalog is entirely hand-notated.
+  final ExerciseSource source;
+
+  /// Presentation/playback mode. Defaults to [ExerciseVoicing.pad] since
+  /// the current single-voice [NotationStaffWidget] is pad-shaped.
+  final ExerciseVoicing voicing;
+
+  /// Tag axis: what this exercise trains. See [Skill].
+  final Set<Skill> skills;
+
+  /// Tag axis: stylistic context. See [Genre]. Empty for most technique
+  /// exercises; populated for genre-specific content (e.g. drum corps).
+  final Set<Genre> genres;
+
+  /// Tag axis: which limbs this exercise engages. See [Limb].
+  final Set<Limb> limbs;
 
   const Rudiment({
     required this.id,
     required this.name,
-    required this.category,
     required this.description,
     required this.minBpm,
     required this.targetBpm,
@@ -96,6 +172,10 @@ class Rudiment {
     this.beatsPerBar = 4,
     this.technique = const [],
     this.svgAssetPath,
-    this.level,
+    this.source = ExerciseSource.authored,
+    this.voicing = ExerciseVoicing.pad,
+    this.skills = const {},
+    this.genres = const {},
+    this.limbs = const {Limb.hands},
   });
 }
