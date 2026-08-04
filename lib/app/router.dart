@@ -71,14 +71,6 @@ final router = GoRouter(
               ),
             ],
           ),
-          GoRoute(
-            path: '/practice/:rudimentId',
-            builder: (_, state) => PracticeSessionScreen(
-              rudimentId: state.pathParameters['rudimentId']!,
-              isFromRoutine: false,
-              targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
-            ),
-          ),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
@@ -87,6 +79,23 @@ final router = GoRouter(
           ),
         ]),
       ],
+    ),
+    // Full-screen practice session. Kept as a root-navigator route (not nested
+    // in the Lessons branch) because it is pushed from two different navigator
+    // contexts — the Lessons detail screen (inside the shell) and the training
+    // program screen (which itself sits on the root navigator). A route bound to
+    // one branch's nested navigator but pushed from the root navigator trips
+    // Navigator's duplicate-page-key assertion (!keyReservation.contains(key)).
+    // (The routine path uses /routine/:rudimentId inside the Routine branch and
+    // is only ever pushed from within that branch, so it stays nested.)
+    GoRoute(
+      path: '/practice/:rudimentId',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, state) => PracticeSessionScreen(
+        rudimentId: state.pathParameters['rudimentId']!,
+        isFromRoutine: false,
+        targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
+      ),
     ),
     GoRoute(
       path: '/program',
