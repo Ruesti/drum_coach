@@ -123,6 +123,21 @@ class MetronomeNotifier extends _$MetronomeNotifier {
     state = state.copyWith(subdivision: subdivision, currentBeatIndex: -1);
   }
 
+  /// Exercise playback: drive the onset rate from the pattern's grid, not the
+  /// user-facing Subdivision. Does not change [MetronomeState.subdivision].
+  void setGridFactor(int cellsPerQuarter) {
+    final wasPlaying = state.isPlaying;
+    if (wasPlaying) _engine?.stop();
+    _engine?.setGridFactor(cellsPerQuarter);
+    if (wasPlaying) _engine?.start();
+  }
+
+  /// Restore the isolate's onset factor to the plain-metronome subdivision
+  /// (call when leaving exercise playback).
+  void reassertSubdivision() {
+    _engine?.setSubdivision(state.subdivision);
+  }
+
   void tap() {
     final now = DateTime.now();
     if (_tapTimestamps.isNotEmpty &&

@@ -244,6 +244,14 @@ class MetronomeEngine {
     _controlPort?.send([_cmdFactor, subdivision.factor]);
   }
 
+  /// Sets the onset rate directly as onsets-per-quarter (e.g. an exercise's
+  /// `gridUnit.cellsPerQuarter`, which may be 6 or 8 — beyond the Subdivision
+  /// enum's range). Leaves the [Subdivision] state alone so the plain
+  /// metronome's selector is unaffected.
+  void setGridFactor(int cellsPerQuarter) {
+    _controlPort?.send([_cmdFactor, cellsPerQuarter]);
+  }
+
   void setSoundType(SoundType t)      => _soundType   = t;
   void setBeatVolumes(List<double>? v) => _beatVolumes = v;
 
