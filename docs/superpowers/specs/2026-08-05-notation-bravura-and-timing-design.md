@@ -152,10 +152,11 @@ korrekt nach `gridUnit` — aber nicht mehr willkürlich nach globalem Zustand.
 - **Accent-Erkennung:** Der Isolate-Zweig `idx % factor == 0` betrifft nur den Plain-Metronom;
   im Übungs-Playback kommen Akzente aus `_beatVolumes`/`StrokeBeat.isAccent` und überschreiben
   ihn. Faktor 6/8 ist damit für Übungen unproblematisch.
-- **4/4 sichtbar:** Die Notation zeichnet Taktstriche bereits aus `beatsPerBar`+`gridUnit`.
-  Zusätzlich wird der **Viertel-Puls** dezent sichtbar gemacht (leichte Beat-Hilfslinien oder
-  Beat-Zähler unter dem System), damit die Bezugsgröße lesbar ist. Cursor, Audio und Takte
-  leiten sich dann alle aus demselben `(bpm, gridUnit, beatsPerBar)` ab.
+- **4/4 sichtbar (festgelegt: Beat-Zähler):** Die Notation zeichnet Taktstriche bereits aus
+  `beatsPerBar`+`gridUnit`. Zusätzlich wird der **Viertel-Puls** durch **Beat-Zähler unter dem
+  System** sichtbar gemacht — pro Viertel eine kleine Ziffer (1 2 3 4) an der Viertel-Position,
+  damit die Bezugsgröße lesbar ist. Cursor, Audio und Takte leiten sich dann alle aus demselben
+  `(bpm, gridUnit, beatsPerBar)` ab.
 
 ---
 
@@ -215,8 +216,8 @@ die **Drift** (Durchschnittstempo), nicht den **Abstand einzelner Schläge**.
 
 ## Risiken / offene Punkte
 
-- **Font-Beschaffung** auf dem headless NUC: Download von Bravura vs. der User legt die Datei ab.
-  Zu klären beim Umsetzen.
+- **Font-Beschaffung (festgelegt):** Claude lädt Bravura (SIL OFL) selbst herunter und legt
+  `assets/fonts/Bravura.otf` + `OFL.txt` ab. Reachability des NUC wird vor dem Plan geprüft.
 - **Bravura-Anker-Kalibrierung** (dy-Versatz pro Glyph) ist Handarbeit.
 - **Engine-Faktor > 4:** prüfen, dass keine andere Stelle einen Faktor ≤ 4 annimmt
   (Accent-per-Faktor betrifft nur den Plain-Metronom).
