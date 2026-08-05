@@ -15,6 +15,7 @@ import '../lessons/lessons_provider.dart';
 import '../lessons/models/rudiment.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
+import '../metronome/tempo.dart';
 import 'practice_provider.dart';
 
 class PracticeSessionScreen extends ConsumerStatefulWidget {
@@ -64,7 +65,7 @@ class _PracticeSessionScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
       final metronome = _metronomeNotifier
-        ..setSubdivision(_subdivisionFor(rudiment.gridUnit))
+        ..setGridFactor(onsetFactorFor(rudiment.gridUnit))
         ..setPatternVolumes(_volumesFor(rudiment.sticking));
       if (widget.targetBpm != null) {
         metronome.setBpm(widget.targetBpm!);
@@ -80,15 +81,6 @@ class _PracticeSessionScreenState
       _micService = MicAnalysisService();
     }
   }
-
-  static Subdivision _subdivisionFor(NoteGrid grid) => switch (grid) {
-        NoteGrid.quarter => Subdivision.quarter,
-        NoteGrid.eighth => Subdivision.eighth,
-        NoteGrid.triplet => Subdivision.triplet,
-        NoteGrid.sixteenth => Subdivision.sixteenth,
-        NoteGrid.sixteenthTriplet => Subdivision.sixteenth,
-        NoteGrid.thirtySecond => Subdivision.sixteenth,
-      };
 
   static List<double> _volumesFor(List<StrokeBeat> sticking) =>
       sticking.map((b) {
@@ -107,7 +99,7 @@ class _PracticeSessionScreenState
       _metronomeNotifier
         ..stop()
         ..setPatternVolumes(null)
-        ..setSubdivision(Subdivision.quarter);
+        ..reassertSubdivision();
     });
     _micService?.stopRecording();
     _micService?.dispose();
@@ -252,6 +244,8 @@ class _PracticeSessionScreenState
     final activeBeat = metState.isPlaying
         ? metState.currentBeatIndex % rudiment.sticking.length
         : null;
+    final perCell =
+        cellDuration(metState.bpm, rudiment.gridUnit.cellsPerQuarter);
 
     final isCountdown = _goalSeconds != null;
     final timerColor = isCountdown &&
@@ -315,6 +309,8 @@ class _PracticeSessionScreenState
                     child: NotationStaffWidget(
                       rudiment: rudiment,
                       activeIndex: activeBeat,
+                      perCellDuration: perCell,
+                      isPlaying: metState.isPlaying,
                     ),
                   ),
                 ),
