@@ -42,12 +42,16 @@ class BeatEvent {
 // Runs in its own isolate so Flutter's UI frame schedule cannot delay beats.
 //
 // Commands  (main → isolate): List<int> [cmdId, ...args]
-// Beat msgs (isolate → main): List<int> [beatIndex, isAccent 0|1]
+// Beat msgs (isolate → main): List<int> [beatIndex, isAccent 0|1, scheduledUs]
 
 const _cmdStart  = 0; // [0, bpm, subdivisionFactor]
 const _cmdStop   = 1; // [1]
 const _cmdBpm    = 2; // [2, bpm]
 const _cmdFactor = 3; // [3, subdivisionFactor]
+
+/// Toggle to log per-beat scheduling jitter (scheduled vs. actual play time).
+/// Keep false in commits; flip locally when measuring on-device.
+const bool kLogBeatJitter = false;
 
 /// Microsecond delay until beat [idx] should fire, given the current tempo
 /// ([bpm]/[factor]) and an anchor point ([anchorUs], [anchorIdx]) the
@@ -98,7 +102,7 @@ void _timingIsolateMain(SendPort replyPort) {
 
   void onBeat() {
     if (!playing) return;
-    replyPort.send([idx, idx % factor == 0 ? 1 : 0]);
+    replyPort.send([idx, idx % factor == 0 ? 1 : 0, sw.elapsedMicroseconds]);
     idx++;
     sched();
   }
@@ -160,6 +164,10 @@ class MetronomeEngine {
   ReceivePort?  _receivePort;
   SendPort?     _controlPort;
 
+  final Stopwatch _wall = Stopwatch()..start();
+  int _lastScheduledUs = 0;
+  int _lastActualUs = 0;
+
   Future<void> init() async {
     _clickAccent = await SoLoud.instance.loadMem(
         'click_accent', _buildClickWav(frequency: 1200, amplitude: 0.95));
@@ -185,6 +193,9 @@ class MetronomeEngine {
         _controlPort = msg;
         if (!ready.isCompleted) ready.complete();
       } else if (msg is List<int> && _isPlaying) {
+        if (kLogBeatJitter && msg.length >= 3) {
+          _logJitter(msg[0], msg[2]);
+        }
         _onBeat(msg[0], msg[1] == 1);
       }
     });
@@ -222,6 +233,20 @@ class MetronomeEngine {
       isAccent: isAccent,
       subdivision: _subdivision,
     ));
+  }
+
+  void _logJitter(int index, int scheduledUs) {
+    final actualUs = _wall.elapsedMicroseconds;
+    if (index > 0) {
+      final schedGap = scheduledUs - _lastScheduledUs;
+      final actualGap = actualUs - _lastActualUs;
+      final jitterUs = actualGap - schedGap;
+      // ignore: avoid_print
+      print('[beat $index] sched_gap=${schedGap}us actual_gap=${actualGap}us '
+          'jitter=${jitterUs}us');
+    }
+    _lastScheduledUs = scheduledUs;
+    _lastActualUs = actualUs;
   }
 
   void start() {
