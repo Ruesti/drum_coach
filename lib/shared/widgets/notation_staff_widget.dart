@@ -60,7 +60,7 @@ class _StaffPainter extends CustomPainter {
   static const double _leftPad = 10;
   static const double _rightPad = 14;
   static const double _barGap = 14; // extra space after a barline
-  static const double _rowH = 104;
+  static const double _rowH = 120; // was 104 — room for the beat-number row
 
   // Space reserved at the left of each system for the clef (+ time signature).
   static const double _systemPad = 40;
@@ -74,6 +74,7 @@ class _StaffPainter extends CustomPainter {
   static const double _stemTopY = 18;
   static const double _midY = 54; // middle staff line / notehead center
   static const double _letterY = 90; // R/L letters (below the bottom line)
+  static const double _beatNumY = 104; // beat numbers, below the R/L letters
 
   static const double _headRx = 6;
   static const double _headRy = 4.6;
@@ -85,6 +86,7 @@ class _StaffPainter extends CustomPainter {
   static const _activeColor = Color(0xFFFFC107);
   static const _ghostColor = Color(0x66FFFFFF);
   static const _letterColor = Color(0x99FFFFFF);
+  static const _beatNumColor = Color(0x77FFC107); // dim amber, the pulse anchor
 
   int get _cellsPerBeat => grid.cellsPerQuarter;
   int get _cellsPerBar => beatsPerBar * _cellsPerBeat;
@@ -192,6 +194,14 @@ class _StaffPainter extends CustomPainter {
 
     // Beam groups (per beat) then individual note heads / flags / letters.
     _paintBeamsAndNotes(canvas, row, start, end, baseY, staffY);
+
+    // Beat-counter row: one number per quarter-note pulse (the 4/4 reference).
+    for (var i = 0; i < count; i++) {
+      if (i % _cellsPerBeat != 0) continue;
+      final beatInBar = (i ~/ _cellsPerBeat) % beatsPerBar + 1;
+      _drawText(canvas, '$beatInBar', Offset(_xForPosInRow(i), baseY + _beatNumY),
+          _beatNumColor, 11, bold: true);
+    }
   }
 
   void _paintBeamsAndNotes(Canvas canvas, int row, int start, int end,
