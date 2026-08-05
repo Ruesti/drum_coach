@@ -150,6 +150,7 @@ class MetronomeEngine {
 
   int          _bpm        = 100;
   Subdivision  _subdivision = Subdivision.quarter;
+  int          _factor      = 1; // effective onsets-per-quarter that start() replays
   SoundType    _soundType   = SoundType.click;
   List<double>? _beatVolumes;
   bool          _isPlaying  = false;
@@ -226,7 +227,7 @@ class MetronomeEngine {
   void start() {
     if (_isPlaying) return;
     _isPlaying = true;
-    _controlPort?.send([_cmdStart, _bpm, _subdivision.factor]);
+    _controlPort?.send([_cmdStart, _bpm, _factor]);
   }
 
   void stop() {
@@ -241,6 +242,7 @@ class MetronomeEngine {
 
   void setSubdivision(Subdivision subdivision) {
     _subdivision = subdivision;
+    _factor = subdivision.factor;
     _controlPort?.send([_cmdFactor, subdivision.factor]);
   }
 
@@ -249,6 +251,7 @@ class MetronomeEngine {
   /// enum's range). Leaves the [Subdivision] state alone so the plain
   /// metronome's selector is unaffected.
   void setGridFactor(int cellsPerQuarter) {
+    _factor = cellsPerQuarter;
     _controlPort?.send([_cmdFactor, cellsPerQuarter]);
   }
 
