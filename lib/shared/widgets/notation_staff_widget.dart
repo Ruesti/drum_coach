@@ -39,15 +39,66 @@ class _Smufl {
 /// accents (>), ghost notes, grace notes, rests, and R/L sticking letters
 /// beneath each note. When [activeIndex] is set (during playback) a running
 /// cursor highlights that note.
-class NotationStaffWidget extends StatelessWidget {
+class NotationStaffWidget extends StatefulWidget {
   final Rudiment rudiment;
   final int? activeIndex;
+  final Duration? perCellDuration;
+  final bool isPlaying;
 
   const NotationStaffWidget({
     super.key,
     required this.rudiment,
     this.activeIndex,
+    this.perCellDuration,
+    this.isPlaying = false,
   });
+
+  @override
+  State<NotationStaffWidget> createState() => _NotationStaffWidgetState();
+}
+
+class _NotationStaffWidgetState extends State<NotationStaffWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this);
+    _syncController();
+  }
+
+  @override
+  void didUpdateWidget(NotationStaffWidget old) {
+    super.didUpdateWidget(old);
+    if (old.activeIndex != widget.activeIndex ||
+        old.isPlaying != widget.isPlaying ||
+        old.perCellDuration != widget.perCellDuration) {
+      _syncController();
+    }
+  }
+
+  /// Re-anchor: whenever a new beat arrives, run the controller 0->1 over one
+  /// cell so the cursor glides from this cell to the next. Never run while
+  /// stopped (keeps widget tests free of pending timers).
+  void _syncController() {
+    final per = widget.perCellDuration;
+    if (widget.isPlaying && widget.activeIndex != null && per != null &&
+        per.inMicroseconds > 0) {
+      _ctrl
+        ..duration = per
+        ..forward(from: 0);
+    } else {
+      _ctrl.stop();
+      _ctrl.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,16 +107,34 @@ class NotationStaffWidget extends StatelessWidget {
         final width = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : MediaQuery.of(context).size.width;
-        final painter = _StaffPainter(
-          beats: rudiment.sticking,
-          grid: rudiment.gridUnit,
-          beatsPerBar: rudiment.beatsPerBar,
-          activeIndex: activeIndex,
-          maxWidth: width,
-        );
-        return CustomPaint(
-          size: Size(width, painter.computeHeight()),
-          painter: painter,
+        return AnimatedBuilder(
+          animation: _ctrl,
+          builder: (context, _) {
+            final anchor = widget.activeIndex;
+            final cursorPos = (widget.isPlaying && anchor != null)
+                ? anchor + _ctrl.value
+                : anchor?.toDouble();
+            return CustomPaint(
+              size: Size(
+                  width,
+                  _StaffPainter(
+                    beats: widget.rudiment.sticking,
+                    grid: widget.rudiment.gridUnit,
+                    beatsPerBar: widget.rudiment.beatsPerBar,
+                    activeIndex: anchor,
+                    cursorPos: cursorPos,
+                    maxWidth: width,
+                  ).computeHeight()),
+              painter: _StaffPainter(
+                beats: widget.rudiment.sticking,
+                grid: widget.rudiment.gridUnit,
+                beatsPerBar: widget.rudiment.beatsPerBar,
+                activeIndex: anchor,
+                cursorPos: cursorPos,
+                maxWidth: width,
+              ),
+            );
+          },
         );
       },
     );
@@ -77,6 +146,7 @@ class _StaffPainter extends CustomPainter {
   final NoteGrid grid;
   final int beatsPerBar;
   final int? activeIndex;
+  final double? cursorPos; // fractional cell position for the gliding cursor
   final double maxWidth;
 
   _StaffPainter({
@@ -84,6 +154,7 @@ class _StaffPainter extends CustomPainter {
     required this.grid,
     required this.beatsPerBar,
     required this.activeIndex,
+    required this.cursorPos,
     required this.maxWidth,
   });
 
@@ -158,6 +229,14 @@ class _StaffPainter extends CustomPainter {
         _cellW / 2;
   }
 
+  double _xForFracInRow(double posInRow) {
+    final base = posInRow.floor();
+    final frac = posInRow - base;
+    final x0 = _xForPosInRow(base);
+    final x1 = _xForPosInRow(base + 1);
+    return x0 + (x1 - x0) * frac;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final cpr = _cellsPerRow;
@@ -201,11 +280,10 @@ class _StaffPainter extends CustomPainter {
           Offset(x, topLineY), Offset(x, bottomLineY), barPaint);
     }
 
-    // Active cursor band.
-    if (activeIndex != null &&
-        activeIndex! >= start &&
-        activeIndex! < end) {
-      final cx = _xForPosInRow(activeIndex! - start);
+    // Active cursor band (glides between cells when cursorPos is set).
+    final cp = cursorPos;
+    if (cp != null && cp >= start && cp < end) {
+      final cx = _xForFracInRow(cp - start);
       final cursorPaint = Paint()..color = _activeColor.withValues(alpha: 0.14);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -475,6 +553,7 @@ class _StaffPainter extends CustomPainter {
   @override
   bool shouldRepaint(_StaffPainter old) =>
       old.activeIndex != activeIndex ||
+      old.cursorPos != cursorPos ||
       old.beats != beats ||
       old.grid != grid ||
       old.beatsPerBar != beatsPerBar ||

@@ -41,5 +41,43 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('accepts playback params and settles without pending timers',
+        (tester) async {
+      final rudiment = rudimentsSeedData.first;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 360,
+              child: NotationStaffWidget(
+                rudiment: rudiment,
+                activeIndex: 1,
+                perCellDuration: const Duration(milliseconds: 200),
+                isPlaying: true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      // Stop playback -> controller must stop (no pending-timer failure on end).
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 360,
+              child: NotationStaffWidget(
+                rudiment: rudiment,
+                activeIndex: 1,
+                isPlaying: false,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
   });
 }
