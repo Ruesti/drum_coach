@@ -17,6 +17,23 @@ List<(int, int)> beatNumbersInRow(
   return out;
 }
 
+/// Bravura (SMuFL) codepoints used by the drum staff. See smufl.org.
+class _Smufl {
+  static const clefPerc = '\u{E069}'; // unpitchedPercussionClef1
+  static const noteheadBlack = '\u{E0A4}';
+  static const parenLeft = '\u{E0F5}'; // noteheadParenthesisLeft
+  static const parenRight = '\u{E0F6}'; // noteheadParenthesisRight
+  static const flag8Up = '\u{E240}';
+  static const flag16Up = '\u{E242}';
+  static const flag32Up = '\u{E244}';
+  static const accent = '\u{E4A0}'; // articAccentAbove
+  static const restQuarter = '\u{E4E5}';
+  static const rest8 = '\u{E4E6}';
+  static const rest16 = '\u{E4E7}';
+  static const rest32 = '\u{E4E8}';
+  static String timeSig(int digit) => String.fromCharCode(0xE080 + digit);
+}
+
 /// Renders a pattern as an engraved five-line drum staff: a percussion clef,
 /// time signature, noteheads on the middle line (snare) + stems + beams/flags,
 /// accents (>), ghost notes, grace notes, rests, and R/L sticking letters
@@ -311,8 +328,10 @@ class _StaffPainter extends CustomPainter {
 
       // Ghost parentheses.
       if (beat.isGhost) {
-        _drawText(canvas, '(', Offset(x - _headRx - 4, staffY), _ghostColor, 14);
-        _drawText(canvas, ')', Offset(x + _headRx + 4, staffY), _ghostColor, 14);
+        _drawGlyph(canvas, _Smufl.parenLeft,
+            Offset(x - _headRx - 3, staffY), _ghostColor);
+        _drawGlyph(canvas, _Smufl.parenRight,
+            Offset(x + _headRx + 3, staffY), _ghostColor);
       }
 
       // R/L letter.
@@ -324,38 +343,51 @@ class _StaffPainter extends CustomPainter {
   }
 
   // ── Glyph helpers ───────────────────────────────────────────────────────--
-  /// Neutral percussion clef: two thick vertical bars centred on the staff.
-  void _drawClef(Canvas canvas, double staffY) {
-    final paint = Paint()..color = _inkColor.withValues(alpha: 0.85);
-    final top = staffY - _lineGap * 1.3;
-    final h = _lineGap * 2.6;
-    for (final bx in const [_leftPad + 14.0, _leftPad + 19.0]) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(bx, top, 3.0, h),
-          const Radius.circular(1.2),
+  /// Draws a Bravura glyph centred horizontally on [center].x, with its
+  /// alphabetic baseline placed on [center].y (SMuFL noteheads/rests register
+  /// on the baseline). [dyStaffSpaces] nudges per-glyph; [emScale] overrides
+  /// the default staff-scaled em (4 staff spaces).
+  void _drawGlyph(Canvas canvas, String glyph, Offset center, Color color,
+      {double dyStaffSpaces = 0, double emScale = 4}) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: glyph,
+        style: TextStyle(
+          fontFamily: 'Bravura',
+          fontSize: emScale * _lineGap,
+          color: color,
+          height: 1.0,
         ),
-        paint,
-      );
-    }
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final baseline =
+        tp.computeDistanceToActualBaseline(TextBaseline.alphabetic);
+    tp.paint(
+      canvas,
+      Offset(center.dx - tp.width / 2,
+          center.dy - baseline + dyStaffSpaces * _lineGap),
+    );
+  }
+
+  void _drawClef(Canvas canvas, double staffY) {
+    _drawGlyph(canvas, _Smufl.clefPerc, Offset(_leftPad + 18, staffY),
+        _inkColor.withValues(alpha: 0.9));
   }
 
   /// Time signature: [beatsPerBar] over 4 (quarter-note pulse), stacked.
   void _drawTimeSignature(Canvas canvas, double staffY) {
-    const x = _leftPad + 30.0;
-    _drawText(canvas, '$beatsPerBar', Offset(x, staffY - _lineGap), _inkColor,
-        15,
-        bold: true);
-    _drawText(canvas, '4', Offset(x, staffY + _lineGap), _inkColor, 15,
-        bold: true);
+    const x = _leftPad + 32.0;
+    _drawGlyph(canvas, _Smufl.timeSig(beatsPerBar),
+        Offset(x, staffY - _lineGap), _inkColor);
+    _drawGlyph(canvas, _Smufl.timeSig(4), Offset(x, staffY + _lineGap), _inkColor);
   }
 
   void _drawHead(Canvas canvas, Offset c, Color color,
       {bool ghost = false, bool active = false}) {
-    final rx = ghost ? _headRx * 0.78 : _headRx;
-    final ry = ghost ? _headRy * 0.78 : _headRy;
-    final rect = Rect.fromCenter(center: c, width: rx * 2, height: ry * 2);
     if (ghost) {
+      final rect = Rect.fromCenter(
+          center: c, width: _headRx * 1.56, height: _headRy * 1.56);
       canvas.drawOval(
           rect,
           Paint()
@@ -363,44 +395,27 @@ class _StaffPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.4);
     } else {
-      canvas.drawOval(rect, Paint()..color = color);
+      _drawGlyph(canvas, _Smufl.noteheadBlack, c, color);
     }
     if (active) {
-      canvas.drawOval(
-          rect.inflate(2.5),
-          Paint()
-            ..color = color.withValues(alpha: 0.4)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.5);
+      _drawGlyph(canvas, _Smufl.noteheadBlack, c,
+          color.withValues(alpha: 0.35), emScale: 4.6);
     }
   }
 
   void _drawFlags(Canvas canvas, double stemX, double stemTopY, Color color) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
-      ..strokeCap = StrokeCap.round;
-    for (var b = 0; b < _beamCount; b++) {
-      final y = stemTopY + b * 5.0;
-      final path = Path()
-        ..moveTo(stemX, y)
-        ..quadraticBezierTo(stemX + 8, y + 3, stemX + 7, y + 10);
-      canvas.drawPath(path, paint);
-    }
+    final glyph = switch (_beamCount) {
+      1 => _Smufl.flag8Up,
+      2 => _Smufl.flag16Up,
+      _ => _Smufl.flag32Up,
+    };
+    // Flag hangs off the stem top; register near the notehead line then lift.
+    _drawGlyph(canvas, glyph, Offset(stemX + 3, stemTopY), color,
+        dyStaffSpaces: -1.5);
   }
 
   void _drawAccent(Canvas canvas, Offset c, Color color) {
-    final paint = Paint()
-      ..color = _accentColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
-    final path = Path()
-      ..moveTo(c.dx - 5, c.dy - 3)
-      ..lineTo(c.dx + 5, c.dy)
-      ..lineTo(c.dx - 5, c.dy + 3);
-    canvas.drawPath(path, paint);
+    _drawGlyph(canvas, _Smufl.accent, c, _accentColor);
   }
 
   void _drawGraces(Canvas canvas, List<Hand> graces, double mainX,
@@ -430,29 +445,13 @@ class _StaffPainter extends CustomPainter {
   }
 
   void _drawRest(Canvas canvas, Offset c) {
-    // Simplified rest glyph that scales with the note value.
-    final paint = Paint()
-      ..color = _ghostColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round;
-    if (_beamCount == 0) {
-      // Quarter rest — squiggle.
-      final path = Path()
-        ..moveTo(c.dx - 3, c.dy - 9)
-        ..lineTo(c.dx + 2, c.dy - 3)
-        ..lineTo(c.dx - 3, c.dy + 2)
-        ..lineTo(c.dx + 2, c.dy + 8);
-      canvas.drawPath(path, paint);
-    } else {
-      // Eighth/sixteenth rest — dots + slash.
-      for (var b = 0; b < _beamCount; b++) {
-        final y = c.dy - 6 + b * 6.0;
-        canvas.drawCircle(Offset(c.dx - 3, y), 1.6, Paint()..color = _ghostColor);
-      }
-      canvas.drawLine(Offset(c.dx + 3, c.dy - 8),
-          Offset(c.dx - 3, c.dy + 8), paint);
-    }
+    final glyph = switch (grid) {
+      NoteGrid.quarter => _Smufl.restQuarter,
+      NoteGrid.eighth || NoteGrid.triplet => _Smufl.rest8,
+      NoteGrid.sixteenth || NoteGrid.sixteenthTriplet => _Smufl.rest16,
+      NoteGrid.thirtySecond => _Smufl.rest32,
+    };
+    _drawGlyph(canvas, glyph, c, _ghostColor);
   }
 
   void _drawText(Canvas canvas, String text, Offset center, Color color,
