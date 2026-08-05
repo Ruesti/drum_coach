@@ -18,12 +18,3 @@ int onsetIntervalMicros(int bpm, int cellsPerQuarter) =>
 Duration cellDuration(int bpm, int cellsPerQuarter) =>
     Duration(microseconds: onsetIntervalMicros(bpm, cellsPerQuarter));
 
-/// Fractional cell position of the playback cursor: [anchorIndex] plus how far
-/// we've progressed toward the next cell (0..1), given [elapsed] since the
-/// anchor beat and the [perCell] cell duration. Clamped to
-/// `[anchorIndex, anchorIndex + 1]`.
-double cursorFraction(int anchorIndex, Duration elapsed, Duration perCell) {
-  if (perCell.inMicroseconds <= 0) return anchorIndex.toDouble();
-  final t = (elapsed.inMicroseconds / perCell.inMicroseconds).clamp(0.0, 1.0);
-  return anchorIndex + t;
-}

@@ -31,19 +31,4 @@ void main() {
     });
   });
 
-  group('cursorFraction', () {
-    test('starts at the anchor and advances linearly, clamped', () {
-      const per = Duration(microseconds: 214285);
-      expect(cursorFraction(2, Duration.zero, per), 2.0);
-      expect(cursorFraction(2, const Duration(microseconds: 107142), per),
-          closeTo(2.5, 0.01));
-      expect(cursorFraction(2, per, per), 3.0);
-      expect(cursorFraction(2, per * 2, per), 3.0); // clamped
-    });
-
-    test('degenerate perCell returns the anchor', () {
-      expect(cursorFraction(5, const Duration(milliseconds: 10), Duration.zero),
-          5.0);
-    });
-  });
 }

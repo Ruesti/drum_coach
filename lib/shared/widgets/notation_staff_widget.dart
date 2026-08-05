@@ -114,25 +114,17 @@ class _NotationStaffWidgetState extends State<NotationStaffWidget>
             final cursorPos = (widget.isPlaying && anchor != null)
                 ? anchor + _ctrl.value
                 : anchor?.toDouble();
+            final painter = _StaffPainter(
+              beats: widget.rudiment.sticking,
+              grid: widget.rudiment.gridUnit,
+              beatsPerBar: widget.rudiment.beatsPerBar,
+              activeIndex: anchor,
+              cursorPos: cursorPos,
+              maxWidth: width,
+            );
             return CustomPaint(
-              size: Size(
-                  width,
-                  _StaffPainter(
-                    beats: widget.rudiment.sticking,
-                    grid: widget.rudiment.gridUnit,
-                    beatsPerBar: widget.rudiment.beatsPerBar,
-                    activeIndex: anchor,
-                    cursorPos: cursorPos,
-                    maxWidth: width,
-                  ).computeHeight()),
-              painter: _StaffPainter(
-                beats: widget.rudiment.sticking,
-                grid: widget.rudiment.gridUnit,
-                beatsPerBar: widget.rudiment.beatsPerBar,
-                activeIndex: anchor,
-                cursorPos: cursorPos,
-                maxWidth: width,
-              ),
+              size: Size(width, painter.computeHeight()),
+              painter: painter,
             );
           },
         );
