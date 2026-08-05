@@ -2,6 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../features/lessons/models/rudiment.dart';
 
+/// Beat-counter labels for a staff row spanning absolute cells
+/// [start, start+count). Returns (indexInRow, beatNumber) for each cell that
+/// falls on a quarter-note pulse. Uses the ABSOLUTE cell position so rows that
+/// don't begin on a bar boundary (narrow-width wrapping) stay correctly labeled.
+List<(int, int)> beatNumbersInRow(
+    int start, int count, int cellsPerBeat, int beatsPerBar) {
+  final out = <(int, int)>[];
+  for (var i = 0; i < count; i++) {
+    final pos = start + i;
+    if (pos % cellsPerBeat != 0) continue;
+    out.add((i, (pos ~/ cellsPerBeat) % beatsPerBar + 1));
+  }
+  return out;
+}
+
 /// Renders a pattern as an engraved five-line drum staff: a percussion clef,
 /// time signature, noteheads on the middle line (snare) + stems + beams/flags,
 /// accents (>), ghost notes, grace notes, rests, and R/L sticking letters
@@ -196,9 +211,8 @@ class _StaffPainter extends CustomPainter {
     _paintBeamsAndNotes(canvas, row, start, end, baseY, staffY);
 
     // Beat-counter row: one number per quarter-note pulse (the 4/4 reference).
-    for (var i = 0; i < count; i++) {
-      if (i % _cellsPerBeat != 0) continue;
-      final beatInBar = (i ~/ _cellsPerBeat) % beatsPerBar + 1;
+    for (final (i, beatInBar)
+        in beatNumbersInRow(start, count, _cellsPerBeat, beatsPerBar)) {
       _drawText(canvas, '$beatInBar', Offset(_xForPosInRow(i), baseY + _beatNumY),
           _beatNumColor, 11, bold: true);
     }
