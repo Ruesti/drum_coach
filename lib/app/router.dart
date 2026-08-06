@@ -14,7 +14,10 @@ import '../features/coaching/exercise_generator_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
 final router = GoRouter(
+  navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   redirect: (context, state) {
     if (!SettingsService.isOnboardingDone && state.matchedLocation != '/onboarding') {
@@ -25,6 +28,7 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/onboarding',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (context, _) => OnboardingScreen(
         onComplete: () => context.go('/'),
       ),
@@ -67,14 +71,6 @@ final router = GoRouter(
               ),
             ],
           ),
-          GoRoute(
-            path: '/practice/:rudimentId',
-            builder: (_, state) => PracticeSessionScreen(
-              rudimentId: state.pathParameters['rudimentId']!,
-              isFromRoutine: false,
-              targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
-            ),
-          ),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
@@ -84,20 +80,41 @@ final router = GoRouter(
         ]),
       ],
     ),
+    // Full-screen practice session. Kept as a root-navigator route (not nested
+    // in the Lessons branch) because it is pushed from two different navigator
+    // contexts — the Lessons detail screen (inside the shell) and the training
+    // program screen (which itself sits on the root navigator). A route bound to
+    // one branch's nested navigator but pushed from the root navigator trips
+    // Navigator's duplicate-page-key assertion (!keyReservation.contains(key)).
+    // (The routine path uses /routine/:rudimentId inside the Routine branch and
+    // is only ever pushed from within that branch, so it stays nested.)
+    GoRoute(
+      path: '/practice/:rudimentId',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, state) => PracticeSessionScreen(
+        rudimentId: state.pathParameters['rudimentId']!,
+        isFromRoutine: false,
+        targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
+      ),
+    ),
     GoRoute(
       path: '/program',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const ProgramScreen(),
     ),
     GoRoute(
       path: '/metronome',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const MetronomeScreen(),
     ),
     GoRoute(
       path: '/settings',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const SettingsScreen(),
     ),
     GoRoute(
       path: '/coaching/exercise-generator',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const ExerciseGeneratorScreen(),
     ),
   ],

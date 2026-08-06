@@ -39,6 +39,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/fonts/OFL.txt
+    - assets/audio/snare.mp3
   fonts:
     - family: Bravura
       fonts:

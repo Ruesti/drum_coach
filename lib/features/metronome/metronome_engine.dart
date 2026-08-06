@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 enum Subdivision {
@@ -150,7 +151,7 @@ class MetronomeEngine {
 
   AudioSource? _clickAccent, _clickNormal;
   AudioSource? _rimAccent,   _rimNormal;
-  AudioSource? _snareAccent, _snareNormal;
+  AudioSource? _snareSample;
 
   int          _bpm        = 100;
   Subdivision  _subdivision = Subdivision.quarter;
@@ -177,10 +178,10 @@ class MetronomeEngine {
         'rim_accent',   _buildRimWav(amplitude: 0.95));
     _rimNormal   = await SoLoud.instance.loadMem(
         'rim_normal',   _buildRimWav(amplitude: 0.55));
-    _snareAccent = await SoLoud.instance.loadMem(
-        'snare_accent', _buildSnareWav(amplitude: 0.95));
-    _snareNormal = await SoLoud.instance.loadMem(
-        'snare_normal', _buildSnareWav(amplitude: 0.55));
+    final snareBytes = (await rootBundle.load('assets/audio/snare.mp3'))
+        .buffer
+        .asUint8List();
+    _snareSample = await SoLoud.instance.loadMem('snare.mp3', snareBytes);
 
     if (_disposed) return;
 
@@ -220,8 +221,8 @@ class MetronomeEngine {
       (SoundType.click, false) => _clickNormal,
       (SoundType.rim,   true)  => _rimAccent,
       (SoundType.rim,   false) => _rimNormal,
-      (SoundType.snare, true)  => _snareAccent,
-      (SoundType.snare, false) => _snareNormal,
+      (SoundType.snare, true)  => _snareSample,
+      (SoundType.snare, false) => _snareSample,
     };
 
     if (source != null && SoLoud.instance.isInitialized) {
@@ -293,7 +294,7 @@ class MetronomeEngine {
     for (final s in [
       _clickAccent, _clickNormal,
       _rimAccent,   _rimNormal,
-      _snareAccent, _snareNormal,
+      _snareSample,
     ]) {
       s?.let((src) => SoLoud.instance.disposeSource(src).ignore());
     }
@@ -323,31 +324,6 @@ class MetronomeEngine {
       final rim   = math.sin(2 * math.pi * 680  * t) * math.exp(-130.0 * t) * 0.60;
       final snap  = math.sin(2 * math.pi * 2100 * t) * math.exp(-600.0 * t) * 0.35;
       return amplitude * (shell + rim + snap);
-    });
-  }
-
-  static Uint8List _buildSnareWav({double amplitude = 0.8}) {
-    const sr = 44100;
-    final n  = (sr * 0.15).round();
-
-    // Coloured noise: simple IIR low-pass for warmth.
-    final noise = List<double>.filled(n, 0);
-    var p1 = 0.0, p2 = 0.0;
-    final rng = math.Random(42);
-    for (var i = 0; i < n; i++) {
-      final x = rng.nextDouble() * 2 - 1;
-      noise[i] = x * 0.6 + p1 * 0.3 + p2 * 0.1;
-      p2 = p1; p1 = x;
-    }
-    var mx = 0.0;
-    for (final v in noise) { if (v.abs() > mx) { mx = v.abs(); } }
-    if (mx > 0) { for (var i = 0; i < n; i++) { noise[i] /= mx; } }
-
-    return _buildWav(n, (i) {
-      final t         = i / sr;
-      final transient = t < 0.008 ? math.sin(math.pi * t / 0.008) * 0.75 : 0.0;
-      final body      = math.sin(2 * math.pi * 195 * t) * math.exp(-45.0 * t) * 0.28;
-      return amplitude * (transient + 0.55 * noise[i] + body);
     });
   }
 
