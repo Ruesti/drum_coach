@@ -12,7 +12,7 @@ import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
 import '../coaching/widgets/coach_feedback_card.dart';
 import '../lessons/lessons_provider.dart';
-import '../lessons/models/rudiment.dart';
+import '../lessons/models/pattern_playback.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import 'practice_provider.dart';
@@ -57,15 +57,20 @@ class _PracticeSessionScreenState
   /// [dispose] — by then the widget's Element may already be torn down.
   late final MetronomeNotifier _metronomeNotifier;
 
+  /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
+  /// metronome's per-tick volumes and map the playback cursor to a note.
+  late PatternPlayback _playback;
+
   @override
   void initState() {
     super.initState();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+      _playback = PatternPlayback.forRudiment(rudiment);
       final metronome = _metronomeNotifier
-        ..setSubdivision(_subdivisionFor(rudiment.gridUnit))
-        ..setPatternVolumes(_volumesFor(rudiment.sticking));
+        ..setPatternClock(_playback.ticksPerQuarter)
+        ..setPatternVolumes(_playback.tickVolumes);
       if (widget.targetBpm != null) {
         metronome.setBpm(widget.targetBpm!);
       }
@@ -80,23 +85,6 @@ class _PracticeSessionScreenState
       _micService = MicAnalysisService();
     }
   }
-
-  static Subdivision _subdivisionFor(NoteGrid grid) => switch (grid) {
-        NoteGrid.quarter => Subdivision.quarter,
-        NoteGrid.eighth => Subdivision.eighth,
-        NoteGrid.triplet => Subdivision.triplet,
-        NoteGrid.sixteenth => Subdivision.sixteenth,
-        NoteGrid.sixteenthTriplet => Subdivision.sixteenth,
-        NoteGrid.thirtySecond => Subdivision.sixteenth,
-      };
-
-  static List<double> _volumesFor(List<StrokeBeat> sticking) =>
-      sticking.map((b) {
-        if (b.isRest) return 0.0;
-        if (b.isAccent) return 2.0;
-        if (b.isGhost) return 0.25;
-        return 0.85;
-      }).toList();
 
   @override
   void dispose() {
@@ -249,8 +237,9 @@ class _PracticeSessionScreenState
       }
     });
 
-    final activeBeat = metState.isPlaying
-        ? metState.currentBeatIndex % rudiment.sticking.length
+    final activeBeat = metState.isPlaying && metState.currentBeatIndex >= 0
+        ? _playback.noteIndexAtTick(
+            metState.currentBeatIndex % _playback.totalTicks)
         : null;
 
     final isCountdown = _goalSeconds != null;
