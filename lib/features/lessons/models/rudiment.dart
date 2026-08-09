@@ -29,6 +29,62 @@ extension NoteGridLabel on NoteGrid {
       };
 }
 
+/// A drawn note value (independent of the pattern's [NoteGrid]). Duration is
+/// expressed in quarter-note units so renderer and player share one source.
+enum NoteValue {
+  whole(quarters: 4.0),
+  half(quarters: 2.0),
+  quarter(quarters: 1.0),
+  eighth(quarters: 0.5),
+  sixteenth(quarters: 0.25),
+  thirtySecond(quarters: 0.125);
+
+  final double quarters;
+  const NoteValue({required this.quarters});
+}
+
+/// Tuplet marker. `triplet` = 3 in the space of 2, `sextuplet` = 6 in the
+/// space of 4 — both scale a note's duration by 2/3.
+enum Tuplet {
+  none(factor: 1.0),
+  triplet(factor: 2 / 3),
+  sextuplet(factor: 2 / 3);
+
+  final double factor;
+  const Tuplet({required this.factor});
+}
+
+/// A fully-resolved note value: base value with an optional dot and tuplet.
+class ResolvedNote {
+  final NoteValue value;
+  final bool dotted;
+  final Tuplet tuplet;
+  const ResolvedNote(this.value, this.dotted, this.tuplet);
+
+  /// Duration in quarter-note units.
+  double get quarters => value.quarters * (dotted ? 1.5 : 1.0) * tuplet.factor;
+}
+
+/// Maps an old uniform [NoteGrid] cell to its equivalent note value, so
+/// pre-existing patterns (whose [StrokeBeat.value] is null) resolve unchanged.
+ResolvedNote gridToNote(NoteGrid grid) => switch (grid) {
+      NoteGrid.quarter => const ResolvedNote(NoteValue.quarter, false, Tuplet.none),
+      NoteGrid.eighth => const ResolvedNote(NoteValue.eighth, false, Tuplet.none),
+      NoteGrid.triplet => const ResolvedNote(NoteValue.eighth, false, Tuplet.triplet),
+      NoteGrid.sixteenth =>
+        const ResolvedNote(NoteValue.sixteenth, false, Tuplet.none),
+      NoteGrid.sixteenthTriplet =>
+        const ResolvedNote(NoteValue.sixteenth, false, Tuplet.sextuplet),
+      NoteGrid.thirtySecond =>
+        const ResolvedNote(NoteValue.thirtySecond, false, Tuplet.none),
+    };
+
+/// Resolves a [StrokeBeat] to its note value: explicit [StrokeBeat.value] when
+/// set (new content), otherwise derived from [grid] (legacy uniform patterns).
+ResolvedNote resolveNote(StrokeBeat beat, NoteGrid grid) => beat.value != null
+    ? ResolvedNote(beat.value!, beat.dotted, beat.tuplet)
+    : gridToNote(grid);
+
 enum Difficulty {
   beginner(label: 'Beginner', color: Color(0xFF4CAF50)),
   intermediate(label: 'Intermediate', color: Color(0xFFFFC107)),
@@ -101,17 +157,29 @@ class StrokeBeat {
   final bool isRest;
   final List<Hand> graces;
 
+  /// Drawn note value. `null` ⇒ derive from the pattern's [Rudiment.gridUnit]
+  /// (legacy uniform patterns). Set explicitly for mixed-value content.
+  final NoteValue? value;
+  final bool dotted;
+  final Tuplet tuplet;
+
   const StrokeBeat({
     required this.hand,
     this.isAccent = false,
     this.isGhost = false,
     this.isRest = false,
     this.graces = const [],
+    this.value,
+    this.dotted = false,
+    this.tuplet = Tuplet.none,
   });
 
   /// A silent grid cell (rest). [hand] is ignored when rendering.
-  const StrokeBeat.rest()
-      : hand = Hand.right,
+  const StrokeBeat.rest({
+    this.value,
+    this.dotted = false,
+    this.tuplet = Tuplet.none,
+  })  : hand = Hand.right,
         isAccent = false,
         isGhost = false,
         isRest = true,
