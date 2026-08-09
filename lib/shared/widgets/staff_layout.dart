@@ -109,12 +109,115 @@ StaffLayout computeStaffLayout({
   final totalBars = (tickCursor / ticksPerBar).ceil().clamp(1, 1 << 30);
   final rowCount = ((totalBars - 1) ~/ barsPerRow) + 1;
 
+  final beams = <BeamGroup>[];
+
+  // Recompute beat index per placement from cumulative ticks for grouping.
+  // (Cheap second pass keeps grouping independent of pixel math.)
+  final beatIndex = <int>[];
+  {
+    var t = 0;
+    for (var i = 0; i < beats.length; i++) {
+      final r = resolveNote(beats[i], grid);
+      beatIndex.add((t % ticksPerBar) ~/ _ticksPerQuarter);
+      t += (r.quarters * _ticksPerQuarter).round();
+    }
+  }
+
+  var p = 0;
+  while (p < placements.length) {
+    final row = placements[p].row;
+    final bar = placements[p].bar;
+    final beat = beatIndex[placements[p].index];
+
+    // Extent of this (row,bar,beat) window.
+    var q = p;
+    while (q < placements.length &&
+        placements[q].row == row &&
+        placements[q].bar == bar &&
+        beatIndex[placements[q].index] == beat) {
+      q++;
+    }
+
+    // Within [p, q): beam runs (same beamCount, non-rest, >=2) and tuplet runs.
+    _emitBeamRuns(beats, placements, beamCountFor, beams, row, p, q);
+    _emitTupletRuns(placements, beams, row, p, q);
+
+    p = q;
+  }
+
   return StaffLayout(
     rowCount: rowCount,
     pxPerQuarter: pxPerQuarter,
     beatsPerBar: beatsPerBar,
     barsPerRow: barsPerRow,
     placements: placements,
-    beams: const [], // filled in Task 6
+    beams: beams,
   );
+}
+
+void _emitBeamRuns(
+  List<StrokeBeat> beats,
+  List<NotePlacement> placements,
+  int Function(NoteValue) beamCountFor,
+  List<BeamGroup> out,
+  int row,
+  int lo,
+  int hi,
+) {
+  var i = lo;
+  while (i < hi) {
+    final pi = placements[i];
+    final bc = pi.isRest ? 0 : beamCountFor(pi.resolved.value);
+    if (bc == 0) {
+      i++;
+      continue;
+    }
+    var j = i;
+    while (j + 1 < hi &&
+        !placements[j + 1].isRest &&
+        beamCountFor(placements[j + 1].resolved.value) == bc) {
+      j++;
+    }
+    if (j > i) {
+      out.add(BeamGroup(
+        row: row,
+        startIndex: placements[i].index,
+        endIndex: placements[j].index,
+        beamCount: bc,
+        tuplet: Tuplet.none,
+      ));
+    }
+    i = j + 1;
+  }
+}
+
+void _emitTupletRuns(
+  List<NotePlacement> placements,
+  List<BeamGroup> out,
+  int row,
+  int lo,
+  int hi,
+) {
+  var i = lo;
+  while (i < hi) {
+    final t = placements[i].resolved.tuplet;
+    if (t == Tuplet.none || placements[i].isRest) {
+      i++;
+      continue;
+    }
+    var j = i;
+    while (j + 1 < hi &&
+        !placements[j + 1].isRest &&
+        placements[j + 1].resolved.tuplet == t) {
+      j++;
+    }
+    out.add(BeamGroup(
+      row: row,
+      startIndex: placements[i].index,
+      endIndex: placements[j].index,
+      beamCount: 0, // marker: this entry is a tuplet bracket, not a beam
+      tuplet: t,
+    ));
+    i = j + 1;
+  }
 }

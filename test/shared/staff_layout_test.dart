@@ -61,4 +61,48 @@ void main() {
       expect(dx, closeTo(4 * layout.pxPerQuarter + 14, 0.001)); // one bar width
     });
   });
+
+  group('computeStaffLayout — beams & tuplets', () {
+    test('groups four sixteenths in a beat into one 2-beam run', () {
+      final beats = List.generate(
+          4, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.sixteenth));
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.sixteenth, beatsPerBar: 4, maxWidth: 2000,
+      );
+      final runs = layout.beams.where((b) => b.beamCount == 2).toList();
+      expect(runs.length, 1);
+      expect(runs.first.startIndex, 0);
+      expect(runs.first.endIndex, 3);
+    });
+
+    test('emits a triplet group for an eighth-triplet beat', () {
+      const beats = [
+        StrokeBeat(hand: Hand.right, value: NoteValue.eighth, tuplet: Tuplet.triplet),
+        StrokeBeat(hand: Hand.left, value: NoteValue.eighth, tuplet: Tuplet.triplet),
+        StrokeBeat(hand: Hand.right, value: NoteValue.eighth, tuplet: Tuplet.triplet),
+      ];
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.eighth, beatsPerBar: 4, maxWidth: 2000,
+      );
+      expect(layout.beams.any((b) => b.tuplet == Tuplet.triplet
+          && b.startIndex == 0 && b.endIndex == 2), isTrue);
+    });
+
+    test('a rest breaks a beam run', () {
+      const beats = [
+        StrokeBeat(hand: Hand.right, value: NoteValue.sixteenth),
+        StrokeBeat.rest(value: NoteValue.sixteenth),
+        StrokeBeat(hand: Hand.left, value: NoteValue.sixteenth),
+        StrokeBeat(hand: Hand.right, value: NoteValue.sixteenth),
+      ];
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.sixteenth, beatsPerBar: 4, maxWidth: 2000,
+      );
+      // only the last two sixteenths form a >=2 beam run
+      final runs = layout.beams.where((b) => b.beamCount == 2).toList();
+      expect(runs.length, 1);
+      expect(runs.first.startIndex, 2);
+      expect(runs.first.endIndex, 3);
+    });
+  });
 }
