@@ -65,9 +65,9 @@ class _PracticeSessionScreenState
   void initState() {
     super.initState();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
+    _playback = PatternPlayback.forRudiment(
+        ref.read(rudimentByIdProvider(widget.rudimentId)));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
-      _playback = PatternPlayback.forRudiment(rudiment);
       final metronome = _metronomeNotifier
         ..setPatternClock(_playback.ticksPerQuarter)
         ..setPatternVolumes(_playback.tickVolumes);
@@ -219,7 +219,8 @@ class _PracticeSessionScreenState
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
       // Record beat timestamps for mic correlation
-      if (next.isPlaying &&
+      if (_micRecording &&
+          next.isPlaying &&
           next.currentBeatIndex >= 0 &&
           next.currentBeatIndex != (prev?.currentBeatIndex ?? -2)) {
         _beatLog.add((

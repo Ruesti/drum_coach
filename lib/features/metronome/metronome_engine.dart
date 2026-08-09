@@ -213,7 +213,7 @@ class MetronomeEngine {
       (SoundType.snare, false) => _snareNormal,
     };
 
-    if (source != null && SoLoud.instance.isInitialized) {
+    if (volume > 0 && source != null && SoLoud.instance.isInitialized) {
       SoLoud.instance.play(source, volume: volume).ignore();
     }
 
