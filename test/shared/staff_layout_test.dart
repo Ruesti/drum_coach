@@ -88,6 +88,22 @@ void main() {
           && b.startIndex == 0 && b.endIndex == 2), isTrue);
     });
 
+    test('emits a sextuplet group for a sixteenth-sextuplet beat', () {
+      final beats = List.generate(
+          6,
+          (_) => const StrokeBeat(
+              hand: Hand.right,
+              value: NoteValue.sixteenth,
+              tuplet: Tuplet.sextuplet));
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.sixteenth, beatsPerBar: 4, maxWidth: 2000,
+      );
+      expect(
+          layout.beams.any((b) =>
+              b.tuplet == Tuplet.sextuplet && b.startIndex == 0 && b.endIndex == 5),
+          isTrue);
+    });
+
     test('a rest breaks a beam run', () {
       const beats = [
         StrokeBeat(hand: Hand.right, value: NoteValue.sixteenth),

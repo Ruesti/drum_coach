@@ -139,7 +139,7 @@ StaffLayout computeStaffLayout({
     }
 
     // Within [p, q): beam runs (same beamCount, non-rest, >=2) and tuplet runs.
-    _emitBeamRuns(beats, placements, beamCountFor, beams, row, p, q);
+    _emitBeamRuns(placements, beams, row, p, q);
     _emitTupletRuns(placements, beams, row, p, q);
 
     p = q;
@@ -156,9 +156,7 @@ StaffLayout computeStaffLayout({
 }
 
 void _emitBeamRuns(
-  List<StrokeBeat> beats,
   List<NotePlacement> placements,
-  int Function(NoteValue) beamCountFor,
   List<BeamGroup> out,
   int row,
   int lo,
