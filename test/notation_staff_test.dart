@@ -69,5 +69,31 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('renders whole/half/dotted note values without throwing',
+        (tester) async {
+      const etude = Rudiment(
+        id: 'etude_values',
+        name: 'Values',
+        description: 'x',
+        minBpm: 60,
+        targetBpm: 120,
+        difficulty: Difficulty.intermediate,
+        gridUnit: NoteGrid.quarter,
+        beatsPerBar: 4,
+        sticking: [
+          StrokeBeat(hand: Hand.right, value: NoteValue.whole), // bar 1: 4 quarters
+          StrokeBeat(hand: Hand.left, value: NoteValue.half), // bar 2: 2
+          StrokeBeat(hand: Hand.right, value: NoteValue.quarter, dotted: true), // 1.5
+          StrokeBeat(hand: Hand.left, value: NoteValue.eighth), // 0.5 -> bar 2 = 4
+        ],
+      );
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SizedBox(width: 360, child: NotationStaffWidget(rudiment: etude)),
+        ),
+      ));
+      expect(tester.takeException(), isNull);
+    });
   });
 }
