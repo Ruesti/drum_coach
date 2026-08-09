@@ -78,7 +78,8 @@ StaffLayout computeStaffLayout({
   var barsPerRow = (usable / barWidthAt(pxPerQuarter)).floor();
   if (barsPerRow < 1) {
     barsPerRow = 1;
-    pxPerQuarter = ((usable - barGap) / beatsPerBar).clamp(8.0, preferredPxPerQuarter);
+    final minPx = preferredPxPerQuarter < 8.0 ? preferredPxPerQuarter : 8.0;
+    pxPerQuarter = ((usable - barGap) / beatsPerBar).clamp(minPx, preferredPxPerQuarter);
   }
 
   final placements = <NotePlacement>[];
@@ -92,7 +93,7 @@ StaffLayout computeStaffLayout({
     final barInRow = bar % barsPerRow;
     final x = leftPad +
         systemPad +
-        barInRow * (beatsPerBar * pxPerQuarter + barGap) +
+        barInRow * barWidthAt(pxPerQuarter) +
         quartersInBar * pxPerQuarter;
     placements.add(NotePlacement(
       index: i,

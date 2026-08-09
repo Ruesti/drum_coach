@@ -46,5 +46,19 @@ void main() {
         expect(p.row, p.bar ~/ layout.barsPerRow);
       }
     });
+
+    test('splits bars across rows when barsPerRow > 1', () {
+      final beats = List.generate(
+          16, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 560,
+      );
+      expect(layout.barsPerRow, 2);
+      expect(layout.placements[0].row, 0); // bar 0
+      expect(layout.placements[4].row, 0); // bar 1
+      expect(layout.placements[8].row, 1); // bar 2
+      final dx = layout.placements[4].xCenter - layout.placements[0].xCenter;
+      expect(dx, closeTo(4 * layout.pxPerQuarter + 14, 0.001)); // one bar width
+    });
   });
 }
