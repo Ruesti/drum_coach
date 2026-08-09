@@ -1009,7 +1009,7 @@ const rudimentsSeedData = <Rudiment>[
   ),
 
   Rudiment(
-    id: 'paradiddle_diddle',
+    id: 'paradiddle_diddle_corps',
     name: 'Paradiddle-Diddle',
     skills: {Skill.control},
     description:
@@ -1638,7 +1638,7 @@ const rudimentsSeedData = <Rudiment>[
   ),
 
   Rudiment(
-    id: 'flam_accent',
+    id: 'flam_accent_corps',
     name: 'Flam Accent',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
@@ -1735,7 +1735,7 @@ const rudimentsSeedData = <Rudiment>[
   ),
 
   Rudiment(
-    id: 'flam_paradiddle',
+    id: 'flam_paradiddle_corps',
     name: 'Flam Paradiddle',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
