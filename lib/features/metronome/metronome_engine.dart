@@ -150,6 +150,7 @@ class MetronomeEngine {
 
   int          _bpm        = 100;
   Subdivision  _subdivision = Subdivision.quarter;
+  int          _factor      = 1; // active ticks-per-quarter (subdivision or pattern clock)
   SoundType    _soundType   = SoundType.click;
   List<double>? _beatVolumes;
   bool          _isPlaying  = false;
@@ -226,7 +227,7 @@ class MetronomeEngine {
   void start() {
     if (_isPlaying) return;
     _isPlaying = true;
-    _controlPort?.send([_cmdStart, _bpm, _subdivision.factor]);
+    _controlPort?.send([_cmdStart, _bpm, _factor]);
   }
 
   void stop() {
@@ -241,7 +242,16 @@ class MetronomeEngine {
 
   void setSubdivision(Subdivision subdivision) {
     _subdivision = subdivision;
-    _controlPort?.send([_cmdFactor, subdivision.factor]);
+    _factor = subdivision.factor;
+    _controlPort?.send([_cmdFactor, _factor]);
+  }
+
+  /// Set an arbitrary integer tick factor for pattern playback (e.g. 24
+  /// ticks/quarter), bypassing the [Subdivision] enum. The timing isolate
+  /// already treats `factor` generically.
+  void setPatternClock(int ticksPerQuarter) {
+    _factor = ticksPerQuarter;
+    _controlPort?.send([_cmdFactor, _factor]);
   }
 
   void setSoundType(SoundType t)      => _soundType   = t;

@@ -78,4 +78,19 @@ void main() {
       expect(delay, 250000);
     });
   });
+
+  group('fine-grid factor', () {
+    test('computeNextBeatDelayUs works at 24 ticks/quarter', () {
+      // 120 bpm, factor 24 => 500000us/quarter / 24 = 20833.33us/tick.
+      final d = computeNextBeatDelayUs(
+        bpm: 120,
+        factor: 24,
+        idx: 1,
+        anchorUs: 0,
+        anchorIdx: 0,
+        elapsedUs: 0,
+      );
+      expect(d, closeTo(20833, 2));
+    });
+  });
 }
