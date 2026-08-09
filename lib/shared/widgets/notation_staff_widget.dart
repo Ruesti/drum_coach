@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../features/lessons/models/rudiment.dart';
+import 'staff_layout.dart';
 
 /// Renders a pattern as an engraved five-line drum staff: a percussion clef,
 /// time signature, noteheads on the middle line (snare) + stems + beams/flags,
 /// accents (>), ghost notes, grace notes, rests, and R/L sticking letters
 /// beneath each note. When [activeIndex] is set (during playback) a running
 /// cursor highlights that note.
+///
+/// Geometry is duration-proportional: horizontal positions, beam runs and
+/// tuplet groups come from [computeStaffLayout] so mixed note values
+/// (quarters next to sixteenths, triplets, dotted notes) space correctly.
 class NotationStaffWidget extends StatelessWidget {
   final Rudiment rudiment;
   final int? activeIndex;
@@ -25,9 +30,7 @@ class NotationStaffWidget extends StatelessWidget {
             ? constraints.maxWidth
             : MediaQuery.of(context).size.width;
         final painter = _StaffPainter(
-          beats: rudiment.sticking,
-          grid: rudiment.gridUnit,
-          beatsPerBar: rudiment.beatsPerBar,
+          rudiment: rudiment,
           activeIndex: activeIndex,
           maxWidth: width,
         );
@@ -41,22 +44,30 @@ class NotationStaffWidget extends StatelessWidget {
 }
 
 class _StaffPainter extends CustomPainter {
-  final List<StrokeBeat> beats;
-  final NoteGrid grid;
-  final int beatsPerBar;
+  final Rudiment rudiment;
   final int? activeIndex;
   final double maxWidth;
 
   _StaffPainter({
-    required this.beats,
-    required this.grid,
-    required this.beatsPerBar,
+    required this.rudiment,
     required this.activeIndex,
     required this.maxWidth,
   });
 
+  /// Duration-proportional layout — the single source of horizontal geometry,
+  /// beam runs and tuplet groups. Computed once, lazily.
+  late final StaffLayout _layout = computeStaffLayout(
+    beats: rudiment.sticking,
+    grid: rudiment.gridUnit,
+    beatsPerBar: rudiment.beatsPerBar,
+    maxWidth: maxWidth,
+    leftPad: _leftPad,
+    rightPad: _rightPad,
+    systemPad: _systemPad,
+    barGap: _barGap,
+  );
+
   // ── Layout metrics ────────────────────────────────────────────────────────
-  static const double _cellW = 30;
   static const double _leftPad = 10;
   static const double _rightPad = 14;
   static const double _barGap = 14; // extra space after a barline
@@ -78,6 +89,12 @@ class _StaffPainter extends CustomPainter {
   static const double _headRx = 6;
   static const double _headRy = 4.6;
 
+  // Width of the translucent active-cursor band (no longer a grid "cell").
+  static const double _cursorW = 18;
+
+  // Right margin added past the last note when drawing a row's staff lines.
+  static const double _lineEndMargin = 14;
+
   // ── Colors ────────────────────────────────────────────────────────────────
   static const _staffColor = Color(0x33FFFFFF);
   static const _inkColor = Color(0xFFEDEDED);
@@ -86,167 +103,130 @@ class _StaffPainter extends CustomPainter {
   static const _ghostColor = Color(0x66FFFFFF);
   static const _letterColor = Color(0x99FFFFFF);
 
-  int get _cellsPerBeat => grid.cellsPerQuarter;
-  int get _cellsPerBar => beatsPerBar * _cellsPerBeat;
-
-  /// How many beam lines a single note of [grid] carries (0 = stem only).
-  int get _beamCount => switch (grid) {
-        NoteGrid.quarter => 0,
-        NoteGrid.eighth => 1,
-        NoteGrid.triplet => 1,
-        NoteGrid.sixteenth => 2,
-        NoteGrid.sixteenthTriplet => 2,
-        NoteGrid.thirtySecond => 3,
-      };
-
-  /// Cells that fit per row, snapped down to a whole number of bars.
-  int get _cellsPerRow {
-    final usable = maxWidth - _leftPad - _rightPad - _systemPad;
-    final bars = (usable / (_cellsPerBar * _cellW + _barGap)).floor();
-    if (bars < 1) {
-      // Fall back to as many cells as fit, at least one.
-      return (usable / _cellW).floor().clamp(1, _cellsPerBar);
-    }
-    return bars * _cellsPerBar;
-  }
-
-  int get _rowCount => (beats.length / _cellsPerRow).ceil().clamp(1, 9999);
-
-  double computeHeight() => _rowCount * _rowH + 8;
-
-  // Horizontal x of a cell within its row (0-based position in the row).
-  double _xForPosInRow(int posInRow) {
-    final bar = posInRow ~/ _cellsPerBar;
-    return _leftPad +
-        _systemPad +
-        posInRow * _cellW +
-        bar * _barGap +
-        _cellW / 2;
-  }
+  double computeHeight() => _layout.rowCount * _rowH + 8;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cpr = _cellsPerRow;
-    for (var row = 0; row < _rowCount; row++) {
-      final start = row * cpr;
-      final end = (start + cpr).clamp(0, beats.length);
-      _paintRow(canvas, row, start, end);
+    for (var row = 0; row < _layout.rowCount; row++) {
+      _paintRow(canvas, row);
     }
   }
 
-  void _paintRow(Canvas canvas, int row, int start, int end) {
+  void _paintRow(Canvas canvas, int row) {
     final baseY = row * _rowH;
     final staffY = baseY + _midY; // middle line = snare = notehead center
-    final count = end - start;
     final topLineY = staffY - 2 * _lineGap;
     final bottomLineY = staffY + 2 * _lineGap;
 
+    final rowPlacements =
+        _layout.placements.where((p) => p.row == row).toList(growable: false);
+
+    // Used width of this row = rightmost notehead + a small margin.
+    var maxX = _leftPad + _systemPad;
+    var maxBarInRow = 0;
+    for (final p in rowPlacements) {
+      if (p.xCenter > maxX) maxX = p.xCenter;
+      final barInRow = p.bar - row * _layout.barsPerRow;
+      if (barInRow > maxBarInRow) maxBarInRow = barInRow;
+    }
+    final lineEndX = maxX + _lineEndMargin;
+
     // Five staff lines spanning this row's used width.
-    final lineEndX = _xForPosInRow(count - 1) + _cellW / 2;
     final staffPaint = Paint()
       ..color = _staffColor
       ..strokeWidth = 1.2;
     const lineStartX = _leftPad / 2;
     for (var l = 0; l < 5; l++) {
       final y = topLineY + l * _lineGap;
-      canvas.drawLine(
-          Offset(lineStartX, y), Offset(lineEndX, y), staffPaint);
+      canvas.drawLine(Offset(lineStartX, y), Offset(lineEndX, y), staffPaint);
     }
 
     // Percussion clef + time signature (time signature only on the first row).
     _drawClef(canvas, staffY);
     if (row == 0) _drawTimeSignature(canvas, staffY);
 
-    // Barlines (full staff height).
+    // Barlines (full staff height) at each internal bar boundary in the row.
     final barPaint = Paint()
       ..color = _staffColor
       ..strokeWidth = 1.2;
-    for (var pos = _cellsPerBar; pos < count; pos += _cellsPerBar) {
-      final x = _xForPosInRow(pos) - _cellW / 2 - _barGap / 2;
-      canvas.drawLine(
-          Offset(x, topLineY), Offset(x, bottomLineY), barPaint);
+    final barWidth = _layout.beatsPerBar * _layout.pxPerQuarter + _barGap;
+    for (var barInRow = 1; barInRow <= maxBarInRow; barInRow++) {
+      final x = _leftPad + _systemPad + barInRow * barWidth - _barGap / 2;
+      canvas.drawLine(Offset(x, topLineY), Offset(x, bottomLineY), barPaint);
     }
 
-    // Active cursor band.
-    if (activeIndex != null &&
-        activeIndex! >= start &&
-        activeIndex! < end) {
-      final cx = _xForPosInRow(activeIndex! - start);
-      final cursorPaint = Paint()..color = _activeColor.withValues(alpha: 0.14);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-              center: Offset(cx, baseY + _rowH / 2),
-              width: _cellW - 4,
-              height: _rowH - 16),
-          const Radius.circular(8),
-        ),
-        cursorPaint,
-      );
-      final linePaint = Paint()
-        ..color = _activeColor.withValues(alpha: 0.55)
-        ..strokeWidth = 1.5;
-      canvas.drawLine(Offset(cx, baseY + 10),
-          Offset(cx, baseY + _rowH - 10), linePaint);
-    }
-
-    // Beam groups (per beat) then individual note heads / flags / letters.
-    _paintBeamsAndNotes(canvas, row, start, end, baseY, staffY);
-  }
-
-  void _paintBeamsAndNotes(Canvas canvas, int row, int start, int end,
-      double baseY, double staffY) {
-    final count = end - start;
-    final stemTopY = baseY + _stemTopY;
-
-    // Determine beam runs within each beat group.
-    // A run is a maximal sequence of consecutive non-rest onset cells inside
-    // the same beat that carry beams. Rests / beat boundaries break runs.
-    final beamedPositions = <int>{}; // positions (in row) that belong to a >=2 run
-
-    if (_beamCount > 0) {
-      var p = 0;
-      while (p < count) {
-        final beat = p ~/ _cellsPerBeat;
-        var q = p;
-        while (q < count &&
-            q ~/ _cellsPerBeat == beat &&
-            !beats[start + q].isRest) {
-          q++;
-        }
-        final runLen = q - p;
-        if (runLen >= 2) {
-          // Draw beam(s) across [p, q-1].
-          final x0 = _xForPosInRow(p) + _headRx - 0.5;
-          final x1 = _xForPosInRow(q - 1) + _headRx - 0.5;
-          final beamPaint = Paint()
-            ..color = _inkColor
-            ..strokeWidth = 3.2;
-          for (var b = 0; b < _beamCount; b++) {
-            final y = stemTopY + b * 5.0;
-            canvas.drawLine(Offset(x0, y), Offset(x1, y), beamPaint);
-          }
-          for (var k = p; k < q; k++) {
-            beamedPositions.add(k);
-          }
-          // Triplet bracket number.
-          if (grid == NoteGrid.triplet && runLen == 3) {
-            _drawText(canvas, '3', Offset((x0 + x1) / 2, baseY + _accentY - 4),
-                _inkColor, 11, italic: true);
-          }
-        }
-        p = q == p ? p + 1 : q;
+    // Active cursor band at the placement whose index == activeIndex.
+    if (activeIndex != null) {
+      for (final p in rowPlacements) {
+        if (p.index != activeIndex) continue;
+        final cx = p.xCenter;
+        final cursorPaint = Paint()
+          ..color = _activeColor.withValues(alpha: 0.14);
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+                center: Offset(cx, baseY + _rowH / 2),
+                width: _cursorW,
+                height: _rowH - 16),
+            const Radius.circular(8),
+          ),
+          cursorPaint,
+        );
+        final linePaint = Paint()
+          ..color = _activeColor.withValues(alpha: 0.55)
+          ..strokeWidth = 1.5;
+        canvas.drawLine(Offset(cx, baseY + 10),
+            Offset(cx, baseY + _rowH - 10), linePaint);
+        break;
       }
     }
 
-    // Heads, stems, flags, accents, graces, rests, letters.
-    for (var i = 0; i < count; i++) {
-      final beat = beats[start + i];
-      final x = _xForPosInRow(i);
-      final isActive = activeIndex == start + i;
+    // Beams / tuplet brackets, then individual note heads / flags / letters.
+    _paintBeamsAndNotes(canvas, row, rowPlacements, baseY, staffY);
+  }
 
-      if (beat.isRest) {
-        _drawRest(canvas, Offset(x, staffY));
+  void _paintBeamsAndNotes(Canvas canvas, int row,
+      List<NotePlacement> rowPlacements, double baseY, double staffY) {
+    final stemTopY = baseY + _stemTopY;
+
+    // Draw beam runs and record which placement indices belong to one, so a
+    // beamed note draws a beam rather than an individual flag.
+    final beamedIndices = <int>{};
+    for (final bg in _layout.beams) {
+      if (bg.row != row || bg.beamCount == 0) continue;
+      final x0 = _placementAt(bg.startIndex).xCenter + _headRx - 0.5;
+      final x1 = _placementAt(bg.endIndex).xCenter + _headRx - 0.5;
+      final beamPaint = Paint()
+        ..color = _inkColor
+        ..strokeWidth = 3.2;
+      for (var b = 0; b < bg.beamCount; b++) {
+        final y = stemTopY + b * 5.0;
+        canvas.drawLine(Offset(x0, y), Offset(x1, y), beamPaint);
+      }
+      for (var idx = bg.startIndex; idx <= bg.endIndex; idx++) {
+        beamedIndices.add(idx);
+      }
+    }
+
+    // Tuplet brackets + numbers ("3" triplet, "6" sextuplet) over each group.
+    for (final bg in _layout.beams) {
+      if (bg.row != row || bg.tuplet == Tuplet.none) continue;
+      final x0 = _placementAt(bg.startIndex).xCenter;
+      final x1 = _placementAt(bg.endIndex).xCenter;
+      final label = bg.tuplet == Tuplet.sextuplet ? '6' : '3';
+      _drawTupletBracket(canvas, x0, x1, baseY + _accentY, label);
+    }
+
+    // Heads, stems, flags, accents, graces, rests, dots, letters.
+    for (final p in rowPlacements) {
+      final beat = rudiment.sticking[p.index];
+      final resolved = p.resolved;
+      final x = p.xCenter;
+      final isActive = p.index == activeIndex;
+      final noteBeamCount = beamCountFor(resolved.value);
+
+      if (p.isRest) {
+        _drawRest(canvas, Offset(x, staffY), noteBeamCount);
         continue;
       }
 
@@ -263,21 +243,25 @@ class _StaffPainter extends CustomPainter {
         _drawGraces(canvas, beat.graces, x, staffY, stemTopY, headColor);
       }
 
-      // Notehead.
+      // Notehead — open (outline) for whole/half, filled otherwise.
+      final isOpen = resolved.value == NoteValue.whole ||
+          resolved.value == NoteValue.half;
       _drawHead(canvas, Offset(x, staffY), headColor,
-          ghost: beat.isGhost, active: isActive);
+          ghost: beat.isGhost, active: isActive, open: isOpen);
 
-      // Stem (up, from right of head).
-      final stemX = x + _headRx - 0.6;
-      final stemPaint = Paint()
-        ..color = headColor
-        ..strokeWidth = 1.6;
-      canvas.drawLine(
-          Offset(stemX, staffY - 1), Offset(stemX, stemTopY), stemPaint);
+      // Stem (up, from right of head) — whole notes are stemless.
+      if (resolved.value != NoteValue.whole) {
+        final stemX = x + _headRx - 0.6;
+        final stemPaint = Paint()
+          ..color = headColor
+          ..strokeWidth = 1.6;
+        canvas.drawLine(
+            Offset(stemX, staffY - 1), Offset(stemX, stemTopY), stemPaint);
 
-      // Flag(s) if this note carries beams but isn't part of a beam run.
-      if (_beamCount > 0 && !beamedPositions.contains(i)) {
-        _drawFlags(canvas, stemX, stemTopY, headColor);
+        // Flag(s) when this note carries beams but isn't part of a beam run.
+        if (noteBeamCount > 0 && !beamedIndices.contains(p.index)) {
+          _drawFlags(canvas, stemX, stemTopY, headColor, noteBeamCount);
+        }
       }
 
       // Accent mark.
@@ -291,6 +275,11 @@ class _StaffPainter extends CustomPainter {
         _drawText(canvas, ')', Offset(x + _headRx + 4, staffY), _ghostColor, 14);
       }
 
+      // Augmentation dot to the right of the head.
+      if (resolved.dotted) {
+        _drawDot(canvas, Offset(x, staffY), headColor);
+      }
+
       // R/L letter.
       final letter = beat.hand == Hand.right ? 'R' : 'L';
       _drawText(canvas, letter, Offset(x, baseY + _letterY),
@@ -298,6 +287,10 @@ class _StaffPainter extends CustomPainter {
           bold: true);
     }
   }
+
+  /// Placement for a `beats` index. Placements are appended in beat order, so
+  /// `index == list position` and this is a direct lookup.
+  NotePlacement _placementAt(int index) => _layout.placements[index];
 
   // ── Glyph helpers ───────────────────────────────────────────────────────--
   /// Neutral percussion clef: two thick vertical bars centred on the staff.
@@ -316,28 +309,29 @@ class _StaffPainter extends CustomPainter {
     }
   }
 
-  /// Time signature: [beatsPerBar] over 4 (quarter-note pulse), stacked.
+  /// Time signature: [Rudiment.beatsPerBar] over 4 (quarter-note pulse).
   void _drawTimeSignature(Canvas canvas, double staffY) {
     const x = _leftPad + 30.0;
-    _drawText(canvas, '$beatsPerBar', Offset(x, staffY - _lineGap), _inkColor,
-        15,
+    _drawText(canvas, '${rudiment.beatsPerBar}', Offset(x, staffY - _lineGap),
+        _inkColor, 15,
         bold: true);
     _drawText(canvas, '4', Offset(x, staffY + _lineGap), _inkColor, 15,
         bold: true);
   }
 
   void _drawHead(Canvas canvas, Offset c, Color color,
-      {bool ghost = false, bool active = false}) {
+      {bool ghost = false, bool active = false, bool open = false}) {
     final rx = ghost ? _headRx * 0.78 : _headRx;
     final ry = ghost ? _headRy * 0.78 : _headRy;
     final rect = Rect.fromCenter(center: c, width: rx * 2, height: ry * 2);
-    if (ghost) {
+    if (ghost || open) {
+      // Outline head: ghost notes and open (whole/half) note values.
       canvas.drawOval(
           rect,
           Paint()
             ..color = color
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.4);
+            ..strokeWidth = ghost ? 1.4 : 1.8);
     } else {
       canvas.drawOval(rect, Paint()..color = color);
     }
@@ -351,13 +345,14 @@ class _StaffPainter extends CustomPainter {
     }
   }
 
-  void _drawFlags(Canvas canvas, double stemX, double stemTopY, Color color) {
+  void _drawFlags(
+      Canvas canvas, double stemX, double stemTopY, Color color, int beamCount) {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.4
       ..strokeCap = StrokeCap.round;
-    for (var b = 0; b < _beamCount; b++) {
+    for (var b = 0; b < beamCount; b++) {
       final y = stemTopY + b * 5.0;
       final path = Path()
         ..moveTo(stemX, y)
@@ -405,15 +400,15 @@ class _StaffPainter extends CustomPainter {
         Offset(firstX + 8, stemTopY - 2), slash);
   }
 
-  void _drawRest(Canvas canvas, Offset c) {
+  void _drawRest(Canvas canvas, Offset c, int beamCount) {
     // Simplified rest glyph that scales with the note value.
     final paint = Paint()
       ..color = _ghostColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.2
       ..strokeCap = StrokeCap.round;
-    if (_beamCount == 0) {
-      // Quarter rest — squiggle.
+    if (beamCount == 0) {
+      // Quarter (or longer) rest — squiggle.
       final path = Path()
         ..moveTo(c.dx - 3, c.dy - 9)
         ..lineTo(c.dx + 2, c.dy - 3)
@@ -421,14 +416,42 @@ class _StaffPainter extends CustomPainter {
         ..lineTo(c.dx + 2, c.dy + 8);
       canvas.drawPath(path, paint);
     } else {
-      // Eighth/sixteenth rest — dots + slash.
-      for (var b = 0; b < _beamCount; b++) {
+      // Eighth/sixteenth/thirty-second rest — dots (one per beam) + slash.
+      for (var b = 0; b < beamCount; b++) {
         final y = c.dy - 6 + b * 6.0;
         canvas.drawCircle(Offset(c.dx - 3, y), 1.6, Paint()..color = _ghostColor);
       }
       canvas.drawLine(Offset(c.dx + 3, c.dy - 8),
           Offset(c.dx - 3, c.dy + 8), paint);
     }
+  }
+
+  /// Augmentation dot: small filled circle just right of the notehead.
+  void _drawDot(Canvas canvas, Offset headCenter, Color color) {
+    canvas.drawCircle(
+        Offset(headCenter.dx + _headRx + 4, headCenter.dy), 1.6,
+        Paint()..color = color);
+  }
+
+  /// Tuplet bracket: a thin horizontal line with downward end ticks and a gap
+  /// in the middle for the [label] number, centred over the group.
+  void _drawTupletBracket(
+      Canvas canvas, double x0, double x1, double y, String label) {
+    final mid = (x0 + x1) / 2;
+    const gap = 7.0; // half-width of the numeral gap in the bracket line
+    // Only draw the connecting line/ticks when the group is wide enough;
+    // otherwise the numeral alone marks the tuplet.
+    if (x1 - x0 > 2 * gap + 2) {
+      final paint = Paint()
+        ..color = _inkColor.withValues(alpha: 0.7)
+        ..strokeWidth = 1.1
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(Offset(x0, y + 4), Offset(x0, y), paint); // left tick
+      canvas.drawLine(Offset(x0, y), Offset(mid - gap, y), paint);
+      canvas.drawLine(Offset(mid + gap, y), Offset(x1, y), paint);
+      canvas.drawLine(Offset(x1, y), Offset(x1, y + 4), paint); // right tick
+    }
+    _drawText(canvas, label, Offset(mid, y), _inkColor, 11, italic: true);
   }
 
   void _drawText(Canvas canvas, String text, Offset center, Color color,
@@ -451,9 +474,7 @@ class _StaffPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_StaffPainter old) =>
+      old.rudiment != rudiment ||
       old.activeIndex != activeIndex ||
-      old.beats != beats ||
-      old.grid != grid ||
-      old.beatsPerBar != beatsPerBar ||
       old.maxWidth != maxWidth;
 }
