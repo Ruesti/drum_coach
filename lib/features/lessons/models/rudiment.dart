@@ -135,6 +135,15 @@ enum Genre {
   const Genre({required this.label});
 }
 
+/// A named, browsable set of exercises (distinct from the base catalog).
+enum ExerciseCollection {
+  rudimentEtudes(label: 'Rudiment-Étüden'),
+  techniqueStudies(label: 'Technik-Studien');
+
+  final String label;
+  const ExerciseCollection({required this.label});
+}
+
 /// Tag axis: which limbs the exercise engages.
 enum Limb {
   hands(label: 'Hände'),
@@ -228,6 +237,12 @@ class Rudiment {
   /// Tag axis: which limbs this exercise engages. See [Limb].
   final Set<Limb> limbs;
 
+  /// Optional named collection this exercise belongs to (null = base catalog).
+  final ExerciseCollection? collection;
+
+  /// Optional sub-heading within the collection (e.g. the rudiment name).
+  final String? collectionGroup;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -245,5 +260,7 @@ class Rudiment {
     this.skills = const {},
     this.genres = const {},
     this.limbs = const {Limb.hands},
+    this.collection,
+    this.collectionGroup,
   });
 }
