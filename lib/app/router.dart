@@ -12,6 +12,7 @@ import '../features/metronome/metronome_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/practice/practice_session_screen.dart';
 import '../features/program/program_screen.dart';
+import '../features/program/program_setup_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
@@ -89,6 +90,10 @@ final router = GoRouter(
     GoRoute(
       path: '/program',
       builder: (_, __) => const ProgramScreen(),
+    ),
+    GoRoute(
+      path: '/program/setup',
+      builder: (_, __) => const ProgramSetupScreen(),
     ),
     GoRoute(
       path: '/collection/:name',
