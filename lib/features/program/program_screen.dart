@@ -175,6 +175,8 @@ class _DayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final phase = day.phase;
+    final totalDays =
+        SettingsService.programConfig?.totalDays ?? programTotalDays;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -186,7 +188,7 @@ class _DayHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tag ${day.dayNumber}/$programTotalDays · Woche ${day.week} · '
+            'Tag ${day.dayNumber}/$totalDays · Woche ${day.week} · '
             '~${day.estimatedMinutes} min',
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),

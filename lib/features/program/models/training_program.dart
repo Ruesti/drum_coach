@@ -1,9 +1,9 @@
-/// Value objects for the fixed multi-week "Stick Control" training program.
+/// Value objects for the adaptive training program (SP4).
 ///
 /// These are plain immutable data classes (like [DailyRoutineItem]) — NOT Isar
-/// collections. The program definition lives as a `const` in
-/// `data/stick_control_program.dart`, and the 84 [ProgramDay]s are expanded at
-/// runtime by the generator (see `program_provider.dart`), never hard-stored.
+/// collections. [ProgramDay]s are expanded at runtime from the persisted
+/// `ProgramConfig` + adaptive stage by the generator (see
+/// `program_generator.dart` / `program_provider.dart`), never hard-stored.
 library;
 
 /// The kind of a day in the weekly rhythm (day 1–5 practice, 6 light, 7 rest).
