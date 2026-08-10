@@ -1,5 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/lessons/models/rudiment.dart';
+import '../../features/program/models/program_config.dart';
+
 class SettingsService {
   SettingsService._();
 
@@ -52,4 +55,37 @@ class SettingsService {
       _prefs.getBool('mic_analysis_enabled') ?? false;
   static Future<void> setMicAnalysisEnabled(bool v) =>
       _prefs.setBool('mic_analysis_enabled', v);
+
+  /// Adaptive training program configuration. `null` = not configured.
+  static ProgramConfig? get programConfig {
+    final weeks = _prefs.getInt('program_duration_weeks');
+    final diff = _prefs.getString('program_start_difficulty');
+    final pool = _prefs.getString('program_pool');
+    if (weeks == null || diff == null || pool == null) return null;
+    return ProgramConfig(
+      durationWeeks: weeks,
+      startDifficulty: Difficulty.values.firstWhere((d) => d.name == diff,
+          orElse: () => Difficulty.beginner),
+      pool: ProgramPool.values.firstWhere((p) => p.name == pool,
+          orElse: () => ProgramPool.mixed),
+    );
+  }
+
+  static Future<void> setProgramConfig(ProgramConfig c) async {
+    await _prefs.setInt('program_duration_weeks', c.durationWeeks);
+    await _prefs.setString('program_start_difficulty', c.startDifficulty.name);
+    await _prefs.setString('program_pool', c.pool.name);
+  }
+
+  static Future<void> clearProgramConfig() async {
+    await _prefs.remove('program_duration_weeks');
+    await _prefs.remove('program_start_difficulty');
+    await _prefs.remove('program_pool');
+    await _prefs.remove('program_stage_index');
+  }
+
+  /// Index into the effective difficulty stages of the current program run.
+  static int get programStageIndex => _prefs.getInt('program_stage_index') ?? 0;
+  static Future<void> setProgramStageIndex(int i) =>
+      _prefs.setInt('program_stage_index', i);
 }
