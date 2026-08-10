@@ -1,3 +1,4 @@
+import 'package:drum_coach/features/lessons/data/etude_dsl.dart';
 import 'package:drum_coach/features/lessons/data/etudes.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
@@ -17,13 +18,12 @@ void main() {
   test('every étude fills whole bars and is a rudimentEtudes/techniqueStudies member', () {
     for (final r in allEtudes) {
       expect(r.collection, isNotNull, reason: '${r.id} has no collection');
-      var quarters = 0.0;
-      for (final b in r.sticking) {
-        quarters += resolveNote(b, r.gridUnit).quarters;
-      }
-      final bars = quarters / r.beatsPerBar;
-      expect((bars - bars.round()).abs() < 1e-6 && bars.round() >= 1, isTrue,
-          reason: '${r.id}: ${quarters}q not whole ${r.beatsPerBar}/4 bars');
+      expect(
+        () => barCountOrThrow(r.sticking,
+            beatsPerBar: r.beatsPerBar, grid: r.gridUnit),
+        returnsNormally,
+        reason: '${r.id} does not fill whole bars',
+      );
     }
   });
 

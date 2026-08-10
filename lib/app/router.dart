@@ -92,11 +92,14 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/collection/:name',
-      builder: (_, state) => CollectionScreen(
-        collection: ExerciseCollection.values.byName(
-          state.pathParameters['name']!,
-        ),
-      ),
+      builder: (context, state) {
+        final name = state.pathParameters['name'];
+        final collection = ExerciseCollection.values.firstWhere(
+          (c) => c.name == name,
+          orElse: () => ExerciseCollection.rudimentEtudes,
+        );
+        return CollectionScreen(collection: collection);
+      },
     ),
     GoRoute(
       path: '/metronome',

@@ -97,6 +97,32 @@ class DashboardScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
 
+          // Technique-studies collection entry
+          _DashCard(
+            onTap: () => context.push('/collection/techniqueStudies'),
+            child: Row(
+              children: [
+                const Icon(Icons.school_outlined,
+                    color: Colors.deepOrange, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Technik-Studien',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Gezielte Technik-Übungen',
+                          style:
+                              TextStyle(color: Colors.white54, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: Colors.white38),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // Today's routine card
           routineAsync.when(
             loading: () => const _LoadingCard(),
