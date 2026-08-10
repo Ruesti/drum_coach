@@ -21,6 +21,7 @@ class ProgramScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(program.name)),
       body: dayAsync.when(
+        skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Fehler: $e')),
         data: (day) {
@@ -33,6 +34,7 @@ class ProgramScreen extends ConsumerWidget {
           }
           if (day == null) {
             return _Finished(
+              weeks: SettingsService.programConfig?.durationWeeks,
               onReset: () =>
                   ref.read(programControllerProvider.notifier).reset(),
             );
@@ -109,11 +111,13 @@ class _PhaseOverviewCard extends StatelessWidget {
 }
 
 class _Finished extends StatelessWidget {
+  final int? weeks;
   final VoidCallback onReset;
-  const _Finished({required this.onReset});
+  const _Finished({required this.weeks, required this.onReset});
 
   @override
   Widget build(BuildContext context) {
+    final weeksLabel = weeks != null ? '$weeks Wochen' : 'Das Programm';
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -125,8 +129,8 @@ class _Finished extends StatelessWidget {
             const Text('Programm abgeschlossen',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text('Zwölf Wochen durch. Neue saubere Bestwerte in der Hand.',
-                style: TextStyle(color: Colors.white54),
+            Text('$weeksLabel durch. Neue saubere Bestwerte in der Hand.',
+                style: const TextStyle(color: Colors.white54),
                 textAlign: TextAlign.center),
             const SizedBox(height: 24),
             OutlinedButton.icon(
@@ -396,18 +400,23 @@ class _BlockCard extends ConsumerWidget {
         ],
       ),
     );
-    if (ok == true) {
-      await ref
-          .read(cleanTempoNotifierProvider.notifier)
-          .recordCleanPass(block.exerciseKey, block.startBpm ?? 0);
-      if (!context.mounted) return;
-      final advanced =
-          await ref.read(programControllerProvider.notifier).advanceStageIfReady();
-      if (advanced && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Level up! Neue Stufe erreicht.')),
-        );
-      }
+    if (ok != true) return;
+    if (!context.mounted) return; // guards this context use only — safe here
+    // Capture the messenger before any further await: recordCleanPass
+    // invalidates currentProgramDay, which reloads the screen and disposes
+    // this widget, so a later context.mounted check would be false by the
+    // time advanceStageIfReady resolves. The messenger itself outlives the
+    // widget, so no further mounted check is needed below.
+    final messenger = ScaffoldMessenger.of(context);
+    await ref
+        .read(cleanTempoNotifierProvider.notifier)
+        .recordCleanPass(block.exerciseKey, block.startBpm ?? 0);
+    final advanced =
+        await ref.read(programControllerProvider.notifier).advanceStageIfReady();
+    if (advanced) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Level up! Neue Stufe erreicht.')),
+      );
     }
   }
 }

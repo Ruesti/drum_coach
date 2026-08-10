@@ -161,11 +161,6 @@ class ProgramController extends _$ProgramController {
   @override
   void build() {}
 
-  Future<void> start() async {
-    await SettingsService.setProgramStartDate(DateTime.now());
-    ref.invalidate(currentProgramDayProvider);
-  }
-
   /// Starts a fresh adaptive program run with config [c]: persists it, resets
   /// the stage index to the first stage, anchors day 1 on today, and
   /// refreshes the current-day provider.
