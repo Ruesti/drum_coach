@@ -1,3 +1,4 @@
+import 'package:drum_coach/data/local/models/rudiment_progress.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/program/models/program_config.dart';
 import 'package:drum_coach/features/program/program_generator.dart';
@@ -44,6 +45,21 @@ void main() {
     test('is the first exercise', () {
       final pool = programPoolExercises(all, ProgramPool.mixed);
       expect(stageFocus(exercisesForStage(pool, Difficulty.beginner)).id, 'base_b');
+    });
+  });
+
+  group('isStageComplete', () {
+    final f = _r('f', Difficulty.beginner); // targetBpm 120
+    test('ready when clean tempo reached target', () {
+      expect(isStageComplete(f, cleanBpm: 120, mastery: null), isTrue);
+      expect(isStageComplete(f, cleanBpm: 119, mastery: null), isFalse);
+    });
+    test('ready when mastery proficient+', () {
+      expect(isStageComplete(f, cleanBpm: null, mastery: MasteryLevel.proficient), isTrue);
+      expect(isStageComplete(f, cleanBpm: null, mastery: MasteryLevel.developing), isFalse);
+    });
+    test('not ready with no signals', () {
+      expect(isStageComplete(f, cleanBpm: null, mastery: null), isFalse);
     });
   });
 

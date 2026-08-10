@@ -3,6 +3,7 @@
 /// No I/O — fully unit-testable.
 library;
 
+import '../../data/local/models/rudiment_progress.dart';
 import '../lessons/models/rudiment.dart';
 import 'models/program_config.dart';
 
@@ -33,3 +34,10 @@ List<Difficulty> effectiveStages(List<Rudiment> poolExercises, Difficulty start)
 
 /// The stable focus exercise of a stage (first in list).
 Rudiment stageFocus(List<Rudiment> stageExercises) => stageExercises.first;
+
+/// Whether the stage's [focus] exercise is ready to advance: either the
+/// stored clean tempo reached its target, or tracked mastery is proficient+.
+bool isStageComplete(Rudiment focus,
+        {required int? cleanBpm, required MasteryLevel? mastery}) =>
+    (cleanBpm != null && cleanBpm >= focus.targetBpm) ||
+    (mastery != null && mastery.index >= MasteryLevel.proficient.index);
