@@ -77,4 +77,103 @@ void main() {
       expect(dayTypeForDayNumber(14), DayType.rest);
     });
   });
+
+  group('buildAdaptiveProgramDay', () {
+    const stage = Difficulty.beginner;
+    final stageExercises = [
+      _r('ex_a', Difficulty.beginner), // minBpm 60, targetBpm 120 (stageFocus)
+      _r('ex_b', Difficulty.beginner),
+      _r('ex_c', Difficulty.beginner),
+    ];
+
+    test(
+        'practice day: warmup + technique + tempoLadder; technique rotates; '
+        'ladder is on the focus, starting at focus.minBpm with no stored clean tempo',
+        () {
+      final day = buildAdaptiveProgramDay(
+        stageExercises: stageExercises,
+        stage: stage,
+        dayNumber: 1, // dow 1 -> practice
+        totalDays: 56,
+      );
+      expect(day.dayNumber, 1);
+      expect(day.type, DayType.practice);
+      expect(day.blocks.map((b) => b.type),
+          [BlockType.warmup, BlockType.technique, BlockType.tempoLadder]);
+      expect(day.blocks[0].exerciseKey, 'single_stroke_roll');
+      // technique line rotates: stageExercises[dayNumber % stageExercises.length]
+      // = stageExercises[1 % 3] = ex_b
+      expect(day.blocks[1].exerciseKey, 'ex_b');
+      final ladder = day.blocks[2];
+      expect(ladder.exerciseKey, 'ex_a'); // stageFocus = first exercise
+      expect(ladder.startBpm, 60); // focus.minBpm, no cleanBpmFor
+      expect(ladder.cleanPassRequired, isTrue);
+      expect(day.phase.name, Difficulty.beginner.label);
+      expect(day.phase.startBpm, 60);
+    });
+
+    test('tempo ladder uses the stored clean tempo for the focus when provided', () {
+      final day = buildAdaptiveProgramDay(
+        stageExercises: stageExercises,
+        stage: stage,
+        dayNumber: 1,
+        totalDays: 56,
+        cleanBpmFor: (id) => id == 'ex_a' ? 96 : null,
+      );
+      expect(day.blocks.last.startBpm, 96);
+    });
+
+    test('light day: warmup + technique only, no tempo ladder', () {
+      final day = buildAdaptiveProgramDay(
+        stageExercises: stageExercises,
+        stage: stage,
+        dayNumber: 6, // dow 6 -> light
+        totalDays: 56,
+      );
+      expect(day.type, DayType.light);
+      expect(day.blocks.map((b) => b.type), [BlockType.warmup, BlockType.technique]);
+    });
+
+    test('rest day: no blocks', () {
+      final day = buildAdaptiveProgramDay(
+        stageExercises: stageExercises,
+        stage: stage,
+        dayNumber: 7, // dow 7 -> rest
+        totalDays: 56,
+      );
+      expect(day.type, DayType.rest);
+      expect(day.blocks, isEmpty);
+    });
+  });
+
+  group('programPacing', () {
+    test('ahead: stageIndex is beyond the expected stage for the nominal week', () {
+      final p = programPacing(durationWeeks: 8, totalStages: 4, stageIndex: 1, dayNumber: 1);
+      expect(p.nominalWeek, 1);
+      expect(p.totalStages, 4);
+      expect(p.expectedStageIndex, 0);
+      expect(p.status, PacingStatus.ahead);
+    });
+
+    test('onTrack: stageIndex matches the expected stage', () {
+      final p = programPacing(durationWeeks: 8, totalStages: 4, stageIndex: 1, dayNumber: 15);
+      expect(p.nominalWeek, 3);
+      expect(p.expectedStageIndex, 1);
+      expect(p.status, PacingStatus.onTrack);
+    });
+
+    test('behind: stageIndex lags the expected stage', () {
+      final p = programPacing(durationWeeks: 8, totalStages: 4, stageIndex: 0, dayNumber: 29);
+      expect(p.nominalWeek, 5);
+      expect(p.expectedStageIndex, 2);
+      expect(p.status, PacingStatus.behind);
+    });
+
+    test('expectedStageIndex clamps to totalStages - 1 past the nominal end', () {
+      final p = programPacing(durationWeeks: 8, totalStages: 4, stageIndex: 3, dayNumber: 57);
+      expect(p.nominalWeek, 9);
+      expect(p.expectedStageIndex, 3); // unclamped would be 4
+      expect(p.status, PacingStatus.onTrack);
+    });
+  });
 }
