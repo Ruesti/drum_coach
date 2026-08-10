@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../data/local/settings_service.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/learning/daily_routine_screen.dart';
+import '../features/lessons/collection_screen.dart';
 import '../features/lessons/lesson_detail_screen.dart';
 import '../features/lessons/lessons_screen.dart';
+import '../features/lessons/models/rudiment.dart';
 import '../features/metronome/metronome_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/practice/practice_session_screen.dart';
@@ -87,6 +89,14 @@ final router = GoRouter(
     GoRoute(
       path: '/program',
       builder: (_, __) => const ProgramScreen(),
+    ),
+    GoRoute(
+      path: '/collection/:name',
+      builder: (_, state) => CollectionScreen(
+        collection: ExerciseCollection.values.byName(
+          state.pathParameters['name']!,
+        ),
+      ),
     ),
     GoRoute(
       path: '/metronome',

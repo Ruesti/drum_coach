@@ -71,6 +71,32 @@ class DashboardScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
 
+          // Étude/technique-collection browse entry
+          _DashCard(
+            onTap: () => context.push('/collection/rudimentEtudes'),
+            child: Row(
+              children: [
+                const Icon(Icons.library_music_outlined,
+                    color: Colors.deepOrange, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Übungs-Sammlung',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Rudiment-Étüden & Technik-Studien',
+                          style:
+                              TextStyle(color: Colors.white54, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: Colors.white38),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // Today's routine card
           routineAsync.when(
             loading: () => const _LoadingCard(),
