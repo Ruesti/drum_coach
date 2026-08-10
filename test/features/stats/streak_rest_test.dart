@@ -35,7 +35,8 @@ void main() {
 
       // With the program: rest day is skipped, freeze absorbs Jan 9 → full run.
       expect(
-        computeCurrentStreak(practiced, now, programStart: programStart),
+        computeCurrentStreak(practiced, now,
+            programStart: programStart, totalDays: 84),
         7,
       );
       // Without a program: the rest day spends the freeze, then Jan 9 breaks it.
@@ -54,6 +55,7 @@ void main() {
           practiced,
           DateTime(2026, 1, 11),
           programStart: programStart,
+          totalDays: 84,
         ),
         3,
       );
@@ -64,7 +66,9 @@ void main() {
     test('a run separated only by a rest day counts as continuous', () {
       final days = [DateTime(2026, 1, 10), DateTime(2026, 1, 12)];
       // Jan 11 between them is a scheduled rest day → bridged.
-      expect(computeLongestStreak(days, programStart: programStart), 2);
+      expect(
+          computeLongestStreak(days, programStart: programStart, totalDays: 84),
+          2);
       // Without the program the 2-day gap resets the run.
       expect(computeLongestStreak(days), 1);
     });
@@ -72,7 +76,9 @@ void main() {
     test('a non-rest gap still resets the run', () {
       // Jan 8 → Jan 10 gap is Jan 9 (a practice day), not a rest day.
       final days = [DateTime(2026, 1, 8), DateTime(2026, 1, 10)];
-      expect(computeLongestStreak(days, programStart: programStart), 1);
+      expect(
+          computeLongestStreak(days, programStart: programStart, totalDays: 84),
+          1);
     });
   });
 }

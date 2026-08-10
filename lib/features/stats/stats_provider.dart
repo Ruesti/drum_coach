@@ -17,6 +17,7 @@ int computeCurrentStreak(
   Set<DateTime> practicedDays,
   DateTime now, {
   DateTime? programStart,
+  int totalDays = programTotalDays,
 }) {
   if (practicedDays.isEmpty) return 0;
   final earliest = practicedDays.reduce((a, b) => a.isBefore(b) ? a : b);
@@ -28,7 +29,8 @@ int computeCurrentStreak(
     final d = DateTime(day.year, day.month, day.day);
     if (practicedDays.contains(d)) {
       streak++;
-    } else if (programStart != null && isScheduledRestDay(programStart, d)) {
+    } else if (programStart != null &&
+        isScheduledRestDay(programStart, d, totalDays)) {
       // scheduled rest day: skip — does not count, break, or spend the freeze.
     } else if (freezes > 0) {
       freezes--;
@@ -47,6 +49,7 @@ int computeCurrentStreak(
 int computeLongestStreak(
   List<DateTime> sortedDays, {
   DateTime? programStart,
+  int totalDays = programTotalDays,
 }) {
   if (sortedDays.isEmpty) return 0;
   bool onlyRestBetween(DateTime a, DateTime b) {
@@ -54,7 +57,7 @@ int computeLongestStreak(
     for (var d = a.add(const Duration(days: 1));
         d.isBefore(b);
         d = d.add(const Duration(days: 1))) {
-      if (!isScheduledRestDay(programStart, d)) return false;
+      if (!isScheduledRestDay(programStart, d, totalDays)) return false;
     }
     return true;
   }
@@ -133,6 +136,7 @@ Future<int> streakDays(StreakDaysRef ref) async {
     practicedDays,
     DateTime.now(),
     programStart: SettingsService.programStartDate,
+    totalDays: SettingsService.programConfig?.totalDays ?? programTotalDays,
   );
 }
 
@@ -149,6 +153,7 @@ Future<int> longestStreak(LongestStreakRef ref) async {
   return computeLongestStreak(
     days,
     programStart: SettingsService.programStartDate,
+    totalDays: SettingsService.programConfig?.totalDays ?? programTotalDays,
   );
 }
 

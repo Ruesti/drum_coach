@@ -117,20 +117,21 @@ ProgramDay buildProgramDay(
   );
 }
 
-/// The global day number for a calendar [date] given the program [start] date,
-/// or null if the date is outside the 84-day window.
-int? dayNumberOn(DateTime start, DateTime date) {
+/// The global day number for a calendar [date] given the program [start] date
+/// and the program's [totalDays] window, or null if [date] falls outside it.
+int? dayNumberOn(DateTime start, DateTime date, int totalDays) {
   final startDay = DateTime(start.year, start.month, start.day);
   final d = DateTime(date.year, date.month, date.day);
   final diff = d.difference(startDay).inDays;
-  if (diff < 0 || diff >= programTotalDays) return null;
+  if (diff < 0 || diff >= totalDays) return null;
   return diff + 1;
 }
 
-/// Whether [date] is a scheduled rest day of the program started on [start].
-/// Used by the streak logic so intentional rest days don't break the streak.
-bool isScheduledRestDay(DateTime start, DateTime date) {
-  final dn = dayNumberOn(start, date);
+/// Whether [date] is a scheduled rest day of the program started on [start],
+/// within a [totalDays] window. Used by the streak logic so intentional rest
+/// days don't break the streak.
+bool isScheduledRestDay(DateTime start, DateTime date, int totalDays) {
+  final dn = dayNumberOn(start, date, totalDays);
   return dn != null && dayTypeForDayNumber(dn) == DayType.rest;
 }
 
@@ -185,7 +186,8 @@ Future<ProgramDay> programDay(ProgramDayRef ref, int dayNumber) async {
 Future<ProgramDay?> currentProgramDay(CurrentProgramDayRef ref) async {
   final start = SettingsService.programStartDate;
   if (start == null) return null;
-  final dayNumber = dayNumberOn(start, DateTime.now());
+  final totalDays = SettingsService.programConfig?.totalDays ?? programTotalDays;
+  final dayNumber = dayNumberOn(start, DateTime.now(), totalDays);
   if (dayNumber == null) return null; // program finished / before start
   return ref.watch(programDayProvider(dayNumber).future);
 }
