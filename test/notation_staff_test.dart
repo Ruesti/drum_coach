@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:drum_coach/features/lessons/data/etudes.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
@@ -8,7 +9,7 @@ import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
 void main() {
   group('NotationStaffWidget (5-line staff)', () {
     testWidgets('renders every seeded pattern without throwing', (tester) async {
-      for (final rudiment in rudimentsSeedData) {
+      for (final rudiment in [...rudimentsSeedData, ...allEtudes]) {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(

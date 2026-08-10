@@ -1,12 +1,13 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'data/etudes.dart';
 import 'data/rudiments_seed.dart';
 import 'models/rudiment.dart';
 
 part 'lessons_provider.g.dart';
 
 @riverpod
-List<Rudiment> rudiments(RudimentsRef ref) => rudimentsSeedData;
+List<Rudiment> rudiments(RudimentsRef ref) => [...rudimentsSeedData, ...allEtudes];
 
 @riverpod
 Rudiment rudimentById(RudimentByIdRef ref, String id) {
