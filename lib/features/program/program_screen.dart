@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/local/settings_service.dart';
 import '../lessons/lessons_provider.dart';
 import 'models/training_program.dart';
+import 'program_generator.dart';
 import 'program_provider.dart';
 
 /// The training-program screen: current day, phase focus, exercise blocks with
@@ -23,12 +24,11 @@ class ProgramScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Fehler: $e')),
         data: (day) {
-          final started = SettingsService.programStartDate != null;
-          if (!started) {
+          final configured = SettingsService.programConfig != null;
+          if (!configured) {
             return _NotStarted(
               program: program,
-              onStart: () =>
-                  ref.read(programControllerProvider.notifier).start(),
+              onSetup: () => context.push('/program/setup'),
             );
           }
           if (day == null) {
@@ -46,8 +46,8 @@ class ProgramScreen extends ConsumerWidget {
 
 class _NotStarted extends StatelessWidget {
   final TrainingProgram program;
-  final VoidCallback onStart;
-  const _NotStarted({required this.program, required this.onStart});
+  final VoidCallback onSetup;
+  const _NotStarted({required this.program, required this.onSetup});
 
   @override
   Widget build(BuildContext context) {
@@ -70,9 +70,9 @@ class _NotStarted extends StatelessWidget {
         ],
         const SizedBox(height: 8),
         ElevatedButton.icon(
-          onPressed: onStart,
-          icon: const Icon(Icons.play_arrow),
-          label: const Text('Programm starten'),
+          onPressed: onSetup,
+          icon: const Icon(Icons.settings),
+          label: const Text('Programm einrichten'),
         ),
       ],
     );
@@ -168,15 +168,40 @@ class _DayView extends StatelessWidget {
   }
 }
 
-class _DayHeader extends StatelessWidget {
+class _DayHeader extends ConsumerWidget {
   final ProgramDay day;
   const _DayHeader({required this.day});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final phase = day.phase;
-    final totalDays =
-        SettingsService.programConfig?.totalDays ?? programTotalDays;
+    final config = SettingsService.programConfig;
+    final totalDays = config?.totalDays ?? programTotalDays;
+
+    String? pacingLabel;
+    if (config != null) {
+      final pool =
+          programPoolExercises(ref.watch(rudimentsProvider), config.pool);
+      final stages = effectiveStages(pool, config.startDifficulty);
+      if (stages.isNotEmpty) {
+        final stageIndex =
+            SettingsService.programStageIndex.clamp(0, stages.length - 1);
+        final pacing = programPacing(
+          durationWeeks: config.durationWeeks,
+          totalStages: stages.length,
+          stageIndex: stageIndex,
+          dayNumber: day.dayNumber,
+        );
+        final statusLabel = switch (pacing.status) {
+          PacingStatus.ahead => 'voraus',
+          PacingStatus.onTrack => 'im Plan',
+          PacingStatus.behind => 'hinterher',
+        };
+        pacingLabel = 'Woche ${pacing.nominalWeek}/${config.durationWeeks} · '
+            'Stufe: ${stages[stageIndex].label} · $statusLabel';
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -188,10 +213,14 @@ class _DayHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tag ${day.dayNumber}/$totalDays · Woche ${day.week} · '
-            '~${day.estimatedMinutes} min',
+            'Tag ${day.dayNumber}/$totalDays · ~${day.estimatedMinutes} min',
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
+          if (pacingLabel != null) ...[
+            const SizedBox(height: 2),
+            Text(pacingLabel,
+                style: const TextStyle(color: Colors.white54, fontSize: 12)),
+          ],
           const SizedBox(height: 4),
           Text('Phase ${phase.index}: ${phase.name}',
               style: Theme.of(context)
@@ -371,6 +400,14 @@ class _BlockCard extends ConsumerWidget {
       await ref
           .read(cleanTempoNotifierProvider.notifier)
           .recordCleanPass(block.exerciseKey, block.startBpm ?? 0);
+      if (!context.mounted) return;
+      final advanced =
+          await ref.read(programControllerProvider.notifier).advanceStageIfReady();
+      if (advanced && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Level up! Neue Stufe erreicht.')),
+        );
+      }
     }
   }
 }
