@@ -70,14 +70,6 @@ final router = GoRouter(
               ),
             ],
           ),
-          GoRoute(
-            path: '/practice/:rudimentId',
-            builder: (_, state) => PracticeSessionScreen(
-              rudimentId: state.pathParameters['rudimentId']!,
-              isFromRoutine: false,
-              targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
-            ),
-          ),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
@@ -105,6 +97,18 @@ final router = GoRouter(
         );
         return CollectionScreen(collection: collection);
       },
+    ),
+    // Top-level (outside the bottom-nav shell) so it can be pushed from any
+    // route — collection, program, lessons — without go_router raising a
+    // duplicate page-key assertion for a shell-branch route pushed from the
+    // root navigator. Runs as a focused full-screen session.
+    GoRoute(
+      path: '/practice/:rudimentId',
+      builder: (_, state) => PracticeSessionScreen(
+        rudimentId: state.pathParameters['rudimentId']!,
+        isFromRoutine: false,
+        targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
+      ),
     ),
     GoRoute(
       path: '/metronome',
