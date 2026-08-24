@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#08090A; }
+  a { color:#FF6A2B; text-decoration:none; }
+  a:hover { color:#FF8A5C; }
+  /* 220 ms Puls-Envelope innerhalb eines Beat-Zyklus; Rest = Ruhe */
+  @keyframes dcPulse96 {
+    0%     { transform:scale(1);    opacity:.5 }
+    10.6%  { transform:scale(1.45); opacity:1  }
+    35.2%  { transform:scale(1);    opacity:.5 }
+    100%   { transform:scale(1);    opacity:.5 }
+  }
+  @keyframes dcPulse120 {
+    0%    { transform:scale(1);    opacity:.5 }
+    13.2% { transform:scale(1.45); opacity:1  }
+    44%   { transform:scale(1);    opacity:.5 }
+    100%  { transform:scale(1);    opacity:.5 }
+  }
+</style>
+</helmet>
+
+<section style="display:flex;flex-direction:column;gap:40px;padding:64px;font-family:'Space Grotesk',sans-serif;color:#EDEDED;background:#08090A;border-bottom:1px solid rgba(255,255,255,.1)">
+
+  <div style="display:flex;flex-direction:column;gap:14px;max-width:900px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#FF6A2B">Turn 2 · Practice-Session Hi-Fi</div>
+    <div style="font-size:44px;font-weight:700;line-height:1.05;letter-spacing:-.02em">Practice-Session, ausgebaut</div>
+    <div style="font-size:15px;line-height:1.6;color:rgba(255,255,255,.62);text-wrap:pretty">Echte Notation statt Skizze: Schlüssel, Taktart, zwei Takte Single Paradiddle in Sechzehnteln, Balkengruppen zu vier, Akzente auf jedem Paradiddle-Anfang, Umbruch nach Takt. Drei Zustände — <a href="#2a">2a</a> Ready, <a href="#2b">2b</a> Playing, <a href="#2c">2c</a> Ziel erreicht — plus <a href="#2d">2d</a> Notations-Vokabular in 2×.</div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+    <!-- 2a READY -->
+    <div id="2a" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:rgba(255,106,43,.16);border:1px solid rgba(255,106,43,.4);color:#FF8A5C">2a</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">Ready · kein Playback</div></div>
+      <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Practice Ready">
+        <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+        <div style="height:60px;display:flex;align-items:center;gap:14px;padding:0 20px;background:#191919">
+          <div style="font-size:24px;color:rgba(255,255,255,.6)">‹</div>
+          <div style="flex:1;display:flex;flex-direction:column"><div style="font-size:17px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Single Paradiddle</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Woche 3 · Tag 4 · Technik</div></div>
+          <div style="width:22px;height:22px;border-radius:999px;border:2px solid rgba(255,255,255,.28)"></div>
+        </div>
+
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px;flex:1">
+          <div style="display:flex;align-items:center;gap:16px;background:#191919;border-radius:14px;padding:16px">
+            <div style="width:120px;height:120px;border-radius:999px;background:rgba(255,255,255,.09);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:44px;font-weight:600;color:rgba(255,255,255,.3)">—</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:64px;font-weight:600;line-height:.9;letter-spacing:-.03em">96</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45)">BPM · 1/16</div>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <div style="width:44px;height:44px;border-radius:10px;background:#212121;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:rgba(255,255,255,.7)">−</div>
+                <div style="width:44px;height:44px;border-radius:10px;background:#212121;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:rgba(255,255,255,.7)">+</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#FAF8F3;border-radius:14px;padding:14px 26px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(23,24,26,.5)">R L R R · L R L L</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(23,24,26,.4)">2 Takte</div>
+            </div>
+
+            <div style="position:relative;height:108px;width:298px">
+              <div style="position:absolute;left:0;right:0;top:36px;display:flex;flex-direction:column;gap:7px"><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div></div>
+              <div style="position:absolute;left:4px;top:39px;width:2.5px;height:26px;background:#17181A"></div>
+              <div style="position:absolute;left:9px;top:39px;width:2.5px;height:26px;background:#17181A"></div>
+              <div style="position:absolute;left:16px;top:39px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;line-height:1.1;color:#17181A">4<br>4</div>
+              <div style="position:absolute;left:24px;top:36px;width:1.5px;height:32px;background:rgba(23,24,26,.45)"></div>
+              <div style="position:absolute;right:0;top:36px;width:1.5px;height:32px;background:rgba(23,24,26,.45)"></div>
+              <div style="position:absolute;left:28px;top:82px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:96px;top:82px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:164px;top:82px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:232px;top:82px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:26px;top:0;display:flex">
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:18px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:48px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:18px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:48px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:18px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:48px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:18px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:48px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+              </div>
+            </div>
+
+            <div style="position:relative;height:100px;width:298px">
+              <div style="position:absolute;left:0;right:0;top:28px;display:flex;flex-direction:column;gap:7px"><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div></div>
+              <div style="position:absolute;left:8px;top:28px;width:1.5px;height:32px;background:rgba(23,24,26,.45)"></div>
+              <div style="position:absolute;right:0;top:28px;width:4px;height:32px;background:#17181A"></div><div style="position:absolute;right:7px;top:28px;width:1.5px;height:32px;background:rgba(23,24,26,.45)"></div>
+              <div style="position:absolute;left:12px;top:74px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:80px;top:74px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:148px;top:74px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:216px;top:74px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:10px;top:0;display:flex">
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:10px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:40px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:10px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:40px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:10px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:40px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:10px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:40px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">Tempo-Leiter</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">90 → 98</div></div>
+            <div style="display:flex;gap:6px">
+              <div style="flex:1;height:10px;border-radius:2px;background:#FF6A2B"></div>
+              <div style="flex:1;height:10px;border-radius:2px;background:rgba(255,255,255,.14)"></div>
+              <div style="flex:1;height:10px;border-radius:2px;background:rgba(255,255,255,.14)"></div>
+              <div style="flex:1;height:10px;border-radius:2px;background:rgba(255,255,255,.14)"></div>
+              <div style="flex:1;height:10px;border-radius:2px;background:rgba(255,255,255,.14)"></div>
+            </div>
+          </div>
+
+          <div style="flex:1"></div>
+          <div style="height:64px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;gap:12px;font-size:20px;font-weight:700;color:#160801">
+            <div style="width:0;height:0;border-left:16px solid #160801;border-top:10px solid transparent;border-bottom:10px solid transparent"></div>Start
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2b PLAYING -->
+    <div id="2b" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:rgba(255,106,43,.16);border:1px solid rgba(255,106,43,.4);color:#FF8A5C">2b</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">Playing · Takt 1, Note 6</div></div>
+      <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column;position:relative" data-screen-label="Practice Playing">
+        <div style="position:absolute;top:0;left:0;right:0;height:5px;background:#FFC42E;z-index:5"></div>
+        <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+        <div style="height:60px;display:flex;align-items:center;gap:14px;padding:0 20px;background:#191919">
+          <div style="font-size:24px;color:rgba(255,255,255,.6)">‹</div>
+          <div style="flex:1;display:flex;flex-direction:column"><div style="font-size:17px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Single Paradiddle</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Woche 3 · Tag 4 · Technik</div></div>
+          <div style="width:22px;height:22px;border-radius:999px;background:#FF6A2B"></div>
+        </div>
+
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px;flex:1">
+          <div style="display:flex;align-items:center;gap:16px;background:#191919;border-radius:14px;padding:16px">
+            <div style="width:120px;height:120px;border-radius:999px;background:#FF6A2B;box-shadow:0 0 40px 10px rgba(255,106,43,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:dcPulse96 625ms linear infinite">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:52px;font-weight:600;color:#160801">2</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:64px;font-weight:600;line-height:.9;letter-spacing:-.03em">96</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45)">BPM · 1/16</div>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <div style="width:44px;height:44px;border-radius:10px;background:#212121;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:rgba(255,255,255,.7)">−</div>
+                <div style="width:44px;height:44px;border-radius:10px;background:#212121;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:rgba(255,255,255,.7)">+</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#FAF8F3;border-radius:14px;padding:14px 26px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(23,24,26,.5)">R L R R · L R L L</div>
+              <div style="padding:4px 10px;border-radius:6px;background:#FFC42E;border:1px solid rgba(23,24,26,.15);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#231a02">Takt 1 · 6</div>
+            </div>
+
+            <div style="position:relative;height:108px;width:298px">
+              <div style="position:absolute;left:110px;top:20px;width:19px;height:72px;border-radius:3px;background:#FFC42E;box-shadow:inset 0 0 0 1px rgba(23,24,26,.14)"></div>
+              <div style="position:absolute;left:118px;top:20px;width:3px;height:72px;background:#B87700"></div>
+              <div style="position:absolute;left:111px;top:0;width:17px;height:18px;border-radius:3px;background:#FFC42E;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#231a02;z-index:2">R</div>
+              <div style="position:absolute;left:0;right:0;top:36px;display:flex;flex-direction:column;gap:7px"><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div></div>
+              <div style="position:absolute;left:4px;top:39px;width:2.5px;height:26px;background:#17181A"></div>
+              <div style="position:absolute;left:9px;top:39px;width:2.5px;height:26px;background:#17181A"></div>
+              <div style="position:absolute;left:16px;top:39px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;line-height:1.1;color:#17181A">4<br>4</div>
+              <div style="position:absolute;left:24px;top:36px;width:1.5px;height:32px;background:rgba(23,24,26,.45)"></div>
+              <div style="position:absolute;right:0;top:36px;width:1.5px;height:32px;background:rgba(23,24,26,.45)"></div>
+              <div style="position:absolute;left:28px;top:82px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:96px;top:82px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:164px;top:82px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:232px;top:82px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:26px;top:0;display:flex">
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:18px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:48px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:18px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:48px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A;box-shadow:0 0 0 2px rgba(23,24,26,.22)"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#17181A">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:18px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:48px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:18px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:48px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:108px"><div style="position:absolute;top:49px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:52px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:88px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+              </div>
+            </div>
+
+            <div style="position:relative;height:100px;width:298px;opacity:.45">
+              <div style="position:absolute;left:0;right:0;top:28px;display:flex;flex-direction:column;gap:7px"><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div></div>
+              <div style="position:absolute;left:8px;top:28px;width:1.5px;height:32px;background:rgba(23,24,26,.45)"></div>
+              <div style="position:absolute;right:0;top:28px;width:4px;height:32px;background:#17181A"></div><div style="position:absolute;right:7px;top:28px;width:1.5px;height:32px;background:rgba(23,24,26,.45)"></div>
+              <div style="position:absolute;left:12px;top:74px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:80px;top:74px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:148px;top:74px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:216px;top:74px;width:53px;height:3px;background:#17181A"></div>
+              <div style="position:absolute;left:10px;top:0;display:flex">
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:10px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:40px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:10px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:40px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:10px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:40px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:10px;left:0;width:17px;text-align:center;font-size:13px;font-weight:700;color:#C0451A;line-height:1">&gt;</div><div style="position:absolute;top:40px;left:2px;width:12px;height:8px;border-radius:999px;background:#C0451A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">R</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+                <div style="width:17px;position:relative;height:100px"><div style="position:absolute;top:41px;left:2px;width:11px;height:7px;border-radius:50%;background:#17181A"></div><div style="position:absolute;top:44px;left:2px;width:1.6px;height:32px;background:#17181A"></div><div style="position:absolute;top:80px;left:0;width:17px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:rgba(23,24,26,.55)">L</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:center;background:#191919;border-radius:14px;padding:16px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">Session · Ziel 8:00</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:40px;font-weight:600;line-height:1">07:42</div>
+            </div>
+            <div style="width:64px;height:64px;border-radius:999px;background:#8E2226;display:flex;align-items:center;justify-content:center"><div style="width:20px;height:20px;background:#fff;border-radius:2px"></div></div>
+          </div>
+
+          <div style="flex:1"></div>
+          <div style="height:64px;border-radius:14px;border:1.5px solid rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;color:rgba(255,255,255,.85)">Finish Session</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2c ZIEL ERREICHT -->
+    <div id="2c" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:rgba(255,106,43,.16);border:1px solid rgba(255,106,43,.4);color:#FF8A5C">2c</div><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">Timer-Ende · peripheres Signal</div></div>
+      <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column;position:relative" data-screen-label="Practice Ziel erreicht">
+        <div style="position:absolute;inset:0;border:10px solid #57C97A;border-radius:28px;z-index:6"></div>
+        <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:0 32px;text-align:center">
+          <div style="width:200px;height:200px;border-radius:999px;background:rgba(87,201,122,.16);border:4px solid #57C97A;display:flex;align-items:center;justify-content:center">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:72px;font-weight:600;color:#57C97A;line-height:1">8:00</div>
+          </div>
+          <div style="font-size:32px;font-weight:700;line-height:1.1">Ziel erreicht</div>
+          <div style="font-size:17px;line-height:1.5;color:rgba(255,255,255,.6)">Single Paradiddle · 96 BPM · 512 Schläge</div>
+        </div>
+        <div style="padding:0 24px 40px;display:flex;flex-direction:column;gap:12px">
+          <div style="height:64px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#160801">Bewerten</div>
+          <div style="height:56px;border-radius:14px;border:1.5px solid rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:500;color:rgba(255,255,255,.85)">Weiterspielen</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANNOTATIONS -->
+    <div style="width:400px;display:flex;flex-direction:column;gap:16px;background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Was sich gegenüber Turn 1 geändert hat</div>
+      <div style="display:flex;flex-direction:column;gap:14px;font-size:15px;line-height:1.6;color:rgba(255,255,255,.72)">
+        <div><b style="color:#EDEDED">Echte Notation.</b> Perkussionsschlüssel, 4/4, zwei Takte à 16 Sechzehntel, Balken in Vierergruppen, Akzente auf jedem Paradiddle-Anfang. Hälse nach unten, damit die Akzentzeichen über dem System frei stehen.</div>
+        <div><b style="color:#EDEDED">Notenzeile als Papier.</b> Schwarze Tinte auf warmem Off-White (<span style="font-family:'IBM Plex Mono',monospace">#FAF8F3</span>), Linien 1 px, Hälse 1,6 px, Balken 3 px, Notenköpfe ohne Drehung — die Rotation war der Grund, warum die Köpfe weich aussahen. Auf Distanz gewinnt der Kontrast von schwarz auf hell gegen jede helle Note auf dunkel — und die Fläche selbst ist schon ein Anker im Augenwinkel. Damit dreht sich die Aktiv-Logik: das <b style="color:#FFC42E">Feld</b> wird amber, die Tinte bleibt schwarz.</div>
+        <div><b style="color:#EDEDED">Takt 2 gedimmt auf 45 %.</b> Nur der laufende Takt ist voll hell. Auf 60 cm sieht man dadurch sofort, wo man ist, ohne den Cursor suchen zu müssen. Bei Takt-Wechsel tauschen die Helligkeiten — hart, auf den Tick.</div>
+        <div><b style="color:#EDEDED">Doppelstrich am Ende.</b> Markiert die Wiederholung; die Zeile springt danach zurück auf Takt 1.</div>
+        <div><b style="color:#EDEDED">Timer mit Ziel.</b> „Session · Ziel 8:00" statt nackter Zahl, und der Timer wächst auf 40 px.</div>
+        <div><b style="color:#EDEDED">Ziel erreicht (<a href="#2c">2c</a>).</b> Grüner 10-px-Rahmen um den ganzen Screen plus 200-px-Kreis. Ein Rahmen an der Bildschirmkante ist das einzige Signal, das im Augenwinkel funktioniert, wenn man nicht hinsieht — deshalb Kante statt Toast.</div>
+        <div><b style="color:#EDEDED">Ready-Zustand (<a href="#2a">2a</a>).</b> Beat-Kreis blass, Zahl durch „—" ersetzt, keine Cursor-Position im System. Primäraktion ist „Start", nicht „Finish".</div>
+      </div>
+    </div>
+
+    <!-- 2d LEGENDE -->
+    <div id="2d" style="width:520px;display:flex;flex-direction:column;gap:20px;background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:rgba(255,106,43,.16);border:1px solid rgba(255,106,43,.4);color:#FF8A5C">2d</div><div style="font-size:22px;font-weight:700">Notations-Vokabular · 2×</div></div>
+
+      <div style="background:#0B0B0B;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;align-items:center;gap:24px">
+          <div style="width:64px;height:56px;position:relative;flex-shrink:0;background:#FAF8F3;border-radius:6px;overflow:hidden">
+            <div style="position:absolute;left:0;right:0;top:14px;display:flex;flex-direction:column;gap:14px"><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div></div>
+            <div style="position:absolute;left:22px;top:24px;width:22px;height:14px;border-radius:50%;background:#17181A"></div>
+          </div>
+          <div><div style="font-size:17px;font-weight:700">Normalschlag</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">#17181A · voller Kopf</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:24px">
+          <div style="width:64px;height:56px;position:relative;flex-shrink:0;background:#FAF8F3;border-radius:6px;overflow:hidden">
+            <div style="position:absolute;left:0;right:0;top:14px;display:flex;flex-direction:column;gap:14px"><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div></div>
+            <div style="position:absolute;left:26px;top:0;font-size:20px;font-weight:700;color:#C0451A;line-height:1">&gt;</div>
+            <div style="position:absolute;left:22px;top:24px;width:22px;height:14px;border-radius:999px;background:#C0451A"></div>
+          </div>
+          <div><div style="font-size:17px;font-weight:700">Akzent</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">#C0451A · Kopf + &gt; über dem System</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:24px">
+          <div style="width:64px;height:56px;position:relative;flex-shrink:0;background:#FAF8F3;border-radius:6px;overflow:hidden">
+            <div style="position:absolute;left:0;right:0;top:14px;display:flex;flex-direction:column;gap:14px"><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div></div>
+            <div style="position:absolute;left:22px;top:24px;width:22px;height:14px;border-radius:999px;box-shadow:inset 0 0 0 2px rgba(23,24,26,.45)"></div>
+            <div style="position:absolute;left:12px;top:22px;font-size:20px;color:rgba(23,24,26,.45);line-height:1">(</div>
+            <div style="position:absolute;left:48px;top:22px;font-size:20px;color:rgba(23,24,26,.45);line-height:1">)</div>
+          </div>
+          <div><div style="font-size:17px;font-weight:700">Ghost Note</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Tinte 45 % · hohl, in Klammern</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:24px">
+          <div style="width:64px;height:56px;position:relative;flex-shrink:0;background:#FAF8F3;border-radius:6px;overflow:hidden">
+            <div style="position:absolute;left:0;right:0;top:14px;display:flex;flex-direction:column;gap:14px"><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div></div>
+            <div style="position:absolute;left:6px;top:26px;width:14px;height:10px;border-radius:50%;background:#17181A"></div>
+            <div style="position:absolute;left:19px;top:12px;width:2px;height:22px;background:#17181A"></div>
+            <div style="position:absolute;left:11px;top:14px;width:15px;height:2px;background:#17181A;transform:rotate(38deg)"></div>
+            <div style="position:absolute;left:30px;top:24px;width:22px;height:14px;border-radius:50%;background:#17181A"></div>
+          </div>
+          <div><div style="font-size:17px;font-weight:700">Flam / Vorschlagnote</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Kleiner Kopf links, Hals mit Schrägstrich</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:24px">
+          <div style="width:64px;height:56px;position:relative;flex-shrink:0;background:#FAF8F3;border-radius:6px;overflow:hidden">
+            <div style="position:absolute;left:0;right:0;top:14px;display:flex;flex-direction:column;gap:14px"><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div></div>
+            <div style="position:absolute;left:22px;top:24px;width:19px;height:12px;background:#17181A"></div>
+          </div>
+          <div><div style="font-size:17px;font-weight:700">Pause</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Balken an der Mittellinie</div></div>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,.08)"></div>
+        <div style="display:flex;align-items:center;gap:24px">
+          <div style="width:64px;height:56px;position:relative;flex-shrink:0;background:#FAF8F3;border-radius:6px;overflow:hidden">
+            <div style="position:absolute;left:20px;top:4px;width:28px;height:48px;border-radius:3px;background:#FFC42E;box-shadow:inset 0 0 0 1px rgba(23,24,26,.14)"></div>
+            <div style="position:absolute;left:32px;top:0;width:3px;height:56px;background:#B87700"></div>
+            <div style="position:absolute;left:0;right:0;top:14px;display:flex;flex-direction:column;gap:14px"><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div><div style="height:2px;background:rgba(23,24,26,.3)"></div></div>
+            <div style="position:absolute;left:22px;top:24px;width:22px;height:14px;border-radius:50%;background:#17181A;box-shadow:0 0 0 3px rgba(23,24,26,.2)"></div>
+          </div>
+          <div><div style="font-size:17px;font-weight:700">Aktive Position</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">#FFC42E-Feld, Tinte bleibt schwarz + R/L-Chip</div></div>
+        </div>
+      </div>
+      <div style="font-size:15px;line-height:1.6;color:rgba(255,255,255,.6);text-wrap:pretty">Auf Papier bekommen Akzent und Aktiv eigene Töne: Akzent <span style="font-family:'IBM Plex Mono',monospace">#C0451A</span> statt #FF6A2B, die Cursor-Linie <span style="font-family:'IBM Plex Mono',monospace">#B87700</span> im Amber-Feld. Beide behalten ihren Farbwinkel, nur die Helligkeit dreht — auf Distanz und bei schlechtem Licht ist der Farbton das Erste, was verloren geht.</div>
+    </div>
+
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:56px;padding:64px;font-family:'Space Grotesk',sans-serif;color:#EDEDED;background:#08090A">
+
+  <div style="display:flex;flex-direction:column;gap:14px;max-width:900px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#FF6A2B">Turn 1 · DrumCoach UI-Redesign</div>
+    <div style="font-size:44px;font-weight:700;line-height:1.05;letter-spacing:-.02em">Alle 11 Screens, grob — plus Tokens, Komponenten und Motion-Spec</div>
+    <div style="font-size:15px;line-height:1.6;color:rgba(255,255,255,.62);text-wrap:pretty">Eine Richtung, kein A/B: dunkel, werkzeughaft, auf Halbdistanz lesbar. Akzent bleibt im Orange-Bereich, aber verfeinert (<span style="font-family:'IBM Plex Mono',monospace">#FF6A2B</span> statt <span style="font-family:'IBM Plex Mono',monospace">#FF5722</span>) — höhere Chroma bei gleicher Lightness, damit Orange auf <span style="font-family:'IBM Plex Mono',monospace">#101010</span> nicht mehr matschig wirkt. Amber/Gold bleibt exklusiv für „gerade jetzt aktiv". Vier Blöcke: <a href="#1a">1a</a> Tokens · <a href="#1b">1b</a> Screens · <a href="#1c">1c</a> Komponenten · <a href="#1d">1d</a> Motion.</div>
+  </div>
+
+  <!-- ============ 1a · TOKENS ============ -->
+  <div id="1a" style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:rgba(255,106,43,.16);border:1px solid rgba(255,106,43,.4);color:#FF8A5C">1a</div>
+      <div style="font-size:24px;font-weight:700">Style-Tile · Tokens</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px;max-width:1500px">
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Flächen</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:12px"><div style="width:52px;height:36px;border-radius:8px;background:#101010;border:1px solid rgba(255,255,255,.1)"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.72)">base &nbsp;#101010</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="width:52px;height:36px;border-radius:8px;background:#191919"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.72)">surface &nbsp;#191919</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="width:52px;height:36px;border-radius:8px;background:#212121"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.72)">raised &nbsp;#212121</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="width:52px;height:36px;border-radius:8px;background:#0B0B0B"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.72)">inset &nbsp;#0B0B0B</div></div>
+          <div style="display:flex;align-items:center;gap:12px"><div style="width:52px;height:36px;border-radius:8px;background:#151726"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.72)">coach &nbsp;#151726</div></div>
+        </div>
+        <div style="font-size:13px;line-height:1.55;color:rgba(255,255,255,.5)">Vier Stufen statt sechs Ad-hoc-Hex-Werte. <span style="font-family:'IBM Plex Mono',monospace">inset</span> ersetzt <span style="font-family:'IBM Plex Mono',monospace">#151515</span>/<span style="font-family:'IBM Plex Mono',monospace">#1A1A1A</span> für Eingaben und Notenzeilen-Hintergrund.</div>
+      </div>
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Akzent &amp; Semantik</div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1;height:72px;border-radius:12px;background:#FF6A2B;display:flex;align-items:flex-end;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#1a0a02;font-weight:600">accent</div>
+          <div style="flex:1;height:72px;border-radius:12px;background:#FFC42E;display:flex;align-items:flex-end;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#231a02;font-weight:600">live</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1;height:44px;border-radius:10px;background:#57C97A"></div>
+          <div style="flex:1;height:44px;border-radius:10px;background:#FFC107"></div>
+          <div style="flex:1;height:44px;border-radius:10px;background:#E5484D"></div>
+          <div style="flex:1;height:44px;border-radius:10px;background:#6AA9FF"></div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.42);line-height:1.7">accent #FF6A2B · live #FFC42E<br>solid #57C97A · ok #FFC107 · struggled #E5484D · info #6AA9FF</div>
+        <div style="font-size:13px;line-height:1.55;color:rgba(255,255,255,.5)">Strikte Trennung: <b style="color:#FF6A2B">Orange</b> = interaktiv &amp; Akzentschlag, <b style="color:#FFC42E">Amber</b> = läuft gerade. Nie beides für dasselbe.</div>
+      </div>
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Typo-Skala</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:56px;font-weight:600;line-height:.9;letter-spacing:-.03em">104</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.4)">numeric-xl 104 / Plex Mono 600 — nur BPM &amp; Timer</div>
+        <div style="height:1px;background:rgba(255,255,255,.08)"></div>
+        <div style="font-size:32px;font-weight:700;line-height:1.1">display 32</div>
+        <div style="font-size:22px;font-weight:700">title 22</div>
+        <div style="font-size:17px;font-weight:500">subtitle 17</div>
+        <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.72)">body 15 — Fließtext, line-height 1.55</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5)">label 12 mono caps</div>
+        <div style="font-size:13px;line-height:1.55;color:rgba(255,255,255,.5)">Sieben Stufen statt 14 Inline-Größen. Nichts unter 12 — die 10/11er-Mikrobadges aus dem IST fallen weg.</div>
+      </div>
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Spacing &amp; Radien</div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <div style="width:4px;height:4px;background:#FF6A2B"></div>
+          <div style="width:8px;height:8px;background:#FF6A2B"></div>
+          <div style="width:12px;height:12px;background:#FF6A2B"></div>
+          <div style="width:16px;height:16px;background:#FF6A2B"></div>
+          <div style="width:24px;height:24px;background:#FF6A2B"></div>
+          <div style="width:32px;height:32px;background:#FF6A2B"></div>
+          <div style="width:48px;height:48px;background:#FF6A2B"></div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.42)">4 · 8 · 12 · 16 · 24 · 32 · 48 &nbsp;— Screen-Padding 20, Card-Padding 16</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:44px;height:44px;background:#212121;border-radius:6px"></div>
+          <div style="width:44px;height:44px;background:#212121;border-radius:10px"></div>
+          <div style="width:44px;height:44px;background:#212121;border-radius:14px"></div>
+          <div style="width:44px;height:44px;background:#212121;border-radius:20px"></div>
+          <div style="width:44px;height:44px;background:#212121;border-radius:999px"></div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.42)">6 badge · 10 chip/input · 14 card/button · 20 sheet · pill</div>
+        <div style="font-size:13px;line-height:1.55;color:rgba(255,255,255,.5)">Elevation bleibt 0. Der einzige Schatten im System ist der Beat-Glow — siehe <a href="#1d">1d</a>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1b · SCREENS ============ -->
+  <div id="1b" style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:rgba(255,106,43,.16);border:1px solid rgba(255,106,43,.4);color:#FF8A5C">1b</div>
+      <div style="font-size:24px;font-weight:700">11 Screens + Zustände</div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+      <!-- ONBOARDING -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Onboarding">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 24px;gap:32px">
+            <div style="width:88px;height:88px;border-radius:20px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;font-size:44px">🥁</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:32px;font-weight:700;line-height:1.1;letter-spacing:-.02em">DrumCoach</div>
+              <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.62);text-wrap:pretty">Rudiments auf dem Practice Pad. Metronom, Notenzeile und ein Plan, der dein Tempo mitzieht.</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)">Dein Level</div>
+              <div style="background:rgba(255,106,43,.14);border:1.5px solid #FF6A2B;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px">
+                <div style="font-size:17px;font-weight:700">Fortgeschrittener Anfänger</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.6)">Singles &amp; Doubles sitzen, Paradiddle wackelt</div>
+              </div>
+              <div style="background:#191919;border:1.5px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px">
+                <div style="font-size:17px;font-weight:700;color:rgba(255,255,255,.82)">Kompletter Einstieg</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.45)">Erste Stöcke, erstes Pad</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding:0 24px 40px;display:flex;flex-direction:column;gap:14px">
+            <div style="height:56px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#160801">Los geht's</div>
+            <div style="display:flex;justify-content:center;gap:8px">
+              <div style="width:24px;height:4px;border-radius:2px;background:#FF6A2B"></div>
+              <div style="width:8px;height:4px;border-radius:2px;background:rgba(255,255,255,.2)"></div>
+              <div style="width:8px;height:4px;border-radius:2px;background:rgba(255,255,255,.2)"></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">01 · Onboarding</div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Dashboard">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#191919">
+            <div style="font-size:22px;font-weight:700">Dashboard</div>
+            <div style="display:flex;gap:14px;align-items:center">
+              <div style="width:24px;height:24px;border-radius:999px;border:2px solid #FF6A2B;display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;border-radius:999px;background:#FF6A2B"></div></div>
+              <div style="width:22px;height:22px;border-radius:999px;border:2.5px solid rgba(255,255,255,.5)"></div>
+            </div>
+          </div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;overflow:hidden">
+
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px">
+              <div style="font-size:40px;line-height:1">🔥</div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;color:#FF6A2B;line-height:1.05">14</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5)">day streak</div>
+              </div>
+              <div style="text-align:right;display:flex;flex-direction:column;gap:2px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:rgba(255,255,255,.82)">21</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;color:rgba(255,255,255,.4)">best</div>
+              </div>
+            </div>
+
+            <div style="background:rgba(255,106,43,.12);border:1.5px solid rgba(255,106,43,.5);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#FF8A5C">Heute · 15 min</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5)">Woche 3 · Tag 4</div>
+              </div>
+              <div style="font-size:22px;font-weight:700;line-height:1.15">Single Paradiddle<br><span style="font-size:17px;font-weight:500;color:rgba(255,255,255,.6)">+ Warmup, Tempo-Leiter</span></div>
+              <div style="display:flex;gap:8px">
+                <div style="padding:5px 10px;border-radius:6px;background:rgba(106,169,255,.15);border:1px solid rgba(106,169,255,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6AA9FF">Technik</div>
+                <div style="padding:5px 10px;border-radius:6px;background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FFC107">Tempo-Leiter</div>
+              </div>
+              <div style="height:52px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:700;color:#160801">
+                <div style="width:0;height:0;border-left:13px solid #160801;border-top:8px solid transparent;border-bottom:8px solid transparent"></div>Start Session
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px">
+              <div style="flex:1;background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45)">Fällig</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;line-height:1">3</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.5)">Reviews</div>
+              </div>
+              <div style="flex:1;background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45)">Diese Woche</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;line-height:1">78<span style="font-size:17px;color:rgba(255,255,255,.4)">min</span></div>
+                <div style="font-size:13px;color:rgba(255,255,255,.5)">5 Sessions</div>
+              </div>
+            </div>
+
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <div style="width:44px;height:44px;border-radius:10px;background:#212121;display:flex;align-items:center;justify-content:center;gap:3px">
+                <div style="width:4px;height:14px;background:#FF6A2B"></div>
+                <div style="width:4px;height:22px;background:#FF6A2B"></div>
+                <div style="width:4px;height:14px;background:#FF6A2B"></div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:17px;font-weight:700">Metronom</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.5)">Freies Üben · 120 BPM</div>
+              </div>
+              <div style="font-size:20px;color:rgba(255,255,255,.3)">›</div>
+            </div>
+
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+                <div style="font-size:17px;font-weight:700">Stick Control · 12 Wochen</div>
+                <div style="height:6px;border-radius:3px;background:#0B0B0B;overflow:hidden"><div style="width:22%;height:100%;background:#FF6A2B"></div></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">Phase 1 · Fundament · 18 / 84 Tage</div>
+              </div>
+              <div style="font-size:20px;color:rgba(255,255,255,.3)">›</div>
+            </div>
+          </div>
+          <div style="height:68px;background:#191919;border-top:1px solid rgba(255,255,255,.07);display:flex">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative">
+              <div style="position:absolute;top:0;width:36px;height:3px;background:#FF6A2B"></div>
+              <div style="display:grid;grid-template-columns:7px 7px;gap:3px"><div style="width:7px;height:7px;background:#FF6A2B"></div><div style="width:7px;height:7px;background:#FF6A2B"></div><div style="width:7px;height:7px;background:#FF6A2B"></div><div style="width:7px;height:7px;background:#FF6A2B"></div></div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FF6A2B">Home</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+              <div style="width:17px;height:17px;border:2px solid rgba(255,255,255,.42);border-radius:3px;border-top-width:5px"></div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Routine</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+              <div style="display:flex;flex-direction:column;gap:2px;align-items:center"><div style="width:17px;height:3px;background:rgba(255,255,255,.42)"></div><div style="width:13px;height:3px;background:rgba(255,255,255,.42)"></div><div style="width:17px;height:3px;background:rgba(255,255,255,.42)"></div></div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Lessons</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+              <div style="display:flex;align-items:flex-end;gap:3px"><div style="width:4px;height:9px;background:rgba(255,255,255,.42)"></div><div style="width:4px;height:16px;background:rgba(255,255,255,.42)"></div><div style="width:4px;height:12px;background:rgba(255,255,255,.42)"></div></div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Stats</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">02 · Dashboard · Normal</div>
+      </div>
+
+      <!-- PRACTICE SESSION -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column;position:relative" data-screen-label="Practice-Session">
+          <div style="position:absolute;top:0;left:0;right:0;height:5px;background:#FFC42E;z-index:5"></div>
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;gap:14px;padding:0 20px;background:#191919">
+            <div style="font-size:22px;color:rgba(255,255,255,.6)">‹</div>
+            <div style="flex:1;font-size:17px;font-weight:700">Single Paradiddle</div>
+            <div style="width:22px;height:22px;border-radius:999px;background:#FF6A2B"></div>
+          </div>
+
+          <div style="padding:20px;display:flex;flex-direction:column;gap:20px;flex:1">
+
+            <div style="display:flex;align-items:center;gap:16px;background:#191919;border-radius:14px;padding:16px">
+              <div style="width:120px;height:120px;border-radius:999px;background:#FF6A2B;box-shadow:0 0 40px 10px rgba(255,106,43,.42);display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:dcPulse96 625ms linear infinite">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:44px;font-weight:600;color:#160801">1</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:64px;font-weight:600;line-height:.9;letter-spacing:-.03em">96</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45)">BPM · 16th</div>
+                <div style="display:flex;gap:8px;margin-top:6px">
+                  <div style="width:44px;height:44px;border-radius:10px;background:#212121;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:rgba(255,255,255,.7)">−</div>
+                  <div style="width:44px;height:44px;border-radius:10px;background:#212121;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:rgba(255,255,255,.7)">+</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notation -->
+            <div style="background:#FAF8F3;border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:12px;position:relative">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(23,24,26,.5)">R L R R · L R L L</div>
+                <div style="padding:4px 10px;border-radius:6px;background:#FFC42E;border:1px solid rgba(23,24,26,.15);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#231a02">Takt 1 · 3</div>
+              </div>
+
+              <div style="position:relative;height:130px">
+                <div style="position:absolute;left:52px;top:38px;width:16px;height:60px;border-radius:4px;background:#FFC42E;box-shadow:inset 0 0 0 1px rgba(23,24,26,.14)"></div>
+                <div style="position:absolute;left:58px;top:24px;width:3px;height:88px;background:#B87700"></div>
+                <div style="position:absolute;left:44px;top:2px;width:32px;height:20px;border-radius:5px;background:#FFC42E;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#231a02">R</div>
+
+                <div style="position:absolute;left:0;right:0;top:44px;display:flex;flex-direction:column;gap:11px">
+                  <div style="height:1px;background:rgba(23,24,26,.3)"></div>
+                  <div style="height:1px;background:rgba(23,24,26,.3)"></div>
+                  <div style="height:1px;background:rgba(23,24,26,.3)"></div>
+                  <div style="height:1px;background:rgba(23,24,26,.3)"></div>
+                  <div style="height:1px;background:rgba(23,24,26,.3)"></div>
+                </div>
+                <div style="position:absolute;left:0;top:44px;width:1.5px;height:49px;background:rgba(23,24,26,.45)"></div>
+                <div style="position:absolute;left:168px;top:44px;width:1.5px;height:49px;background:rgba(23,24,26,.45)"></div>
+                <div style="position:absolute;right:0;top:44px;width:1.5px;height:49px;background:rgba(23,24,26,.45)"></div>
+                <div style="position:absolute;left:24px;top:63px;width:15px;height:11px;border-radius:50%;background:#C0451A"></div>
+                <div style="position:absolute;left:52px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A;box-shadow:0 0 0 2px rgba(23,24,26,.22)"></div>
+                <div style="position:absolute;left:80px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+                <div style="position:absolute;left:108px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+                <div style="position:absolute;left:136px;top:63px;width:15px;height:11px;border-radius:50%;background:transparent;box-shadow:inset 0 0 0 2px rgba(23,24,26,.45)"></div>
+                <div style="position:absolute;left:196px;top:63px;width:15px;height:11px;border-radius:50%;background:#C0451A"></div>
+                <div style="position:absolute;left:224px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+                <div style="position:absolute;left:252px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+                <div style="position:absolute;left:280px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+                <div style="position:absolute;left:36px;top:30px;width:2px;height:39px;background:#17181A"></div>
+                <div style="position:absolute;left:64px;top:30px;width:2px;height:39px;background:#17181A"></div>
+                <div style="position:absolute;left:92px;top:30px;width:2px;height:39px;background:#17181A"></div>
+                <div style="position:absolute;left:120px;top:30px;width:2px;height:39px;background:#17181A"></div>
+                <div style="position:absolute;left:148px;top:30px;width:2px;height:39px;background:#17181A"></div>
+                <div style="position:absolute;left:208px;top:30px;width:2px;height:39px;background:#17181A"></div>
+                <div style="position:absolute;left:236px;top:30px;width:2px;height:39px;background:#17181A"></div>
+                <div style="position:absolute;left:264px;top:30px;width:2px;height:39px;background:#17181A"></div>
+                <div style="position:absolute;left:292px;top:30px;width:2px;height:39px;background:#17181A"></div>
+                <div style="position:absolute;left:36px;top:30px;width:114px;height:3px;background:#17181A"></div>
+                <div style="position:absolute;left:208px;top:30px;width:86px;height:3px;background:#17181A"></div>
+                <div style="position:absolute;left:22px;top:100px;display:flex;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:rgba(23,24,26,.55)">
+                  <span style="width:16px;text-align:center">R</span>
+                  <span style="width:16px;text-align:center;color:#17181A;font-weight:700">L</span>
+                  <span style="width:16px;text-align:center">R</span>
+                  <span style="width:16px;text-align:center">R</span>
+                  <span style="width:16px;text-align:center;color:rgba(23,24,26,.38)">(l)</span>
+                </div>
+                <div style="position:absolute;left:194px;top:100px;display:flex;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:rgba(23,24,26,.55)">
+                  <span style="width:16px;text-align:center">L</span>
+                  <span style="width:16px;text-align:center">R</span>
+                  <span style="width:16px;text-align:center">L</span>
+                  <span style="width:16px;text-align:center">L</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px;align-items:center;background:#191919;border-radius:14px;padding:16px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">Session</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;line-height:1">07:42</div>
+              </div>
+              <div style="width:56px;height:56px;border-radius:999px;background:#8E2226;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;background:#fff;border-radius:2px"></div></div>
+            </div>
+
+            <div style="height:56px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#160801">Finish Session</div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">03 · Practice-Session · Playing</div>
+      </div>
+
+      <!-- RATING SHEET -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;position:relative" data-screen-label="Rating-Sheet">
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,.62)"></div>
+          <div style="position:relative;background:#191919;border-radius:20px 20px 0 0;padding:16px 24px 40px;display:flex;flex-direction:column;gap:20px">
+            <div style="width:44px;height:4px;border-radius:2px;background:rgba(255,255,255,.24);align-self:center"></div>
+            <div>
+              <div style="font-size:22px;font-weight:700">Wie lief's?</div>
+              <div style="font-size:15px;color:rgba(255,255,255,.55);margin-top:4px">Single Paradiddle · 96 BPM · 12:04</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="background:rgba(229,72,77,.12);border:1.5px solid rgba(229,72,77,.45);border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px">
+                <div style="font-size:32px">😓</div>
+                <div style="flex:1"><div style="font-size:17px;font-weight:700">Struggled</div><div style="font-size:13px;color:rgba(255,255,255,.55)">Keep the same BPM</div></div>
+              </div>
+              <div style="background:rgba(255,193,7,.12);border:1.5px solid rgba(255,193,7,.45);border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px">
+                <div style="font-size:32px">😐</div>
+                <div style="flex:1"><div style="font-size:17px;font-weight:700">OK</div><div style="font-size:13px;color:rgba(255,255,255,.55)">+2 BPM next time</div></div>
+              </div>
+              <div style="background:rgba(87,201,122,.14);border:1.5px solid #57C97A;border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px">
+                <div style="font-size:32px">💪</div>
+                <div style="flex:1"><div style="font-size:17px;font-weight:700">Solid</div><div style="font-size:13px;color:rgba(255,255,255,.55)">+5 BPM next time</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">03b · Rating-Sheet</div>
+      </div>
+
+      <!-- FEEDBACK SHEET -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;position:relative" data-screen-label="Feedback-Sheet">
+          <div style="position:absolute;inset:0;background:rgba(0,0,0,.62)"></div>
+          <div style="position:relative;background:#191919;border-radius:20px 20px 0 0;padding:16px 24px 40px;display:flex;flex-direction:column;gap:20px">
+            <div style="width:44px;height:4px;border-radius:2px;background:rgba(255,255,255,.24);align-self:center"></div>
+            <div>
+              <div style="font-size:22px;font-weight:700">Session gespeichert</div>
+              <div style="font-size:15px;color:rgba(255,255,255,.55);margin-top:4px">Single Paradiddle · 96 → 101 BPM</div>
+            </div>
+            <div style="background:#0B0B0B;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)">Mic-Analyse · 1 482 Schläge</div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:rgba(255,255,255,.6)">Overall Timing</span><span style="font-family:'IBM Plex Mono',monospace;color:#57C97A;font-weight:600">±8 ms</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:rgba(255,255,255,.6)">Rechte Hand</span><span style="font-family:'IBM Plex Mono',monospace;color:#57C97A;font-weight:600">±6 ms</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:rgba(255,255,255,.6)">Linke Hand</span><span style="font-family:'IBM Plex Mono',monospace;color:#FFC107;font-weight:600">±14 ms</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:rgba(255,255,255,.6)">Konsistenz</span><span style="font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,.85);font-weight:600">Jitter 11 ms</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:rgba(255,255,255,.6)">Dynamik R / L</span><span style="font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,.85);font-weight:600">0.92 / 0.71</span></div>
+            </div>
+            <div style="background:#151726;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:8px;height:8px;border-radius:999px;background:#6AA9FF"></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#6AA9FF">Coach</div>
+              </div>
+              <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.8);text-wrap:pretty">Deine Linke hängt konstant 14 ms hinten und schlägt 20 % leiser. Nimm die nächsten zwei Sessions auf 88 BPM zurück und spiele nur Doubles links — Ziel ist gleiche Lautstärke, nicht mehr Tempo.</div>
+            </div>
+            <div style="height:56px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#160801">Fertig</div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">03c · Feedback-Sheet + Coach-Card</div>
+      </div>
+
+      <!-- ROUTINE -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Routine">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#191919">
+            <div style="font-size:22px;font-weight:700">Routine</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">Mo · 24. Aug</div>
+          </div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;gap:12px;align-items:center;background:#191919;border-radius:14px;padding:16px">
+              <div style="flex:1"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">Heute</div><div style="font-size:22px;font-weight:700;margin-top:4px">4 Übungen · 15 min</div></div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:#FF6A2B">1/4</div>
+            </div>
+
+            <div style="background:rgba(255,106,43,.12);border:1.5px solid rgba(255,106,43,.5);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="padding:5px 10px;border-radius:6px;background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FFC107">Review</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5)">4 min · 84 BPM</div>
+              </div>
+              <div style="font-size:22px;font-weight:700">Double Stroke Roll</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.55)">Fällig seit 2 Tagen</div>
+              <div style="height:52px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#160801">Weiter üben</div>
+            </div>
+
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between"><div style="padding:5px 10px;border-radius:6px;background:rgba(106,169,255,.15);border:1px solid rgba(106,169,255,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6AA9FF">Progress</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">5 min · 96 BPM</div></div>
+              <div style="font-size:17px;font-weight:700">Single Paradiddle</div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between"><div style="padding:5px 10px;border-radius:6px;background:rgba(106,169,255,.15);border:1px solid rgba(106,169,255,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6AA9FF">Progress</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">3 min · 132 BPM</div></div>
+              <div style="font-size:17px;font-weight:700">Eight on a Hand</div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between"><div style="padding:5px 10px;border-radius:6px;background:rgba(87,201,122,.15);border:1px solid rgba(87,201,122,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#57C97A">New</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">3 min · 60 BPM</div></div>
+              <div style="font-size:17px;font-weight:700">Six Stroke Roll</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.5)">Neu heute</div>
+            </div>
+          </div>
+          <div style="height:68px;background:#191919;border-top:1px solid rgba(255,255,255,.07);display:flex">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><div style="display:grid;grid-template-columns:7px 7px;gap:3px"><div style="width:7px;height:7px;background:rgba(255,255,255,.42)"></div><div style="width:7px;height:7px;background:rgba(255,255,255,.42)"></div><div style="width:7px;height:7px;background:rgba(255,255,255,.42)"></div><div style="width:7px;height:7px;background:rgba(255,255,255,.42)"></div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Home</div></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative"><div style="position:absolute;top:0;width:36px;height:3px;background:#FF6A2B"></div><div style="width:17px;height:17px;border:2px solid #FF6A2B;border-radius:3px;border-top-width:5px"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FF6A2B">Routine</div></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><div style="display:flex;flex-direction:column;gap:2px;align-items:center"><div style="width:17px;height:3px;background:rgba(255,255,255,.42)"></div><div style="width:13px;height:3px;background:rgba(255,255,255,.42)"></div><div style="width:17px;height:3px;background:rgba(255,255,255,.42)"></div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Lessons</div></div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><div style="display:flex;align-items:flex-end;gap:3px"><div style="width:4px;height:9px;background:rgba(255,255,255,.42)"></div><div style="width:4px;height:16px;background:rgba(255,255,255,.42)"></div><div style="width:4px;height:12px;background:rgba(255,255,255,.42)"></div></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">Stats</div></div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">04 · Routine · Normal</div>
+      </div>
+
+      <!-- ROUTINE EMPTY -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Routine Empty">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#191919">
+            <div style="font-size:22px;font-weight:700">Routine</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">Mo · 24. Aug</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:0 32px;text-align:center">
+            <div style="font-size:56px">🎉</div>
+            <div style="font-size:22px;font-weight:700">You're all caught up!</div>
+            <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.55)">No reviews due today. Great work!</div>
+            <div style="height:52px;padding:0 24px;border-radius:14px;border:1.5px solid rgba(255,255,255,.24);display:flex;align-items:center;font-size:17px;font-weight:500;color:rgba(255,255,255,.85)">Browse Lessons</div>
+          </div>
+          <div style="height:68px;background:#191919;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.2)">bottom nav</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">04b · Routine · Empty</div>
+      </div>
+
+      <!-- LESSONS -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Lessons">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;padding:0 20px;background:#191919"><div style="font-size:22px;font-weight:700">Lessons</div><div style="flex:1"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">41</div></div>
+          <div style="padding:16px 20px;display:flex;gap:8px;flex-wrap:wrap">
+            <div style="padding:9px 16px;border-radius:999px;background:rgba(255,106,43,.18);border:1.5px solid #FF6A2B;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#FF8A5C">Alle</div>
+            <div style="padding:9px 16px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.6)">Beginner</div>
+            <div style="padding:9px 16px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.6)">Rolls</div>
+            <div style="padding:9px 16px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.6)">Flams</div>
+          </div>
+          <div style="flex:1;padding:0 20px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                <div style="font-size:17px;font-weight:700">Single Stroke Roll</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div style="padding:4px 8px;border-radius:6px;background:rgba(76,175,80,.15);border:1px solid rgba(76,175,80,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4CAF50">Beginner</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">60–200 BPM</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:#57C97A">98</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.38)">best</div>
+              </div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                <div style="font-size:17px;font-weight:700">Double Stroke Roll</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div style="padding:4px 8px;border-radius:6px;background:rgba(76,175,80,.15);border:1px solid rgba(76,175,80,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4CAF50">Beginner</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">60–180 BPM</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:rgba(255,255,255,.85)">84</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.38)">best</div>
+              </div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                <div style="font-size:17px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">Multiple Bounce Roll (Buzz)</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div style="padding:4px 8px;border-radius:6px;background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FFC107">Intermediate</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">40–100</div>
+                </div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.3)">—</div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                <div style="font-size:17px;font-weight:700">Flamacue</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div style="padding:4px 8px;border-radius:6px;background:rgba(255,152,0,.15);border:1px solid rgba(255,152,0,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FF9800">Advanced</div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.42)">50–140</div>
+                </div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.3)">—</div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                <div style="font-size:17px;font-weight:700">Moeller-Bewegung</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div style="padding:4px 8px;border-radius:6px;background:rgba(244,67,54,.15);border:1px solid rgba(244,67,54,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#F44336">Professional</div>
+                </div>
+              </div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.3)">—</div>
+            </div>
+          </div>
+          <div style="height:68px;background:#191919;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.2)">bottom nav</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">05 · Lessons + Overflow-Regel</div>
+      </div>
+
+      <!-- LESSON DETAIL -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Lesson-Detail">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;gap:14px;padding:0 20px;background:#191919"><div style="font-size:22px;color:rgba(255,255,255,.6)">‹</div><div style="font-size:17px;font-weight:700">Single Paradiddle</div></div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="padding:5px 10px;border-radius:6px;background:rgba(76,175,80,.15);border:1px solid rgba(76,175,80,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4CAF50">Beginner</div>
+              <div style="padding:5px 10px;border-radius:6px;background:rgba(106,169,255,.15);border:1px solid rgba(106,169,255,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6AA9FF">Technik</div>
+            </div>
+            <div style="background:#FAF8F3;border-radius:14px;padding:20px 16px;position:relative;height:110px">
+              <div style="position:absolute;left:16px;right:16px;top:44px;display:flex;flex-direction:column;gap:11px">
+                <div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div>
+              </div>
+              <div style="position:absolute;left:24px;top:63px;width:15px;height:11px;border-radius:50%;background:#C0451A"></div>
+              <div style="position:absolute;left:56px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+              <div style="position:absolute;left:88px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+              <div style="position:absolute;left:120px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+              <div style="position:absolute;left:168px;top:63px;width:15px;height:11px;border-radius:50%;background:#C0451A"></div>
+              <div style="position:absolute;left:200px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+              <div style="position:absolute;left:232px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+              <div style="position:absolute;left:264px;top:63px;width:15px;height:11px;border-radius:50%;background:#17181A"></div>
+              <div style="position:absolute;left:22px;top:98px;display:flex;gap:16px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:rgba(23,24,26,.55)"><span style="width:16px;text-align:center">R</span><span style="width:16px;text-align:center">L</span><span style="width:16px;text-align:center">R</span><span style="width:16px;text-align:center">R</span></div>
+              <div style="position:absolute;left:166px;top:98px;display:flex;gap:16px;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:rgba(23,24,26,.55)"><span style="width:16px;text-align:center">L</span><span style="width:16px;text-align:center">R</span><span style="width:16px;text-align:center">L</span><span style="width:16px;text-align:center">L</span></div>
+            </div>
+            <div style="font-size:15px;line-height:1.6;color:rgba(255,255,255,.72);text-wrap:pretty">Akzent klar und voll, Taps klein und leise. Der Wechsel der führenden Hand passiert ohne Bruch im Puls — hör auf die Lautstärke, nicht auf das Tempo.</div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1;background:#191919;border-radius:14px;padding:16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;color:rgba(255,255,255,.45)">Best</div><div style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;color:#57C97A">101</div></div>
+              <div style="flex:1;background:#191919;border-radius:14px;padding:16px"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;color:rgba(255,255,255,.45)">Sessions</div><div style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600">17</div></div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">Start-Tempo</div>
+              <div style="display:flex;align-items:baseline;gap:8px"><div style="font-family:'IBM Plex Mono',monospace;font-size:44px;font-weight:600;line-height:1">96</div><div style="font-family:'IBM Plex Mono',monospace;font-size:15px;color:rgba(255,255,255,.45)">BPM</div></div>
+              <div style="height:6px;border-radius:3px;background:#0B0B0B;position:relative"><div style="width:40%;height:100%;background:#FF6A2B;border-radius:3px"></div><div style="position:absolute;left:40%;top:-9px;width:24px;height:24px;border-radius:999px;background:#FF6A2B;margin-left:-12px"></div></div>
+            </div>
+            <div style="height:56px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#160801">Üben starten</div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">06 · Lesson-Detail</div>
+      </div>
+
+      <!-- PROGRAMM -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Programm">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;gap:14px;padding:0 20px;background:#191919"><div style="font-size:22px;color:rgba(255,255,255,.6)">‹</div><div style="font-size:17px;font-weight:700">Stick Control · 12 Wochen</div></div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:17px;font-weight:700">Phase 1 · Fundament</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.45)">Woche 3 / 12</div></div>
+              <div style="display:flex;gap:3px">
+                <div style="flex:1;height:8px;border-radius:2px;background:#FF6A2B"></div><div style="flex:1;height:8px;border-radius:2px;background:#FF6A2B"></div><div style="flex:1;height:8px;border-radius:2px;background:#FF6A2B"></div>
+                <div style="flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.14)"></div><div style="flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.14)"></div><div style="flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.14)"></div>
+                <div style="flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.14)"></div><div style="flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.14)"></div><div style="flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.14)"></div>
+                <div style="flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.14)"></div><div style="flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.14)"></div><div style="flex:1;height:8px;border-radius:2px;background:rgba(255,255,255,.14)"></div>
+              </div>
+              <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.65);text-wrap:pretty">„Beide Hände exakt gleich hoch, exakt gleich laut. Locker greifen — der Stock soll federn, nicht gewürgt werden."</div>
+            </div>
+
+            <div style="background:rgba(255,106,43,.14);border:1.5px solid rgba(255,106,43,.55);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#FF8A5C">Tag 4 · Heute</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5)">15 min</div></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.3);border-radius:10px;padding:12px">
+                  <div style="padding:4px 8px;border-radius:6px;background:rgba(87,201,122,.15);border:1px solid rgba(87,201,122,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#57C97A">Warmup</div>
+                  <div style="flex:1;font-size:15px">Single Stroke Roll</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5)">3 min</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.3);border-radius:10px;padding:12px">
+                  <div style="padding:4px 8px;border-radius:6px;background:rgba(106,169,255,.15);border:1px solid rgba(106,169,255,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6AA9FF">Technik</div>
+                  <div style="flex:1;font-size:15px">Single Paradiddle</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5)">8 min</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.3);border-radius:10px;padding:12px">
+                  <div style="padding:4px 8px;border-radius:6px;background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FFC107">Leiter</div>
+                  <div style="flex:1;font-size:15px">90 → 98 BPM</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.5)">4 min</div>
+                </div>
+              </div>
+              <div style="height:52px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#160801">Tag starten</div>
+            </div>
+
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px">
+              <div style="font-size:32px">😴</div>
+              <div style="flex:1"><div style="font-size:17px;font-weight:700">Tag 7 · Ruhetag</div><div style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.5">Frei. Kein Block heute — der Ruhetag zählt nicht gegen deinen Streak.</div></div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;opacity:.62">
+              <div style="padding:4px 8px;border-radius:6px;background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FFC107">Light</div>
+              <div style="flex:1"><div style="font-size:17px;font-weight:700">Tag 6</div><div style="font-size:13px;color:rgba(255,255,255,.5)">8 min · Warmup + Technik</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">07 · Programm</div>
+      </div>
+
+      <!-- METRONOM -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Metronom">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;gap:14px;padding:0 20px;background:#191919"><div style="font-size:22px;color:rgba(255,255,255,.6)">‹</div><div style="font-size:17px;font-weight:700">Metronom</div></div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:24px;align-items:center">
+            <div style="width:100%;display:flex;flex-direction:column;align-items:center">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:104px;font-weight:600;line-height:.88;letter-spacing:-.04em">120</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:8px">BPM</div>
+            </div>
+            <div style="width:160px;height:160px;border-radius:999px;background:#FF6A2B;box-shadow:0 0 56px 14px rgba(255,106,43,.4);display:flex;align-items:center;justify-content:center;animation:dcPulse120 500ms linear infinite">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:64px;font-weight:600;color:#160801">1</div>
+            </div>
+            <div style="width:100%;display:flex;gap:8px;justify-content:center">
+              <div style="width:14px;height:14px;border-radius:999px;background:#FF6A2B"></div>
+              <div style="width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.18)"></div>
+              <div style="width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.18)"></div>
+              <div style="width:14px;height:14px;border-radius:999px;background:rgba(255,255,255,.18)"></div>
+            </div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:16px">
+              <div style="height:8px;border-radius:4px;background:#0B0B0B;position:relative"><div style="width:42%;height:100%;background:#FF6A2B;border-radius:4px"></div><div style="position:absolute;left:42%;top:-11px;width:30px;height:30px;border-radius:999px;background:#FF6A2B;margin-left:-15px"></div></div>
+              <div style="display:flex;gap:12px">
+                <div style="flex:1;height:56px;border-radius:14px;background:#212121;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:rgba(255,255,255,.8)">−</div>
+                <div style="flex:1;height:56px;border-radius:14px;background:#212121;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:rgba(255,255,255,.8)">+</div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <div style="flex:1;height:48px;border-radius:10px;background:rgba(255,106,43,.18);border:1.5px solid #FF6A2B;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:#FF8A5C">1/4</div>
+                <div style="flex:1;height:48px;border-radius:10px;border:1.5px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:15px;color:rgba(255,255,255,.6)">1/8</div>
+                <div style="flex:1;height:48px;border-radius:10px;border:1.5px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:15px;color:rgba(255,255,255,.6)">1/16</div>
+                <div style="flex:1;height:48px;border-radius:10px;border:1.5px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:15px;color:rgba(255,255,255,.6)">3er</div>
+              </div>
+            </div>
+            <div style="flex:1"></div>
+            <div style="width:100%;display:flex;gap:12px;align-items:center;padding-bottom:24px">
+              <div style="flex:1;height:56px;border-radius:14px;border:1.5px solid rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:500;color:rgba(255,255,255,.85)">Tap Tempo</div>
+              <div style="width:72px;height:72px;border-radius:999px;background:#8E2226;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;background:#fff;border-radius:3px"></div></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">08 · Metronom · Playing</div>
+      </div>
+
+      <!-- STATS -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Stats">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;padding:0 20px;background:#191919"><div style="font-size:22px;font-weight:700">Stats</div></div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;overflow:hidden">
+
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">12 Wochen</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.4)">60 Tage geübt</div></div>
+              <div style="display:flex;gap:4px">
+                <div style="display:flex;flex-direction:column;gap:4px"><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.85)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.55)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.3)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.7)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.15)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,.06)"></div></div>
+                <div style="display:flex;flex-direction:column;gap:4px"><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.7)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.85)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.55)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.85)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.15)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,.06)"></div></div>
+                <div style="display:flex;flex-direction:column;gap:4px"><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.85)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.7)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.55)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.3)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,.06)"></div></div>
+                <div style="display:flex;flex-direction:column;gap:4px"><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.55)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.7)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.85)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.7)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.15)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,.06)"></div></div>
+                <div style="display:flex;flex-direction:column;gap:4px"><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.85)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.55)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.7)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.3)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,.06)"></div></div>
+                <div style="display:flex;flex-direction:column;gap:4px"><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.85)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.85)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.7)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.15)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,.06)"></div></div>
+                <div style="display:flex;flex-direction:column;gap:4px"><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.7)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.55)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,1)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.85)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,106,43,.3)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,.06)"></div><div style="width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,.06)"></div></div>
+              </div>
+            </div>
+
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">Letzte 14 Tage · Minuten</div>
+              <div style="height:96px;display:flex;align-items:flex-end;gap:5px">
+                <div style="flex:1;height:64%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:76%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:0;border-bottom:2px solid rgba(255,255,255,.1)"></div>
+                <div style="flex:1;height:88%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:60%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:72%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:96%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:68%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:80%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:0;border-bottom:2px solid rgba(255,255,255,.1)"></div>
+                <div style="flex:1;height:64%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:84%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:72%;background:rgba(255,255,255,.24);border-radius:2px"></div>
+                <div style="flex:1;height:92%;background:#FF6A2B;border-radius:2px"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.35)"><span>11.8.</span><span>18.8.</span><span>heute</span></div>
+            </div>
+
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">BPM-Verlauf</div>
+                <div style="padding:8px 12px;border-radius:10px;background:#212121;display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.8)">Single Stroke Roll <span style="color:rgba(255,255,255,.4)">▾</span></div>
+              </div>
+              <div style="height:120px;position:relative;display:flex">
+                <div style="display:flex;flex-direction:column;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.3);padding-right:8px"><span>100</span><span>80</span><span>60</span></div>
+                <div style="flex:1;position:relative;background:linear-gradient(to top,rgba(255,106,43,.10),rgba(255,106,43,0) 70%)">
+                  <div style="position:absolute;left:0;bottom:22%;width:26%;height:3px;background:#FF6A2B;transform-origin:left;transform:rotate(-24deg)"></div>
+                  <div style="position:absolute;left:24%;bottom:52%;width:26%;height:3px;background:#FF6A2B;transform-origin:left"></div>
+                  <div style="position:absolute;left:48%;bottom:76%;width:8%;height:3px;background:#FF6A2B"></div>
+                  <div style="position:absolute;left:56%;bottom:10%;width:20%;height:3px;background:#FF6A2B;transform-origin:left;transform:rotate(-22deg)"></div>
+                  <div style="position:absolute;left:74%;bottom:36%;width:26%;height:3px;background:#FF6A2B;transform-origin:left"></div>
+                  <div style="position:absolute;left:0;bottom:22%;width:9px;height:9px;border-radius:999px;background:#FF6A2B;margin:-3px 0 0 -4px"></div>
+                  <div style="position:absolute;left:24%;bottom:52%;width:9px;height:9px;border-radius:999px;background:#FF6A2B;margin:-3px 0 0 -4px"></div>
+                  <div style="position:absolute;left:48%;bottom:76%;width:9px;height:9px;border-radius:999px;background:#FF6A2B;margin:-3px 0 0 -4px"></div>
+                  <div style="position:absolute;left:56%;bottom:10%;width:9px;height:9px;border-radius:999px;background:#FF6A2B;margin:-3px 0 0 -4px"></div>
+                  <div style="position:absolute;left:74%;bottom:36%;width:9px;height:9px;border-radius:999px;background:#FF6A2B;margin:-3px 0 0 -4px"></div>
+                  <div style="position:absolute;left:99%;bottom:62%;width:9px;height:9px;border-radius:999px;background:#FF6A2B;margin:-3px 0 0 -4px"></div>
+                  <div style="position:absolute;left:54%;top:0;bottom:0;width:1.5px;background:rgba(255,255,255,.14)"></div>
+                  <div style="position:absolute;left:56%;top:2px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.4)">Phase 2</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:68px;background:#191919;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.2)">bottom nav</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">09 · Stats · Normal</div>
+      </div>
+
+      <!-- STATS EMPTY + ERROR -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Stats Empty">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;padding:0 20px;background:#191919"><div style="font-size:22px;font-weight:700">Stats</div></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:16px;flex:1">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:0 24px">
+              <div style="font-size:56px">🥁</div>
+              <div style="font-size:22px;font-weight:700">No sessions yet</div>
+              <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.55)">Complete your first practice session to see stats here.</div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;height:150px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">Letzte 14 Tage</div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center"><div style="width:28px;height:28px;border-radius:999px;border:3px solid rgba(255,106,43,.25);border-top-color:#FF6A2B"></div></div>
+            </div>
+            <div style="background:#191919;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;height:170px">
+              <div style="display:flex;justify-content:space-between"><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)">BPM-Verlauf</div></div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center">
+                <div style="width:36px;height:36px;border-radius:10px;background:rgba(229,72,77,.16);border:1px solid rgba(229,72,77,.4);display:flex;align-items:center;justify-content:center;font-size:20px;color:#E5484D;font-weight:700">!</div>
+                <div style="font-size:15px;color:rgba(255,255,255,.6);line-height:1.5">Daten konnten nicht geladen werden.</div>
+                <div style="padding:10px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,.24);font-size:15px;font-weight:500">Erneut versuchen</div>
+              </div>
+            </div>
+          </div>
+          <div style="height:68px;background:#191919;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.2)">bottom nav</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">09b · Empty · Loading · Error+Retry</div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Einstellungen">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;gap:14px;padding:0 20px;background:#191919"><div style="font-size:22px;color:rgba(255,255,255,.6)">‹</div><div style="font-size:17px;font-weight:700">Einstellungen</div></div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:24px;overflow:hidden">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)">Üben</div>
+              <div style="background:#191919;border-radius:14px;overflow:hidden">
+                <div style="padding:16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(255,255,255,.06)">
+                  <div style="flex:1"><div style="font-size:17px">Haptisches Feedback</div><div style="font-size:13px;color:rgba(255,255,255,.45)">Vibration auf jeden Beat</div></div>
+                  <div style="width:52px;height:30px;border-radius:999px;background:#FF6A2B;position:relative"><div style="position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:999px;background:#fff"></div></div>
+                </div>
+                <div style="padding:16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(255,255,255,.06)">
+                  <div style="flex:1"><div style="font-size:17px">Mikrofon-Analyse</div><div style="font-size:13px;color:rgba(255,255,255,.45)">Timing &amp; Dynamik messen</div></div>
+                  <div style="width:52px;height:30px;border-radius:999px;background:#FF6A2B;position:relative"><div style="position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:999px;background:#fff"></div></div>
+                </div>
+                <div style="padding:16px;display:flex;align-items:center;gap:14px">
+                  <div style="flex:1"><div style="font-size:17px">Tägliche Erinnerung</div><div style="font-size:13px;color:rgba(255,255,255,.45)">Aus</div></div>
+                  <div style="width:52px;height:30px;border-radius:999px;background:rgba(255,255,255,.16);position:relative"><div style="position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:999px;background:rgba(255,255,255,.6)"></div></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)">Coach (Claude API)</div>
+              <div style="background:#0B0B0B;border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;border:1.5px solid #FF6A2B">
+                <div style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:15px;color:rgba(255,255,255,.85);letter-spacing:.1em">••••••••••••••••</div>
+                <div style="width:22px;height:14px;border-radius:999px;border:2px solid rgba(255,255,255,.45)"></div>
+              </div>
+              <div style="font-size:13px;color:rgba(255,255,255,.45)">Key wird nur lokal gespeichert.</div>
+              <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+                <div style="flex:1;font-size:17px">Exercise-Generator</div><div style="font-size:20px;color:rgba(255,255,255,.3)">›</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)">App</div>
+              <div style="background:#191919;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+                <div style="flex:1"><div style="font-size:17px">Onboarding erneut zeigen</div><div style="font-size:13px;color:rgba(255,255,255,.45)">Level neu wählen</div></div>
+                <div style="font-size:20px;color:rgba(255,255,255,.3)">›</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">10 · Einstellungen</div>
+      </div>
+
+      <!-- EXERCISE GENERATOR -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#101010;border-radius:28px;border:1px solid rgba(255,255,255,.1);overflow:hidden;display:flex;flex-direction:column" data-screen-label="Exercise-Generator">
+          <div style="height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.34)"><span>9:41</span><span>▮▮▮ 84%</span></div>
+          <div style="height:56px;display:flex;align-items:center;gap:14px;padding:0 20px;background:#191919"><div style="font-size:22px;color:rgba(255,255,255,.6)">‹</div><div style="font-size:17px;font-weight:700">Exercise-Generator</div></div>
+          <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.6);text-wrap:pretty">Beschreibe, was du üben willst. Der Coach baut daraus eine Sticking-Übung.</div>
+            <div style="background:#0B0B0B;border-radius:10px;padding:16px;min-height:120px;font-size:15px;line-height:1.55;color:rgba(255,255,255,.85);border:1.5px solid #FF6A2B">Wandernder Akzent über Sechzehntel, linke Hand führend, 90 BPM</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="padding:9px 16px;border-radius:999px;background:rgba(255,106,43,.18);border:1.5px solid #FF6A2B;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#FF8A5C">1/16</div>
+              <div style="padding:9px 16px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.6)">2 Takte</div>
+              <div style="padding:9px 16px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.6)">Intermediate</div>
+            </div>
+            <div style="height:56px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;gap:12px;font-size:17px;font-weight:700;color:#160801;opacity:.7">
+              <div style="width:20px;height:20px;border-radius:999px;border:2.5px solid rgba(22,8,1,.3);border-top-color:#160801"></div>Generiere…
+            </div>
+            <div style="background:#151726;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;flex:1">
+              <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:999px;background:#6AA9FF"></div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#6AA9FF">Vorschlag</div></div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:rgba(255,255,255,.4);font-size:15px;text-align:center;line-height:1.5">
+                <div style="width:28px;height:28px;border-radius:999px;border:3px solid rgba(255,106,43,.25);border-top-color:#FF6A2B"></div>
+                Noch kein Vorschlag.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)">11 · Exercise-Generator · Loading</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ 1c · KOMPONENTEN ============ -->
+  <div id="1c" style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:rgba(255,106,43,.16);border:1px solid rgba(255,106,43,.4);color:#FF8A5C">1c</div>
+      <div style="font-size:24px;font-weight:700">Komponenten-Sheet</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px;max-width:1500px">
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Buttons</div>
+        <div style="height:56px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#160801">Primary</div>
+        <div style="height:56px;border-radius:14px;background:#FF6A2B;display:flex;align-items:center;justify-content:center;gap:12px;font-size:17px;font-weight:700;color:#160801;opacity:.7"><div style="width:20px;height:20px;border-radius:999px;border:2.5px solid rgba(22,8,1,.3);border-top-color:#160801"></div>Loading</div>
+        <div style="height:56px;border-radius:14px;background:#212121;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:rgba(255,255,255,.28)">Disabled</div>
+        <div style="height:56px;border-radius:14px;border:1.5px solid rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:500;color:rgba(255,255,255,.85)">Secondary</div>
+        <div style="display:flex;gap:16px;align-items:center">
+          <div style="width:56px;height:56px;border-radius:999px;background:#FF6A2B;display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-left:16px solid #160801;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px"></div></div>
+          <div style="width:56px;height:56px;border-radius:999px;background:#8E2226;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;background:#fff;border-radius:2px"></div></div>
+          <div style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.14);font-size:20px;color:#FF6A2B">◉</div>
+          <div style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,.14);font-size:20px;color:rgba(255,255,255,.3)">◉</div>
+        </div>
+      </div>
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Badges &amp; Chips</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="padding:5px 10px;border-radius:6px;background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FFC107">Review</div>
+          <div style="padding:5px 10px;border-radius:6px;background:rgba(106,169,255,.15);border:1px solid rgba(106,169,255,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6AA9FF">Progress</div>
+          <div style="padding:5px 10px;border-radius:6px;background:rgba(87,201,122,.15);border:1px solid rgba(87,201,122,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#57C97A">New</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="padding:5px 10px;border-radius:6px;background:rgba(76,175,80,.15);border:1px solid rgba(76,175,80,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4CAF50">Beginner</div>
+          <div style="padding:5px 10px;border-radius:6px;background:rgba(255,193,7,.15);border:1px solid rgba(255,193,7,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FFC107">Intermediate</div>
+          <div style="padding:5px 10px;border-radius:6px;background:rgba(255,152,0,.15);border:1px solid rgba(255,152,0,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#FF9800">Advanced</div>
+          <div style="padding:5px 10px;border-radius:6px;background:rgba(244,67,54,.15);border:1px solid rgba(244,67,54,.4);font-family:'IBM Plex Mono',monospace;font-size:12px;color:#F44336">Professional</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <div style="padding:9px 16px;border-radius:999px;background:rgba(255,106,43,.18);border:1.5px solid #FF6A2B;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#FF8A5C">selected</div>
+          <div style="padding:9px 16px;border-radius:999px;border:1.5px solid rgba(255,255,255,.14);font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.6)">default</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.35)">150 ms</div>
+        </div>
+        <div style="font-size:13px;line-height:1.55;color:rgba(255,255,255,.5)">Badge-Text jetzt Plex Mono 12 statt Sans 10/11 — Mono trennt Metadaten optisch von Inhalt und bleibt auf Distanz lesbar.</div>
+      </div>
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Card-Zustände</div>
+        <div style="background:#191919;border-radius:14px;padding:16px;font-size:15px;color:rgba(255,255,255,.8)">Standard</div>
+        <div style="background:rgba(255,106,43,.12);border:1.5px solid rgba(255,106,43,.5);border-radius:14px;padding:16px;font-size:15px">Betont / aktiv</div>
+        <div style="background:#191919;border-radius:14px;height:80px;display:flex;align-items:center;justify-content:center"><div style="width:28px;height:28px;border-radius:999px;border:3px solid rgba(255,106,43,.25);border-top-color:#FF6A2B"></div></div>
+        <div style="background:#191919;border-radius:14px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center"><div style="font-size:40px">🎉</div><div style="font-size:17px;font-weight:700">Empty-State</div><div style="font-size:13px;color:rgba(255,255,255,.5)">Erklärtext + optionaler CTA</div></div>
+        <div style="background:#191919;border-radius:14px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+          <div style="width:36px;height:36px;border-radius:10px;background:rgba(229,72,77,.16);border:1px solid rgba(229,72,77,.4);display:flex;align-items:center;justify-content:center;font-size:20px;color:#E5484D;font-weight:700">!</div>
+          <div style="font-size:15px;color:rgba(255,255,255,.6)">Fehler-Zustand mit Retry</div>
+          <div style="padding:10px 18px;border-radius:10px;border:1.5px solid rgba(255,255,255,.24);font-size:15px;font-weight:500">Erneut versuchen</div>
+        </div>
+        <div style="font-size:13px;line-height:1.55;color:rgba(255,255,255,.5)">Neu: <b>ein</b> Fehler-Muster überall — Karten kollabieren nicht mehr stumm, Vollbild-Screens zeigen keinen nackten Fehlertext. Immer Icon + Satz + Retry.</div>
+      </div>
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">Eingaben</div>
+        <div style="height:8px;border-radius:4px;background:#0B0B0B;position:relative;margin:12px 0"><div style="width:52%;height:100%;background:#FF6A2B;border-radius:4px"></div><div style="position:absolute;left:52%;top:-11px;width:30px;height:30px;border-radius:999px;background:#FF6A2B;margin-left:-15px"></div></div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;height:48px;border-radius:10px;background:rgba(255,106,43,.18);border:1.5px solid #FF6A2B;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:#FF8A5C">1/4</div>
+          <div style="flex:1;height:48px;border-radius:10px;border:1.5px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:15px;color:rgba(255,255,255,.6)">1/8</div>
+          <div style="flex:1;height:48px;border-radius:10px;border:1.5px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:15px;color:rgba(255,255,255,.6)">1/16</div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center">
+          <div style="width:52px;height:30px;border-radius:999px;background:#FF6A2B;position:relative"><div style="position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:999px;background:#fff"></div></div>
+          <div style="width:52px;height:30px;border-radius:999px;background:rgba(255,255,255,.16);position:relative"><div style="position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:999px;background:rgba(255,255,255,.6)"></div></div>
+        </div>
+        <div style="background:#0B0B0B;border-radius:10px;padding:14px 16px;font-size:15px;color:rgba(255,255,255,.4)">Ruhezustand</div>
+        <div style="background:#0B0B0B;border:1.5px solid #FF6A2B;border-radius:10px;padding:14px 16px;font-size:15px;color:rgba(255,255,255,.85)">Fokus</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1d · MOTION ============ -->
+  <div id="1d" style="display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:rgba(255,106,43,.16);border:1px solid rgba(255,106,43,.4);color:#FF8A5C">1d</div>
+      <div style="font-size:24px;font-weight:700">Bewegungs-Spec</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:24px;max-width:1500px">
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:22px;font-weight:700">Beat-Indikator</div>
+        <div style="display:flex;align-items:center;gap:24px;background:#101010;border-radius:14px;padding:24px;justify-content:center">
+          <div style="width:80px;height:80px;border-radius:999px;background:rgba(255,255,255,.1)"></div>
+          <div style="width:80px;height:80px;border-radius:999px;background:rgba(255,255,255,.7)"></div>
+          <div style="width:80px;height:80px;border-radius:999px;background:#FF6A2B;box-shadow:0 0 32px 8px rgba(255,106,43,.45)"></div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.4);line-height:1.7">idle 10 % Weiß · beat 70 % Weiß · accent #FF6A2B + Glow 32/8</div>
+        <div style="font-size:15px;line-height:1.6;color:rgba(255,255,255,.72);text-wrap:pretty">Timing bleibt wie im IST: 220 ms, Phase A 30 % der Zeit 100 → 145 % (ease-out), Phase B 70 % zurück 145 → 100 % (ease-in), Deckkraft parallel 50 → 100 → 50 %.</div>
+        <div style="font-size:15px;line-height:1.6;color:rgba(255,255,255,.72);text-wrap:pretty"><b>Geändert:</b> Ruhedurchmesser 80 → 160 px im Metronom-Screen, 120 px im kompakten Practice-Header, und die Beat-Zahl steht im Kreis. Der Puls skaliert auf 145 %, also braucht der Kreis auch bei 160 px keinen zusätzlichen Platz — er nutzt nur den vorhandenen. Begründung: der 60-cm-Blick erfasst Flächenänderung, nicht Kantendetail.</div>
+      </div>
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:22px;font-weight:700">Notenzeilen-Cursor</div>
+        <div style="background:#FAF8F3;border-radius:14px;padding:20px;position:relative;height:150px">
+          <div style="position:absolute;left:96px;top:56px;width:22px;height:70px;border-radius:5px;background:#FFC42E;box-shadow:inset 0 0 0 1px rgba(23,24,26,.14)"></div>
+          <div style="position:absolute;left:105px;top:40px;width:3px;height:100px;background:#B87700"></div>
+          <div style="position:absolute;left:88px;top:12px;width:38px;height:24px;border-radius:6px;background:#FFC42E;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;color:#231a02">R</div>
+          <div style="position:absolute;left:20px;right:20px;top:64px;display:flex;flex-direction:column;gap:12px">
+            <div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div><div style="height:1px;background:rgba(23,24,26,.3)"></div>
+          </div>
+          <div style="position:absolute;left:52px;top:84px;width:17px;height:12px;border-radius:50%;background:#17181A"></div>
+          <div style="position:absolute;left:98px;top:84px;width:17px;height:12px;border-radius:50%;background:#17181A;box-shadow:0 0 0 2px rgba(23,24,26,.22)"></div>
+          <div style="position:absolute;left:144px;top:84px;width:17px;height:12px;border-radius:50%;background:#C0451A"></div>
+          <div style="position:absolute;left:190px;top:84px;width:17px;height:12px;border-radius:50%;background:transparent;box-shadow:inset 0 0 0 2px rgba(23,24,26,.45)"></div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(255,255,255,.4);line-height:1.7">Band #FFC42E voll · Linie #B87700 3 px · Tinte bleibt #17181A + Ring 2 px</div>
+        <div style="font-size:15px;line-height:1.6;color:rgba(255,255,255,.72);text-wrap:pretty">Das harte Springen bleibt — ein weicher Übergang würde das Timing verschmieren, und genau das Timing ist die Information. Cursor-Wechsel exakt auf den Tick, kein Fade, keine Interpolation.</div>
+        <div style="font-size:15px;line-height:1.6;color:rgba(255,255,255,.72);text-wrap:pretty"><b>Ergänzt für 60 cm:</b> (1) Notenzeile als Papier — schwarze Tinte auf <span style="font-family:'IBM Plex Mono',monospace">#FAF8F3</span>, dazu ein volles Amber-Feld statt eines blassen Bands, (2) ein <span style="color:#FFC42E;font-weight:700">R/L-Chip über der aktiven Position</span> — 24 px Amber-Fläche, das erste peripher lesbare Signal, weil Farbfläche schneller erfasst wird als ein Buchstabe im Notenbild, (3) eine 5 px Amber-Kante an der Screen-Oberkante, die auf jedem Takt-1 aufblitzt. Alle drei sind Zustandsanzeige, keine Animation — nichts pulsiert am Notensystem.</div>
+      </div>
+
+      <div style="background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-size:22px;font-weight:700">Offene Punkte · entschieden</div>
+        <div style="display:flex;flex-direction:column;gap:14px;font-size:15px;line-height:1.6;color:rgba(255,255,255,.72)">
+          <div><b style="color:#EDEDED">Fehlerzustand:</b> ein Muster überall — Icon, ein Satz, Retry. Stumm kollabierende Karten fallen weg (<a href="#1c">1c</a>).</div>
+          <div><b style="color:#EDEDED">Branding:</b> App-Icon = orange gerundetes Quadrat, weiße Wortmarke „DC" in Space Grotesk 700. Kein Maskottchen, kein Drum-Piktogramm — das 🥁 bleibt nur im Onboarding.</div>
+          <div><b style="color:#EDEDED">Onboarding wiederholbar:</b> Einstellungen → App → „Onboarding erneut zeigen" (<a href="#1b">10</a>).</div>
+          <div><b style="color:#EDEDED">Overflow:</b> Übungsnamen einzeilig mit Ellipse, Badges nie kürzen. Über 24 Zeichen bricht der Titel auf zwei Zeilen, dann Ellipse.</div>
+          <div><b style="color:#EDEDED">Landscape/Tablet:</b> nicht layoutet, aber vorgesehen — Practice-Session bricht auf zwei Spalten (Metronom links, Notenzeile rechts), alles andere zentriert bei max. 480 px Inhaltsbreite. Kein eigener Screen-Satz.</div>
+          <div><b style="color:#EDEDED">Zukunftsvision:</b> kein Platz reserviert. Ein fünfter Nav-Tab bricht die Vier-Tab-Balance; wenn Song-Sync kommt, wird es ein eigener Einstieg vom Dashboard wie Metronom und Programm.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script></script>
+</body>
+</html>
