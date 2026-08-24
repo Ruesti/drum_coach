@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
+import '../../shared/widgets/error_state.dart';
 import '../../shared/widgets/notation_staff_widget.dart';
 import '../lessons/models/rudiment.dart';
 import 'services/ai_coaching_service.dart';
@@ -89,7 +91,7 @@ class _ExerciseGeneratorScreenState extends State<ExerciseGeneratorScreen> {
             children: [
               const Text(
                 'Describe the pattern you want to practice:',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 10),
               TextField(
@@ -98,16 +100,16 @@ class _ExerciseGeneratorScreenState extends State<ExerciseGeneratorScreen> {
                 decoration: InputDecoration(
                   hintText:
                       'e.g. "8-beat pattern combining flams and paradiddles with accents on beats 1 and 5"',
-                  hintStyle: const TextStyle(color: Colors.white24, fontSize: 13),
+                  hintStyle: const TextStyle(color: AppColors.textFaint, fontSize: 13),
                   filled: true,
-                  fillColor: const Color(0xFF1E1E1E),
+                  fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.deepOrange, width: 1.5),
+                    borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
                   ),
                 ),
                 textInputAction: TextInputAction.done,
@@ -124,25 +126,21 @@ class _ExerciseGeneratorScreenState extends State<ExerciseGeneratorScreen> {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                           ),
                         )
                       : const Icon(Icons.auto_awesome),
                   label: Text(_isLoading ? 'Generating…' : 'Generate Pattern'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
                 ),
               ),
 
               if (_error != null) ...[
                 const SizedBox(height: 16),
-                Text(_error!,
-                    style: const TextStyle(color: Colors.red, fontSize: 13)),
+                ErrorStateWidget(
+                  message: _error!,
+                  compact: true,
+                  onRetry: _generate,
+                ),
               ],
 
               if (_pattern != null) ...[
@@ -155,17 +153,9 @@ class _ExerciseGeneratorScreenState extends State<ExerciseGeneratorScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SingleChildScrollView(
-                    child: NotationStaffWidget(
-                      rudiment: buildGeneratedRudiment(_pattern!),
-                    ),
+                SingleChildScrollView(
+                  child: NotationStaffWidget(
+                    rudiment: buildGeneratedRudiment(_pattern!),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -173,13 +163,13 @@ class _ExerciseGeneratorScreenState extends State<ExerciseGeneratorScreen> {
                   '${_pattern!.length} beats  ·  '
                   '${_pattern!.where((b) => b.hand == Hand.right).length}R / '
                   '${_pattern!.where((b) => b.hand == Hand.left).length}L',
-                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'Tip: Regenerate for variations, or adjust the description.',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: AppColors.textFaint,
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),

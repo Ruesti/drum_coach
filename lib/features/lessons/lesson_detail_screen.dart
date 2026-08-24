@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
+import '../../shared/widgets/app_badge.dart';
+import '../../shared/widgets/app_card.dart';
 import '../../shared/widgets/notation_staff_widget.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
@@ -16,7 +19,13 @@ class LessonDetailScreen extends ConsumerWidget {
     final rudiment = ref.watch(rudimentByIdProvider(rudimentId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(rudiment.name)),
+      appBar: AppBar(
+        title: Text(
+          rudiment.name,
+          maxLines: rudiment.name.length > 24 ? 2 : 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -26,19 +35,16 @@ class LessonDetailScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             Text(
               rudiment.description,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Colors.white70, height: 1.6),
+              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 32),
             Text(
               'STICKING PATTERN',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.deepOrange,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: AppTypography.label.copyWith(
+                color: AppColors.accent,
+                letterSpacing: 2,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             NotationStaffWidget(rudiment: rudiment),
@@ -48,11 +54,11 @@ class LessonDetailScreen extends ConsumerWidget {
               const SizedBox(height: 32),
               Text(
                 'TECHNIK',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.deepOrange,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: AppTypography.label.copyWith(
+                  color: AppColors.accent,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 12),
               ...rudiment.technique.map(
@@ -86,10 +92,9 @@ class _MetaRow extends StatelessWidget {
         _InfoChip(
           icon: Icons.speed_outlined,
           label: '${rudiment.minBpm}–${rudiment.targetBpm} BPM',
-          color: Colors.white54,
+          color: AppColors.textMuted,
         ),
-        _InfoChip(
-          icon: Icons.bar_chart_outlined,
+        AppBadge(
           label: rudiment.difficulty.label,
           color: rudiment.difficulty.color,
         ),
@@ -97,13 +102,13 @@ class _MetaRow extends StatelessWidget {
           _InfoChip(
             icon: Icons.label_outline,
             label: skill.label,
-            color: Colors.white38,
+            color: AppColors.textFaint,
           ),
         for (final genre in rudiment.genres)
           _InfoChip(
             icon: Icons.public,
             label: genre.label,
-            color: Colors.white38,
+            color: AppColors.textFaint,
           ),
       ],
     );
@@ -135,7 +140,7 @@ class _InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: color),
           const SizedBox(width: 5),
-          Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500)),
+          Text(label, style: AppTypography.label.copyWith(color: color)),
         ],
       ),
     );
@@ -150,32 +155,23 @@ class _TechniqueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-        ),
+      child: AppCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               section.title,
-              style: const TextStyle(
+              style: AppTypography.body.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
-                color: Colors.white,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               section.body,
-              style: const TextStyle(
+              style: AppTypography.body.copyWith(
+                color: AppColors.textSecondary,
                 fontSize: 13,
-                color: Colors.white70,
-                height: 1.55,
               ),
             ),
           ],
@@ -195,10 +191,7 @@ class _Legend extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
             'Snare auf der mittleren Linie; die Taktart steht am Anfang.',
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
-                ?.copyWith(color: Colors.white38),
+            style: AppTypography.label.copyWith(color: AppColors.textMuted),
           ),
         ),
         Wrap(
@@ -207,18 +200,18 @@ class _Legend extends StatelessWidget {
           children: [
             _LegendItem(
               symbol: '>',
-              color: Colors.deepOrange,
+              color: AppColors.accent,
               label: 'Akzent',
             ),
-        _LegendItem(
-          symbol: '( )',
-          color: Colors.white.withValues(alpha: 0.4),
-          label: 'Ghost Note',
-          small: true,
-        ),
+            _LegendItem(
+              symbol: '( )',
+              color: AppColors.textMuted,
+              label: 'Ghost Note',
+              small: true,
+            ),
             _LegendItem(
               symbol: '♪',
-              color: Colors.white.withValues(alpha: 0.4),
+              color: AppColors.textMuted,
               label: 'Vorschlag (Flam/Drag)',
               small: true,
             ),
@@ -258,10 +251,7 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .labelSmall
-              ?.copyWith(color: Colors.white38),
+          style: AppTypography.label.copyWith(color: AppColors.textMuted),
         ),
       ],
     );

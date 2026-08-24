@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../../app/design_tokens.dart';
 import '../../features/lessons/models/rudiment.dart';
 import 'staff_layout.dart';
 
-/// Renders a pattern as an engraved five-line drum staff: a percussion clef,
-/// time signature, noteheads on the middle line (snare) + stems + beams/flags,
-/// accents (>), ghost notes, grace notes, rests, and R/L sticking letters
-/// beneath each note. When [activeIndex] is set (during playback) a running
-/// cursor highlights that note.
+/// Renders a pattern as an engraved five-line drum staff on warm off-white
+/// "paper" — black ink on a light field reads better at arm's length than
+/// light notation on dark: a percussion clef, time signature, noteheads on
+/// the middle line (snare) + stems + beams/flags, accents (>), ghost notes,
+/// grace notes, rests, and R/L sticking letters beneath each note.
+///
+/// When [activeIndex] is set (during playback), the cursor logic inverts
+/// from the rest of the (dark) app: the *field* behind the active note turns
+/// amber, the ink stays black. The bar that isn't currently playing is
+/// dimmed to 45% — only the running bar stays fully bright, and the jump
+/// between bars/notes is a hard cut, never a fade (timing is information).
 ///
 /// Geometry is duration-proportional: horizontal positions, beam runs and
 /// tuplet groups come from [computeStaffLayout] so mixed note values
@@ -22,23 +29,34 @@ class NotationStaffWidget extends StatelessWidget {
     this.activeIndex,
   });
 
+  static const _hPad = 8.0;
+  static const _vPad = 16.0;
+
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : MediaQuery.of(context).size.width;
-        final painter = _StaffPainter(
-          rudiment: rudiment,
-          activeIndex: activeIndex,
-          maxWidth: width,
-        );
-        return CustomPaint(
-          size: Size(width, painter.computeHeight()),
-          painter: painter,
-        );
-      },
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : MediaQuery.of(context).size.width - 2 * _hPad;
+          final painter = _StaffPainter(
+            rudiment: rudiment,
+            activeIndex: activeIndex,
+            maxWidth: width,
+          );
+          return CustomPaint(
+            size: Size(width, painter.computeHeight()),
+            painter: painter,
+          );
+        },
+      ),
     );
   }
 }
@@ -67,6 +85,11 @@ class _StaffPainter extends CustomPainter {
     barGap: _barGap,
   );
 
+  /// The bar currently under the cursor. Every other bar dims to 45% — only
+  /// the running bar stays fully bright.
+  late final int? _activeBar =
+      activeIndex == null ? null : _layout.placements[activeIndex!].bar;
+
   // ── Layout metrics ────────────────────────────────────────────────────────
   static const double _leftPad = 10;
   static const double _rightPad = 14;
@@ -89,21 +112,30 @@ class _StaffPainter extends CustomPainter {
   static const double _headRx = 6;
   static const double _headRy = 4.6;
 
-  // Width of the translucent active-cursor band (no longer a grid "cell").
-  static const double _cursorW = 18;
+  // Width of the cursor field (no longer a grid "cell").
+  static const double _cursorW = 22;
 
   // Right margin added past the last note when drawing a row's staff lines.
   static const double _lineEndMargin = 14;
 
-  // ── Colors ────────────────────────────────────────────────────────────────
-  static const _staffColor = Color(0x33FFFFFF);
-  static const _inkColor = Color(0xFFEDEDED);
-  static const _accentColor = Color(0xFFFF7043);
-  static const _activeColor = Color(0xFFFFC107);
-  static const _ghostColor = Color(0x66FFFFFF);
-  static const _letterColor = Color(0x99FFFFFF);
+  // ── Colors — black ink on warm off-white paper ──────────────────────────
+  static const _staffColor = Color(0x2E17181A); // ink @ 18%
+  static const _inkColor = AppColors.ink;
+  static const _accentColor = AppColors.paperAccent;
+  static const _cursorField = AppColors.live; // amber field behind active note
+  static const _cursorLine = AppColors.paperCursorLine;
+  static const _ghostColor = Color(0x7317181A); // ink @ 45%
+  static const _letterColor = Color(0x9917181A); // ink @ 60%
 
   double computeHeight() => _layout.rowCount * _rowH + 8;
+
+  /// Dims [color] to 45% when [bar] isn't the currently playing bar. No
+  /// dimming while idle (activeIndex == null) — dimming only means anything
+  /// relative to a running cursor.
+  Color _forBar(Color color, int bar) {
+    if (_activeBar == null || bar == _activeBar) return color;
+    return color.withValues(alpha: color.a * 0.45);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -134,7 +166,7 @@ class _StaffPainter extends CustomPainter {
     // Five staff lines spanning this row's used width.
     final staffPaint = Paint()
       ..color = _staffColor
-      ..strokeWidth = 1.2;
+      ..strokeWidth = 1.0;
     const lineStartX = _leftPad / 2;
     for (var l = 0; l < 5; l++) {
       final y = topLineY + l * _lineGap;
@@ -148,20 +180,21 @@ class _StaffPainter extends CustomPainter {
     // Barlines (full staff height) at each internal bar boundary in the row.
     final barPaint = Paint()
       ..color = _staffColor
-      ..strokeWidth = 1.2;
+      ..strokeWidth = 1.0;
     final barWidth = _layout.beatsPerBar * _layout.pxPerQuarter + _barGap;
     for (var barInRow = 1; barInRow <= maxBarInRow; barInRow++) {
       final x = _leftPad + _systemPad + barInRow * barWidth - _barGap / 2;
       canvas.drawLine(Offset(x, topLineY), Offset(x, bottomLineY), barPaint);
     }
 
-    // Active cursor band at the placement whose index == activeIndex.
+    // Double barline at the end of the row — marks the phrase repeat.
+    _drawDoubleBarline(canvas, lineEndX, topLineY, bottomLineY);
+
+    // Cursor field: the active note's slot turns amber; ink stays black.
     if (activeIndex != null) {
       for (final p in rowPlacements) {
         if (p.index != activeIndex) continue;
         final cx = p.xCenter;
-        final cursorPaint = Paint()
-          ..color = _activeColor.withValues(alpha: 0.14);
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromCenter(
@@ -170,11 +203,11 @@ class _StaffPainter extends CustomPainter {
                 height: _rowH - 16),
             const Radius.circular(8),
           ),
-          cursorPaint,
+          Paint()..color = _cursorField,
         );
         final linePaint = Paint()
-          ..color = _activeColor.withValues(alpha: 0.55)
-          ..strokeWidth = 1.5;
+          ..color = _cursorLine
+          ..strokeWidth = 3;
         canvas.drawLine(Offset(cx, baseY + 10),
             Offset(cx, baseY + _rowH - 10), linePaint);
         break;
@@ -197,8 +230,8 @@ class _StaffPainter extends CustomPainter {
       final x0 = _placementAt(bg.startIndex).xCenter + _headRx - 0.5;
       final x1 = _placementAt(bg.endIndex).xCenter + _headRx - 0.5;
       final beamPaint = Paint()
-        ..color = _inkColor
-        ..strokeWidth = 3.2;
+        ..color = _forBar(_inkColor, _placementAt(bg.startIndex).bar)
+        ..strokeWidth = 3.0;
       for (var b = 0; b < bg.beamCount; b++) {
         final y = stemTopY + b * 5.0;
         canvas.drawLine(Offset(x0, y), Offset(x1, y), beamPaint);
@@ -214,7 +247,9 @@ class _StaffPainter extends CustomPainter {
       final x0 = _placementAt(bg.startIndex).xCenter;
       final x1 = _placementAt(bg.endIndex).xCenter;
       final label = bg.tuplet == Tuplet.sextuplet ? '6' : '3';
-      _drawTupletBracket(canvas, x0, x1, baseY + _accentY, label);
+      final bar = _placementAt(bg.startIndex).bar;
+      _drawTupletBracket(
+          canvas, x0, x1, baseY + _accentY, label, _forBar(_inkColor, bar));
     }
 
     // Heads, stems, flags, accents, graces, rests, dots, letters.
@@ -223,24 +258,26 @@ class _StaffPainter extends CustomPainter {
       final resolved = p.resolved;
       final x = p.xCenter;
       final isActive = p.index == activeIndex;
+
+      Color dim(Color c) => _forBar(c, p.bar);
+
       final noteBeamCount = beamCountFor(resolved.value);
 
       if (p.isRest) {
-        _drawRest(canvas, Offset(x, staffY), noteBeamCount);
+        _drawRest(canvas, Offset(x, staffY), noteBeamCount, dim(_ghostColor));
         continue;
       }
 
-      final headColor = isActive
-          ? _activeColor
-          : beat.isAccent
-              ? _accentColor
-              : beat.isGhost
-                  ? _ghostColor
-                  : _inkColor;
+      final headColor = dim(beat.isAccent
+          ? _accentColor
+          : beat.isGhost
+              ? _ghostColor
+              : _inkColor);
 
       // Grace notes (drawn small, to the left).
       if (beat.graces.isNotEmpty) {
-        _drawGraces(canvas, beat.graces, x, staffY, stemTopY, headColor);
+        _drawGraces(
+            canvas, beat.graces, x, staffY, stemTopY, dim(_ghostColor));
       }
 
       // Notehead — open (outline) for whole/half, filled otherwise.
@@ -266,13 +303,14 @@ class _StaffPainter extends CustomPainter {
 
       // Accent mark.
       if (beat.isAccent) {
-        _drawAccent(canvas, Offset(x, baseY + _accentY), headColor);
+        _drawAccent(canvas, Offset(x, baseY + _accentY), dim(_accentColor));
       }
 
       // Ghost parentheses.
       if (beat.isGhost) {
-        _drawText(canvas, '(', Offset(x - _headRx - 4, staffY), _ghostColor, 14);
-        _drawText(canvas, ')', Offset(x + _headRx + 4, staffY), _ghostColor, 14);
+        final ghostInk = dim(_ghostColor);
+        _drawText(canvas, '(', Offset(x - _headRx - 4, staffY), ghostInk, 14);
+        _drawText(canvas, ')', Offset(x + _headRx + 4, staffY), ghostInk, 14);
       }
 
       // Augmentation dot to the right of the head.
@@ -283,7 +321,7 @@ class _StaffPainter extends CustomPainter {
       // R/L letter.
       final letter = beat.hand == Hand.right ? 'R' : 'L';
       _drawText(canvas, letter, Offset(x, baseY + _letterY),
-          isActive ? _activeColor : _letterColor, 12,
+          dim(_letterColor), 12,
           bold: true);
     }
   }
@@ -336,12 +374,13 @@ class _StaffPainter extends CustomPainter {
       canvas.drawOval(rect, Paint()..color = color);
     }
     if (active) {
+      // Cursor ring — ties the note to the amber field/line behind it.
       canvas.drawOval(
           rect.inflate(2.5),
           Paint()
-            ..color = color.withValues(alpha: 0.4)
+            ..color = _cursorLine
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.5);
+            ..strokeWidth = 2);
     }
   }
 
@@ -363,7 +402,7 @@ class _StaffPainter extends CustomPainter {
 
   void _drawAccent(Canvas canvas, Offset c, Color color) {
     final paint = Paint()
-      ..color = _accentColor
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.8
       ..strokeCap = StrokeCap.round;
@@ -383,16 +422,16 @@ class _StaffPainter extends CustomPainter {
       final gx = mainX - _headRx - 6 - (n - 1 - i) * gW;
       final rect =
           Rect.fromCenter(center: Offset(gx, staffY), width: 6, height: 4.4);
-      canvas.drawOval(rect, Paint()..color = _ghostColor);
+      canvas.drawOval(rect, Paint()..color = color);
       // tiny stem
       final p = Paint()
-        ..color = _ghostColor
+        ..color = color
         ..strokeWidth = 1.1;
       canvas.drawLine(Offset(gx + 2.6, staffY), Offset(gx + 2.6, stemTopY + 4), p);
     }
     // Slash through grace stems (flam/drag marker).
     final slash = Paint()
-      ..color = _ghostColor
+      ..color = color
       ..strokeWidth = 1.4
       ..strokeCap = StrokeCap.round;
     final firstX = mainX - _headRx - 6 - (n - 1) * gW;
@@ -400,10 +439,10 @@ class _StaffPainter extends CustomPainter {
         Offset(firstX + 8, stemTopY - 2), slash);
   }
 
-  void _drawRest(Canvas canvas, Offset c, int beamCount) {
+  void _drawRest(Canvas canvas, Offset c, int beamCount, Color color) {
     // Simplified rest glyph that scales with the note value.
     final paint = Paint()
-      ..color = _ghostColor
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.2
       ..strokeCap = StrokeCap.round;
@@ -419,7 +458,7 @@ class _StaffPainter extends CustomPainter {
       // Eighth/sixteenth/thirty-second rest — dots (one per beam) + slash.
       for (var b = 0; b < beamCount; b++) {
         final y = c.dy - 6 + b * 6.0;
-        canvas.drawCircle(Offset(c.dx - 3, y), 1.6, Paint()..color = _ghostColor);
+        canvas.drawCircle(Offset(c.dx - 3, y), 1.6, Paint()..color = color);
       }
       canvas.drawLine(Offset(c.dx + 3, c.dy - 8),
           Offset(c.dx - 3, c.dy + 8), paint);
@@ -435,15 +474,15 @@ class _StaffPainter extends CustomPainter {
 
   /// Tuplet bracket: a thin horizontal line with downward end ticks and a gap
   /// in the middle for the [label] number, centred over the group.
-  void _drawTupletBracket(
-      Canvas canvas, double x0, double x1, double y, String label) {
+  void _drawTupletBracket(Canvas canvas, double x0, double x1, double y,
+      String label, Color color) {
     final mid = (x0 + x1) / 2;
     const gap = 7.0; // half-width of the numeral gap in the bracket line
     // Only draw the connecting line/ticks when the group is wide enough;
     // otherwise the numeral alone marks the tuplet.
     if (x1 - x0 > 2 * gap + 2) {
       final paint = Paint()
-        ..color = _inkColor.withValues(alpha: 0.7)
+        ..color = color.withValues(alpha: color.a * 0.7)
         ..strokeWidth = 1.1
         ..strokeCap = StrokeCap.round;
       canvas.drawLine(Offset(x0, y + 4), Offset(x0, y), paint); // left tick
@@ -451,7 +490,20 @@ class _StaffPainter extends CustomPainter {
       canvas.drawLine(Offset(mid + gap, y), Offset(x1, y), paint);
       canvas.drawLine(Offset(x1, y), Offset(x1, y + 4), paint); // right tick
     }
-    _drawText(canvas, label, Offset(mid, y), _inkColor, 11, italic: true);
+    _drawText(canvas, label, Offset(mid, y), color, 11, italic: true);
+  }
+
+  /// Double barline at the end of a row — marks that the phrase repeats.
+  void _drawDoubleBarline(
+      Canvas canvas, double x, double topLineY, double bottomLineY) {
+    final paint = Paint()
+      ..color = _inkColor.withValues(alpha: 0.6)
+      ..strokeWidth = 1.0;
+    canvas.drawLine(Offset(x - 4, topLineY), Offset(x - 4, bottomLineY), paint);
+    final thick = Paint()
+      ..color = _inkColor.withValues(alpha: 0.85)
+      ..strokeWidth = 2.2;
+    canvas.drawLine(Offset(x, topLineY), Offset(x, bottomLineY), thick);
   }
 
   void _drawText(Canvas canvas, String text, Offset center, Color color,

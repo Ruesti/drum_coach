@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
+import '../../shared/widgets/app_card.dart';
+import '../../shared/widgets/error_state.dart';
 import '../learning/routine_provider.dart';
 import '../stats/stats_provider.dart';
 
@@ -34,7 +37,7 @@ class DashboardScreen extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           // Greeting + streak
           _GreetingCard(
@@ -43,90 +46,49 @@ class DashboardScreen extends ConsumerWidget {
             best: bestAsync.valueOrNull ?? 0,
             today: todayAsync.valueOrNull,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
 
           // Training program entry
-          _DashCard(
+          AppCard(
             onTap: () => context.push('/program'),
-            child: Row(
-              children: [
-                const Icon(Icons.fitness_center,
-                    color: Colors.deepOrange, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Trainingsprogramm',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Stick Control · 12 Wochen',
-                          style:
-                              TextStyle(color: Colors.white54, fontSize: 12)),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: Colors.white38),
-              ],
+            child: const _DashRow(
+              icon: Icons.fitness_center,
+              title: 'Trainingsprogramm',
+              subtitle: 'Stick Control · 12 Wochen',
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
 
           // Étude/technique-collection browse entry
-          _DashCard(
+          AppCard(
             onTap: () => context.push('/collection/rudimentEtudes'),
-            child: Row(
-              children: [
-                const Icon(Icons.library_music_outlined,
-                    color: Colors.deepOrange, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Übungs-Sammlung',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Rudiment-Étüden & Technik-Studien',
-                          style:
-                              TextStyle(color: Colors.white54, fontSize: 12)),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: Colors.white38),
-              ],
+            child: const _DashRow(
+              icon: Icons.library_music_outlined,
+              title: 'Übungs-Sammlung',
+              subtitle: 'Rudiment-Étüden & Technik-Studien',
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
 
           // Technique-studies collection entry
-          _DashCard(
+          AppCard(
             onTap: () => context.push('/collection/techniqueStudies'),
-            child: Row(
-              children: [
-                const Icon(Icons.school_outlined,
-                    color: Colors.deepOrange, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Technik-Studien',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Gezielte Technik-Übungen',
-                          style:
-                              TextStyle(color: Colors.white54, fontSize: 12)),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: Colors.white38),
-              ],
+            child: const _DashRow(
+              icon: Icons.school_outlined,
+              title: 'Technik-Studien',
+              subtitle: 'Gezielte Technik-Übungen',
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
 
           // Today's routine card
           routineAsync.when(
             loading: () => const _LoadingCard(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, __) => ErrorStateWidget(
+              message: 'Tagesroutine konnte nicht geladen werden.',
+              compact: true,
+              onRetry: () => ref.invalidate(dailyRoutineProvider),
+            ),
             data: (items) => _RoutineSummaryCard(
               itemCount: items.length,
               totalMin: items.fold(0, (s, i) => s + i.suggestedDurationMinutes),
@@ -135,12 +97,16 @@ class DashboardScreen extends ConsumerWidget {
               onTap: () => context.go('/routine'),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
 
           // Last session card
           sessionsAsync.when(
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, __) => ErrorStateWidget(
+              message: 'Letzte Sessions konnten nicht geladen werden.',
+              compact: true,
+              onRetry: () => ref.invalidate(allSessionsProvider),
+            ),
             data: (sessions) {
               if (sessions.isEmpty) return const _NoSessionsCard();
               final last = sessions.first;
@@ -150,23 +116,58 @@ class DashboardScreen extends ConsumerWidget {
               );
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
 
           // Quick-start metronome
           OutlinedButton.icon(
             onPressed: () => context.push('/metronome'),
             icon: const Icon(Icons.music_note_outlined),
             label: const Text('Open Metronome'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white70,
-              side: const BorderSide(color: Colors.white24),
-              minimumSize: const Size(double.infinity, 52),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Shared icon + title/subtitle row used by the simple navigation cards.
+class _DashRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  const _DashRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.accent, size: 28),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        const Icon(Icons.chevron_right, color: AppColors.textFaint),
+      ],
     );
   }
 }
@@ -189,40 +190,48 @@ class _GreetingCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(greeting,
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          greeting,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context)
+              .textTheme
+              .headlineSmall
+              ?.copyWith(fontWeight: FontWeight.bold),
+        ),
         if (streak > 0) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
               Text('🔥 $streak day streak',
                   style:
-                      const TextStyle(color: Colors.deepOrange, fontSize: 14)),
+                      const TextStyle(color: AppColors.accent, fontSize: 14)),
               if (best > streak) ...[
                 const SizedBox(width: 10),
                 Text('Best $best',
                     style:
-                        const TextStyle(color: Colors.white38, fontSize: 13)),
+                        const TextStyle(color: AppColors.textFaint, fontSize: 13)),
               ],
             ],
           ),
         ],
         if (today != null && today.practiced) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
               Icon(today.goalMet ? Icons.check_circle : Icons.timelapse_outlined,
                   size: 14,
-                  color: today.goalMet ? Colors.green : Colors.amber),
-              const SizedBox(width: 4),
-              Text(
-                today.goalMet
-                    ? 'Tagesziel erreicht'
-                    : 'Heute ${today.minutes}/${today.goalMinutes} min',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  color: today.goalMet ? AppColors.solidStreak : AppColors.ok),
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(
+                  today.goalMet
+                      ? 'Tagesziel erreicht'
+                      : 'Heute ${today.minutes}/${today.goalMinutes} min',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                ),
               ),
             ],
           ),
@@ -237,13 +246,12 @@ class _LoadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
+    return const AppCard(
+      padding: EdgeInsets.zero,
+      child: SizedBox(
+        height: 80,
+        child: Center(child: CircularProgressIndicator()),
       ),
-      child: const Center(child: CircularProgressIndicator()),
     );
   }
 }
@@ -264,47 +272,63 @@ class _RoutineSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (itemCount == 0) {
-      return _DashCard(
+      return AppCard(
         onTap: onTap,
-        child: const Row(
+        child: Row(
           children: [
-            Text('🎉', style: TextStyle(fontSize: 28)),
-            SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("All caught up!",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text("No reviews due today",
-                    style: TextStyle(color: Colors.white54, fontSize: 12)),
-              ],
+            const Text('🎉', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "All caught up!",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const Text(
+                    "No reviews due today",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       );
     }
-    return _DashCard(
+    return AppCard(
       onTap: onTap,
       child: Row(
         children: [
-          const Icon(Icons.today, color: Colors.deepOrange, size: 28),
-          const SizedBox(width: 12),
+          const Icon(Icons.today, color: AppColors.accent, size: 28),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("$itemCount rudiments · ~$totalMin min",
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  "$itemCount rudiments · ~$totalMin min",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Text(
                   reviewCount > 0
                       ? "$reviewCount due for review"
                       : "Practice session ready",
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: Colors.white38),
+          const Icon(Icons.chevron_right, color: AppColors.textFaint),
         ],
       ),
     );
@@ -318,28 +342,36 @@ class _LastSessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _DashCard(
+    return AppCard(
       onTap: () {},
       child: Row(
         children: [
-          const Icon(Icons.history, color: Colors.white38, size: 24),
-          const SizedBox(width: 12),
+          const Icon(Icons.history, color: AppColors.textFaint, size: 24),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Last practiced",
-                    style: TextStyle(color: Colors.white54, fontSize: 12)),
-                Text(rudimentId.replaceAll('_', ' '),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        textBaseline: TextBaseline.alphabetic)),
+                const Text(
+                  "Last practiced",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                ),
+                Text(
+                  rudimentId.replaceAll('_', ' '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      textBaseline: TextBaseline.alphabetic),
+                ),
               ],
             ),
           ),
           Text('$bpm BPM',
               style: const TextStyle(
-                  color: Colors.deepOrange, fontWeight: FontWeight.bold)),
+                  color: AppColors.accent, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -351,34 +383,10 @@ class _NoSessionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Text(
+    return const AppCard(
+      child: Text(
         "Start your first practice session to see your progress here.",
-        style: TextStyle(color: Colors.white54, fontSize: 13),
-      ),
-    );
-  }
-}
-
-class _DashCard extends StatelessWidget {
-  final Widget child;
-  final VoidCallback onTap;
-  const _DashCard({required this.child, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFF1E1E1E),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(padding: const EdgeInsets.all(16), child: child),
+        style: TextStyle(color: AppColors.textMuted, fontSize: 13),
       ),
     );
   }

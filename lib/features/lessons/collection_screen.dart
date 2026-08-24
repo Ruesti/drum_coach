@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
 
@@ -52,7 +53,7 @@ class _EmptyCollectionState extends StatelessWidget {
     return Center(
       child: Text(
         'Keine Übungen in dieser Sammlung.',
-        style: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
+        style: AppTypography.body.copyWith(color: AppColors.textMuted),
       ),
     );
   }
@@ -68,11 +69,10 @@ class _GroupHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Colors.deepOrange,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
+        style: AppTypography.label.copyWith(
+          color: AppColors.accent,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }
@@ -88,14 +88,15 @@ class _EtudeTile extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       title: Text(
         rudiment.name,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        maxLines: rudiment.name.length > 24 ? 2 : 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTypography.subtitle,
       ),
       subtitle: Text(
         '${rudiment.difficulty.label} · ${rudiment.minBpm}–${rudiment.targetBpm} BPM',
-        style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.45), fontSize: 12),
+        style: AppTypography.label.copyWith(color: AppColors.textMuted),
       ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textFaint),
       onTap: () => context.push('/practice/${rudiment.id}'),
     );
   }

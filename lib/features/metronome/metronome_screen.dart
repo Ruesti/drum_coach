@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/design_tokens.dart';
+import '../../shared/widgets/app_badge.dart';
+import '../../shared/widgets/beat_indicator.dart';
 import 'metronome_engine.dart';
 import 'metronome_provider.dart';
 
@@ -13,12 +16,7 @@ class MetronomeScreen extends ConsumerStatefulWidget {
   ConsumerState<MetronomeScreen> createState() => _MetronomeScreenState();
 }
 
-class _MetronomeScreenState extends ConsumerState<MetronomeScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _scaleAnim;
-  late Animation<double> _opacityAnim;
-
+class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
   /// Captured in [initState] because `ref` is unsafe to read fresh inside
   /// [dispose] — by then the widget's Element may already be torn down.
   late final MetronomeNotifier _metronomeNotifier;
@@ -27,32 +25,6 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen>
   void initState() {
     super.initState();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 220),
-    );
-    _scaleAnim = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.45)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 30,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.45, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 70,
-      ),
-    ]).animate(_pulseController);
-    _opacityAnim = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.5, end: 1.0),
-        weight: 30,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 0.5),
-        weight: 70,
-      ),
-    ]).animate(_pulseController);
   }
 
   @override
@@ -60,7 +32,6 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen>
     // Deferred: Riverpod forbids modifying provider state synchronously
     // during a widget tree teardown (dispose runs mid-build/mid-unmount).
     Future.microtask(_metronomeNotifier.stop);
-    _pulseController.dispose();
     super.dispose();
   }
 
@@ -70,13 +41,6 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen>
     final notifier = ref.read(metronomeNotifierProvider.notifier);
     final colorScheme = Theme.of(context).colorScheme;
 
-    ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
-      if (next.currentBeatIndex != (prev?.currentBeatIndex ?? -1) &&
-          next.currentBeatIndex >= 0) {
-        _pulseController.forward(from: 0);
-      }
-    });
-
     return Scaffold(
       appBar: AppBar(title: const Text('Metronome')),
       body: SafeArea(
@@ -85,12 +49,12 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen>
           child: Column(
             children: [
               const Spacer(),
-              _BeatIndicator(
-                scaleAnim: _scaleAnim,
-                opacityAnim: _opacityAnim,
-                isAccent: state.isAccent,
+              BeatIndicator(
+                diameter: 160,
                 isPlaying: state.isPlaying,
-                colorScheme: colorScheme,
+                isAccent: state.isAccent,
+                beatTrigger: state.currentBeatIndex,
+                beatNumber: state.currentBeatIndex + 1,
               ),
               const SizedBox(height: 32),
               _BpmDisplay(bpm: state.bpm),
@@ -126,54 +90,6 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen>
   }
 }
 
-class _BeatIndicator extends StatelessWidget {
-  final Animation<double> scaleAnim;
-  final Animation<double> opacityAnim;
-  final bool isAccent;
-  final bool isPlaying;
-  final ColorScheme colorScheme;
-
-  const _BeatIndicator({
-    required this.scaleAnim,
-    required this.opacityAnim,
-    required this.isAccent,
-    required this.isPlaying,
-    required this.colorScheme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final baseColor =
-        isAccent ? Colors.deepOrange : colorScheme.onSurface.withValues(alpha: 0.7);
-    final idleColor = colorScheme.onSurface.withValues(alpha: 0.15);
-
-    return AnimatedBuilder(
-      animation: scaleAnim,
-      builder: (_, __) => Transform.scale(
-        scale: isPlaying ? scaleAnim.value : 1.0,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 80),
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isPlaying ? baseColor : idleColor,
-            boxShadow: isPlaying && isAccent
-                ? [
-                    BoxShadow(
-                      color: Colors.deepOrange.withValues(alpha: 0.4),
-                      blurRadius: 20,
-                      spreadRadius: 4,
-                    )
-                  ]
-                : null,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _BpmDisplay extends StatelessWidget {
   final int bpm;
   const _BpmDisplay({required this.bpm});
@@ -182,21 +98,10 @@ class _BpmDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          '$bpm',
-          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                fontSize: 96,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                height: 1,
-              ),
-        ),
+        Text('$bpm', style: AppTypography.numericXl),
         Text(
           'BPM',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Colors.white54,
-                letterSpacing: 4,
-              ),
+          style: AppTypography.label.copyWith(letterSpacing: 4),
         ),
       ],
     );
@@ -225,8 +130,8 @@ class _BpmSlider extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('40', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white38)),
-              Text('240', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white38)),
+              Text('40', style: AppTypography.label.copyWith(color: AppColors.textFaint)),
+              Text('240', style: AppTypography.label.copyWith(color: AppColors.textFaint)),
             ],
           ),
         ),
@@ -260,10 +165,8 @@ class _SubdivisionSelector extends StatelessWidget {
               duration: const Duration(milliseconds: 150),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.deepOrange
-                    : colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
+                color: isSelected ? AppColors.accent : AppColors.raised,
+                borderRadius: BorderRadius.circular(AppRadius.chip),
               ),
               child: Column(
                 children: [
@@ -271,15 +174,18 @@ class _SubdivisionSelector extends StatelessWidget {
                     s.label,
                     style: TextStyle(
                       fontSize: 18,
-                      color: isSelected ? Colors.white : Colors.white60,
+                      color: isSelected
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     s.name,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: isSelected ? Colors.white70 : Colors.white38,
+                    style: AppTypography.label.copyWith(
+                      color: isSelected
+                          ? AppColors.textSecondary
+                          : AppColors.textMuted,
                     ),
                   ),
                 ],
@@ -304,12 +210,6 @@ class _TapTempoButton extends StatelessWidget {
         onPressed: onTap,
         icon: const Icon(Icons.touch_app_outlined),
         label: const Text('Tap Tempo'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white70,
-          side: const BorderSide(color: Colors.white24),
-          minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
       ),
     );
   }
@@ -329,30 +229,10 @@ class _SoundTypeToggle extends StatelessWidget {
         final isSelected = t == selected;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: GestureDetector(
+          child: AppSelectableChip(
+            label: t.label,
+            selected: isSelected,
             onTap: () => onSelected(t),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.deepOrange.withValues(alpha: 0.18)
-                    : Colors.white.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isSelected ? Colors.deepOrange : Colors.white24,
-                  width: isSelected ? 1.5 : 1,
-                ),
-              ),
-              child: Text(
-                t.label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.deepOrange : Colors.white54,
-                ),
-              ),
-            ),
           ),
         );
       }).toList(),
@@ -375,11 +255,8 @@ class _StartStopButton extends StatelessWidget {
         icon: Icon(isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded),
         label: Text(isPlaying ? 'Stop' : 'Start'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isPlaying ? Colors.red.shade700 : Colors.deepOrange,
-          foregroundColor: Colors.white,
+          backgroundColor: isPlaying ? AppColors.struggled : AppColors.accent,
           minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
     );

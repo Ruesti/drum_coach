@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
+import '../../shared/widgets/app_badge.dart';
 import '../lessons/models/rudiment.dart';
 import 'models/program_config.dart';
 import 'program_provider.dart';
@@ -64,7 +66,7 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
             runSpacing: 8,
             children: [
               for (final w in _durationOptions)
-                _SetupChip(
+                AppSelectableChip(
                   label: '$w Wochen',
                   selected: _durationWeeks == w,
                   onTap: () => setState(() => _durationWeeks = w),
@@ -82,7 +84,7 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
             runSpacing: 8,
             children: [
               for (final d in _difficultyOptions)
-                _SetupChip(
+                AppSelectableChip(
                   label: d.label,
                   selected: _startDifficulty == d,
                   onTap: () => setState(() => _startDifficulty = d),
@@ -100,7 +102,7 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
             runSpacing: 8,
             children: [
               for (final p in ProgramPool.values)
-                _SetupChip(
+                AppSelectableChip(
                   label: p.label,
                   selected: _pool == p,
                   onTap: () => setState(() => _pool = p),
@@ -113,8 +115,8 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
             icon: const Icon(Icons.play_arrow),
             label: const Text('Programm starten'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepOrange,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.accent,
+              foregroundColor: AppColors.textPrimary,
               minimumSize: const Size(double.infinity, 54),
               shape:
                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -154,48 +156,8 @@ class _SectionTitle extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
         const SizedBox(height: 4),
         Text(subtitle,
-            style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
       ],
-    );
-  }
-}
-
-// ── Setup chip ───────────────────────────────────────────────────────────
-
-class _SetupChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SetupChip(
-      {required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: selected
-              ? Colors.deepOrange.withValues(alpha: 0.16)
-              : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? Colors.deepOrange : Colors.white24,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.deepOrange : Colors.white54,
-          ),
-        ),
-      ),
     );
   }
 }

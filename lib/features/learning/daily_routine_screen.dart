@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
+import '../../shared/widgets/app_badge.dart';
+import '../../shared/widgets/app_card.dart';
+import '../../shared/widgets/error_state.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/rudiment.dart';
 import 'models/daily_routine.dart';
@@ -19,7 +23,12 @@ class DailyRoutineScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Daily Routine')),
       body: routineAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(
+          child: ErrorStateWidget(
+            message: 'Error: $e',
+            onRetry: () => ref.invalidate(dailyRoutineProvider),
+          ),
+        ),
         data: (items) {
           if (items.isEmpty) {
             return _EmptyRoutine(onFreePractice: () => context.push('/lessons'));
@@ -55,27 +64,37 @@ class _RoutineHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.deepOrange.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.deepOrange.withValues(alpha: 0.3)),
+        color: AppColors.accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.today, color: Colors.deepOrange),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Today's Routine",
+          const Icon(Icons.today, color: AppColors.accent),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Today's Routine",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
-              Text('$itemCount rudiments · ~$totalMin min',
-                  style: const TextStyle(color: Colors.white54, fontSize: 13)),
-            ],
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '$itemCount rudiments · ~$totalMin min',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -96,12 +115,7 @@ class _RoutineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return AppCard(
       child: Row(
         children: [
           Expanded(
@@ -111,29 +125,35 @@ class _RoutineCard extends StatelessWidget {
                 Row(
                   children: [
                     _TypeBadge(type: item.type),
-                    const SizedBox(width: 8),
-                    Text(rudiment.name,
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        rudiment.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 15)),
+                            fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   '${item.suggestedBpm} BPM · ~${item.suggestedDurationMinutes} min',
-                  style:
-                      const TextStyle(color: Colors.white54, fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: AppSpacing.sm),
           ElevatedButton(
             onPressed: onStart,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepOrange,
-              foregroundColor: Colors.white,
               minimumSize: const Size(70, 38),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(AppRadius.chip)),
               padding: const EdgeInsets.symmetric(horizontal: 14),
             ),
             child: const Text('Start'),
@@ -151,21 +171,11 @@ class _TypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (type) {
-      RoutineItemType.review => ('Review', Colors.amber),
-      RoutineItemType.progression => ('Progress', Colors.blue.shade300),
-      RoutineItemType.newRudiment => ('New', Colors.green.shade400),
+      RoutineItemType.review => ('Review', AppColors.ok),
+      RoutineItemType.progression => ('Progress', AppColors.info),
+      RoutineItemType.newRudiment => ('New', AppColors.solidStreak),
     };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 10, color: color, fontWeight: FontWeight.bold)),
-    );
+    return AppBadge(label: label, color: color);
   }
 }
 
@@ -184,11 +194,13 @@ class _EmptyRoutine extends StatelessWidget {
             const Text('🎉', style: TextStyle(fontSize: 56)),
             const SizedBox(height: 16),
             const Text("You're all caught up!",
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style:
                     TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             const Text('No reviews due today. Great work!',
-                style: TextStyle(color: Colors.white54),
+                style: TextStyle(color: AppColors.textMuted),
                 textAlign: TextAlign.center),
             const SizedBox(height: 24),
             OutlinedButton.icon(
@@ -196,8 +208,8 @@ class _EmptyRoutine extends StatelessWidget {
               icon: const Icon(Icons.library_books_outlined),
               label: const Text('Browse Lessons'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white70,
-                side: const BorderSide(color: Colors.white24),
+                foregroundColor: AppColors.textSecondary,
+                side: const BorderSide(color: AppColors.textFaint),
               ),
             ),
           ],

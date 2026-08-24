@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
+import '../../shared/widgets/app_badge.dart';
+import '../../shared/widgets/app_card.dart';
+import '../../shared/widgets/error_state.dart';
 import '../lessons/lessons_provider.dart';
 import 'models/training_program.dart';
 import 'program_generator.dart';
@@ -23,7 +27,12 @@ class ProgramScreen extends ConsumerWidget {
       body: dayAsync.when(
         skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Fehler: $e')),
+        error: (e, _) => Center(
+          child: ErrorStateWidget(
+            message: 'Fehler: $e',
+            onRetry: () => ref.invalidate(currentProgramDayProvider),
+          ),
+        ),
         data: (day) {
           final configured = SettingsService.programConfig != null;
           if (!configured) {
@@ -58,13 +67,15 @@ class _NotStarted extends StatelessWidget {
       children: [
         const SizedBox(height: 8),
         Text(program.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context)
                 .textTheme
                 .headlineSmall
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Text(program.description,
-            style: const TextStyle(color: Colors.white54, fontSize: 14)),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 14)),
         const SizedBox(height: 20),
         for (final phase in program.phases) ...[
           _PhaseOverviewCard(phase: phase),
@@ -87,23 +98,20 @@ class _PhaseOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Phase ${phase.index} · ${phase.name}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 2),
           Text('Woche ${phase.weekStart}–${phase.weekEnd} · ab ${phase.startBpm} BPM',
-              style: const TextStyle(color: Colors.white38, fontSize: 12)),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
           const SizedBox(height: 8),
           Text(phase.focus,
-              style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
         ],
       ),
     );
@@ -130,7 +138,7 @@ class _Finished extends StatelessWidget {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text('$weeksLabel durch. Neue saubere Bestwerte in der Hand.',
-                style: const TextStyle(color: Colors.white54),
+                style: const TextStyle(color: AppColors.textMuted),
                 textAlign: TextAlign.center),
             const SizedBox(height: 24),
             OutlinedButton.icon(
@@ -138,8 +146,8 @@ class _Finished extends StatelessWidget {
               icon: const Icon(Icons.replay),
               label: const Text('Neu starten'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white70,
-                side: const BorderSide(color: Colors.white24),
+                foregroundColor: AppColors.textSecondary,
+                side: const BorderSide(color: AppColors.textFaint),
               ),
             ),
           ],
@@ -207,45 +215,47 @@ class _DayHeader extends ConsumerWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.cardPadding),
       decoration: BoxDecoration(
-        color: Colors.deepOrange.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.deepOrange.withValues(alpha: 0.3)),
+        color: AppColors.accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Tag ${day.dayNumber}/$totalDays · ~${day.estimatedMinutes} min',
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
           ),
           if (pacingLabel != null) ...[
             const SizedBox(height: 2),
             Text(pacingLabel,
-                style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
           ],
           const SizedBox(height: 4),
           Text('Phase ${phase.index}: ${phase.name}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
                   ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(phase.focus,
-              style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
           if (phase.focusCue != null) ...[
             const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(Icons.lightbulb_outline,
-                    size: 14, color: Colors.white38),
+                    size: 14, color: AppColors.textMuted),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(phase.focusCue!,
                       style: const TextStyle(
-                          color: Colors.white38,
+                          color: AppColors.textMuted,
                           fontSize: 12,
                           fontStyle: FontStyle.italic)),
                 ),
@@ -277,7 +287,7 @@ class _RestDay extends StatelessWidget {
             child: Text(
               'Frei. Kein Block heute — der Ruhetag zählt nicht gegen deinen '
               'Streak. Erholung ist Teil des Plans.',
-              style: TextStyle(color: Colors.white54),
+              style: TextStyle(color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
           ),
@@ -296,13 +306,9 @@ class _BlockCard extends ConsumerWidget {
     final rudiment = ref.watch(rudimentByIdProvider(block.exerciseKey));
     final variants =
         block.variants.map(_variantLabel).join(' · ');
+    final (badgeLabel, badgeColor) = _blockBadgeInfo(block.type);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -314,10 +320,12 @@ class _BlockCard extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        _BlockBadge(type: block.type),
+                        AppBadge(label: badgeLabel, color: badgeColor),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(rudiment.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 15)),
                         ),
@@ -331,7 +339,7 @@ class _BlockCard extends ConsumerWidget {
                         if (variants.isNotEmpty) variants,
                       ].join(' · '),
                       style: const TextStyle(
-                          color: Colors.white54, fontSize: 12),
+                          color: AppColors.textMuted, fontSize: 12),
                     ),
                   ],
                 ),
@@ -343,8 +351,8 @@ class _BlockCard extends ConsumerWidget {
                   context.push('/practice/${block.exerciseKey}$q');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepOrange,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: AppColors.textPrimary,
                   minimumSize: const Size(70, 38),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
@@ -357,7 +365,7 @@ class _BlockCard extends ConsumerWidget {
           // Tempo-ladder gate: self-rated clean pass lifts the stored tempo +4.
           if (block.cleanPassRequired) ...[
             const SizedBox(height: 8),
-            const Divider(color: Colors.white12, height: 1),
+            const Divider(color: AppColors.textFaint, height: 1),
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerLeft,
@@ -366,7 +374,7 @@ class _BlockCard extends ConsumerWidget {
                 icon: const Icon(Icons.check_circle_outline, size: 18),
                 label: const Text('Sauber & locker durchgelaufen?'),
                 style: TextButton.styleFrom(
-                    foregroundColor: Colors.deepOrange,
+                    foregroundColor: AppColors.accent,
                     padding: EdgeInsets.zero),
               ),
             ),
@@ -380,13 +388,13 @@ class _BlockCard extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: AppColors.surface,
         title: const Text('Sauber & locker?'),
         content: Text(
           'Lief die Tempo-Leiter gleichmäßig und locker durch? '
           'Ja hebt dein sauberes Tempo um +4 BPM auf '
           '${(block.startBpm ?? 0) + 4}.',
-          style: const TextStyle(color: Colors.white70),
+          style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
@@ -421,31 +429,12 @@ class _BlockCard extends ConsumerWidget {
   }
 }
 
-class _BlockBadge extends StatelessWidget {
-  final BlockType type;
-  const _BlockBadge({required this.type});
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (type) {
-      BlockType.warmup => ('Warmup', Colors.green.shade400),
-      BlockType.technique => ('Technik', Colors.blue.shade300),
-      BlockType.tempoLadder => ('Tempo-Leiter', Colors.deepOrange),
-      BlockType.endurance => ('Ausdauer', Colors.amber),
+(String, Color) _blockBadgeInfo(BlockType type) => switch (type) {
+      BlockType.warmup => ('Warmup', AppColors.solidStreak),
+      BlockType.technique => ('Technik', AppColors.info),
+      BlockType.tempoLadder => ('Tempo-Leiter', AppColors.accent),
+      BlockType.endurance => ('Ausdauer', AppColors.ok),
     };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 10, color: color, fontWeight: FontWeight.bold)),
-    );
-  }
-}
 
 String _variantLabel(Variant v) => switch (v) {
       Variant.even => 'gleichmäßig',

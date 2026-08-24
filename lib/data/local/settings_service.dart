@@ -14,6 +14,7 @@ class SettingsService {
 
   static bool get isOnboardingDone => _prefs.getBool('onboarding_done') ?? false;
   static Future<void> setOnboardingDone() => _prefs.setBool('onboarding_done', true);
+  static Future<void> resetOnboarding() => _prefs.setBool('onboarding_done', false);
 
   /// Day 1 anchor of the training program. `null` = program not started.
   /// Stored as an ISO-8601 string (matching the string-value style here).
