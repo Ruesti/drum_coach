@@ -1,145 +1,75 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
 
-/// Six 1-Takt-Zähl-Etüden für absolute Anfänger*innen: Viertel- und
-/// Achtelnoten in wechselnden Positionen, um Zählen/Unterteilen zu üben
-/// (z.B. "1 2 3 4" reine Viertel, dann "1-und 2 3 4" mit einer Achtelgruppe
-/// an wechselnder Position). Sticking ist über die gesamte Notenfolge jeder
-/// Etüde strikt alternierend R/L, beginnend mit R – unabhängig davon, ob die
-/// einzelne Note eine Viertel oder eine Achtel ist.
+/// One page-length beginner étude: 8 short 1-bar count/subdivision ideas,
+/// each written out twice (matching the repeat-sign phrasing of a real
+/// method-book line) for 16 bars total — progressively mixing quarter and
+/// eighth notes. Inspired by (not copied from) a beginner PDF the user
+/// provided under docs/Übungen/ (see docs/Übungen/README.md). Sticking
+/// alternates R/L within each line (odd-length lines restart on R at the
+/// repeat, same as a real method-book repeat bar).
 final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   Rudiment(
-    id: 'etude_pad_basics_1',
-    name: 'Zähl-Etüde 1 · Viertel',
-    description: 'Vier Viertelnoten – der Grundpuls zum Zählen "1 2 3 4".',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
-    difficulty: Difficulty.beginner,
-    minBpm: 50,
-    targetBpm: 90,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.control},
-    sticking: [
-      // 1.0 + 1.0 + 1.0 + 1.0 = 4.0 quarters
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.quarter),
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.quarter),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_basics_2',
-    name: 'Zähl-Etüde 2 · Achtel auf 1',
+    id: 'etude_pad_basics_page',
+    name: 'Grundlagen · Zählen & Unterteilen',
     description:
-        'Eine Achtelgruppe auf Zählzeit 1, danach drei Viertel: "1-und 2 3 4".',
+        '8 Zeilen, die Viertel und Achtel an wechselnder Position kombinieren '
+        '— jede Zeile zweimal gespielt, wie ein Übungsblatt mit '
+        'Wiederholungszeichen.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grundlagen',
     difficulty: Difficulty.beginner,
     minBpm: 50,
-    targetBpm: 90,
+    targetBpm: 100,
     gridUnit: NoteGrid.eighth,
     beatsPerBar: 4,
     skills: {Skill.control},
     sticking: [
-      // 0.5 + 0.5 + 1.0 + 1.0 + 1.0 = 4.0 quarters
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.quarter),
-      note(R, NoteValue.quarter),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_basics_3',
-    name: 'Zähl-Etüde 3 · Achtel auf 2',
-    description:
-        'Viertel auf 1, Achtelgruppe auf Zählzeit 2, dann zwei Viertel: '
-        '"1 2-und 3 4".',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
-    difficulty: Difficulty.beginner,
-    minBpm: 50,
-    targetBpm: 90,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.control},
-    sticking: [
-      // 1.0 + 0.5 + 0.5 + 1.0 + 1.0 = 4.0 quarters
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.quarter),
-      note(R, NoteValue.quarter),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_basics_4',
-    name: 'Zähl-Etüde 4 · Achtel auf 3',
-    description:
-        'Zwei Viertel, Achtelgruppe auf Zählzeit 3, dann eine Viertel: '
-        '"1 2 3-und 4".',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
-    difficulty: Difficulty.beginner,
-    minBpm: 50,
-    targetBpm: 90,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.control},
-    sticking: [
-      // 1.0 + 1.0 + 0.5 + 0.5 + 1.0 = 4.0 quarters
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.quarter),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.quarter),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_basics_5',
-    name: 'Zähl-Etüde 5 · Achtel auf 4',
-    description:
-        'Drei Viertel, Achtelgruppe auf Zählzeit 4: "1 2 3 4-und".',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
-    difficulty: Difficulty.beginner,
-    minBpm: 50,
-    targetBpm: 90,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.control},
-    sticking: [
-      // 1.0 + 1.0 + 1.0 + 0.5 + 0.5 = 4.0 quarters
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.quarter),
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.eighth),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_basics_6',
-    name: 'Zähl-Etüde 6 · Achtel auf 1 und 3',
-    description:
-        'Zwei Achtelgruppen auf Zählzeit 1 und 3, dazwischen und danach '
-        'Viertel: "1-und 2 3-und 4".',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
-    difficulty: Difficulty.beginner,
-    minBpm: 50,
-    targetBpm: 90,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.control},
-    sticking: [
-      // 0.5 + 0.5 + 1.0 + 0.5 + 0.5 + 1.0 = 4.0 quarters
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.quarter),
+      // Zeile 1: reine Viertel (Basis-Zählen), 2x.
+      for (var i = 0; i < 2; i++) ...[
+        note(R, NoteValue.quarter), note(L, NoteValue.quarter),
+        note(R, NoteValue.quarter), note(L, NoteValue.quarter),
+      ],
+      // Zeile 2: Achtelgruppe auf Zählzeit 1, 2x.
+      for (var i = 0; i < 2; i++) ...[
+        note(R, NoteValue.eighth), note(L, NoteValue.eighth),
+        note(R, NoteValue.quarter), note(L, NoteValue.quarter),
+        note(R, NoteValue.quarter),
+      ],
+      // Zeile 3: Achtelgruppe auf Zählzeit 2, 2x.
+      for (var i = 0; i < 2; i++) ...[
+        note(R, NoteValue.quarter),
+        note(L, NoteValue.eighth), note(R, NoteValue.eighth),
+        note(L, NoteValue.quarter), note(R, NoteValue.quarter),
+      ],
+      // Zeile 4: Achtelgruppe auf Zählzeit 3, 2x.
+      for (var i = 0; i < 2; i++) ...[
+        note(R, NoteValue.quarter), note(L, NoteValue.quarter),
+        note(R, NoteValue.eighth), note(L, NoteValue.eighth),
+        note(R, NoteValue.quarter),
+      ],
+      // Zeile 5: Achtelgruppe auf Zählzeit 4, 2x.
+      for (var i = 0; i < 2; i++) ...[
+        note(R, NoteValue.quarter), note(L, NoteValue.quarter),
+        note(R, NoteValue.quarter),
+        note(L, NoteValue.eighth), note(R, NoteValue.eighth),
+      ],
+      // Zeile 6: zwei Achtelgruppen (1 + 3), 2x.
+      for (var i = 0; i < 2; i++) ...[
+        note(R, NoteValue.eighth), note(L, NoteValue.eighth),
+        note(R, NoteValue.quarter),
+        note(L, NoteValue.eighth), note(R, NoteValue.eighth),
+        note(L, NoteValue.quarter),
+      ],
+      // Zeile 7: zwei Achtelgruppen (2 + 4), 2x.
+      for (var i = 0; i < 2; i++) ...[
+        note(R, NoteValue.quarter),
+        note(L, NoteValue.eighth), note(R, NoteValue.eighth),
+        note(L, NoteValue.quarter),
+        note(R, NoteValue.eighth), note(L, NoteValue.eighth),
+      ],
+      // Zeile 8: durchgehend Achtel (Kadenz), 2x.
+      for (var i = 0; i < 2; i++) ...eighths([R, L, R, L, R, L, R, L]),
     ],
   ),
 ];
