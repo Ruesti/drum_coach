@@ -81,6 +81,17 @@ class DashboardScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
 
+          // Pad-workout collection entry
+          AppCard(
+            onTap: () => context.push('/collection/padWorkouts'),
+            child: const _DashRow(
+              icon: Icons.dashboard_customize_outlined,
+              title: 'Pad-Workouts',
+              subtitle: 'Sticking-Patterns, Warm-Up, Akzent-Workout & mehr',
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+
           // Today's routine card
           routineAsync.when(
             loading: () => const _LoadingCard(),

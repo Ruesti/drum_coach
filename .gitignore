@@ -47,3 +47,7 @@ app.*.map.json
 # Claude Code worktrees (local tooling, not part of the app)
 /.claude/worktrees/
 /.worktrees/
+
+# Local reference PDFs for exercise inspiration — mixed copyright status,
+# never checked in. See docs/Übungen/README.md.
+/docs/Übungen/*.pdf

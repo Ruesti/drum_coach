@@ -138,7 +138,8 @@ enum Genre {
 /// A named, browsable set of exercises (distinct from the base catalog).
 enum ExerciseCollection {
   rudimentEtudes(label: 'Rudiment-Étüden'),
-  techniqueStudies(label: 'Technik-Studien');
+  techniqueStudies(label: 'Technik-Studien'),
+  padWorkouts(label: 'Pad-Workouts');
 
   final String label;
   const ExerciseCollection({required this.label});
