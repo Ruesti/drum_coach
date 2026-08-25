@@ -1,189 +1,75 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
 
-/// Warm-up étude progression: settles the hands in before the session's real
-/// technical work starts. Mirrors a classic "warm the hands up" order — pure
-/// single-hand repetition first, then alternating strokes, then grouped hand
-/// sets — while the note value climbs from quarters to eighths to
-/// sixteenths across the seven pieces.
-
-// --- building blocks --------------------------------------------------------
-
-/// One bar of straight quarter notes, all struck by [hand] (4 notes = 1 bar).
-List<StrokeBeat> _singleHandQuarterBar(Hand hand) =>
-    run([hand, hand, hand, hand], NoteValue.quarter);
-
-/// One bar of alternating quarter notes, starting on [lead] (4 notes = 1 bar).
-List<StrokeBeat> _alternatingQuarterBar(Hand lead) {
-  final other = lead == R ? L : R;
-  return run([lead, other, lead, other], NoteValue.quarter);
-}
-
-/// One bar of alternating eighth notes, starting on [lead] (8 notes = 1 bar).
-List<StrokeBeat> _alternatingEighthBar(Hand lead) {
-  final other = lead == R ? L : R;
-  return eighths([lead, other, lead, other, lead, other, lead, other]);
-}
-
-/// One bar of alternating sixteenth notes, starting on [lead]
-/// (16 notes = 1 bar).
-List<StrokeBeat> _alternatingSixteenthBar(Hand lead) {
-  final other = lead == R ? L : R;
-  return sixteenths([
-    lead, other, lead, other, lead, other, lead, other, //
-    lead, other, lead, other, lead, other, lead, other,
-  ]);
-}
-
-/// One bar of grouped hand sets: two 4-note eighth-note blocks, [lead] first
-/// then the opposite hand (8 notes = 1 bar) — e.g. RRRR LLLL.
-List<StrokeBeat> _groupedEighthBar(Hand lead) {
-  final other = lead == R ? L : R;
-  return eighths([lead, lead, lead, lead, other, other, other, other]);
-}
-
-/// Warm-up études: the pad-workout collection's "Warm-Up" group. Each entry
-/// is a short, low-effort progression meant to be played first, before any
-/// other exercise, so the hands are loose and the alternation is settled.
+/// Two page-length warm-up pieces, each stringing several short lines into
+/// one continuous étude — "verbinde alle Zeilen zu einer Übung" (connect
+/// all lines into one exercise) was the explicit instruction on one of the
+/// source warm-up sheets the user provided under docs/Übungen/. Inspired by
+/// (not copied from) those PDFs — see docs/Übungen/README.md.
 final List<Rudiment> warmupEtudes = <Rudiment>[
   Rudiment(
-    id: 'etude_pad_warmup_1',
-    name: 'Warm-Up 1 · Nur Rechts',
+    id: 'etude_pad_warmup_einspielen',
+    name: 'Warm-Up · Einspielübung',
     description:
-        'Reine Viertelnoten, ausschließlich mit der rechten Hand — löst das '
-        'Handgelenk, bevor beidhändig gespielt wird.',
+        '6 aufeinander aufbauende Zeilen (je 1 Takt Viertel + 1 Takt Achtel) '
+        'zu einer durchgehenden Einspielübung verbunden: Einzelhand, '
+        'alternierend, dann bis zu 16tel gesteigert.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.beginner,
     minBpm: 40,
-    targetBpm: 70,
-    gridUnit: NoteGrid.quarter,
-    beatsPerBar: 4,
-    skills: {Skill.endurance, Skill.control},
-    sticking: [
-      // 2 bars = 8 quarters, R R R R | R R R R.
-      ..._singleHandQuarterBar(R),
-      ..._singleHandQuarterBar(R),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_warmup_2',
-    name: 'Warm-Up 2 · Nur Links',
-    description:
-        'Reine Viertelnoten, ausschließlich mit der linken Hand — gleicht die '
-        'schwächere Seite an die rechte Hand an.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Warm-Up',
-    difficulty: Difficulty.beginner,
-    minBpm: 40,
-    targetBpm: 70,
-    gridUnit: NoteGrid.quarter,
-    beatsPerBar: 4,
-    skills: {Skill.endurance, Skill.control},
-    sticking: [
-      // 2 bars = 8 quarters, L L L L | L L L L.
-      ..._singleHandQuarterBar(L),
-      ..._singleHandQuarterBar(L),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_warmup_3',
-    name: 'Warm-Up 3 · Wechselschlag Viertel',
-    description:
-        'Beide Hände wechseln sich in Viertelnoten ab — der erste Schritt von '
-        'Einzelhand- zu Wechselschlag-Bewegung.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Warm-Up',
-    difficulty: Difficulty.beginner,
-    minBpm: 45,
-    targetBpm: 75,
-    gridUnit: NoteGrid.quarter,
-    beatsPerBar: 4,
-    skills: {Skill.endurance, Skill.control},
-    sticking: [
-      // 2 bars = 8 quarters, R L R L | R L R L.
-      ..._alternatingQuarterBar(R),
-      ..._alternatingQuarterBar(R),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_warmup_4',
-    name: 'Warm-Up 4 · Wechselschlag Achtel',
-    description:
-        'Der Wechselschlag aus Warm-Up 3, jetzt doppelt so dicht in '
-        'Achtelnoten gespielt.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Warm-Up',
-    difficulty: Difficulty.beginner,
-    minBpm: 50,
-    targetBpm: 85,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.endurance, Skill.control},
-    sticking: [
-      // 2 bars = 16 eighths.
-      ..._alternatingEighthBar(R),
-      ..._alternatingEighthBar(R),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_warmup_5',
-    name: 'Warm-Up 5 · Gruppierte Handsätze',
-    description:
-        'Blöcke aus vier gleichen Achtelschlägen im Wechsel zwischen rechts '
-        'und links — bereitet auf gruppierte Stickings vor.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Warm-Up',
-    difficulty: Difficulty.intermediate,
-    minBpm: 55,
-    targetBpm: 90,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.endurance, Skill.control, Skill.coordination},
-    sticking: [
-      // 2 bars = 16 eighths, RRRR LLLL | RRRR LLLL.
-      ..._groupedEighthBar(R),
-      ..._groupedEighthBar(R),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_warmup_6',
-    name: 'Warm-Up 6 · Wechselschlag Sechzehntel',
-    description:
-        'Der Wechselschlag verdichtet sich weiter zu durchgehenden '
-        'Sechzehnteln — der letzte Schritt vor dem eigentlichen Training.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Warm-Up',
-    difficulty: Difficulty.intermediate,
-    minBpm: 60,
-    targetBpm: 100,
+    targetBpm: 120,
     gridUnit: NoteGrid.sixteenth,
     beatsPerBar: 4,
     skills: {Skill.endurance, Skill.control},
     sticking: [
-      // 2 bars = 32 sixteenths.
-      ..._alternatingSixteenthBar(R),
-      ..._alternatingSixteenthBar(R),
+      // Zeile 1: nur rechte Hand.
+      ...[R, R, R, R].map((h) => note(h, NoteValue.quarter)),
+      ...eighths([R, R, R, R, R, R, R, R]),
+      // Zeile 2: nur linke Hand.
+      ...[L, L, L, L].map((h) => note(h, NoteValue.quarter)),
+      ...eighths([L, L, L, L, L, L, L, L]),
+      // Zeile 3: alternierend, rechts beginnend.
+      ...[R, L, R, L].map((h) => note(h, NoteValue.quarter)),
+      ...eighths([R, L, R, L, R, L, R, L]),
+      // Zeile 4: alternierend, links beginnend.
+      ...[L, R, L, R].map((h) => note(h, NoteValue.quarter)),
+      ...eighths([L, R, L, R, L, R, L, R]),
+      // Zeile 5: Handwechsel mitten in der Zeile (8 L, dann 8 R).
+      ...eighths([L, L, L, L, L, L, L, L]),
+      ...eighths([R, R, R, R, R, R, R, R]),
+      // Zeile 6: alternierende Achtel, dann alternierende 16tel (Tempo-Sprung).
+      ...eighths([R, L, R, L, R, L, R, L]),
+      ...sixteenths([R, L, R, L, R, L, R, L, R, L, R, L, R, L, R, L]),
     ],
   ),
   Rudiment(
-    id: 'etude_pad_warmup_7',
-    name: 'Warm-Up 7 · Von Achtel zu Sechzehntel',
+    id: 'etude_pad_warmup_handsaetze',
+    name: 'Warm-Up · Handsatz-Aufwärmen',
     description:
-        'Takt 1 alternierend in Achteln, Takt 2 alternierend in Sechzehnteln '
-        '— simuliert innerhalb einer Übung das Gefühl von langsam zu schnell.',
+        '3 Handsatz-Blöcke (je 3 Takte 16tel) zu einer Aufwärm-Übung '
+        'verbunden — von 2er- über 3er- bis 4er-Gruppen.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.intermediate,
     minBpm: 60,
-    targetBpm: 100,
+    targetBpm: 130,
     gridUnit: NoteGrid.sixteenth,
     beatsPerBar: 4,
-    skills: {Skill.endurance, Skill.control, Skill.coordination},
+    skills: {Skill.endurance, Skill.coordination},
     sticking: [
-      // Bar 1 = 8 eighths, bar 2 = 16 sixteenths — both 4 quarters = 1 bar.
-      ..._alternatingEighthBar(R),
-      ..._alternatingSixteenthBar(R),
+      // Block 1: 2er-Gruppen (RRLL), 3 Takte.
+      ...sixteenths([R, R, L, L, R, R, L, L, R, R, L, L, R, R, L, L]),
+      ...sixteenths([R, R, L, L, R, R, L, L, R, R, L, L, R, R, L, L]),
+      ...sixteenths([R, R, L, L, R, R, L, L, R, R, L, L, R, R, L, L]),
+      // Block 2: 3er-Gruppen (RRRLLL), 3 Takte.
+      ...sixteenths([R, R, R, L, L, L, R, R, R, L, L, L, R, R, R, L]),
+      ...sixteenths([L, L, R, R, R, L, L, L, R, R, R, L, L, L, R, R]),
+      ...sixteenths([R, L, L, L, R, R, R, L, L, L, R, R, R, L, L, L]),
+      // Block 3: 4er-Gruppen (RRRRLLLL), 3 Takte.
+      ...sixteenths([R, R, R, R, L, L, L, L, R, R, R, R, L, L, L, L]),
+      ...sixteenths([L, L, L, L, R, R, R, R, L, L, L, L, R, R, R, R]),
+      ...sixteenths([R, R, R, R, L, L, L, L, R, R, R, R, L, L, L, L]),
     ],
   ),
 ];
