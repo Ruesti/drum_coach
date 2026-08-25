@@ -69,17 +69,26 @@ StaffLayout computeStaffLayout({
   double systemPad = 40,
   double barGap = 14,
   double preferredPxPerQuarter = 56,
+  int targetBarsPerRow = 2,
 }) {
   final ticksPerBar = beatsPerBar * _ticksPerQuarter;
   final usable = maxWidth - leftPad - rightPad - systemPad;
 
   double barWidthAt(double pxq) => beatsPerBar * pxq + barGap;
-  var pxPerQuarter = preferredPxPerQuarter;
-  var barsPerRow = (usable / barWidthAt(pxPerQuarter)).floor();
-  if (barsPerRow < 1) {
+
+  // Rows are a fixed [targetBarsPerRow] bars wide — note width flexes to
+  // fit, rather than note width staying fixed and the bar count per row
+  // flexing. Matches printed sheet music: a consistent line length instead
+  // of "however many bars happen to fit at a comfortable size".
+  var barsPerRow = targetBarsPerRow;
+  const minPxPerQuarter = 8.0;
+  var pxPerQuarter =
+      ((usable / barsPerRow - barGap) / beatsPerBar).clamp(0.0, preferredPxPerQuarter);
+  if (pxPerQuarter < minPxPerQuarter) {
+    // Even at the minimum readable size, [targetBarsPerRow] bars don't fit
+    // (very narrow viewport) — fall back to one bar per row.
     barsPerRow = 1;
-    final minPx = preferredPxPerQuarter < 8.0 ? preferredPxPerQuarter : 8.0;
-    pxPerQuarter = ((usable - barGap) / beatsPerBar).clamp(minPx, preferredPxPerQuarter);
+    pxPerQuarter = ((usable - barGap) / beatsPerBar).clamp(minPxPerQuarter, preferredPxPerQuarter);
   }
 
   final placements = <NotePlacement>[];

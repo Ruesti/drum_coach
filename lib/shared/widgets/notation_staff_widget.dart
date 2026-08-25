@@ -19,44 +19,110 @@ import 'staff_layout.dart';
 /// Geometry is duration-proportional: horizontal positions, beam runs and
 /// tuplet groups come from [computeStaffLayout] so mixed note values
 /// (quarters next to sixteenths, triplets, dotted notes) space correctly.
-class NotationStaffWidget extends StatelessWidget {
+///
+/// When [autoScroll] is true (practice playback), the widget owns its own
+/// vertical scrolling and keeps the active row in view as [activeIndex]
+/// moves to a new row — the page-length pieces run many rows long, so
+/// without this the player would have to scroll manually while playing.
+/// Static call sites (lesson detail, generated-pattern preview) leave it
+/// false and stay sized to their full content height, as before.
+class NotationStaffWidget extends StatefulWidget {
   final Rudiment rudiment;
   final int? activeIndex;
+  final bool autoScroll;
 
   const NotationStaffWidget({
     super.key,
     required this.rudiment,
     this.activeIndex,
+    this.autoScroll = false,
   });
 
+  @override
+  State<NotationStaffWidget> createState() => _NotationStaffWidgetState();
+}
+
+class _NotationStaffWidgetState extends State<NotationStaffWidget> {
   static const _hPad = 8.0;
   static const _vPad = 16.0;
 
+  final _scrollController = ScrollController();
+  _StaffPainter? _lastPainter;
+
+  @override
+  void didUpdateWidget(covariant NotationStaffWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.autoScroll &&
+        widget.activeIndex != null &&
+        widget.activeIndex != oldWidget.activeIndex) {
+      _scrollToActive();
+    }
+  }
+
+  void _scrollToActive() {
+    final painter = _lastPainter;
+    final index = widget.activeIndex;
+    if (painter == null || index == null || index >= painter._layout.placements.length) {
+      return;
+    }
+    final row = painter._layout.placements[index].row;
+    final rowTop = row * _StaffPainter._rowH;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final viewport = _scrollController.position.viewportDimension;
+      // Keep the active row roughly a quarter of the way down the visible
+      // area, so upcoming bars stay in view below it.
+      final target = (_vPad + rowTop - viewport * 0.25)
+          .clamp(0.0, _scrollController.position.maxScrollExtent);
+      _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
-      decoration: BoxDecoration(
-        color: AppColors.paper,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth.isFinite
-              ? constraints.maxWidth
-              : MediaQuery.of(context).size.width - 2 * _hPad;
-          final painter = _StaffPainter(
-            rudiment: rudiment,
-            activeIndex: activeIndex,
-            maxWidth: width,
-          );
-          return CustomPaint(
-            size: Size(width, painter.computeHeight()),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.of(context).size.width;
+        final contentWidth = width - 2 * _hPad;
+        final painter = _StaffPainter(
+          rudiment: widget.rudiment,
+          activeIndex: widget.activeIndex,
+          maxWidth: contentWidth,
+        );
+        _lastPainter = painter;
+
+        final sheet = Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
+          decoration: BoxDecoration(
+            color: AppColors.paper,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+          ),
+          child: CustomPaint(
+            size: Size(contentWidth, painter.computeHeight()),
             painter: painter,
-          );
-        },
-      ),
+          ),
+        );
+
+        if (!widget.autoScroll) return sheet;
+        return SingleChildScrollView(
+          controller: _scrollController,
+          child: sheet,
+        );
+      },
     );
   }
 }

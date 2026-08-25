@@ -297,11 +297,10 @@ class _PracticeSessionScreenState
           child: Column(
             children: [
               Expanded(
-                child: SingleChildScrollView(
-                  child: NotationStaffWidget(
-                    rudiment: rudiment,
-                    activeIndex: activeBeat,
-                  ),
+                child: NotationStaffWidget(
+                  rudiment: rudiment,
+                  activeIndex: activeBeat,
+                  autoScroll: true,
                 ),
               ),
               const SizedBox(height: 16),

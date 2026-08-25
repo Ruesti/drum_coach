@@ -47,6 +47,23 @@ void main() {
       }
     });
 
+    test('always fits 2 bars per row on a realistic phone width, shrinking '
+        'note width rather than dropping to 1 bar/row', () {
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 360,
+      );
+      expect(layout.barsPerRow, 2);
+      expect(layout.pxPerQuarter, lessThan(56));
+    });
+
+    test('falls back to 1 bar per row only when even the minimum note '
+        'width would not fit 2 bars', () {
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 90,
+      );
+      expect(layout.barsPerRow, 1);
+    });
+
     test('splits bars across rows when barsPerRow > 1', () {
       final beats = List.generate(
           16, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
