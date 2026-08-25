@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
 import '../../services/notification_service.dart';
+import '../../shared/widgets/app_badge.dart';
+import '../../shared/widgets/app_card.dart';
 
 const _donationUrl = 'https://ko-fi.com/drumcoach';
 
@@ -83,6 +86,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _resetOnboarding() async {
+    await SettingsService.resetOnboarding();
+    if (mounted) {
+      context.push('/onboarding');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,12 +143,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: _setMicEnabled,
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(12),
-            ),
+          AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -149,7 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 4),
                 const Text(
                   'Get a key at console.anthropic.com',
-                  style: TextStyle(color: Colors.white38, fontSize: 11),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 11),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -158,9 +163,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
                   decoration: InputDecoration(
                     hintText: 'sk-ant-…',
-                    hintStyle: const TextStyle(color: Colors.white24),
+                    hintStyle: const TextStyle(color: AppColors.textFaint),
                     filled: true,
-                    fillColor: const Color(0xFF151515),
+                    fillColor: AppColors.inset,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide.none,
@@ -168,7 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     suffixIcon: IconButton(
                       icon: Icon(
                         _apiKeyObscured ? Icons.visibility_off : Icons.visibility,
-                        color: Colors.white38,
+                        color: AppColors.textMuted,
                         size: 18,
                       ),
                       onPressed: () =>
@@ -182,8 +187,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: OutlinedButton(
                     onPressed: _saveApiKey,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.deepOrange,
-                      side: const BorderSide(color: Colors.deepOrange),
+                      foregroundColor: AppColors.accent,
+                      side: const BorderSide(color: AppColors.accent),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -195,16 +200,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          ListTile(
-            tileColor: const Color(0xFF1E1E1E),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            leading: const Icon(Icons.auto_awesome, color: Colors.white54),
-            title: const Text('Exercise Generator',
-                style: TextStyle(fontSize: 14)),
-            subtitle: const Text('AI-generated custom patterns',
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
-            trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+          AppCard(
+            padding: EdgeInsets.zero,
             onTap: () => context.push('/coaching/exercise-generator'),
+            child: ListTile(
+              leading: const Icon(Icons.auto_awesome, color: AppColors.textMuted),
+              title: const Text('Exercise Generator',
+                  style: TextStyle(fontSize: 14)),
+              subtitle: const Text('AI-generated custom patterns',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ),
+          ),
+          const SizedBox(height: 8),
+          AppCard(
+            padding: EdgeInsets.zero,
+            onTap: _resetOnboarding,
+            child: ListTile(
+              leading: const Icon(Icons.replay, color: AppColors.textMuted),
+              title: const Text('Onboarding erneut zeigen',
+                  style: TextStyle(fontSize: 14)),
+              subtitle: const Text('Startet die Einführung von vorne',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ),
           ),
         ],
       ),
@@ -221,7 +240,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Colors.deepOrange,
+            color: AppColors.accent,
             letterSpacing: 2,
             fontWeight: FontWeight.bold,
           ),
@@ -236,17 +255,17 @@ class _DonationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.deepOrange.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(14),
+      color: AppColors.accent.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(AppRadius.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.card),
             border: Border.all(
-              color: Colors.deepOrange.withValues(alpha: 0.35),
+              color: AppColors.accent.withValues(alpha: 0.35),
             ),
           ),
           child: Row(
@@ -265,17 +284,17 @@ class _DonationCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Text(
+                    const Text(
                       'Gefällt dir die App? Spendiere ein Bier!',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: AppColors.textSecondary,
                         fontSize: 13,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.open_in_new, color: Colors.white38, size: 18),
+              const Icon(Icons.open_in_new, color: AppColors.textMuted, size: 18),
             ],
           ),
         ),
@@ -293,48 +312,14 @@ class _TargetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: _options.map((min) {
-        final selected = value == min;
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => onChanged(min),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? Colors.deepOrange.withValues(alpha: 0.18)
-                      : const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: selected
-                        ? Colors.deepOrange
-                        : Colors.white.withValues(alpha: 0.1),
-                    width: selected ? 1.5 : 1,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      '$min',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: selected ? Colors.deepOrange : Colors.white,
-                      ),
-                    ),
-                    const Text(
-                      'min',
-                      style: TextStyle(color: Colors.white54, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        return AppSelectableChip(
+          label: '$min min',
+          selected: value == min,
+          onTap: () => onChanged(min),
         );
       }).toList(),
     );
@@ -358,22 +343,19 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return AppCard(
+      padding: EdgeInsets.zero,
       child: SwitchListTile(
-        secondary: Icon(icon, color: Colors.white54),
+        secondary: Icon(icon, color: AppColors.textMuted),
         title: Text(title, style: const TextStyle(fontSize: 14)),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(color: Colors.white38, fontSize: 12),
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
         ),
         value: value,
         onChanged: onChanged,
-        activeThumbColor: Colors.deepOrange,
-        activeTrackColor: Colors.deepOrange.withValues(alpha: 0.4),
+        activeThumbColor: AppColors.accent,
+        activeTrackColor: AppColors.accent.withValues(alpha: 0.4),
       ),
     );
   }

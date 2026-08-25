@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/design_tokens.dart';
+import '../../../shared/widgets/app_badge.dart';
+import '../../../shared/widgets/error_state.dart';
+
 class CoachFeedbackCard extends StatelessWidget {
   final String? feedback;
   final bool isLoading;
@@ -18,9 +22,9 @@ class CoachFeedbackCard extends StatelessWidget {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.deepOrange.withValues(alpha: 0.3)),
+        color: AppColors.coach,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,23 +38,7 @@ class CoachFeedbackCard extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.deepOrange.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'AI',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.deepOrange,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
+              const AppBadge(label: 'AI', color: AppColors.accent),
             ],
           ),
           const SizedBox(height: 10),
@@ -63,7 +51,7 @@ class CoachFeedbackCard extends StatelessWidget {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.deepOrange,
+                    color: AppColors.accent,
                   ),
                 ),
               ),
@@ -73,19 +61,19 @@ class CoachFeedbackCard extends StatelessWidget {
               feedback!,
               style: const TextStyle(
                 fontSize: 13,
-                color: Colors.white70,
+                color: AppColors.textSecondary,
                 height: 1.5,
               ),
             )
           else if (!hasAnalysis)
             const Text(
               'No microphone data captured. Enable the mic during your next session for personalised coaching.',
-              style: TextStyle(fontSize: 12, color: Colors.white38, height: 1.4),
+              style: TextStyle(fontSize: 12, color: AppColors.textMuted, height: 1.4),
             )
           else
-            const Text(
-              'Could not reach the coaching service. Check your API key in Settings.',
-              style: TextStyle(fontSize: 12, color: Colors.white38, height: 1.4),
+            const ErrorStateWidget(
+              message: 'Could not reach the coaching service. Check your API key in Settings.',
+              compact: true,
             ),
         ],
       ),

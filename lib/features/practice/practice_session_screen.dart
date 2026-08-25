@@ -5,14 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
+import '../../shared/widgets/app_badge.dart';
+import '../../shared/widgets/beat_indicator.dart';
 import '../../shared/widgets/notation_staff_widget.dart';
 import '../coaching/models/session_analysis.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
 import '../coaching/widgets/coach_feedback_card.dart';
 import '../lessons/lessons_provider.dart';
-import '../lessons/models/rudiment.dart';
+import '../lessons/models/pattern_playback.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import 'practice_provider.dart';
@@ -21,10 +24,15 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   final String rudimentId;
   final bool isFromRoutine;
 
+  /// Optional target tempo to preset the metronome to (e.g. a program's tempo
+  /// ladder start). Null keeps the metronome's current BPM.
+  final int? targetBpm;
+
   const PracticeSessionScreen({
     super.key,
     required this.rudimentId,
     required this.isFromRoutine,
+    this.targetBpm,
   });
 
   @override
@@ -48,14 +56,27 @@ class _PracticeSessionScreenState
 
   final _aiService = AICoachingService();
 
+  /// Captured in [initState] because `ref` is unsafe to read fresh inside
+  /// [dispose] — by then the widget's Element may already be torn down.
+  late final MetronomeNotifier _metronomeNotifier;
+
+  /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
+  /// metronome's per-tick volumes and map the playback cursor to a note.
+  late PatternPlayback _playback;
+
   @override
   void initState() {
     super.initState();
+    _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
+    _playback = PatternPlayback.forRudiment(
+        ref.read(rudimentByIdProvider(widget.rudimentId)));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
-      ref.read(metronomeNotifierProvider.notifier)
-        ..setSubdivision(_subdivisionFor(rudiment.gridUnit))
-        ..setPatternVolumes(_volumesFor(rudiment.sticking));
+      final metronome = _metronomeNotifier
+        ..setPatternClock(_playback.ticksPerQuarter)
+        ..setPatternVolumes(_playback.tickVolumes);
+      if (widget.targetBpm != null) {
+        metronome.setBpm(widget.targetBpm!);
+      }
       _initMicIfEnabled();
     });
   }
@@ -68,29 +89,17 @@ class _PracticeSessionScreenState
     }
   }
 
-  static Subdivision _subdivisionFor(NoteGrid grid) => switch (grid) {
-        NoteGrid.quarter => Subdivision.quarter,
-        NoteGrid.eighth => Subdivision.eighth,
-        NoteGrid.triplet => Subdivision.triplet,
-        NoteGrid.sixteenth => Subdivision.sixteenth,
-      };
-
-  static List<double> _volumesFor(List<StrokeBeat> sticking) =>
-      sticking.map((b) {
-        if (b.isRest) return 0.0;
-        if (b.isAccent) return 2.0;
-        if (b.isGhost) return 0.25;
-        return 0.85;
-      }).toList();
-
   @override
   void dispose() {
     _ticker?.cancel();
-    final notifier = ref.read(metronomeNotifierProvider.notifier);
-    notifier
-      ..stop()
-      ..setPatternVolumes(null)
-      ..setSubdivision(Subdivision.quarter);
+    // Deferred: Riverpod forbids modifying provider state synchronously
+    // during a widget tree teardown (dispose runs mid-build/mid-unmount).
+    Future.microtask(() {
+      _metronomeNotifier
+        ..stop()
+        ..setPatternVolumes(null)
+        ..setSubdivision(Subdivision.quarter);
+    });
     _micService?.stopRecording();
     _micService?.dispose();
     super.dispose();
@@ -149,9 +158,10 @@ class _PracticeSessionScreenState
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
       ),
       builder: (_) => _RatingSheet(onRating: _saveAndShowFeedback),
     );
@@ -186,9 +196,10 @@ class _PracticeSessionScreenState
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
       ),
       builder: (_) => _FeedbackSheet(
         rudimentName: rudiment.name,
@@ -213,7 +224,8 @@ class _PracticeSessionScreenState
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
       // Record beat timestamps for mic correlation
-      if (next.isPlaying &&
+      if (_micRecording &&
+          next.isPlaying &&
           next.currentBeatIndex >= 0 &&
           next.currentBeatIndex != (prev?.currentBeatIndex ?? -2)) {
         _beatLog.add((
@@ -231,15 +243,15 @@ class _PracticeSessionScreenState
       }
     });
 
-    final activeBeat = metState.isPlaying
-        ? metState.currentBeatIndex % rudiment.sticking.length
+    final activeBeat = metState.isPlaying && metState.currentBeatIndex >= 0
+        ? _playback.noteIndexAtTick(
+            metState.currentBeatIndex % _playback.totalTicks)
         : null;
 
     final isCountdown = _goalSeconds != null;
-    final timerColor = isCountdown &&
-            (_goalSeconds! - _elapsedSeconds) <= 30
-        ? Colors.deepOrange
-        : Colors.white;
+    final timerColor = isCountdown && (_goalSeconds! - _elapsedSeconds) <= 30
+        ? AppColors.accent
+        : AppColors.textPrimary;
 
     return Scaffold(
       appBar: AppBar(
@@ -251,7 +263,7 @@ class _PracticeSessionScreenState
               child: Icon(
                 _micRecording ? Icons.mic : Icons.mic_off,
                 size: 18,
-                color: _micRecording ? Colors.deepOrange : Colors.white24,
+                color: _micRecording ? AppColors.accent : AppColors.textFaint,
               ),
             ),
           Padding(
@@ -262,7 +274,7 @@ class _PracticeSessionScreenState
                 children: [
                   if (isCountdown)
                     const Icon(Icons.timer_outlined,
-                        size: 16, color: Colors.white54),
+                        size: 16, color: AppColors.textMuted),
                   if (isCountdown) const SizedBox(width: 4),
                   Text(
                     _timerLabel,
@@ -286,18 +298,9 @@ class _PracticeSessionScreenState
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1A1A1A),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: NotationStaffWidget(
-                      rudiment: rudiment,
-                      activeIndex: activeBeat,
-                    ),
+                  child: NotationStaffWidget(
+                    rudiment: rudiment,
+                    activeIndex: activeBeat,
                   ),
                 ),
               ),
@@ -305,6 +308,8 @@ class _PracticeSessionScreenState
               _CompactMetronome(
                 bpm: metState.bpm,
                 isPlaying: metState.isPlaying,
+                isAccent: metState.isAccent,
+                currentBeatIndex: metState.currentBeatIndex,
                 soundType: metState.soundType,
                 onBpmChanged: notifier.setBpm,
                 onToggle: notifier.toggle,
@@ -324,15 +329,6 @@ class _PracticeSessionScreenState
                 onPressed: _showRatingSheet,
                 icon: const Icon(Icons.check_circle_outline),
                 label: const Text('Finish Session'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepOrange,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 54),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  textStyle: const TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.bold),
-                ),
               ),
             ],
           ),
@@ -366,31 +362,10 @@ class _TimerGoalRow extends StatelessWidget {
         final isSelected = selected == sec;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: GestureDetector(
+          child: AppSelectableChip(
+            label: opt.label,
+            selected: isSelected,
             onTap: () => onSelected(sec),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.deepOrange.withValues(alpha: 0.16)
-                    : Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected ? Colors.deepOrange : Colors.white24,
-                  width: isSelected ? 1.5 : 1,
-                ),
-              ),
-              child: Text(
-                opt.label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.deepOrange : Colors.white54,
-                ),
-              ),
-            ),
           ),
         );
       }).toList(),
@@ -403,6 +378,8 @@ class _TimerGoalRow extends StatelessWidget {
 class _CompactMetronome extends StatelessWidget {
   final int bpm;
   final bool isPlaying;
+  final bool isAccent;
+  final int currentBeatIndex;
   final SoundType soundType;
   final ValueChanged<int> onBpmChanged;
   final VoidCallback onToggle;
@@ -411,6 +388,8 @@ class _CompactMetronome extends StatelessWidget {
   const _CompactMetronome({
     required this.bpm,
     required this.isPlaying,
+    required this.isAccent,
+    required this.currentBeatIndex,
     required this.soundType,
     required this.onBpmChanged,
     required this.onToggle,
@@ -422,40 +401,29 @@ class _CompactMetronome extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.raised,
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              GestureDetector(
+              BeatIndicator(
+                diameter: 64,
+                isPlaying: isPlaying,
+                isAccent: isAccent,
+                beatTrigger: currentBeatIndex,
                 onTap: onToggle,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isPlaying ? Colors.red.shade700 : Colors.deepOrange,
-                  ),
-                  child: Icon(
-                    isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
+                child: Icon(
+                  isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                  color: AppColors.textPrimary,
+                  size: 26,
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                '$bpm',
-                style: const TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
+              Text('$bpm', style: AppTypography.display),
               const SizedBox(width: 4),
-              const Text('BPM',
-                  style: TextStyle(fontSize: 12, color: Colors.white38)),
+              Text('BPM', style: AppTypography.label.copyWith(color: AppColors.textMuted)),
               const SizedBox(width: 8),
               Expanded(
                 child: Slider(
@@ -472,34 +440,12 @@ class _CompactMetronome extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: SoundType.values.map((t) {
-              final sel = t == soundType;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: GestureDetector(
+                child: AppSelectableChip(
+                  label: t.label,
+                  selected: t == soundType,
                   onTap: () => onSoundTypeChanged(t),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 120),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: sel
-                          ? Colors.deepOrange.withValues(alpha: 0.18)
-                          : Colors.white.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: sel ? Colors.deepOrange : Colors.white24,
-                        width: sel ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Text(
-                      t.label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: sel ? Colors.deepOrange : Colors.white54,
-                      ),
-                    ),
-                  ),
                 ),
               );
             }).toList(),
@@ -527,7 +473,7 @@ class _RatingSheet extends StatelessWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white24,
+              color: AppColors.textFaint,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -541,7 +487,7 @@ class _RatingSheet extends StatelessWidget {
             emoji: '😓',
             label: 'Struggled',
             subtitle: 'Keep the same BPM',
-            color: Colors.red.shade400,
+            color: AppColors.struggled,
             onTap: () {
               Navigator.pop(context);
               onRating(1);
@@ -552,7 +498,7 @@ class _RatingSheet extends StatelessWidget {
             emoji: '😐',
             label: 'OK',
             subtitle: '+2 BPM next time',
-            color: Colors.amber,
+            color: AppColors.ok,
             onTap: () {
               Navigator.pop(context);
               onRating(2);
@@ -563,7 +509,7 @@ class _RatingSheet extends StatelessWidget {
             emoji: '💪',
             label: 'Solid',
             subtitle: '+5 BPM next time',
-            color: Colors.green.shade400,
+            color: AppColors.solidStreak,
             onTap: () {
               Navigator.pop(context);
               onRating(3);
@@ -614,7 +560,7 @@ class _RatingButton extends StatelessWidget {
                           color: color)),
                   Text(subtitle,
                       style: const TextStyle(
-                          fontSize: 12, color: Colors.white54)),
+                          fontSize: 12, color: AppColors.textMuted)),
                 ],
               ),
             ],
@@ -698,7 +644,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: AppColors.textFaint,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -710,7 +656,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
           Text(
             '${widget.achievedBpm} BPM  ·  '
             '${widget.durationSeconds ~/ 60}min ${widget.durationSeconds % 60}s',
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),
           if (hasMicData && widget.analysis?.timing != null) ...[
             const SizedBox(height: 16),
@@ -726,13 +672,6 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: widget.onClose,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepOrange,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
               child: const Text('Done'),
             ),
           ),
@@ -753,8 +692,8 @@ class _AnalysisSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.raised,
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -763,7 +702,7 @@ class _AnalysisSummary extends StatelessWidget {
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
-                  color: Colors.white70)),
+                  color: AppColors.textSecondary)),
           const SizedBox(height: 10),
           _Row(
             label: 'Overall timing',
@@ -814,11 +753,11 @@ class _Row extends StatelessWidget {
       child: Row(
         children: [
           Text(label,
-              style: const TextStyle(color: Colors.white38, fontSize: 12)),
+              style: const TextStyle(color: AppColors.textFaint, fontSize: 12)),
           const Spacer(),
           Text(value,
               style: const TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textSecondary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600)),
         ],

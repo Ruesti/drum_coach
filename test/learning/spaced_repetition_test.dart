@@ -7,7 +7,7 @@ RudimentProgress _makeProgress({
   int srRepetitions = 0,
 }) {
   final p = RudimentProgress()
-    ..rudimentId = 'test'
+    ..exerciseId = 'test'
     ..currentBpm = 80
     ..bestBpm = 80
     ..mastery = MasteryLevel.beginner

@@ -123,6 +123,16 @@ class MetronomeNotifier extends _$MetronomeNotifier {
     state = state.copyWith(subdivision: subdivision, currentBeatIndex: -1);
   }
 
+  /// Set an arbitrary integer tick factor (ticks per quarter) for pattern
+  /// playback — used by exercises with mixed note values via [PatternPlayback].
+  void setPatternClock(int ticksPerQuarter) {
+    final wasPlaying = state.isPlaying;
+    if (wasPlaying) _engine?.stop();
+    _engine?.setPatternClock(ticksPerQuarter);
+    if (wasPlaying) _engine?.start();
+    state = state.copyWith(currentBeatIndex: -1);
+  }
+
   void tap() {
     final now = DateTime.now();
     if (_tapTimestamps.isNotEmpty &&

@@ -4,11 +4,15 @@ import 'package:go_router/go_router.dart';
 import '../data/local/settings_service.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/learning/daily_routine_screen.dart';
+import '../features/lessons/collection_screen.dart';
 import '../features/lessons/lesson_detail_screen.dart';
 import '../features/lessons/lessons_screen.dart';
+import '../features/lessons/models/rudiment.dart';
 import '../features/metronome/metronome_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/practice/practice_session_screen.dart';
+import '../features/program/program_screen.dart';
+import '../features/program/program_setup_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
@@ -66,13 +70,6 @@ final router = GoRouter(
               ),
             ],
           ),
-          GoRoute(
-            path: '/practice/:rudimentId',
-            builder: (_, state) => PracticeSessionScreen(
-              rudimentId: state.pathParameters['rudimentId']!,
-              isFromRoutine: false,
-            ),
-          ),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
@@ -81,6 +78,37 @@ final router = GoRouter(
           ),
         ]),
       ],
+    ),
+    GoRoute(
+      path: '/program',
+      builder: (_, __) => const ProgramScreen(),
+    ),
+    GoRoute(
+      path: '/program/setup',
+      builder: (_, __) => const ProgramSetupScreen(),
+    ),
+    GoRoute(
+      path: '/collection/:name',
+      builder: (context, state) {
+        final name = state.pathParameters['name'];
+        final collection = ExerciseCollection.values.firstWhere(
+          (c) => c.name == name,
+          orElse: () => ExerciseCollection.rudimentEtudes,
+        );
+        return CollectionScreen(collection: collection);
+      },
+    ),
+    // Top-level (outside the bottom-nav shell) so it can be pushed from any
+    // route — collection, program, lessons — without go_router raising a
+    // duplicate page-key assertion for a shell-branch route pushed from the
+    // root navigator. Runs as a focused full-screen session.
+    GoRoute(
+      path: '/practice/:rudimentId',
+      builder: (_, state) => PracticeSessionScreen(
+        rudimentId: state.pathParameters['rudimentId']!,
+        isFromRoutine: false,
+        targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
+      ),
     ),
     GoRoute(
       path: '/metronome',

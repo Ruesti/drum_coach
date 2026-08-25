@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/design_tokens.dart';
+import '../../shared/widgets/app_card.dart';
+import '../../shared/widgets/error_state.dart';
 import '../lessons/lessons_provider.dart';
 import 'stats_provider.dart';
 
@@ -32,7 +35,12 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       appBar: AppBar(title: const Text('Stats')),
       body: sessionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(
+          child: ErrorStateWidget(
+            message: 'Error: $e',
+            onRetry: () => ref.invalidate(allSessionsProvider),
+          ),
+        ),
         data: (sessions) {
           if (sessions.isEmpty) {
             return const _EmptyStats();
@@ -52,7 +60,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               const SizedBox(height: 8),
               calendarAsync.when(
                 loading: () => const SizedBox(height: 96),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (e, _) => ErrorStateWidget(
+                  message: 'Error: $e',
+                  compact: true,
+                  onRetry: () => ref.invalidate(practiceCalendarProvider()),
+                ),
                 data: (days) => _CalendarHeatmap(days: days),
               ),
               const SizedBox(height: 20),
@@ -62,7 +74,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               dailyAsync.when(
                 loading: () => const SizedBox(
                     height: 160, child: Center(child: CircularProgressIndicator())),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (e, _) => ErrorStateWidget(
+                  message: 'Error: $e',
+                  compact: true,
+                  onRetry: () => ref.invalidate(last14DaysMinutesProvider),
+                ),
                 data: (data) => _BarChartCard(data: data),
               ),
               const SizedBox(height: 20),
@@ -83,9 +99,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               const SizedBox(height: 8),
               ...sessions.take(10).map((s) {
                 final name = rudiments
-                    .where((r) => r.id == s.rudimentId)
+                    .where((r) => r.id == s.exerciseId)
                     .firstOrNull
-                    ?.name ?? s.rudimentId;
+                    ?.name ?? s.exerciseId;
                 return _SessionTile(session: s, rudimentName: name);
               }),
             ],
@@ -104,26 +120,25 @@ class _StreakCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return AppCard(
       child: Row(
         children: [
           const Text('🔥', style: TextStyle(fontSize: 32)),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('$current day streak',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontSize: 22, fontWeight: FontWeight.bold)),
                 Text('Best: $best ${best == 1 ? "day" : "days"}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style:
-                        const TextStyle(color: Colors.white54, fontSize: 13)),
+                        const TextStyle(color: AppColors.textMuted, fontSize: 13)),
               ],
             ),
           ),
@@ -143,10 +158,10 @@ class _TodayBadge extends StatelessWidget {
     final done = status.goalMet;
     final practiced = status.practiced;
     final color = done
-        ? Colors.green
+        ? AppColors.solidStreak
         : practiced
-            ? Colors.amber
-            : Colors.white38;
+            ? AppColors.ok
+            : AppColors.textFaint;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -155,7 +170,7 @@ class _TodayBadge extends StatelessWidget {
         const SizedBox(height: 4),
         Text('Heute', style: TextStyle(color: color, fontSize: 11)),
         Text('${status.minutes}/${status.goalMinutes}m',
-            style: const TextStyle(color: Colors.white38, fontSize: 10)),
+            style: const TextStyle(color: AppColors.textFaint, fontSize: 10)),
       ],
     );
   }
@@ -169,11 +184,11 @@ class _CalendarHeatmap extends StatelessWidget {
   static const _gap = 3.0;
 
   Color _colorFor(int minutes) {
-    if (minutes <= 0) return Colors.white.withValues(alpha: 0.06);
-    if (minutes < 10) return Colors.deepOrange.withValues(alpha: 0.30);
-    if (minutes < 20) return Colors.deepOrange.withValues(alpha: 0.55);
-    if (minutes < 40) return Colors.deepOrange.withValues(alpha: 0.80);
-    return Colors.deepOrange;
+    if (minutes <= 0) return AppColors.textPrimary.withValues(alpha: 0.06);
+    if (minutes < 10) return AppColors.accent.withValues(alpha: 0.30);
+    if (minutes < 20) return AppColors.accent.withValues(alpha: 0.55);
+    if (minutes < 40) return AppColors.accent.withValues(alpha: 0.80);
+    return AppColors.accent;
   }
 
   @override
@@ -188,12 +203,8 @@ class _CalendarHeatmap extends StatelessWidget {
     ];
     final weeks = (cells.length / 7).ceil();
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -236,8 +247,10 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Colors.deepOrange,
+            color: AppColors.accent,
             letterSpacing: 2,
             fontWeight: FontWeight.bold,
           ),
@@ -252,51 +265,49 @@ class _BarChartCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final today = DateTime.now();
-    return Container(
+    return SizedBox(
       height: 160,
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: BarChart(
-        BarChartData(
-          maxY: data.map((d) => d.minutes.toDouble()).fold<double>(10, (a, b) => a > b ? a : b) + 5,
-          barGroups: data.asMap().entries.map((e) {
-            final isToday = e.value.date.day == today.day &&
-                e.value.date.month == today.month &&
-                e.value.date.year == today.year;
-            return BarChartGroupData(
-              x: e.key,
-              barRods: [
-                BarChartRodData(
-                  toY: e.value.minutes.toDouble(),
-                  width: 14,
-                  color: isToday ? Colors.deepOrange : Colors.white24,
-                  borderRadius: BorderRadius.circular(4),
+      child: AppCard(
+        padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
+        child: BarChart(
+          BarChartData(
+            maxY: data.map((d) => d.minutes.toDouble()).fold<double>(10, (a, b) => a > b ? a : b) + 5,
+            barGroups: data.asMap().entries.map((e) {
+              final isToday = e.value.date.day == today.day &&
+                  e.value.date.month == today.month &&
+                  e.value.date.year == today.year;
+              return BarChartGroupData(
+                x: e.key,
+                barRods: [
+                  BarChartRodData(
+                    toY: e.value.minutes.toDouble(),
+                    width: 14,
+                    color: isToday ? AppColors.accent : AppColors.textFaint,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ],
+              );
+            }).toList(),
+            gridData: const FlGridData(show: false),
+            borderData: FlBorderData(show: false),
+            titlesData: FlTitlesData(
+              leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 24,
+                  interval: 7,
+                  getTitlesWidget: (value, _) {
+                    final idx = value.toInt();
+                    if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
+                    return Text(
+                      DateFormat('d/M').format(data[idx].date),
+                      style: const TextStyle(color: AppColors.textFaint, fontSize: 10),
+                    );
+                  },
                 ),
-              ],
-            );
-          }).toList(),
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          titlesData: FlTitlesData(
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 24,
-                interval: 7,
-                getTitlesWidget: (value, _) {
-                  final idx = value.toInt();
-                  if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
-                  return Text(
-                    DateFormat('d/M').format(data[idx].date),
-                    style: const TextStyle(color: Colors.white38, fontSize: 10),
-                  );
-                },
               ),
             ),
           ),
@@ -320,18 +331,25 @@ class _RudimentPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.chip),
       ),
       child: DropdownButton<String>(
         value: selected,
         isExpanded: true,
-        dropdownColor: const Color(0xFF2A2A2A),
+        dropdownColor: AppColors.raised,
         underline: const SizedBox.shrink(),
         items: rudiments
-            .map((r) => DropdownMenuItem(value: r.$1, child: Text(r.$2)))
+            .map((r) => DropdownMenuItem(
+                  value: r.$1,
+                  child: Text(
+                    r.$2,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ))
             .toList(),
         onChanged: (v) {
           if (v != null) onChanged(v);
@@ -351,60 +369,63 @@ class _BpmLineChart extends ConsumerWidget {
 
     return historyAsync.when(
       loading: () => const SizedBox(height: 140, child: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (e, _) => ErrorStateWidget(
+        message: 'Error: $e',
+        compact: true,
+        onRetry: () => ref.invalidate(bpmHistoryForRudimentProvider(rudimentId)),
+      ),
       data: (sessions) {
         if (sessions.isEmpty) {
-          return Container(
+          return SizedBox(
             height: 80,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(12),
+            child: AppCard(
+              child: Center(
+                child: Text('No sessions yet for this rudiment',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.textFaint)),
+              ),
             ),
-            child: const Text('No sessions yet for this rudiment',
-                style: TextStyle(color: Colors.white38)),
           );
         }
         final spots = sessions.asMap().entries
             .map((e) => FlSpot(e.key.toDouble(), e.value.achievedBpm.toDouble()))
             .toList();
-        return Container(
+        return SizedBox(
           height: 140,
-          padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
-            borderRadius: BorderRadius.circular(12),
+          child: AppCard(
+            padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
+            child: LineChart(LineChartData(
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: AppColors.accent,
+                  barWidth: 2,
+                  dotData: const FlDotData(show: true),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: AppColors.accent.withValues(alpha: 0.08),
+                  ),
+                ),
+              ],
+              gridData: const FlGridData(show: false),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 32,
+                    getTitlesWidget: (v, _) => Text('${v.toInt()}',
+                        style: const TextStyle(color: AppColors.textFaint, fontSize: 10)),
+                  ),
+                ),
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+            )),
           ),
-          child: LineChart(LineChartData(
-            lineBarsData: [
-              LineChartBarData(
-                spots: spots,
-                isCurved: true,
-                color: Colors.deepOrange,
-                barWidth: 2,
-                dotData: const FlDotData(show: true),
-                belowBarData: BarAreaData(
-                  show: true,
-                  color: Colors.deepOrange.withValues(alpha: 0.08),
-                ),
-              ),
-            ],
-            gridData: const FlGridData(show: false),
-            borderData: FlBorderData(show: false),
-            titlesData: FlTitlesData(
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 32,
-                  getTitlesWidget: (v, _) => Text('${v.toInt()}',
-                      style: const TextStyle(color: Colors.white38, fontSize: 10)),
-                ),
-              ),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            ),
-          )),
         );
       },
     );
@@ -429,10 +450,14 @@ class _SessionTile extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       title: Text(rudimentName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
       subtitle: Text(
         DateFormat('dd MMM yyyy').format(session.date as DateTime),
-        style: const TextStyle(color: Colors.white38, fontSize: 12),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: AppColors.textFaint, fontSize: 12),
       ),
       trailing: Column(
         mainAxisSize: MainAxisSize.min,
@@ -441,7 +466,7 @@ class _SessionTile extends StatelessWidget {
           Text('$emoji  ${session.achievedBpm} BPM',
               style: const TextStyle(fontSize: 13)),
           Text('${m}m ${s}s',
-              style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              style: const TextStyle(color: AppColors.textFaint, fontSize: 11)),
         ],
       ),
     );
@@ -465,7 +490,7 @@ class _EmptyStats extends StatelessWidget {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             Text('Complete your first practice session\nto see stats here.',
-                style: TextStyle(color: Colors.white54),
+                style: TextStyle(color: AppColors.textMuted),
                 textAlign: TextAlign.center),
           ],
         ),

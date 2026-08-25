@@ -1,16 +1,23 @@
-# drum_coach
+# DrumCoach
 
-A new Flutter project.
+An Android app for practicing drum rudiments on a practice pad. Metronome,
+sticking notation, spaced-repetition routine, a 12-week Stick Control
+program, and optional AI coaching feedback from a phone microphone.
 
-## Getting Started
+Built for practicing at arm's length from the phone — read
+[`docs/design/60-cm-kontext-und-startpunkt`](docs/design/60-cm-kontext-und-startpunkt)
+for the design rationale ("60cm": legibility at a glance beats subtlety).
 
-This project is a starting point for a Flutter application.
+## Stack
 
-A few resources to get you started if this is your first Flutter project:
+Flutter + Riverpod + go_router + Isar (local storage). See `docs/CLAUDE.md`
+for the current architecture and `docs/AUDIT.md` / `docs/PHASES.md` for
+project history.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Development
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```
+flutter pub get
+flutter analyze
+flutter test
+```

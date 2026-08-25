@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:drum_coach/features/lessons/data/etudes.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
-import 'package:drum_coach/features/lessons/lessons_provider.dart';
+import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
 
 void main() {
   group('NotationStaffWidget (5-line staff)', () {
     testWidgets('renders every seeded pattern without throwing', (tester) async {
-      for (final rudiment in rudimentsSeedData) {
+      for (final rudiment in [...rudimentsSeedData, ...allEtudes]) {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
@@ -29,6 +29,33 @@ void main() {
       }
     });
 
+    testWidgets('renders a mixed-value multi-bar étude without throwing',
+        (tester) async {
+      const etude = Rudiment(
+        id: 'etude_mixed', name: 'Mixed', description: 'x',
+        minBpm: 60, targetBpm: 120, difficulty: Difficulty.intermediate,
+        gridUnit: NoteGrid.eighth, beatsPerBar: 4,
+        sticking: [
+          StrokeBeat(hand: Hand.right, value: NoteValue.quarter, isAccent: true),
+          StrokeBeat(hand: Hand.left, value: NoteValue.eighth),
+          StrokeBeat(hand: Hand.right, value: NoteValue.eighth),
+          StrokeBeat(hand: Hand.left, value: NoteValue.sixteenth),
+          StrokeBeat(hand: Hand.right, value: NoteValue.sixteenth),
+          StrokeBeat(hand: Hand.left, value: NoteValue.eighth),
+          StrokeBeat(hand: Hand.right, value: NoteValue.eighth, tuplet: Tuplet.triplet),
+          StrokeBeat(hand: Hand.left, value: NoteValue.eighth, tuplet: Tuplet.triplet),
+          StrokeBeat(hand: Hand.right, value: NoteValue.eighth, tuplet: Tuplet.triplet),
+          StrokeBeat(hand: Hand.left, value: NoteValue.quarter),
+        ],
+      );
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SizedBox(width: 360, child: NotationStaffWidget(rudiment: etude)),
+        ),
+      ));
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('renders with an active cursor during playback', (tester) async {
       final rudiment = rudimentsSeedData.first;
       await tester.pumpWidget(
@@ -43,36 +70,31 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     });
-  });
 
-  group('practice plan', () {
-    test('is ordered by level then difficulty', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      final plan = container.read(practicePlanProvider);
-      expect(plan, isNotEmpty);
-
-      // Every exercise belongs to a focus category.
-      for (final r in plan) {
-        expect(exerciseCategories, contains(r.category));
-      }
-
-      // Levels are non-decreasing (nulls sort last).
-      var prevLevel = -1;
-      for (final r in plan) {
-        final lvl = r.level ?? 1 << 20;
-        expect(lvl, greaterThanOrEqualTo(prevLevel),
-            reason: 'plan not ordered at ${r.id}');
-        prevLevel = lvl;
-      }
-    });
-
-    test('every focus category has at least one exercise', () {
-      for (final cat in exerciseCategories) {
-        final inCat = rudimentsSeedData.where((r) => r.category == cat);
-        expect(inCat, isNotEmpty, reason: 'no exercises in "$cat"');
-      }
+    testWidgets('renders whole/half/dotted note values without throwing',
+        (tester) async {
+      const etude = Rudiment(
+        id: 'etude_values',
+        name: 'Values',
+        description: 'x',
+        minBpm: 60,
+        targetBpm: 120,
+        difficulty: Difficulty.intermediate,
+        gridUnit: NoteGrid.quarter,
+        beatsPerBar: 4,
+        sticking: [
+          StrokeBeat(hand: Hand.right, value: NoteValue.whole), // bar 1: 4 quarters
+          StrokeBeat(hand: Hand.left, value: NoteValue.half), // bar 2: 2
+          StrokeBeat(hand: Hand.right, value: NoteValue.quarter, dotted: true), // 1.5
+          StrokeBeat(hand: Hand.left, value: NoteValue.eighth), // 0.5 -> bar 2 = 4
+        ],
+      );
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SizedBox(width: 360, child: NotationStaffWidget(rudiment: etude)),
+        ),
+      ));
+      expect(tester.takeException(), isNull);
     });
   });
 }
