@@ -10,12 +10,17 @@ import 'models/training_program.dart';
 import 'program_provider.dart' show dayTypeForDayNumber;
 
 /// The exercises drawn from [all] for the given [pool]. `basicStrokes` = base
-/// catalog (no [Rudiment.collection]); `newExercises` = collection content
-/// (étude/technique-study collections); `mixed` = everything.
+/// catalog (no [Rudiment.collection]); each other named pool = exactly that
+/// [ExerciseCollection]; `mixed` = everything.
 List<Rudiment> programPoolExercises(List<Rudiment> all, ProgramPool pool) =>
     switch (pool) {
       ProgramPool.basicStrokes => all.where((r) => r.collection == null).toList(),
-      ProgramPool.newExercises => all.where((r) => r.collection != null).toList(),
+      ProgramPool.rudimentEtudes =>
+        all.where((r) => r.collection == ExerciseCollection.rudimentEtudes).toList(),
+      ProgramPool.techniqueStudies =>
+        all.where((r) => r.collection == ExerciseCollection.techniqueStudies).toList(),
+      ProgramPool.padWorkouts =>
+        all.where((r) => r.collection == ExerciseCollection.padWorkouts).toList(),
       ProgramPool.mixed => List<Rudiment>.of(all),
     };
 

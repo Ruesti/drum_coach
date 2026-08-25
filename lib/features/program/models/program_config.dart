@@ -1,12 +1,15 @@
 import '../../lessons/models/rudiment.dart';
 
-/// Which exercises the program draws from.
-enum ProgramPool { basicStrokes, newExercises, mixed }
+/// Which exercises the program draws from. One entry per source (the base
+/// catalog plus each [ExerciseCollection]), plus [mixed] for everything.
+enum ProgramPool { basicStrokes, rudimentEtudes, techniqueStudies, padWorkouts, mixed }
 
 extension ProgramPoolLabel on ProgramPool {
   String get label => switch (this) {
         ProgramPool.basicStrokes => 'Klassische Schlagübungen',
-        ProgramPool.newExercises => 'Neue Übungen',
+        ProgramPool.rudimentEtudes => 'Rudiment-Étüden',
+        ProgramPool.techniqueStudies => 'Technik-Studien',
+        ProgramPool.padWorkouts => 'Pad-Workouts',
         ProgramPool.mixed => 'Gemischt',
       };
 }

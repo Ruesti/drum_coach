@@ -21,7 +21,8 @@ class ProgramSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
-  static const _durationOptions = [4, 8, 12];
+  static const _minWeeks = 1;
+  static const _maxWeeks = 24;
   static const _difficultyOptions = [
     Difficulty.beginner,
     Difficulty.intermediate,
@@ -39,9 +40,7 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
     // defaults.
     final existing = SettingsService.programConfig;
     _durationWeeks =
-        existing != null && _durationOptions.contains(existing.durationWeeks)
-            ? existing.durationWeeks
-            : 8;
+        existing?.durationWeeks.clamp(_minWeeks, _maxWeeks) ?? 8;
     _startDifficulty = existing != null &&
             _difficultyOptions.contains(existing.startDifficulty)
         ? existing.startDifficulty
@@ -61,17 +60,36 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
             subtitle: 'Wie viele Wochen soll dein Programm laufen?',
           ),
           const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
             children: [
-              for (final w in _durationOptions)
-                AppSelectableChip(
-                  label: '$w Wochen',
-                  selected: _durationWeeks == w,
-                  onTap: () => setState(() => _durationWeeks = w),
-                ),
+              Text('$_durationWeeks', style: AppTypography.display),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Wochen',
+                  style: AppTypography.label.copyWith(color: AppColors.textMuted)),
             ],
+          ),
+          Slider(
+            value: _durationWeeks.toDouble(),
+            min: _minWeeks.toDouble(),
+            max: _maxWeeks.toDouble(),
+            divisions: _maxWeeks - _minWeeks,
+            label: '$_durationWeeks Wochen',
+            onChanged: (v) => setState(() => _durationWeeks = v.round()),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('$_minWeeks',
+                    style: AppTypography.label.copyWith(color: AppColors.textFaint)),
+                Text('$_maxWeeks',
+                    style: AppTypography.label.copyWith(color: AppColors.textFaint)),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           const _SectionTitle(

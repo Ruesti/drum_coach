@@ -9,7 +9,9 @@ void main() {
   });
   test('pool labels', () {
     expect(ProgramPool.basicStrokes.label, 'Klassische Schlagübungen');
-    expect(ProgramPool.newExercises.label, 'Neue Übungen');
+    expect(ProgramPool.rudimentEtudes.label, 'Rudiment-Étüden');
+    expect(ProgramPool.techniqueStudies.label, 'Technik-Studien');
+    expect(ProgramPool.padWorkouts.label, 'Pad-Workouts');
     expect(ProgramPool.mixed.label, 'Gemischt');
   });
 }

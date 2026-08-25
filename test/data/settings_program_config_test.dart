@@ -12,11 +12,11 @@ void main() {
   test('config round-trips', () async {
     expect(SettingsService.programConfig, isNull);
     await SettingsService.setProgramConfig(const ProgramConfig(
-        durationWeeks: 8, startDifficulty: Difficulty.intermediate, pool: ProgramPool.newExercises));
+        durationWeeks: 8, startDifficulty: Difficulty.intermediate, pool: ProgramPool.padWorkouts));
     final c = SettingsService.programConfig!;
     expect(c.durationWeeks, 8);
     expect(c.startDifficulty, Difficulty.intermediate);
-    expect(c.pool, ProgramPool.newExercises);
+    expect(c.pool, ProgramPool.padWorkouts);
   });
   test('stage index round-trips + defaults to 0', () async {
     expect(SettingsService.programStageIndex, 0);

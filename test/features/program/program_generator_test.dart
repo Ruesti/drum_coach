@@ -21,7 +21,7 @@ void main() {
   group('programPoolExercises', () {
     test('pool filtering', () {
       expect(programPoolExercises(all, ProgramPool.basicStrokes).map((r) => r.id), ['base_b', 'base_i']);
-      expect(programPoolExercises(all, ProgramPool.newExercises).map((r) => r.id), ['etu_b', 'etu_a']);
+      expect(programPoolExercises(all, ProgramPool.rudimentEtudes).map((r) => r.id), ['etu_b', 'etu_a']);
       expect(programPoolExercises(all, ProgramPool.mixed).length, 4);
     });
   });
@@ -35,7 +35,7 @@ void main() {
 
   group('effectiveStages', () {
     test('skips empty tiers', () {
-      final pool = programPoolExercises(all, ProgramPool.newExercises); // beginner + advanced only
+      final pool = programPoolExercises(all, ProgramPool.rudimentEtudes); // beginner + advanced only
       expect(effectiveStages(pool, Difficulty.beginner),
           [Difficulty.beginner, Difficulty.advanced]); // intermediate + professional empty → skipped
     });
