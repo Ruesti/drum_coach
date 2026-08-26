@@ -43,7 +43,7 @@ class NotationStaffWidget extends StatefulWidget {
 }
 
 class _NotationStaffWidgetState extends State<NotationStaffWidget> {
-  static const _hPad = 8.0;
+  static const _hPad = 4.0;
   static const _vPad = 16.0;
 
   final _scrollController = ScrollController();
@@ -157,13 +157,13 @@ class _StaffPainter extends CustomPainter {
       activeIndex == null ? null : _layout.placements[activeIndex!].bar;
 
   // ── Layout metrics ────────────────────────────────────────────────────────
-  static const double _leftPad = 10;
-  static const double _rightPad = 14;
-  static const double _barGap = 14; // extra space after a barline
+  static const double _leftPad = 8;
+  static const double _rightPad = 12;
+  static const double _barGap = 12; // extra space after a barline
   static const double _rowH = 104;
 
   // Space reserved at the left of each system for the clef (+ time signature).
-  static const double _systemPad = 40;
+  static const double _systemPad = 26;
 
   // Five-line staff geometry.
   static const double _lineGap = 6; // vertical gap between adjacent staff lines
@@ -402,7 +402,7 @@ class _StaffPainter extends CustomPainter {
     final paint = Paint()..color = _inkColor.withValues(alpha: 0.85);
     final top = staffY - _lineGap * 1.3;
     final h = _lineGap * 2.6;
-    for (final bx in const [_leftPad + 14.0, _leftPad + 19.0]) {
+    for (final bx in const [_leftPad + 3.0, _leftPad + 8.0]) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(bx, top, 3.0, h),
@@ -415,7 +415,7 @@ class _StaffPainter extends CustomPainter {
 
   /// Time signature: [Rudiment.beatsPerBar] over 4 (quarter-note pulse).
   void _drawTimeSignature(Canvas canvas, double staffY) {
-    const x = _leftPad + 30.0;
+    const x = _leftPad + 18.0;
     _drawText(canvas, '${rudiment.beatsPerBar}', Offset(x, staffY - _lineGap),
         _inkColor, 15,
         bold: true);

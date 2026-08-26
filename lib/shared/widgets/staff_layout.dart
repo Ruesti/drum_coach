@@ -59,15 +59,32 @@ class StaffLayout {
 
 const int _ticksPerQuarter = 24; // integer layout math, matches PatternPlayback
 
+/// Minimum on-screen width (in px) a single note gets, so consecutive
+/// noteheads (≈12px wide) never visually merge into a solid bar — a fixed
+/// px-per-quarter floor let very fast pieces (32nd notes) collapse into an
+/// unreadable smear regardless of how sparse the rest of the piece was.
+const double _minNoteWidthPx = 9.0;
+
+/// The smallest note duration (in quarters) actually present in [beats], or
+/// `null` if there are no notes at all.
+double? _finestDurationQuarters(List<StrokeBeat> beats, NoteGrid grid) {
+  double? min;
+  for (final b in beats) {
+    final q = resolveNote(b, grid).quarters;
+    if (q > 0 && (min == null || q < min)) min = q;
+  }
+  return min;
+}
+
 StaffLayout computeStaffLayout({
   required List<StrokeBeat> beats,
   required NoteGrid grid,
   required int beatsPerBar,
   required double maxWidth,
-  double leftPad = 10,
-  double rightPad = 14,
-  double systemPad = 40,
-  double barGap = 14,
+  double leftPad = 8,
+  double rightPad = 12,
+  double systemPad = 26,
+  double barGap = 12,
   double preferredPxPerQuarter = 56,
   int targetBarsPerRow = 2,
 }) {
@@ -76,19 +93,30 @@ StaffLayout computeStaffLayout({
 
   double barWidthAt(double pxq) => beatsPerBar * pxq + barGap;
 
+  // Legibility floor derives from the piece's own fastest note — a 16th-note
+  // piece and a 32nd-note piece need very different minimums.
+  final finest = _finestDurationQuarters(beats, grid);
+  final minPxPerQuarter = finest == null ? 8.0 : _minNoteWidthPx / finest;
+
   // Rows are a fixed [targetBarsPerRow] bars wide — note width flexes to
   // fit, rather than note width staying fixed and the bar count per row
   // flexing. Matches printed sheet music: a consistent line length instead
   // of "however many bars happen to fit at a comfortable size".
   var barsPerRow = targetBarsPerRow;
-  const minPxPerQuarter = 8.0;
-  var pxPerQuarter =
-      ((usable / barsPerRow - barGap) / beatsPerBar).clamp(0.0, preferredPxPerQuarter);
+  var pxPerQuarter = (usable / barsPerRow - barGap) / beatsPerBar;
+  if (pxPerQuarter > preferredPxPerQuarter) pxPerQuarter = preferredPxPerQuarter;
   if (pxPerQuarter < minPxPerQuarter) {
-    // Even at the minimum readable size, [targetBarsPerRow] bars don't fit
-    // (very narrow viewport) — fall back to one bar per row.
+    // Even at the preferred size, [targetBarsPerRow] bars don't comfortably
+    // fit this piece's note density — fall back to one bar per row.
     barsPerRow = 1;
-    pxPerQuarter = ((usable - barGap) / beatsPerBar).clamp(minPxPerQuarter, preferredPxPerQuarter);
+    pxPerQuarter = (usable - barGap) / beatsPerBar;
+    if (pxPerQuarter > preferredPxPerQuarter) pxPerQuarter = preferredPxPerQuarter;
+    if (pxPerQuarter < minPxPerQuarter) {
+      // Extreme case (very fast notes on a narrow viewport, e.g. 32nd notes
+      // on a phone): legibility wins over fitting the viewport width — the
+      // row may need a hair more than [maxWidth] to stay readable.
+      pxPerQuarter = minPxPerQuarter;
+    }
   }
 
   final placements = <NotePlacement>[];

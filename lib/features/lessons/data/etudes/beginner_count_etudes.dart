@@ -2,17 +2,16 @@ import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
 
 /// Six short, self-contained beginner pieces (4 bars each) instead of one
-/// long list of unrelated 1-bar lines. Every piece uses a clear
-/// "Frage/Antwort" (question/answer) shape: bars 1–2 state a 2-bar idea
-/// that places an eighth-note group at one position in the bar, bars 3–4
-/// answer with the same idea at a different, complementary position — like
-/// a rhyme. Difficulty rises gently: pieces 1–2 use one eighth-group per
-/// bar, 3–4 use two, 5–6 add denser eighth-note coverage (piece 5) and an
-/// accent-driven syncopation "rhyme" (piece 6), while staying fully on the
-/// eighth-note grid so it's always easy to count. Sticking alternates
-/// strictly R/L within every bar, restarting on R each bar (like a new
-/// verse). Inspired by (not copied from) a beginner PDF the user provided
-/// under docs/Übungen/ (see docs/Übungen/README.md).
+/// long list of unrelated 1-bar lines. Every piece has one clear idea: an
+/// eighth-note group moves from one position in bars 1–2 to a different,
+/// related position in bars 3–4 (the same shape, just relocated) — never a
+/// random new pattern out of nowhere. Difficulty rises gently: pieces 1–2
+/// move one eighth-group per bar, 3–4 move two, 5–6 add denser eighth-note
+/// coverage (piece 5) and a moving accent (piece 6), while staying fully on
+/// the eighth-note grid so it's always easy to count. Sticking alternates
+/// strictly R/L within every bar, restarting on R each bar. Inspired by
+/// (not copied from) a beginner PDF the user provided under docs/Übungen/
+/// (see docs/Übungen/README.md).
 
 // --- 1-Achtelgruppe-pro-Takt Bausteine (5 Noten, R L R L R) ---------------
 
@@ -105,10 +104,10 @@ List<StrokeBeat> _fullEighthsAccent2and4() =>
 final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_pad_basics_1',
-    name: 'Grundlagen · Frage-Antwort I',
+    name: 'Grundlagen · Achtelgruppe 1→3',
     description:
-        'Frage (Takt 1–2): Achtelgruppe auf Zählzeit 1. Antwort (Takt 3–4): '
-        'dieselbe Idee auf Zählzeit 3 beantwortet — wie ein Reim.',
+        'Eine Achtelgruppe wandert von Zählzeit 1 (Takt 1–2) zu Zählzeit 3 '
+        '(Takt 3–4) — dieselbe Idee, nur an anderer Stelle im Takt.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grundlagen',
     difficulty: Difficulty.beginner,
@@ -124,10 +123,10 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_2',
-    name: 'Grundlagen · Frage-Antwort II',
+    name: 'Grundlagen · Achtelgruppe 2→4',
     description:
-        'Frage (Takt 1–2): Achtelgruppe auf Zählzeit 2. Antwort (Takt 3–4): '
-        'dieselbe Idee auf Zählzeit 4 beantwortet.',
+        'Eine Achtelgruppe wandert von Zählzeit 2 (Takt 1–2) zu Zählzeit 4 '
+        '(Takt 3–4).',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grundlagen',
     difficulty: Difficulty.beginner,
@@ -143,11 +142,10 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_3',
-    name: 'Grundlagen · Frage-Antwort III',
+    name: 'Grundlagen · Zwei Achtelgruppen springen',
     description:
-        'Frage (Takt 1–2): zwei Achtelgruppen auf den Off-Beat-Zählzeiten '
-        '1+3. Antwort (Takt 3–4): dieselbe Idee auf den On-Beat-Zählzeiten '
-        '2+4 beantwortet.',
+        'Zwei Achtelgruppen springen von den Zählzeiten 1+3 (Takt 1–2) zu '
+        'den Zählzeiten 2+4 (Takt 3–4).',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grundlagen',
     difficulty: Difficulty.beginner,
@@ -163,11 +161,10 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_4',
-    name: 'Grundlagen · Frage-Antwort IV',
+    name: 'Grundlagen · Vorne nach hinten',
     description:
-        'Frage (Takt 1–2): zwei Achtelgruppen vorne im Takt (Zählzeit 1+2). '
-        'Antwort (Takt 3–4): dieselbe Idee hinten im Takt (Zählzeit 3+4) '
-        'beantwortet.',
+        'Zwei Achtelgruppen wandern von vorne im Takt (Zählzeit 1+2, Takt '
+        '1–2) nach hinten (Zählzeit 3+4, Takt 3–4).',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grundlagen',
     difficulty: Difficulty.beginner,
@@ -183,11 +180,11 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_5',
-    name: 'Grundlagen · Frage-Antwort V',
+    name: 'Grundlagen · Kadenz wandert',
     description:
-        'Frage (Takt 1–2): durchgehende Achtel mit Viertel-Kadenz am '
-        'Taktende (Zählzeit 4). Antwort (Takt 3–4): dieselbe Achtel-Kadenz '
-        'an den Taktanfang (Zählzeit 1) verschoben.',
+        'Durchgehende Achtel mit einer Viertel-Kadenz, die vom Taktende '
+        '(Zählzeit 4, Takt 1–2) an den Taktanfang (Zählzeit 1, Takt 3–4) '
+        'wandert.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grundlagen',
     difficulty: Difficulty.beginner,
@@ -203,12 +200,10 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_6',
-    name: 'Grundlagen · Frage-Antwort VI',
+    name: 'Grundlagen · Wandernder Akzent',
     description:
-        'Frage (Takt 1–2): durchgehende Achtel mit Akzent auf dem Off-Beat '
-        'von Zählzeit 1 und 3. Antwort (Takt 3–4): dieselbe Idee mit Akzent '
-        'auf dem Off-Beat von Zählzeit 2 und 4 beantwortet — ein '
-        'Synkopen-Reim.',
+        'Durchgehende Achtel, deren Akzent auf dem Zwischenschlag von '
+        'Zählzeit 1+3 (Takt 1–2) zu Zählzeit 2+4 (Takt 3–4) wandert.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grundlagen',
     difficulty: Difficulty.beginner,

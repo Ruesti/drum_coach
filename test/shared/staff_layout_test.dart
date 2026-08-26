@@ -64,6 +64,18 @@ void main() {
       expect(layout.barsPerRow, 1);
     });
 
+    test('keeps 32nd notes from visually merging by widening past the '
+        'preferred size when needed, instead of a flat width floor', () {
+      final fastBeats = List.generate(
+          32, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.thirtySecond));
+      final layout = computeStaffLayout(
+        beats: fastBeats, grid: NoteGrid.thirtySecond, beatsPerBar: 4, maxWidth: 360,
+      );
+      // A 32nd note spans pxPerQuarter/8 — must stay well above a single
+      // pixel (the old fixed 8px-per-quarter floor let 32nds collapse).
+      expect(layout.pxPerQuarter / 8, greaterThan(6.0));
+    });
+
     test('splits bars across rows when barsPerRow > 1', () {
       final beats = List.generate(
           16, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
@@ -75,7 +87,7 @@ void main() {
       expect(layout.placements[4].row, 0); // bar 1
       expect(layout.placements[8].row, 1); // bar 2
       final dx = layout.placements[4].xCenter - layout.placements[0].xCenter;
-      expect(dx, closeTo(4 * layout.pxPerQuarter + 14, 0.001)); // one bar width
+      expect(dx, closeTo(4 * layout.pxPerQuarter + 12, 0.001)); // one bar width (barGap)
     });
   });
 

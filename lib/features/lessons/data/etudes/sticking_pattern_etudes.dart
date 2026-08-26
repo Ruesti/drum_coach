@@ -1,21 +1,27 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
 
-/// Swap every hand in [hands] (R↔L) — used to build the mirrored second
-/// half of each 4-bar sticking étude below.
+/// Swap every hand in [hands] (R↔L) — used to build the mirrored half of
+/// each sticking étude below.
 List<Hand> _mirror(List<Hand> hands) =>
     hands.map((h) => h == R ? L : R).toList();
 
-/// Six short (4-bar) sticking studies, each built from one 8-note eighth-note
-/// motif with a clear inner structure instead of a loose chain of unrelated
-/// one-bar patterns:
-///   bar 1  motif
-///   bar 2  motif repeated (festigen)
-///   bar 3  motif mirrored (R<->L getauscht)
-///   bar 4  mirrored motif repeated (Abschluss/Symmetrie)
-/// Straight eighth notes throughout, no accents/ghosts — pure hand-sequence
-/// drilling for the pad. #1-3 use an even 4:4 R/L split (beginner); #4-6
-/// step up to asymmetric 5:3 / 3:5 splits (intermediate).
+/// Double every stroke (R L → R R L L) — turns the 8-note eighth-note motif
+/// into a 16-note sixteenth-note motif for the "verdichtet" second half:
+/// same hand sequence, doubled into rudimental doubles instead of singles.
+List<Hand> _double(List<Hand> hands) =>
+    hands.expand((h) => [h, h]).toList();
+
+/// Six 8-bar sticking studies, each built from ONE 8-note motif developed
+/// over the whole piece instead of a chain of unrelated one-bar patterns:
+///   bar 1-2  motif, played twice (eighths)
+///   bar 3-4  the motif mirrored (R<->L getauscht), played twice
+///   bar 5-6  the SAME motif densified into doubles (sixteenths), twice
+///   bar 7-8  the densified motif mirrored, played twice
+/// One idea, carried through in two dynamics (singles → doubles) instead of
+/// switching to a new, unrelated figure every bar. #1-3 use an even 4:4 R/L
+/// split (beginner); #4-6 step up to asymmetric 5:3 / 3:5 splits
+/// (intermediate).
 final List<Rudiment> stickingPatternEtudes = <Rudiment>[
   () {
     const motif = [R, L, L, R, L, R, R, L]; // 4:4
@@ -23,22 +29,23 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
       id: 'etude_pad_sticking_1',
       name: 'Sticking-Studie 1',
       description:
-          'Motiv R L L R L R R L, wiederholt, dann gespiegelt und die '
-          'Spiegelung wiederholt — eine kleine 4-Takt-Studie statt loser '
-          'Handsatz-Häppchen.',
+          'Motiv R L L R L R R L: erst als Einzelschläge gespielt und '
+          'gespiegelt, dann dasselbe Motiv als Doppelschläge verdichtet und '
+          'wieder gespiegelt — eine 8-Takt-Studie mit rotem Faden statt '
+          'loser Handsatz-Häppchen.',
       collection: ExerciseCollection.padWorkouts,
       collectionGroup: 'Sticking-Patterns',
       difficulty: Difficulty.beginner,
       minBpm: 70,
       targetBpm: 110,
-      gridUnit: NoteGrid.eighth,
+      gridUnit: NoteGrid.sixteenth,
       beatsPerBar: 4,
       skills: {Skill.coordination, Skill.control},
       sticking: [
-        ...eighths(motif),
-        ...eighths(motif),
-        ...eighths(_mirror(motif)),
-        ...eighths(_mirror(motif)),
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
       ],
     );
   }(),
@@ -48,21 +55,21 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
       id: 'etude_pad_sticking_2',
       name: 'Sticking-Studie 2',
       description:
-          'Motiv L R R L L R L R, wiederholt, dann gespiegelt und die '
-          'Spiegelung wiederholt.',
+          'Motiv L R R L L R L R: erst als Einzelschläge, dann als '
+          'Doppelschläge verdichtet — jeweils gespiegelt wiederholt.',
       collection: ExerciseCollection.padWorkouts,
       collectionGroup: 'Sticking-Patterns',
       difficulty: Difficulty.beginner,
       minBpm: 70,
       targetBpm: 115,
-      gridUnit: NoteGrid.eighth,
+      gridUnit: NoteGrid.sixteenth,
       beatsPerBar: 4,
       skills: {Skill.coordination, Skill.control},
       sticking: [
-        ...eighths(motif),
-        ...eighths(motif),
-        ...eighths(_mirror(motif)),
-        ...eighths(_mirror(motif)),
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
       ],
     );
   }(),
@@ -72,21 +79,21 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
       id: 'etude_pad_sticking_3',
       name: 'Sticking-Studie 3',
       description:
-          'Motiv R R L R L L R L, wiederholt, dann gespiegelt und die '
-          'Spiegelung wiederholt.',
+          'Motiv R R L R L L R L: erst als Einzelschläge, dann als '
+          'Doppelschläge verdichtet — jeweils gespiegelt wiederholt.',
       collection: ExerciseCollection.padWorkouts,
       collectionGroup: 'Sticking-Patterns',
       difficulty: Difficulty.beginner,
       minBpm: 75,
       targetBpm: 120,
-      gridUnit: NoteGrid.eighth,
+      gridUnit: NoteGrid.sixteenth,
       beatsPerBar: 4,
       skills: {Skill.coordination, Skill.control},
       sticking: [
-        ...eighths(motif),
-        ...eighths(motif),
-        ...eighths(_mirror(motif)),
-        ...eighths(_mirror(motif)),
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
       ],
     );
   }(),
@@ -96,21 +103,22 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
       id: 'etude_pad_sticking_4',
       name: 'Sticking-Studie 4',
       description:
-          'Asymmetrisches Motiv R R L R R L L R (5:3), wiederholt, dann '
-          'gespiegelt und die Spiegelung wiederholt.',
+          'Asymmetrisches Motiv R R L R R L L R (5:3): erst als '
+          'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
+          'gespiegelt wiederholt.',
       collection: ExerciseCollection.padWorkouts,
       collectionGroup: 'Sticking-Patterns',
       difficulty: Difficulty.intermediate,
       minBpm: 90,
       targetBpm: 130,
-      gridUnit: NoteGrid.eighth,
+      gridUnit: NoteGrid.sixteenth,
       beatsPerBar: 4,
       skills: {Skill.coordination, Skill.control},
       sticking: [
-        ...eighths(motif),
-        ...eighths(motif),
-        ...eighths(_mirror(motif)),
-        ...eighths(_mirror(motif)),
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
       ],
     );
   }(),
@@ -120,21 +128,22 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
       id: 'etude_pad_sticking_5',
       name: 'Sticking-Studie 5',
       description:
-          'Asymmetrisches Motiv L R R L R L R R (5:3), wiederholt, dann '
-          'gespiegelt und die Spiegelung wiederholt.',
+          'Asymmetrisches Motiv L R R L R L R R (5:3): erst als '
+          'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
+          'gespiegelt wiederholt.',
       collection: ExerciseCollection.padWorkouts,
       collectionGroup: 'Sticking-Patterns',
       difficulty: Difficulty.intermediate,
       minBpm: 95,
       targetBpm: 135,
-      gridUnit: NoteGrid.eighth,
+      gridUnit: NoteGrid.sixteenth,
       beatsPerBar: 4,
       skills: {Skill.coordination, Skill.control},
       sticking: [
-        ...eighths(motif),
-        ...eighths(motif),
-        ...eighths(_mirror(motif)),
-        ...eighths(_mirror(motif)),
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
       ],
     );
   }(),
@@ -144,21 +153,22 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
       id: 'etude_pad_sticking_6',
       name: 'Sticking-Studie 6',
       description:
-          'Asymmetrisches Motiv R L L R L L R L (3:5), wiederholt, dann '
-          'gespiegelt und die Spiegelung wiederholt.',
+          'Asymmetrisches Motiv R L L R L L R L (3:5): erst als '
+          'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
+          'gespiegelt wiederholt.',
       collection: ExerciseCollection.padWorkouts,
       collectionGroup: 'Sticking-Patterns',
       difficulty: Difficulty.intermediate,
       minBpm: 100,
       targetBpm: 140,
-      gridUnit: NoteGrid.eighth,
+      gridUnit: NoteGrid.sixteenth,
       beatsPerBar: 4,
       skills: {Skill.coordination, Skill.control},
       sticking: [
-        ...eighths(motif),
-        ...eighths(motif),
-        ...eighths(_mirror(motif)),
-        ...eighths(_mirror(motif)),
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
       ],
     );
   }(),
