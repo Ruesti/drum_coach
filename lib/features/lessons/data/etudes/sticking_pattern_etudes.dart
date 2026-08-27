@@ -27,7 +27,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [R, L, L, R, L, R, R, L]; // 4:4
     return Rudiment(
       id: 'etude_pad_sticking_1',
-      name: 'Sticking-Studie 1',
+      name: 'Kreuzmuster',
       description:
           'Motiv R L L R L R R L: erst als Einzelschläge gespielt und '
           'gespiegelt, dann dasselbe Motiv als Doppelschläge verdichtet und '
@@ -53,7 +53,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [L, R, R, L, L, R, L, R]; // 4:4
     return Rudiment(
       id: 'etude_pad_sticking_2',
-      name: 'Sticking-Studie 2',
+      name: 'Wellenmuster',
       description:
           'Motiv L R R L L R L R: erst als Einzelschläge, dann als '
           'Doppelschläge verdichtet — jeweils gespiegelt wiederholt.',
@@ -77,7 +77,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [R, R, L, R, L, L, R, L]; // 4:4
     return Rudiment(
       id: 'etude_pad_sticking_3',
-      name: 'Sticking-Studie 3',
+      name: 'Doppel-Wechsel',
       description:
           'Motiv R R L R L L R L: erst als Einzelschläge, dann als '
           'Doppelschläge verdichtet — jeweils gespiegelt wiederholt.',
@@ -101,7 +101,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [R, R, L, R, R, L, L, R]; // 5 R : 3 L
     return Rudiment(
       id: 'etude_pad_sticking_4',
-      name: 'Sticking-Studie 4',
+      name: 'Rechts-Schwerpunkt',
       description:
           'Asymmetrisches Motiv R R L R R L L R (5:3): erst als '
           'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
@@ -126,7 +126,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [L, R, R, L, R, L, R, R]; // 5 R : 3 L
     return Rudiment(
       id: 'etude_pad_sticking_5',
-      name: 'Sticking-Studie 5',
+      name: 'Rechts-Fluss',
       description:
           'Asymmetrisches Motiv L R R L R L R R (5:3): erst als '
           'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
@@ -151,7 +151,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [R, L, L, R, L, L, R, L]; // 3 R : 5 L
     return Rudiment(
       id: 'etude_pad_sticking_6',
-      name: 'Sticking-Studie 6',
+      name: 'Links-Schwerpunkt',
       description:
           'Asymmetrisches Motiv R L L R L L R L (3:5): erst als '
           'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '

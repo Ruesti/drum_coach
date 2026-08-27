@@ -103,11 +103,11 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_solo_2',
-    name: 'Pad-Solo · Frage & Antwort',
+    name: 'Pad-Solo · Achtel trifft Sechzehntel',
     description:
-        'Achtel-"Frage" beantwortet von einer 16tel-"Antwort", zweimal '
-        'durchlaufen mit wechselnder Führungshand, Schluss mit Roll-Fill '
-        'und Kadenz.',
+        'Eine Achtel-Idee wird von einer schnelleren 16tel-Version '
+        'beantwortet, zweimal durchlaufen mit wechselnder Führungshand, '
+        'Schluss mit Roll-Fill und Kadenz.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Pad-Solo',
     difficulty: Difficulty.intermediate,
@@ -203,11 +203,11 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_solo_6',
-    name: 'Pad-Solo · Call & Response',
+    name: 'Pad-Solo · Zuruf & Echo',
     description:
-        'Ein Vierteln-Ruf wird von einer 16tel-Antwort beantwortet, dreimal '
-        'variiert (Führungshand, Akzentposition), bevor das große Finale mit '
-        'zwei Roll-Fills schließt.',
+        'Ein Viertel-Zuruf bekommt jedes Mal eine schnellere 16tel-Antwort, '
+        'dreimal variiert (Führungshand, Akzentposition), bevor das große '
+        'Finale mit zwei Roll-Fills schließt.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Pad-Solo',
     difficulty: Difficulty.advanced,
