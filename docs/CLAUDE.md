@@ -1,8 +1,10 @@
 # DrumCoach – Claude Code Context
 
 ## Project Overview
-Android app for training and improving drum rudiments on a practice pad.
-Flutter, Android-first. iOS support may follow later.
+App for training and improving drum rudiments on a practice pad.
+Flutter. Android + Desktop (Windows/macOS/Linux) are supported core-flow
+targets (see docs/superpowers/specs/2026-08-31-desktop-expansion-roadmap.md);
+AI coaching remains mobile-only for now. iOS may follow later.
 
 ## Core Features
 1. **Metronome** – BPM slider, tap tempo, subdivisions, accent patterns, visual beat indicator
