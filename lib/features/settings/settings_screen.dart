@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/platform_support.dart';
 import '../../data/local/settings_service.dart';
 import '../../services/notification_service.dart';
 import '../../shared/widgets/app_badge.dart';
@@ -132,87 +133,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 28),
 
-          // ── AI Coaching ────────────────────────────────────────────────
-          _SectionLabel('AI COACHING'),
-          const SizedBox(height: 10),
-          _SettingsTile(
-            icon: Icons.mic_outlined,
-            title: 'Mikrofon-Analyse',
-            subtitle: 'Misst Timing & Dynamik während der Session',
-            value: _micEnabled,
-            onChanged: _setMicEnabled,
-          ),
-          const SizedBox(height: 12),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Claude API Key',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Get a key at console.anthropic.com',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 11),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _apiKeyController,
-                  obscureText: _apiKeyObscured,
-                  style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
-                  decoration: InputDecoration(
-                    hintText: 'sk-ant-…',
-                    hintStyle: const TextStyle(color: AppColors.textFaint),
-                    filled: true,
-                    fillColor: AppColors.inset,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _apiKeyObscured ? Icons.visibility_off : Icons.visibility,
-                        color: AppColors.textMuted,
-                        size: 18,
+          // ── AI Coaching (mobile-only in Phase 1) ─────────────────────────
+          if (aiCoachingAvailable) ...[
+            _SectionLabel('AI COACHING'),
+            const SizedBox(height: 10),
+            _SettingsTile(
+              icon: Icons.mic_outlined,
+              title: 'Mikrofon-Analyse',
+              subtitle: 'Misst Timing & Dynamik während der Session',
+              value: _micEnabled,
+              onChanged: _setMicEnabled,
+            ),
+            const SizedBox(height: 12),
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Claude API Key',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Get a key at console.anthropic.com',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _apiKeyController,
+                    obscureText: _apiKeyObscured,
+                    style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
+                    decoration: InputDecoration(
+                      hintText: 'sk-ant-…',
+                      hintStyle: const TextStyle(color: AppColors.textFaint),
+                      filled: true,
+                      fillColor: AppColors.inset,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
                       ),
-                      onPressed: () =>
-                          setState(() => _apiKeyObscured = !_apiKeyObscured),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _apiKeyObscured ? Icons.visibility_off : Icons.visibility,
+                          color: AppColors.textMuted,
+                          size: 18,
+                        ),
+                        onPressed: () =>
+                            setState(() => _apiKeyObscured = !_apiKeyObscured),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: _saveApiKey,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accent,
-                      side: const BorderSide(color: AppColors.accent),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: _saveApiKey,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.accent,
+                        side: const BorderSide(color: AppColors.accent),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      child: const Text('Save API Key'),
                     ),
-                    child: const Text('Save API Key'),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          AppCard(
-            padding: EdgeInsets.zero,
-            onTap: () => context.push('/coaching/exercise-generator'),
-            child: ListTile(
-              leading: const Icon(Icons.auto_awesome, color: AppColors.textMuted),
-              title: const Text('Exercise Generator',
-                  style: TextStyle(fontSize: 14)),
-              subtitle: const Text('AI-generated custom patterns',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-              trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            const SizedBox(height: 10),
+            AppCard(
+              padding: EdgeInsets.zero,
+              onTap: () => context.push('/coaching/exercise-generator'),
+              child: ListTile(
+                leading: const Icon(Icons.auto_awesome, color: AppColors.textMuted),
+                title: const Text('Exercise Generator',
+                    style: TextStyle(fontSize: 14)),
+                subtitle: const Text('AI-generated custom patterns',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
+          ],
           AppCard(
             padding: EdgeInsets.zero,
             onTap: _resetOnboarding,
