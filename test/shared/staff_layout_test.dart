@@ -31,6 +31,39 @@ void main() {
     });
   });
 
+  group('computeStaffLayout — fills width for short patterns', () {
+    test('grows pxPerQuarter beyond preferred when a single bar has room to spare', () {
+      final beats =
+          List.generate(4, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 400,
+      );
+      expect(layout.rowCount, 1);
+      expect(layout.pxPerQuarter, greaterThan(56));
+    });
+
+    test('does not grow past maxPxPerQuarter on very wide panels', () {
+      final beats =
+          List.generate(4, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 3000,
+        maxPxPerQuarter: 110,
+      );
+      expect(layout.pxPerQuarter, 110);
+    });
+
+    test('does not grow a full row (matches preferred px)', () {
+      final beats =
+          List.generate(8, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
+      final layout = computeStaffLayout(
+        // usable width sized so exactly 2 bars fit per row at the preferred size
+        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 540,
+      );
+      expect(layout.barsPerRow, 2);
+      expect(layout.pxPerQuarter, 56);
+    });
+  });
+
   group('computeStaffLayout — wrapping', () {
     // 4 bars of quarters on a narrow canvas => multiple rows, whole bars only.
     final beats =

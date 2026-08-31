@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/local/settings_service.dart';
@@ -11,6 +12,7 @@ import '../features/lessons/models/rudiment.dart';
 import '../features/metronome/metronome_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/practice/practice_session_screen.dart';
+import '../features/practice/session_timer_provider.dart';
 import '../features/program/program_screen.dart';
 import '../features/program/program_setup_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
@@ -52,6 +54,7 @@ final router = GoRouter(
                 builder: (_, state) => PracticeSessionScreen(
                   rudimentId: state.pathParameters['rudimentId']!,
                   isFromRoutine: true,
+                  targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
                 ),
               ),
             ],
@@ -125,21 +128,29 @@ final router = GoRouter(
   ],
 );
 
-class _ScaffoldWithNavBar extends StatelessWidget {
+class _ScaffoldWithNavBar extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const _ScaffoldWithNavBar({required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        ),
+        onTap: (index) {
+          // Returning to the Dashboard ends the current training session —
+          // reset the cross-exercise session timer so the next one starts
+          // from zero instead of carrying over.
+          if (index == 0 && navigationShell.currentIndex != 0) {
+            ref.read(sessionTimerNotifierProvider.notifier).reset();
+          }
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),

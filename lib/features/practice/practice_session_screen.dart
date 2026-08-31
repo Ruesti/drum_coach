@@ -4,21 +4,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
 import '../../shared/widgets/app_badge.dart';
 import '../../shared/widgets/beat_indicator.dart';
+import '../../shared/widgets/bpm_control.dart';
 import '../../shared/widgets/notation_staff_widget.dart';
 import '../coaching/models/session_analysis.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
 import '../coaching/widgets/coach_feedback_card.dart';
+import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import 'practice_provider.dart';
+import 'session_timer_provider.dart';
+
+String _formatDuration(int seconds) {
+  final m = seconds ~/ 60;
+  final s = seconds % 60;
+  return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+}
 
 class PracticeSessionScreen extends ConsumerStatefulWidget {
   final String rudimentId;
@@ -67,6 +77,8 @@ class _PracticeSessionScreenState
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
+    ref.read(sessionTimerNotifierProvider.notifier).startIfNeeded();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
     _playback = PatternPlayback.forRudiment(
         ref.read(rudimentByIdProvider(widget.rudimentId)));
@@ -91,6 +103,7 @@ class _PracticeSessionScreenState
 
   @override
   void dispose() {
+    WakelockPlus.disable();
     _ticker?.cancel();
     // Deferred: Riverpod forbids modifying provider state synchronously
     // during a widget tree teardown (dispose runs mid-build/mid-unmount).
@@ -141,10 +154,7 @@ class _PracticeSessionScreenState
     final remaining = _goalSeconds != null
         ? (_goalSeconds! - _elapsedSeconds).clamp(0, _goalSeconds!)
         : null;
-    final seconds = remaining ?? _elapsedSeconds;
-    final m = seconds ~/ 60;
-    final s = seconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    return _formatDuration(remaining ?? _elapsedSeconds);
   }
 
   Future<void> _showRatingSheet() async {
@@ -221,6 +231,7 @@ class _PracticeSessionScreenState
     final rudiment = ref.watch(rudimentByIdProvider(widget.rudimentId));
     final metState = ref.watch(metronomeNotifierProvider);
     final notifier = ref.read(metronomeNotifierProvider.notifier);
+    final sessionSeconds = ref.watch(sessionTimerNotifierProvider);
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
       // Record beat timestamps for mic correlation
@@ -257,6 +268,17 @@ class _PracticeSessionScreenState
       appBar: AppBar(
         title: Text(rudiment.name),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'Erklärung anzeigen',
+            // A plain Navigator push, not context.push('/lessons/...') — this
+            // screen lives on the top-level /practice route (outside the
+            // bottom-nav shell, see router.dart), and pushing a shell-branch
+            // route from there previously caused a duplicate-page-key crash.
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => LessonDetailScreen(rudimentId: widget.rudimentId),
+            )),
+          ),
           if (SettingsService.micAnalysisEnabled)
             Padding(
               padding: const EdgeInsets.only(right: 4),
@@ -269,19 +291,32 @@ class _PracticeSessionScreenState
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
-              child: Row(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  if (isCountdown)
-                    const Icon(Icons.timer_outlined,
-                        size: 16, color: AppColors.textMuted),
-                  if (isCountdown) const SizedBox(width: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isCountdown)
+                        const Icon(Icons.timer_outlined,
+                            size: 16, color: AppColors.textMuted),
+                      if (isCountdown) const SizedBox(width: 4),
+                      Text(
+                        _timerLabel,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: timerColor,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
                   Text(
-                    _timerLabel,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: timerColor,
+                    'Session ${_formatDuration(sessionSeconds)}',
+                    style: AppTypography.label.copyWith(
+                      color: AppColors.textFaint,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
@@ -421,10 +456,34 @@ class _CompactMetronome extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text('$bpm', style: AppTypography.display),
-              const SizedBox(width: 4),
-              Text('BPM', style: AppTypography.label.copyWith(color: AppColors.textMuted)),
-              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    final value = await editBpmDialog(context, current: bpm);
+                    if (value != null) onBpmChanged(value);
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('$bpm', style: AppTypography.display),
+                      const SizedBox(width: 4),
+                      Text('BPM',
+                          style: AppTypography.label
+                              .copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              BpmStepButtons(
+                bpm: bpm,
+                onChanged: onBpmChanged,
+                alignment: MainAxisAlignment.start,
+              ),
               Expanded(
                 child: Slider(
                   value: bpm.toDouble(),

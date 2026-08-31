@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
 import '../../shared/widgets/app_badge.dart';
+import '../learning/suggested_bpm_provider.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
 import 'rudiment_filter.dart';
@@ -156,12 +157,12 @@ class _EmptyFilterState extends StatelessWidget {
   }
 }
 
-class _RudimentTile extends StatelessWidget {
+class _RudimentTile extends ConsumerWidget {
   final Rudiment rudiment;
   const _RudimentTile({required this.rudiment});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       title: Text(
@@ -181,11 +182,20 @@ class _RudimentTile extends StatelessWidget {
             label: rudiment.difficulty.label,
             color: rudiment.difficulty.color,
           ),
-          const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, color: AppColors.textFaint),
+          IconButton(
+            icon: const Icon(Icons.info_outline, color: AppColors.textFaint),
+            tooltip: 'Erklärung anzeigen',
+            onPressed: () => context.push('/lessons/${rudiment.id}'),
+          ),
         ],
       ),
-      onTap: () => context.push('/lessons/${rudiment.id}'),
+      // Straight into practice, matching the Routine/Program entry points —
+      // the explanation is available on demand via the info button above
+      // instead of forced before every start.
+      onTap: () async {
+        final bpm = await ref.read(suggestedBpmProvider(rudiment.id).future);
+        if (context.mounted) context.push('/practice/${rudiment.id}?bpm=$bpm');
+      },
     );
   }
 }

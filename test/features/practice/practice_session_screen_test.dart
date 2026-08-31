@@ -58,5 +58,11 @@ void main() {
     // Let the postFrameCallback (metronome clock/volume setup) run too.
     await tester.pump();
     expect(tester.takeException(), isNull);
+
+    // Dispose before the test ends, not just via addTearDown — the session
+    // timer's real Timer.periodic (started in initState) must be cancelled
+    // inside the test body, or flutter_test's "no pending timers" invariant
+    // check (which runs before tearDowns) fails.
+    container.dispose();
   });
 }

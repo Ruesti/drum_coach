@@ -38,6 +38,22 @@ class BeatEvent {
   });
 }
 
+/// Playback volume for tick [index]: from the per-tick pattern array if one
+/// is set, otherwise a flat accent/normal volume. A tick with volume 0 is
+/// silent — no sound, and (per [MetronomeEngine._onBeat]) no [BeatEvent], so
+/// grid-filler ticks in fine-grained pattern playback don't drive the UI's
+/// beat indicator. Pure so it's unit-testable without SoLoud/isolates.
+double resolveTickVolume({
+  required List<double>? beatVolumes,
+  required int index,
+  required bool isAccent,
+}) {
+  if (beatVolumes != null && beatVolumes.isNotEmpty) {
+    return beatVolumes[index % beatVolumes.length];
+  }
+  return isAccent ? 2.0 : 0.7;
+}
+
 // ── Timing isolate ────────────────────────────────────────────────────────────
 // Runs in its own isolate so Flutter's UI frame schedule cannot delay beats.
 //
@@ -194,15 +210,14 @@ class MetronomeEngine {
   void _onBeat(int index, bool isAccent) {
     if (!_isPlaying || _disposed) return;
 
-    final double volume;
-    final bool useAccentSrc;
-    if (_beatVolumes != null && _beatVolumes!.isNotEmpty) {
-      volume       = _beatVolumes![index % _beatVolumes!.length];
-      useAccentSrc = volume >= 1.2;
-    } else {
-      useAccentSrc = isAccent;
-      volume       = isAccent ? 2.0 : 0.7;
-    }
+    final volume = resolveTickVolume(
+      beatVolumes: _beatVolumes,
+      index: index,
+      isAccent: isAccent,
+    );
+    final useAccentSrc = _beatVolumes != null && _beatVolumes!.isNotEmpty
+        ? volume >= 1.2
+        : isAccent;
 
     final source = switch ((_soundType, useAccentSrc)) {
       (SoundType.click, true)  => _clickAccent,
@@ -213,7 +228,9 @@ class MetronomeEngine {
       (SoundType.snare, false) => _snareNormal,
     };
 
-    if (volume > 0 && source != null && SoLoud.instance.isInitialized) {
+    if (volume <= 0) return; // silent grid tick — no sound, no UI trigger
+
+    if (source != null && SoLoud.instance.isInitialized) {
       SoLoud.instance.play(source, volume: volume).ignore();
     }
 

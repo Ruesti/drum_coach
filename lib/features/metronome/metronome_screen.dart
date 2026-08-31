@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../app/design_tokens.dart';
 import '../../shared/widgets/app_badge.dart';
 import '../../shared/widgets/beat_indicator.dart';
+import '../../shared/widgets/bpm_control.dart';
 import 'metronome_engine.dart';
 import 'metronome_provider.dart';
 
@@ -24,11 +26,13 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
   }
 
   @override
   void dispose() {
+    WakelockPlus.disable();
     // Deferred: Riverpod forbids modifying provider state synchronously
     // during a widget tree teardown (dispose runs mid-build/mid-unmount).
     Future.microtask(_metronomeNotifier.stop);
@@ -57,8 +61,16 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                 beatNumber: state.currentBeatIndex + 1,
               ),
               const SizedBox(height: 32),
-              _BpmDisplay(bpm: state.bpm),
-              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () async {
+                  final value = await editBpmDialog(context, current: state.bpm);
+                  if (value != null) notifier.setBpm(value);
+                },
+                child: _BpmDisplay(bpm: state.bpm),
+              ),
+              const SizedBox(height: 12),
+              BpmStepButtons(bpm: state.bpm, onChanged: notifier.setBpm),
+              const SizedBox(height: 8),
               _BpmSlider(
                 bpm: state.bpm,
                 onChanged: notifier.setBpm,
