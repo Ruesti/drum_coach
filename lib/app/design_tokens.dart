@@ -52,6 +52,14 @@ class AppSpacing {
   static const cardPadding = 16.0;
 }
 
+/// Layout limits. On large (desktop) windows the phone-first UI is capped to
+/// this width and centered, so it never stretches into an unreadable column.
+class AppLayout {
+  AppLayout._();
+
+  static const maxContentWidth = 560.0;
+}
+
 class AppRadius {
   AppRadius._();
 
