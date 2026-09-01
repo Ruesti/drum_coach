@@ -69,6 +69,7 @@ class _PracticeSessionScreenState
   /// Captured in [initState] because `ref` is unsafe to read fresh inside
   /// [dispose] — by then the widget's Element may already be torn down.
   late final MetronomeNotifier _metronomeNotifier;
+  late final SessionTimerNotifier _sessionTimerNotifier;
 
   /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
   /// metronome's per-tick volumes and map the playback cursor to a note.
@@ -78,8 +79,8 @@ class _PracticeSessionScreenState
   void initState() {
     super.initState();
     WakelockPlus.enable();
-    ref.read(sessionTimerNotifierProvider.notifier).startIfNeeded();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
+    _sessionTimerNotifier = ref.read(sessionTimerNotifierProvider.notifier);
     _playback = PatternPlayback.forRudiment(
         ref.read(rudimentByIdProvider(widget.rudimentId)));
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -105,6 +106,11 @@ class _PracticeSessionScreenState
   void dispose() {
     WakelockPlus.disable();
     _ticker?.cancel();
+    // Leaving the screen while playing (e.g. backing out mid-exercise) never
+    // fires the ref.listen isPlaying transition below — that listener is
+    // gone the moment this widget is disposed — so the session timer would
+    // otherwise keep ticking forever with nothing left to pause it.
+    _sessionTimerNotifier.pause();
     // Deferred: Riverpod forbids modifying provider state synchronously
     // during a widget tree teardown (dispose runs mid-build/mid-unmount).
     Future.microtask(() {
@@ -249,8 +255,10 @@ class _PracticeSessionScreenState
       if (next.isPlaying && !(prev?.isPlaying ?? false)) {
         _startTicker();
         _startMicRecording();
+        _sessionTimerNotifier.resume();
       } else if (!next.isPlaying && (prev?.isPlaying ?? false)) {
         _stopTicker();
+        _sessionTimerNotifier.pause();
       }
     });
 
@@ -310,11 +318,17 @@ class _PracticeSessionScreenState
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.timelapse,
+                      size: 16, color: AppColors.textMuted),
+                  const SizedBox(width: 4),
                   Text(
-                    '  ·  Session ${_formatDuration(sessionSeconds)}',
-                    style: AppTypography.label.copyWith(
-                      color: AppColors.textFaint,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                    _formatDuration(sessionSeconds),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                      fontFeatures: [FontFeature.tabularFigures()],
                     ),
                   ),
                 ],
