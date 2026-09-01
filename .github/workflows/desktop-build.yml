@@ -11,7 +11,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          # Pinned to 22.04 (not ubuntu-latest/24.04) so the built binary links
+          # against an older GLib and stays runnable on Ubuntu 22.04 machines;
+          # binaries built on 24.04 fail on 22.04 with an undefined GLib symbol
+          # (g_once_init_enter_pointer, added in GLib 2.80).
+          - os: ubuntu-22.04
             target: linux
           - os: windows-latest
             target: windows
