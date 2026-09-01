@@ -291,30 +291,27 @@ class _PracticeSessionScreenState
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
-              child: Column(
+              // Single row, not stacked — a two-line Column here silently
+              // clipped against the AppBar's fixed toolbar height, making
+              // the session timer invisible on-device.
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isCountdown)
-                        const Icon(Icons.timer_outlined,
-                            size: 16, color: AppColors.textMuted),
-                      if (isCountdown) const SizedBox(width: 4),
-                      Text(
-                        _timerLabel,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: timerColor,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
+                  if (isCountdown)
+                    const Icon(Icons.timer_outlined,
+                        size: 16, color: AppColors.textMuted),
+                  if (isCountdown) const SizedBox(width: 4),
+                  Text(
+                    _timerLabel,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: timerColor,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
                   Text(
-                    'Session ${_formatDuration(sessionSeconds)}',
+                    '  ·  Session ${_formatDuration(sessionSeconds)}',
                     style: AppTypography.label.copyWith(
                       color: AppColors.textFaint,
                       fontFeatures: const [FontFeature.tabularFigures()],

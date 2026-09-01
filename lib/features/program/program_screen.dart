@@ -21,9 +21,47 @@ class ProgramScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final program = ref.watch(trainingProgramProvider);
     final dayAsync = ref.watch(currentProgramDayProvider);
+    final configured = SettingsService.programConfig != null;
+
+    Future<void> resetProgram() async {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text('Programm zurücksetzen?'),
+          content: const Text(
+              'Der aktuelle Fortschritt und die Einstellungen (Dauer, '
+              'Startniveau, Übungspool) gehen verloren. Du kannst danach '
+              'ein neues Programm mit individueller Dauer einrichten.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Zurücksetzen'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed == true) {
+        await ref.read(programControllerProvider.notifier).reset();
+      }
+    }
 
     return Scaffold(
-      appBar: AppBar(title: Text(program.name)),
+      appBar: AppBar(
+        title: Text(program.name),
+        actions: [
+          if (configured)
+            IconButton(
+              icon: const Icon(Icons.replay),
+              tooltip: 'Programm zurücksetzen',
+              onPressed: resetProgram,
+            ),
+        ],
+      ),
       body: dayAsync.when(
         skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -34,7 +72,6 @@ class ProgramScreen extends ConsumerWidget {
           ),
         ),
         data: (day) {
-          final configured = SettingsService.programConfig != null;
           if (!configured) {
             return _NotStarted(
               program: program,
@@ -44,8 +81,7 @@ class ProgramScreen extends ConsumerWidget {
           if (day == null) {
             return _Finished(
               weeks: SettingsService.programConfig?.durationWeeks,
-              onReset: () =>
-                  ref.read(programControllerProvider.notifier).reset(),
+              onReset: resetProgram,
             );
           }
           return _DayView(day: day);
