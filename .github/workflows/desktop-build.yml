@@ -39,3 +39,26 @@ jobs:
       - run: flutter analyze --no-fatal-warnings
       - run: flutter test
       - run: flutter build ${{ matrix.target }} --release
+
+      # Publish the built desktop bundle so it can be downloaded and run on a
+      # real machine (device verification) without a local Flutter toolchain.
+      - name: Upload Linux bundle
+        if: matrix.target == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drum_coach-linux
+          path: build/linux/x64/release/bundle
+
+      - name: Upload Windows bundle
+        if: matrix.target == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drum_coach-windows
+          path: build/windows/x64/runner/Release
+
+      - name: Upload macOS app
+        if: matrix.target == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drum_coach-macos
+          path: build/macos/Build/Products/Release/drum_coach.app
