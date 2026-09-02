@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
+import '../learning/suggested_bpm_provider.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
 
@@ -78,12 +79,12 @@ class _GroupHeader extends StatelessWidget {
   }
 }
 
-class _EtudeTile extends StatelessWidget {
+class _EtudeTile extends ConsumerWidget {
   final Rudiment rudiment;
   const _EtudeTile({required this.rudiment});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       title: Text(
@@ -97,7 +98,10 @@ class _EtudeTile extends StatelessWidget {
         style: AppTypography.label.copyWith(color: AppColors.textMuted),
       ),
       trailing: const Icon(Icons.chevron_right, color: AppColors.textFaint),
-      onTap: () => context.push('/practice/${rudiment.id}'),
+      onTap: () async {
+        final bpm = await ref.read(suggestedBpmProvider(rudiment.id).future);
+        if (context.mounted) context.push('/practice/${rudiment.id}?bpm=$bpm');
+      },
     );
   }
 }

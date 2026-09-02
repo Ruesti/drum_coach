@@ -27,6 +27,7 @@ dependencies:
   permission_handler: ^11.3.1
   http: ^1.2.2
   google_fonts: ^6.2.1
+  wakelock_plus: ^1.7.0
 
 dev_dependencies:
   flutter_test:
@@ -38,3 +39,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/audio/snare.mp3
