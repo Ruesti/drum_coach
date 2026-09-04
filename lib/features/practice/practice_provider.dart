@@ -34,6 +34,7 @@ class PracticeNotifier extends _$PracticeNotifier {
     await _updateProgress(rudimentId, achievedBpm, rating, targetBpm);
 
     ref.invalidate(recentSessionsProvider);
+    ref.invalidate(exerciseStartBpmProvider);
   }
 
   Future<void> _updateProgress(
@@ -67,6 +68,22 @@ class PracticeNotifier extends _$PracticeNotifier {
     await IsarService.instance.writeTxn(
       () => IsarService.instance.rudimentProgress.put(progress!),
     );
+  }
+}
+
+/// The suggested start tempo for an exercise: the BPM progression's current
+/// value (lifted +2/+5 by session ratings), or null if never practiced or
+/// the store is unavailable. Practice sessions preset the metronome with
+/// this so tempo never leaks over from a previously played exercise.
+@riverpod
+Future<int?> exerciseStartBpm(ExerciseStartBpmRef ref, String rudimentId) async {
+  try {
+    final all = await IsarService.instance.rudimentProgress
+        .buildQuery<RudimentProgress>()
+        .findAll();
+    return all.where((p) => p.exerciseId == rudimentId).firstOrNull?.currentBpm;
+  } catch (_) {
+    return null;
   }
 }
 

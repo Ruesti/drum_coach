@@ -108,6 +108,8 @@ final router = GoRouter(
         rudimentId: state.pathParameters['rudimentId']!,
         isFromRoutine: false,
         targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
+        targetMinutes: int.tryParse(state.uri.queryParameters['min'] ?? ''),
+        isLadder: state.uri.queryParameters['ladder'] == '1',
       ),
     ),
     GoRoute(

@@ -6,7 +6,7 @@ part of 'lessons_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$rudimentsHash() => r'd2549f377d40c632ac2c37641824e6941610badb';
+String _$rudimentsHash() => r'52a951d1568bf7c19c4f29c3b7c3d92f67981a3e';
 
 /// See also [rudiments].
 @ProviderFor(rudiments)

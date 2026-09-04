@@ -1,10 +1,14 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import 'dart:math' as math;
+
 import '../../data/local/isar_service.dart';
 import '../../data/local/models/clean_tempo.dart';
 import '../../data/local/models/rudiment_progress.dart';
 import '../../data/local/settings_service.dart';
 import '../lessons/lessons_provider.dart';
+import '../practice/practice_provider.dart';
+import 'day_completion.dart';
 import 'models/program_config.dart';
 import 'models/training_program.dart';
 import 'program_generator.dart';
@@ -79,7 +83,8 @@ class CleanTempoNotifier extends _$CleanTempoNotifier {
   }
 
   /// Records a clean pass: lifts the stored clean tempo for [exerciseKey] to
-  /// [ladderStartBpm] + 4 (§6). Idempotent per unique-indexed exercise key.
+  /// [ladderStartBpm] + 4 (§6), never lowering an already higher value.
+  /// Idempotent per unique-indexed exercise key.
   Future<void> recordCleanPass(String exerciseKey, int ladderStartBpm) async {
     final isar = IsarService.instance;
     final next = ladderStartBpm + 4;
@@ -90,7 +95,7 @@ class CleanTempoNotifier extends _$CleanTempoNotifier {
           all.where((r) => r.exerciseKey == exerciseKey).firstOrNull;
       final row = existing ?? CleanTempo();
       row.exerciseKey = exerciseKey;
-      row.bpm = next;
+      row.bpm = math.max(existing?.bpm ?? 0, next);
       await isar.cleanTempos.put(row);
     });
     ref.invalidateSelf();
@@ -155,6 +160,26 @@ Future<ProgramDay?> currentProgramDay(CurrentProgramDayRef ref) async {
   );
 }
 
+/// Which of today's program-day blocks already count as done, derived from
+/// today's finished practice sessions (ordinal per exercise key — see
+/// [completedBlockIndices]). Empty when no program day is active.
+@riverpod
+Future<Set<int>> programDayCompletion(ProgramDayCompletionRef ref) async {
+  final day = await ref.watch(currentProgramDayProvider.future);
+  if (day == null || day.blocks.isEmpty) return const {};
+  final sessions = await ref.watch(recentSessionsProvider.future);
+  final now = DateTime.now();
+  final counts = <String, int>{};
+  for (final s in sessions) {
+    if (s.date.year == now.year &&
+        s.date.month == now.month &&
+        s.date.day == now.day) {
+      counts[s.exerciseId] = (counts[s.exerciseId] ?? 0) + 1;
+    }
+  }
+  return completedBlockIndices(day.blocks, counts);
+}
+
 /// Controls program lifecycle (start / reset / stage advance).
 @riverpod
 class ProgramController extends _$ProgramController {
@@ -169,12 +194,14 @@ class ProgramController extends _$ProgramController {
     await SettingsService.setProgramStageIndex(0);
     await SettingsService.setProgramStartDate(DateTime.now());
     ref.invalidate(currentProgramDayProvider);
+    ref.invalidate(trainingProgramProvider);
   }
 
   Future<void> reset() async {
     await SettingsService.clearProgramStartDate();
     await SettingsService.clearProgramConfig();
     ref.invalidate(currentProgramDayProvider);
+    ref.invalidate(trainingProgramProvider);
   }
 
   /// Advances to the next difficulty stage if the current stage's focus

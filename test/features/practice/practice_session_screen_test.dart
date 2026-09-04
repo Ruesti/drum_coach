@@ -20,6 +20,30 @@ class _AlreadyPlayingMetronomeNotifier extends MetronomeNotifier {
   }
 }
 
+/// Idle metronome without engine/SoLoud so preset logic runs hermetically.
+class _IdleMetronomeNotifier extends MetronomeNotifier {
+  @override
+  MetronomeState build() => const MetronomeState();
+}
+
+Future<void> _pumpScreen(
+  WidgetTester tester, {
+  required PracticeSessionScreen screen,
+  MetronomeNotifier Function()? metronome,
+}) async {
+  final container = ProviderContainer(overrides: [
+    metronomeNotifierProvider
+        .overrideWith(metronome ?? () => _IdleMetronomeNotifier()),
+  ]);
+  addTearDown(container.dispose);
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp(home: screen),
+    ),
+  );
+}
+
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -58,5 +82,86 @@ void main() {
     // Let the postFrameCallback (metronome clock/volume setup) run too.
     await tester.pump();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('übernimmt die vorgeschlagene Blockdauer als Countdown-Ziel',
+      (tester) async {
+    await _pumpScreen(
+      tester,
+      screen: PracticeSessionScreen(
+        rudimentId: rudimentsSeedData.first.id,
+        isFromRoutine: false,
+        targetMinutes: 4,
+      ),
+    );
+    await tester.pump();
+    // Countdown preset to 4 min and offered as an explicit chip.
+    expect(find.text('04:00'), findsOneWidget);
+    expect(find.text('4 min ✦'), findsOneWidget);
+  });
+
+  testWidgets('Leiter-Modus zeigt die Stufen und startet auf der untersten',
+      (tester) async {
+    await _pumpScreen(
+      tester,
+      screen: PracticeSessionScreen(
+        rudimentId: rudimentsSeedData.first.id,
+        isFromRoutine: false,
+        targetBpm: 80,
+        targetMinutes: 4,
+        isLadder: true,
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Tempo-Leiter'), findsOneWidget);
+    for (final bpm in ['76', '80', '84']) {
+      expect(find.text(bpm), findsOneWidget);
+    }
+    // Metronome preset to the lowest ladder step — 72 appears in the BPM
+    // display AND its step chip.
+    expect(find.text('72'), findsNWidgets(2));
+  });
+
+  testWidgets('stellt eine unterbrochene Session aus dem Snapshot wieder her',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'practice_snap_id': rudimentsSeedData.first.id,
+      'practice_snap_elapsed': 200,
+      'practice_snap_time': DateTime.now().toIso8601String(),
+    });
+    await SettingsService.init();
+
+    await _pumpScreen(
+      tester,
+      screen: PracticeSessionScreen(
+        rudimentId: rudimentsSeedData.first.id,
+        isFromRoutine: false,
+      ),
+    );
+    await tester.pump();
+    // Elapsed timer restored (03:20 count-up) + hint shown.
+    expect(find.text('03:20'), findsOneWidget);
+    expect(find.textContaining('fortgesetzt'), findsOneWidget);
+  });
+
+  testWidgets('abgelaufener Snapshot wird ignoriert', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'practice_snap_id': rudimentsSeedData.first.id,
+      'practice_snap_elapsed': 200,
+      'practice_snap_time': DateTime.now()
+          .subtract(const Duration(hours: 2))
+          .toIso8601String(),
+    });
+    await SettingsService.init();
+
+    await _pumpScreen(
+      tester,
+      screen: PracticeSessionScreen(
+        rudimentId: rudimentsSeedData.first.id,
+        isFromRoutine: false,
+      ),
+    );
+    await tester.pump();
+    expect(find.text('00:00'), findsOneWidget);
   });
 }
