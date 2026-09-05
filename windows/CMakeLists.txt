@@ -32,6 +32,14 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# permission_handler_windows (a transitive, mobile-only-feature plugin) still
+# includes <experimental/coroutine>, which recent MSVC toolchains reject with a
+# hard error (STL1011). This define, set before the plugin subdirectories are
+# added below, propagates to those targets and restores the deprecated header so
+# the Windows build compiles. Remove once permission_handler ships a Windows impl
+# on <coroutine>.
+add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by

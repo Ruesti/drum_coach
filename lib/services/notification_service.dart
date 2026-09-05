@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../app/platform_support.dart';
 import '../data/local/settings_service.dart';
 
 class NotificationService {
@@ -13,6 +14,7 @@ class NotificationService {
   static final _plugin = FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
+    if (isDesktopPlatform) return;
     tz.initializeTimeZones();
 
     const androidSettings =
@@ -27,6 +29,7 @@ class NotificationService {
   }
 
   static Future<void> scheduleDailyReminder() async {
+    if (isDesktopPlatform) return;
     await _plugin.cancel(_notificationId);
 
     final now = tz.TZDateTime.now(tz.local);
@@ -63,5 +66,9 @@ class NotificationService {
     );
   }
 
-  static Future<void> cancelReminder() => _plugin.cancel(_notificationId);
+  static Future<void> cancelReminder() async {
+    if (isDesktopPlatform) return;
+    await _plugin.cancel(_notificationId);
+  }
 }
+

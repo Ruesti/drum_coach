@@ -1,0 +1,68 @@
+# .github/workflows/desktop-build.yml
+name: Desktop Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Pinned to 22.04 (not ubuntu-latest/24.04) so the built binary links
+          # against an older GLib and stays runnable on Ubuntu 22.04 machines;
+          # binaries built on 24.04 fail on 22.04 with an undefined GLib symbol
+          # (g_once_init_enter_pointer, added in GLib 2.80).
+          - os: ubuntu-22.04
+            target: linux
+          - os: windows-latest
+            target: windows
+          - os: macos-latest
+            target: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux desktop build deps
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          # libasound2-dev: ALSA headers required by flutter_soloud's Linux backend
+          sudo apt-get install -y ninja-build libgtk-3-dev libasound2-dev
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.4
+
+      - run: flutter pub get
+      # --no-fatal-warnings: the repo carries 8 pre-existing
+      # experimental_member_use warnings (Isar buildQuery); errors still fail.
+      - run: flutter analyze --no-fatal-warnings
+      - run: flutter test
+      - run: flutter build ${{ matrix.target }} --release
+
+      # Publish the built desktop bundle so it can be downloaded and run on a
+      # real machine (device verification) without a local Flutter toolchain.
+      - name: Upload Linux bundle
+        if: matrix.target == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drum_coach-linux
+          path: build/linux/x64/release/bundle
+
+      - name: Upload Windows bundle
+        if: matrix.target == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drum_coach-windows
+          path: build/windows/x64/runner/Release
+
+      - name: Upload macOS app
+        if: matrix.target == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: drum_coach-macos
+          path: build/macos/Build/Products/Release/drum_coach.app
