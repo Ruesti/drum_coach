@@ -482,40 +482,48 @@ class _PracticeSessionScreenState
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          padding: const EdgeInsets.fromLTRB(0, 16, 0, 20),
           child: Column(
             children: [
+              // Sheet bleeds to the screen edges (minus a tiny 4px margin) —
+              // every pixel of width matters for note spacing, unlike the
+              // controls below which read fine with normal 20px insets.
               Expanded(
-                child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: NotationStaffWidget(
                     rudiment: rudiment,
                     activeIndex: activeBeat,
+                    autoScroll: true,
                   ),
                 ),
               ),
               const SizedBox(height: 16),
               if (_ladderActive && _ladderPlan != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                   child: _LadderStepRow(
                     bpms: _ladderPlan!.bpms,
                     currentStep: _ladderPlan!.stepIndexAt(_elapsedSeconds),
                   ),
                 ),
-              _CompactMetronome(
-                bpm: metState.bpm,
-                isPlaying: metState.isPlaying,
-                isAccent: metState.isAccent,
-                currentBeatIndex: metState.currentBeatIndex,
-                soundType: metState.soundType,
-                onBpmChanged: notifier.setBpm,
-                onToggle: notifier.toggle,
-                onSoundTypeChanged: notifier.setSoundType,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _CompactMetronome(
+                  bpm: metState.bpm,
+                  isPlaying: metState.isPlaying,
+                  isAccent: metState.isAccent,
+                  currentBeatIndex: metState.currentBeatIndex,
+                  soundType: metState.soundType,
+                  onBpmChanged: notifier.setBpm,
+                  onToggle: notifier.toggle,
+                  onSoundTypeChanged: notifier.setSoundType,
+                ),
               ),
               const SizedBox(height: 10),
               if (!metState.isPlaying && _elapsedSeconds == 0)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                   child: _TimerGoalRow(
                     selected: _goalSeconds,
                     suggestedMinutes: widget.targetMinutes,
@@ -523,10 +531,13 @@ class _PracticeSessionScreenState
                   ),
                 ),
               const SizedBox(height: 4),
-              ElevatedButton.icon(
-                onPressed: _showRatingSheet,
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Finish Session'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ElevatedButton.icon(
+                  onPressed: _showRatingSheet,
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Finish Session'),
+                ),
               ),
             ],
           ),

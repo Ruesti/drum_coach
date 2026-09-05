@@ -59,45 +59,64 @@ class StaffLayout {
 
 const int _ticksPerQuarter = 24; // integer layout math, matches PatternPlayback
 
+/// Minimum on-screen width (in px) a single note gets, so consecutive
+/// noteheads (≈12px wide) never visually merge into a solid bar — a fixed
+/// px-per-quarter floor let very fast pieces (32nd notes) collapse into an
+/// unreadable smear regardless of how sparse the rest of the piece was.
+const double _minNoteWidthPx = 9.0;
+
+/// The smallest note duration (in quarters) actually present in [beats], or
+/// `null` if there are no notes at all.
+double? _finestDurationQuarters(List<StrokeBeat> beats, NoteGrid grid) {
+  double? min;
+  for (final b in beats) {
+    final q = resolveNote(b, grid).quarters;
+    if (q > 0 && (min == null || q < min)) min = q;
+  }
+  return min;
+}
+
 StaffLayout computeStaffLayout({
   required List<StrokeBeat> beats,
   required NoteGrid grid,
   required int beatsPerBar,
   required double maxWidth,
-  double leftPad = 10,
-  double rightPad = 14,
-  double systemPad = 40,
-  double barGap = 14,
+  double leftPad = 8,
+  double rightPad = 12,
+  double systemPad = 26,
+  double barGap = 12,
   double preferredPxPerQuarter = 56,
-  double maxPxPerQuarter = 110,
+  int targetBarsPerRow = 2,
 }) {
   final ticksPerBar = beatsPerBar * _ticksPerQuarter;
   final usable = maxWidth - leftPad - rightPad - systemPad;
 
   double barWidthAt(double pxq) => beatsPerBar * pxq + barGap;
-  var pxPerQuarter = preferredPxPerQuarter;
-  var barsPerRow = (usable / barWidthAt(pxPerQuarter)).floor();
-  var didShrinkToFit = false;
-  if (barsPerRow < 1) {
+
+  // Legibility floor derives from the piece's own fastest note — a 16th-note
+  // piece and a 32nd-note piece need very different minimums.
+  final finest = _finestDurationQuarters(beats, grid);
+  final minPxPerQuarter = finest == null ? 8.0 : _minNoteWidthPx / finest;
+
+  // Rows are a fixed [targetBarsPerRow] bars wide — note width flexes to
+  // fit, rather than note width staying fixed and the bar count per row
+  // flexing. Matches printed sheet music: a consistent line length instead
+  // of "however many bars happen to fit at a comfortable size".
+  var barsPerRow = targetBarsPerRow;
+  var pxPerQuarter = (usable / barsPerRow - barGap) / beatsPerBar;
+  if (pxPerQuarter > preferredPxPerQuarter) pxPerQuarter = preferredPxPerQuarter;
+  if (pxPerQuarter < minPxPerQuarter) {
+    // Even at the preferred size, [targetBarsPerRow] bars don't comfortably
+    // fit this piece's note density — fall back to one bar per row.
     barsPerRow = 1;
-    didShrinkToFit = true;
-    final minPx = preferredPxPerQuarter < 8.0 ? preferredPxPerQuarter : 8.0;
-    pxPerQuarter = ((usable - barGap) / beatsPerBar).clamp(minPx, preferredPxPerQuarter);
-  }
-
-  var totalTicks = 0;
-  for (final b in beats) {
-    totalTicks += (resolveNote(b, grid).quarters * _ticksPerQuarter).round();
-  }
-  final totalBars = (totalTicks / ticksPerBar).ceil().clamp(1, 1 << 30);
-
-  // A short pattern (e.g. a single bar) on a wide panel would otherwise draw
-  // at preferredPxPerQuarter and leave the rest of the row blank. Grow the
-  // notes to use the available width instead, up to a sane cap. Skip this
-  // when we just shrank to fit — that branch already sized for the space.
-  if (!didShrinkToFit && totalBars <= barsPerRow) {
-    final fillPx = (usable - totalBars * barGap) / (totalBars * beatsPerBar);
-    pxPerQuarter = fillPx.clamp(preferredPxPerQuarter, maxPxPerQuarter);
+    pxPerQuarter = (usable - barGap) / beatsPerBar;
+    if (pxPerQuarter > preferredPxPerQuarter) pxPerQuarter = preferredPxPerQuarter;
+    if (pxPerQuarter < minPxPerQuarter) {
+      // Extreme case (very fast notes on a narrow viewport, e.g. 32nd notes
+      // on a phone): legibility wins over fitting the viewport width — the
+      // row may need a hair more than [maxWidth] to stay readable.
+      pxPerQuarter = minPxPerQuarter;
+    }
   }
 
   final placements = <NotePlacement>[];
@@ -124,6 +143,7 @@ StaffLayout computeStaffLayout({
     tickCursor += (resolved.quarters * _ticksPerQuarter).round();
   }
 
+  final totalBars = (tickCursor / ticksPerBar).ceil().clamp(1, 1 << 30);
   final rowCount = ((totalBars - 1) ~/ barsPerRow) + 1;
 
   final beams = <BeamGroup>[];

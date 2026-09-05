@@ -168,6 +168,7 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('00:00'), findsOneWidget);
+    // Both AppBar timers (exercise + cross-exercise session) sit at zero.
+    expect(find.text('00:00'), findsNWidgets(2));
   });
 }

@@ -1,169 +1,175 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
 
-/// Acht eigenständige Sticking-Pattern-Übungen: kurze 2-Takt-Handsatz-
-/// Permutationen aus durchgehenden Achtelnoten (8 Noten pro Takt), ohne
-/// Akzente oder Ghost Notes. Trainieren reines R/L-Vokabular und
-/// Handunabhängigkeit jenseits der klassischen RLRL-Standardmuster.
+/// Swap every hand in [hands] (R↔L) — used to build the mirrored half of
+/// each sticking étude below.
+List<Hand> _mirror(List<Hand> hands) =>
+    hands.map((h) => h == R ? L : R).toList();
+
+/// Double every stroke (R L → R R L L) — turns the 8-note eighth-note motif
+/// into a 16-note sixteenth-note motif for the "verdichtet" second half:
+/// same hand sequence, doubled into rudimental doubles instead of singles.
+List<Hand> _double(List<Hand> hands) =>
+    hands.expand((h) => [h, h]).toList();
+
+/// Six 8-bar sticking studies, each built from ONE 8-note motif developed
+/// over the whole piece instead of a chain of unrelated one-bar patterns:
+///   bar 1-2  motif, played twice (eighths)
+///   bar 3-4  the motif mirrored (R<->L getauscht), played twice
+///   bar 5-6  the SAME motif densified into doubles (sixteenths), twice
+///   bar 7-8  the densified motif mirrored, played twice
+/// One idea, carried through in two dynamics (singles → doubles) instead of
+/// switching to a new, unrelated figure every bar. #1-3 use an even 4:4 R/L
+/// split (beginner); #4-6 step up to asymmetric 5:3 / 3:5 splits
+/// (intermediate).
 final List<Rudiment> stickingPatternEtudes = <Rudiment>[
-  Rudiment(
-    id: 'etude_pad_sticking_1',
-    name: 'Sticking-Pattern · Spiegel-Wechsel',
-    description:
-        'Achtel-Handsatzmuster, dessen zweiter Takt die Hände des ersten spiegelt.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Sticking-Patterns',
-    difficulty: Difficulty.beginner,
-    minBpm: 70,
-    targetBpm: 100,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.coordination, Skill.control},
-    sticking: [
-      // Takt 1: R L L R L R R L (8 Achtel)
-      ...eighths([R, L, L, R, L, R, R, L], accents: {}),
-      // Takt 2: Spiegelung (R<->L getauscht) von Takt 1 (8 Achtel)
-      ...eighths([L, R, R, L, R, L, L, R], accents: {}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_sticking_2',
-    name: 'Sticking-Pattern · Doppelschlag-Fluss',
-    description:
-        'Kombiniert Doppelschläge (RR/LL) mit Einzelschlägen zu einem fließenden Handwechsel.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Sticking-Patterns',
-    difficulty: Difficulty.beginner,
-    minBpm: 70,
-    targetBpm: 100,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.coordination, Skill.control},
-    sticking: [
-      // Takt 1: R R L L R L R L (8 Achtel)
-      ...eighths([R, R, L, L, R, L, R, L], accents: {}),
-      // Takt 2: Spiegelung von Takt 1 (8 Achtel)
-      ...eighths([L, L, R, R, L, R, L, R], accents: {}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_sticking_3',
-    name: 'Sticking-Pattern · Versetzte Paare',
-    description:
-        'Verschiebt die Doppelschlag-Position innerhalb des Taktes für ungewohnte Koordination.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Sticking-Patterns',
-    difficulty: Difficulty.beginner,
-    minBpm: 75,
-    targetBpm: 105,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.coordination, Skill.control},
-    sticking: [
-      // Takt 1: R L R R L R L L (8 Achtel)
-      ...eighths([R, L, R, R, L, R, L, L], accents: {}),
-      // Takt 2: Spiegelung von Takt 1 (8 Achtel)
-      ...eighths([L, R, L, L, R, L, R, R], accents: {}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_sticking_4',
-    name: 'Sticking-Pattern · Kreuzmuster',
-    description:
-        'Zwei benachbarte Doppelschlag-Paare pro Takt für erweiterte Handunabhängigkeit.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Sticking-Patterns',
-    difficulty: Difficulty.beginner,
-    minBpm: 80,
-    targetBpm: 110,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.coordination, Skill.control},
-    sticking: [
-      // Takt 1: L R R L L R L R (8 Achtel)
-      ...eighths([L, R, R, L, L, R, L, R], accents: {}),
-      // Takt 2: Spiegelung von Takt 1 (8 Achtel)
-      ...eighths([R, L, L, R, R, L, R, L], accents: {}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_sticking_5',
-    name: 'Sticking-Pattern · Retrograde',
-    description:
-        'Takt 2 spielt das Muster aus Takt 1 rückwärts – trainiert Mustererkennung in beide Richtungen.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Sticking-Patterns',
-    difficulty: Difficulty.intermediate,
-    minBpm: 90,
-    targetBpm: 120,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.coordination, Skill.control},
-    sticking: [
-      // Takt 1: R R L R L L R L (8 Achtel)
-      ...eighths([R, R, L, R, L, L, R, L], accents: {}),
-      // Takt 2: Rückwärtslauf (Retrograde) von Takt 1 (8 Achtel)
-      ...eighths([L, R, L, L, R, L, R, R], accents: {}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_sticking_6',
-    name: 'Sticking-Pattern · Tripel-Kontrolle',
-    description:
-        'Bewusster Dreifachschlag (LLL/RRR) im Muster – Trainingsziel: kontrollierte Tripel-Anschläge ohne Tempo-Einbruch.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Sticking-Patterns',
-    difficulty: Difficulty.intermediate,
-    minBpm: 90,
-    targetBpm: 120,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.coordination, Skill.control},
-    sticking: [
-      // Takt 1: R L L L R L R R (8 Achtel, LLL als Trainingsziel)
-      ...eighths([R, L, L, L, R, L, R, R], accents: {}),
-      // Takt 2: Spiegelung von Takt 1 (8 Achtel, RRR als Trainingsziel)
-      ...eighths([L, R, R, R, L, R, L, L], accents: {}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_sticking_7',
-    name: 'Sticking-Pattern · Versetzte Doppelschläge',
-    description:
-        'Die Doppelschlag-Positionen verschieben sich zwischen den beiden Takten und fordern schnelles Umdenken.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Sticking-Patterns',
-    difficulty: Difficulty.intermediate,
-    minBpm: 100,
-    targetBpm: 130,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.coordination, Skill.control},
-    sticking: [
-      // Takt 1: L L R L R R L R (8 Achtel)
-      ...eighths([L, L, R, L, R, R, L, R], accents: {}),
-      // Takt 2: neues, kontrastierendes Muster mit versetzten Paaren (8 Achtel)
-      ...eighths([R, L, R, L, L, R, R, L], accents: {}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_sticking_8',
-    name: 'Sticking-Pattern · Kraft & Balance',
-    description:
-        'Höchste Stufe: bewusste Dreifachschläge plus unausgeglichene Handverteilung (5:3) fordern Kraft und Kontrolle in beiden Händen.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Sticking-Patterns',
-    difficulty: Difficulty.intermediate,
-    minBpm: 100,
-    targetBpm: 135,
-    gridUnit: NoteGrid.eighth,
-    beatsPerBar: 4,
-    skills: {Skill.coordination, Skill.control},
-    sticking: [
-      // Takt 1: R L R R R L R L (8 Achtel, RRR + 5R:3L als Trainingsziel)
-      ...eighths([R, L, R, R, R, L, R, L], accents: {}),
-      // Takt 2: Spiegelung von Takt 1 (8 Achtel, LLL + 5L:3R als Trainingsziel)
-      ...eighths([L, R, L, L, L, R, L, R], accents: {}),
-    ],
-  ),
+  () {
+    const motif = [R, L, L, R, L, R, R, L]; // 4:4
+    return Rudiment(
+      id: 'etude_pad_sticking_1',
+      name: 'Kreuzmuster',
+      description:
+          'Motiv R L L R L R R L: erst als Einzelschläge gespielt und '
+          'gespiegelt, dann dasselbe Motiv als Doppelschläge verdichtet und '
+          'wieder gespiegelt — eine 8-Takt-Studie mit rotem Faden statt '
+          'loser Handsatz-Häppchen.',
+      collection: ExerciseCollection.padWorkouts,
+      collectionGroup: 'Sticking-Patterns',
+      difficulty: Difficulty.beginner,
+      minBpm: 70,
+      targetBpm: 110,
+      gridUnit: NoteGrid.sixteenth,
+      beatsPerBar: 4,
+      skills: {Skill.coordination, Skill.control},
+      sticking: [
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
+      ],
+    );
+  }(),
+  () {
+    const motif = [L, R, R, L, L, R, L, R]; // 4:4
+    return Rudiment(
+      id: 'etude_pad_sticking_2',
+      name: 'Wellenmuster',
+      description:
+          'Motiv L R R L L R L R: erst als Einzelschläge, dann als '
+          'Doppelschläge verdichtet — jeweils gespiegelt wiederholt.',
+      collection: ExerciseCollection.padWorkouts,
+      collectionGroup: 'Sticking-Patterns',
+      difficulty: Difficulty.beginner,
+      minBpm: 70,
+      targetBpm: 115,
+      gridUnit: NoteGrid.sixteenth,
+      beatsPerBar: 4,
+      skills: {Skill.coordination, Skill.control},
+      sticking: [
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
+      ],
+    );
+  }(),
+  () {
+    const motif = [R, R, L, R, L, L, R, L]; // 4:4
+    return Rudiment(
+      id: 'etude_pad_sticking_3',
+      name: 'Doppel-Wechsel',
+      description:
+          'Motiv R R L R L L R L: erst als Einzelschläge, dann als '
+          'Doppelschläge verdichtet — jeweils gespiegelt wiederholt.',
+      collection: ExerciseCollection.padWorkouts,
+      collectionGroup: 'Sticking-Patterns',
+      difficulty: Difficulty.beginner,
+      minBpm: 75,
+      targetBpm: 120,
+      gridUnit: NoteGrid.sixteenth,
+      beatsPerBar: 4,
+      skills: {Skill.coordination, Skill.control},
+      sticking: [
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
+      ],
+    );
+  }(),
+  () {
+    const motif = [R, R, L, R, R, L, L, R]; // 5 R : 3 L
+    return Rudiment(
+      id: 'etude_pad_sticking_4',
+      name: 'Rechts-Schwerpunkt',
+      description:
+          'Asymmetrisches Motiv R R L R R L L R (5:3): erst als '
+          'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
+          'gespiegelt wiederholt.',
+      collection: ExerciseCollection.padWorkouts,
+      collectionGroup: 'Sticking-Patterns',
+      difficulty: Difficulty.intermediate,
+      minBpm: 90,
+      targetBpm: 130,
+      gridUnit: NoteGrid.sixteenth,
+      beatsPerBar: 4,
+      skills: {Skill.coordination, Skill.control},
+      sticking: [
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
+      ],
+    );
+  }(),
+  () {
+    const motif = [L, R, R, L, R, L, R, R]; // 5 R : 3 L
+    return Rudiment(
+      id: 'etude_pad_sticking_5',
+      name: 'Rechts-Fluss',
+      description:
+          'Asymmetrisches Motiv L R R L R L R R (5:3): erst als '
+          'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
+          'gespiegelt wiederholt.',
+      collection: ExerciseCollection.padWorkouts,
+      collectionGroup: 'Sticking-Patterns',
+      difficulty: Difficulty.intermediate,
+      minBpm: 95,
+      targetBpm: 135,
+      gridUnit: NoteGrid.sixteenth,
+      beatsPerBar: 4,
+      skills: {Skill.coordination, Skill.control},
+      sticking: [
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
+      ],
+    );
+  }(),
+  () {
+    const motif = [R, L, L, R, L, L, R, L]; // 3 R : 5 L
+    return Rudiment(
+      id: 'etude_pad_sticking_6',
+      name: 'Links-Schwerpunkt',
+      description:
+          'Asymmetrisches Motiv R L L R L L R L (3:5): erst als '
+          'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
+          'gespiegelt wiederholt.',
+      collection: ExerciseCollection.padWorkouts,
+      collectionGroup: 'Sticking-Patterns',
+      difficulty: Difficulty.intermediate,
+      minBpm: 100,
+      targetBpm: 140,
+      gridUnit: NoteGrid.sixteenth,
+      beatsPerBar: 4,
+      skills: {Skill.coordination, Skill.control},
+      sticking: [
+        ...eighths(motif), ...eighths(motif),
+        ...eighths(_mirror(motif)), ...eighths(_mirror(motif)),
+        ...sixteenths(_double(motif)), ...sixteenths(_double(motif)),
+        ...sixteenths(_double(_mirror(motif))), ...sixteenths(_double(_mirror(motif))),
+      ],
+    );
+  }(),
 ];

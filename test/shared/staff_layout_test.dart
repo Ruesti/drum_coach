@@ -31,39 +31,6 @@ void main() {
     });
   });
 
-  group('computeStaffLayout — fills width for short patterns', () {
-    test('grows pxPerQuarter beyond preferred when a single bar has room to spare', () {
-      final beats =
-          List.generate(4, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
-      final layout = computeStaffLayout(
-        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 400,
-      );
-      expect(layout.rowCount, 1);
-      expect(layout.pxPerQuarter, greaterThan(56));
-    });
-
-    test('does not grow past maxPxPerQuarter on very wide panels', () {
-      final beats =
-          List.generate(4, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
-      final layout = computeStaffLayout(
-        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 3000,
-        maxPxPerQuarter: 110,
-      );
-      expect(layout.pxPerQuarter, 110);
-    });
-
-    test('does not grow a full row (matches preferred px)', () {
-      final beats =
-          List.generate(8, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
-      final layout = computeStaffLayout(
-        // usable width sized so exactly 2 bars fit per row at the preferred size
-        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 540,
-      );
-      expect(layout.barsPerRow, 2);
-      expect(layout.pxPerQuarter, 56);
-    });
-  });
-
   group('computeStaffLayout — wrapping', () {
     // 4 bars of quarters on a narrow canvas => multiple rows, whole bars only.
     final beats =
@@ -80,6 +47,35 @@ void main() {
       }
     });
 
+    test('always fits 2 bars per row on a realistic phone width, shrinking '
+        'note width rather than dropping to 1 bar/row', () {
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 360,
+      );
+      expect(layout.barsPerRow, 2);
+      expect(layout.pxPerQuarter, lessThan(56));
+    });
+
+    test('falls back to 1 bar per row only when even the minimum note '
+        'width would not fit 2 bars', () {
+      final layout = computeStaffLayout(
+        beats: beats, grid: NoteGrid.quarter, beatsPerBar: 4, maxWidth: 90,
+      );
+      expect(layout.barsPerRow, 1);
+    });
+
+    test('keeps 32nd notes from visually merging by widening past the '
+        'preferred size when needed, instead of a flat width floor', () {
+      final fastBeats = List.generate(
+          32, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.thirtySecond));
+      final layout = computeStaffLayout(
+        beats: fastBeats, grid: NoteGrid.thirtySecond, beatsPerBar: 4, maxWidth: 360,
+      );
+      // A 32nd note spans pxPerQuarter/8 — must stay well above a single
+      // pixel (the old fixed 8px-per-quarter floor let 32nds collapse).
+      expect(layout.pxPerQuarter / 8, greaterThan(6.0));
+    });
+
     test('splits bars across rows when barsPerRow > 1', () {
       final beats = List.generate(
           16, (_) => const StrokeBeat(hand: Hand.right, value: NoteValue.quarter));
@@ -91,7 +87,7 @@ void main() {
       expect(layout.placements[4].row, 0); // bar 1
       expect(layout.placements[8].row, 1); // bar 2
       final dx = layout.placements[4].xCenter - layout.placements[0].xCenter;
-      expect(dx, closeTo(4 * layout.pxPerQuarter + 14, 0.001)); // one bar width
+      expect(dx, closeTo(4 * layout.pxPerQuarter + 12, 0.001)); // one bar width (barGap)
     });
   });
 
