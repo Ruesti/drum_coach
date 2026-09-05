@@ -4,16 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
 import '../../shared/widgets/app_badge.dart';
 import '../../shared/widgets/beat_indicator.dart';
+import '../../shared/widgets/bpm_control.dart';
 import '../../shared/widgets/notation_staff_widget.dart';
 import '../coaching/models/session_analysis.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
 import '../coaching/widgets/coach_feedback_card.dart';
+import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
 import '../metronome/metronome_engine.dart';
@@ -21,6 +24,13 @@ import '../metronome/metronome_provider.dart';
 import '../program/program_provider.dart';
 import 'ladder_plan.dart';
 import 'practice_provider.dart';
+import 'session_timer_provider.dart';
+
+String _formatDuration(int seconds) {
+  final m = seconds ~/ 60;
+  final s = seconds % 60;
+  return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+}
 
 class PracticeSessionScreen extends ConsumerStatefulWidget {
   final String rudimentId;
@@ -77,6 +87,7 @@ class _PracticeSessionScreenState
   /// Captured in [initState] because `ref` is unsafe to read fresh inside
   /// [dispose] — by then the widget's Element may already be torn down.
   late final MetronomeNotifier _metronomeNotifier;
+  late final SessionTimerNotifier _sessionTimerNotifier;
 
   /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
   /// metronome's per-tick volumes and map the playback cursor to a note.
@@ -86,7 +97,9 @@ class _PracticeSessionScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WakelockPlus.enable();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
+    _sessionTimerNotifier = ref.read(sessionTimerNotifierProvider.notifier);
     _playback = PatternPlayback.forRudiment(
         ref.read(rudimentByIdProvider(widget.rudimentId)));
 
@@ -122,7 +135,7 @@ class _PracticeSessionScreenState
       if (snap != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-              'Unterbrochene Session fortgesetzt (${_formatSeconds(snap.elapsedSeconds)})'),
+              'Unterbrochene Session fortgesetzt (${_formatDuration(snap.elapsedSeconds)})'),
         ));
       }
     });
@@ -157,12 +170,6 @@ class _PracticeSessionScreenState
     }
   }
 
-  static String _formatSeconds(int seconds) {
-    final m = seconds ~/ 60;
-    final s = seconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-
   Future<void> _initMicIfEnabled() async {
     if (!SettingsService.micAnalysisEnabled) return;
     final status = await Permission.microphone.request();
@@ -174,7 +181,13 @@ class _PracticeSessionScreenState
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    WakelockPlus.disable();
     _ticker?.cancel();
+    // Leaving the screen while playing (e.g. backing out mid-exercise) never
+    // fires the ref.listen isPlaying transition below — that listener is
+    // gone the moment this widget is disposed — so the session timer would
+    // otherwise keep ticking forever with nothing left to pause it.
+    _sessionTimerNotifier.pause();
     // Deferred: Riverpod forbids modifying provider state synchronously
     // during a widget tree teardown (dispose runs mid-build/mid-unmount).
     Future.microtask(() {
@@ -241,7 +254,7 @@ class _PracticeSessionScreenState
     final remaining = _goalSeconds != null
         ? (_goalSeconds! - _elapsedSeconds).clamp(0, _goalSeconds!)
         : null;
-    return _formatSeconds(remaining ?? _elapsedSeconds);
+    return _formatDuration(remaining ?? _elapsedSeconds);
   }
 
   Future<void> _showRatingSheet() async {
@@ -362,6 +375,7 @@ class _PracticeSessionScreenState
     final rudiment = ref.watch(rudimentByIdProvider(widget.rudimentId));
     final metState = ref.watch(metronomeNotifierProvider);
     final notifier = ref.read(metronomeNotifierProvider.notifier);
+    final sessionSeconds = ref.watch(sessionTimerNotifierProvider);
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
       // Record beat timestamps for mic correlation — only pattern ticks that
@@ -384,8 +398,10 @@ class _PracticeSessionScreenState
       if (next.isPlaying && !(prev?.isPlaying ?? false)) {
         _startTicker();
         _startMicRecording();
+        _sessionTimerNotifier.resume();
       } else if (!next.isPlaying && (prev?.isPlaying ?? false)) {
         _stopTicker();
+        _sessionTimerNotifier.pause();
       }
     });
 
@@ -403,6 +419,17 @@ class _PracticeSessionScreenState
       appBar: AppBar(
         title: Text(rudiment.name),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'Erklärung anzeigen',
+            // A plain Navigator push, not context.push('/lessons/...') — this
+            // screen lives on the top-level /practice route (outside the
+            // bottom-nav shell, see router.dart), and pushing a shell-branch
+            // route from there previously caused a duplicate-page-key crash.
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => LessonDetailScreen(rudimentId: widget.rudimentId),
+            )),
+          ),
           if (SettingsService.micAnalysisEnabled)
             Padding(
               padding: const EdgeInsets.only(right: 4),
@@ -415,6 +442,9 @@ class _PracticeSessionScreenState
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
+              // Single row, not stacked — a two-line Column here silently
+              // clipped against the AppBar's fixed toolbar height, making
+              // the session timer invisible on-device.
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -425,10 +455,23 @@ class _PracticeSessionScreenState
                   Text(
                     _timerLabel,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: timerColor,
                       fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.timelapse,
+                      size: 16, color: AppColors.textMuted),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatDuration(sessionSeconds),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                      fontFeatures: [FontFeature.tabularFigures()],
                     ),
                   ),
                 ],
@@ -620,10 +663,34 @@ class _CompactMetronome extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text('$bpm', style: AppTypography.display),
-              const SizedBox(width: 4),
-              Text('BPM', style: AppTypography.label.copyWith(color: AppColors.textMuted)),
-              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    final value = await editBpmDialog(context, current: bpm);
+                    if (value != null) onBpmChanged(value);
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('$bpm', style: AppTypography.display),
+                      const SizedBox(width: 4),
+                      Text('BPM',
+                          style: AppTypography.label
+                              .copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              BpmStepButtons(
+                bpm: bpm,
+                onChanged: onBpmChanged,
+                alignment: MainAxisAlignment.start,
+              ),
               Expanded(
                 child: Slider(
                   value: bpm.toDouble(),

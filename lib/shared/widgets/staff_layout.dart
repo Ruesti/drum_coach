@@ -69,6 +69,7 @@ StaffLayout computeStaffLayout({
   double systemPad = 40,
   double barGap = 14,
   double preferredPxPerQuarter = 56,
+  double maxPxPerQuarter = 110,
 }) {
   final ticksPerBar = beatsPerBar * _ticksPerQuarter;
   final usable = maxWidth - leftPad - rightPad - systemPad;
@@ -76,10 +77,27 @@ StaffLayout computeStaffLayout({
   double barWidthAt(double pxq) => beatsPerBar * pxq + barGap;
   var pxPerQuarter = preferredPxPerQuarter;
   var barsPerRow = (usable / barWidthAt(pxPerQuarter)).floor();
+  var didShrinkToFit = false;
   if (barsPerRow < 1) {
     barsPerRow = 1;
+    didShrinkToFit = true;
     final minPx = preferredPxPerQuarter < 8.0 ? preferredPxPerQuarter : 8.0;
     pxPerQuarter = ((usable - barGap) / beatsPerBar).clamp(minPx, preferredPxPerQuarter);
+  }
+
+  var totalTicks = 0;
+  for (final b in beats) {
+    totalTicks += (resolveNote(b, grid).quarters * _ticksPerQuarter).round();
+  }
+  final totalBars = (totalTicks / ticksPerBar).ceil().clamp(1, 1 << 30);
+
+  // A short pattern (e.g. a single bar) on a wide panel would otherwise draw
+  // at preferredPxPerQuarter and leave the rest of the row blank. Grow the
+  // notes to use the available width instead, up to a sane cap. Skip this
+  // when we just shrank to fit — that branch already sized for the space.
+  if (!didShrinkToFit && totalBars <= barsPerRow) {
+    final fillPx = (usable - totalBars * barGap) / (totalBars * beatsPerBar);
+    pxPerQuarter = fillPx.clamp(preferredPxPerQuarter, maxPxPerQuarter);
   }
 
   final placements = <NotePlacement>[];
@@ -106,7 +124,6 @@ StaffLayout computeStaffLayout({
     tickCursor += (resolved.quarters * _ticksPerQuarter).round();
   }
 
-  final totalBars = (tickCursor / ticksPerBar).ceil().clamp(1, 1 << 30);
   final rowCount = ((totalBars - 1) ~/ barsPerRow) + 1;
 
   final beams = <BeamGroup>[];

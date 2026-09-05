@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/local/settings_service.dart';
@@ -11,13 +12,25 @@ import '../features/lessons/models/rudiment.dart';
 import '../features/metronome/metronome_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/practice/practice_session_screen.dart';
+import '../features/practice/session_timer_provider.dart';
 import '../features/program/program_screen.dart';
 import '../features/program/program_setup_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 
+// /program, /metronome, /settings, /coaching/exercise-generator etc. are
+// top-level GoRoutes declared as siblings of the StatefulShellRoute, meant
+// to push on top of the whole shell (covering the bottom nav bar). Without
+// an explicit navigatorKey on GoRouter + a matching parentNavigatorKey on
+// each of those routes, go_router places them onto the shell branch's own
+// nested Navigator instead of the root one — colliding with that branch's
+// auto-keyed page and crashing with a duplicate-Page-key assertion (a known
+// go_router pitfall, flutter/flutter#156585 and similar).
+final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
 final router = GoRouter(
+  navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   redirect: (context, state) {
     if (!SettingsService.isOnboardingDone && state.matchedLocation != '/onboarding') {
@@ -28,6 +41,7 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/onboarding',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (context, _) => OnboardingScreen(
         onComplete: () => context.go('/'),
       ),
@@ -52,6 +66,7 @@ final router = GoRouter(
                 builder: (_, state) => PracticeSessionScreen(
                   rudimentId: state.pathParameters['rudimentId']!,
                   isFromRoutine: true,
+                  targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
                 ),
               ),
             ],
@@ -81,14 +96,17 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/program',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const ProgramScreen(),
     ),
     GoRoute(
       path: '/program/setup',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const ProgramSetupScreen(),
     ),
     GoRoute(
       path: '/collection/:name',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
         final name = state.pathParameters['name'];
         final collection = ExerciseCollection.values.firstWhere(
@@ -104,6 +122,7 @@ final router = GoRouter(
     // root navigator. Runs as a focused full-screen session.
     GoRoute(
       path: '/practice/:rudimentId',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, state) => PracticeSessionScreen(
         rudimentId: state.pathParameters['rudimentId']!,
         isFromRoutine: false,
@@ -114,34 +133,45 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/metronome',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const MetronomeScreen(),
     ),
     GoRoute(
       path: '/settings',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const SettingsScreen(),
     ),
     GoRoute(
       path: '/coaching/exercise-generator',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const ExerciseGeneratorScreen(),
     ),
   ],
 );
 
-class _ScaffoldWithNavBar extends StatelessWidget {
+class _ScaffoldWithNavBar extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   const _ScaffoldWithNavBar({required this.navigationShell});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        ),
+        onTap: (index) {
+          // Returning to the Dashboard ends the current training session —
+          // reset the cross-exercise session timer so the next one starts
+          // from zero instead of carrying over.
+          if (index == 0 && navigationShell.currentIndex != 0) {
+            ref.read(sessionTimerNotifierProvider.notifier).reset();
+          }
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
