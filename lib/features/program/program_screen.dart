@@ -21,9 +21,47 @@ class ProgramScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final program = ref.watch(trainingProgramProvider);
     final dayAsync = ref.watch(currentProgramDayProvider);
+    final configured = SettingsService.programConfig != null;
+
+    Future<void> resetProgram() async {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text('Programm zurücksetzen?'),
+          content: const Text(
+              'Der aktuelle Fortschritt und die Einstellungen (Dauer, '
+              'Startniveau, Übungspool) gehen verloren. Du kannst danach '
+              'ein neues Programm mit individueller Dauer einrichten.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Zurücksetzen'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed == true) {
+        await ref.read(programControllerProvider.notifier).reset();
+      }
+    }
 
     return Scaffold(
-      appBar: AppBar(title: Text(program.name)),
+      appBar: AppBar(
+        title: Text(program.name),
+        actions: [
+          if (configured)
+            IconButton(
+              icon: const Icon(Icons.replay),
+              tooltip: 'Programm zurücksetzen',
+              onPressed: resetProgram,
+            ),
+        ],
+      ),
       body: dayAsync.when(
         skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -34,7 +72,6 @@ class ProgramScreen extends ConsumerWidget {
           ),
         ),
         data: (day) {
-          final configured = SettingsService.programConfig != null;
           if (!configured) {
             return _NotStarted(
               program: program,
@@ -44,8 +81,7 @@ class ProgramScreen extends ConsumerWidget {
           if (day == null) {
             return _Finished(
               weeks: SettingsService.programConfig?.durationWeeks,
-              onReset: () =>
-                  ref.read(programControllerProvider.notifier).reset(),
+              onReset: resetProgram,
             );
           }
           return _DayView(day: day);
@@ -157,12 +193,15 @@ class _Finished extends StatelessWidget {
   }
 }
 
-class _DayView extends StatelessWidget {
+class _DayView extends ConsumerWidget {
   final ProgramDay day;
   const _DayView({required this.day});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final done =
+        ref.watch(programDayCompletionProvider).valueOrNull ?? const <int>{};
+    final allDone = day.blocks.isNotEmpty && done.length >= day.blocks.length;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -170,12 +209,69 @@ class _DayView extends StatelessWidget {
         const SizedBox(height: 16),
         if (day.type == DayType.rest)
           const _RestDay()
-        else
-          for (final block in day.blocks) ...[
-            _BlockCard(block: block),
+        else ...[
+          if (allDone) ...[
+            _DayDoneBanner(day: day),
+            const SizedBox(height: 12),
+          ],
+          for (var i = 0; i < day.blocks.length; i++) ...[
+            _BlockCard(block: day.blocks[i], done: done.contains(i)),
             const SizedBox(height: 10),
           ],
+        ],
       ],
+    );
+  }
+}
+
+/// Shown once every block of the day has a finished session: confirms the
+/// day is complete and says what tomorrow brings.
+class _DayDoneBanner extends StatelessWidget {
+  final ProgramDay day;
+  const _DayDoneBanner({required this.day});
+
+  @override
+  Widget build(BuildContext context) {
+    final totalDays =
+        SettingsService.programConfig?.totalDays ?? programTotalDays;
+    final String tomorrow;
+    if (day.dayNumber >= totalDays) {
+      tomorrow = 'Das war der letzte Tag — Programm geschafft!';
+    } else {
+      tomorrow = switch (dayTypeForDayNumber(day.dayNumber + 1)) {
+        DayType.practice =>
+          'Morgen wartet Tag ${day.dayNumber + 1} mit frischen Übungen.',
+        DayType.light => 'Morgen: lockerer Tag mit kurzem Technik-Review.',
+        DayType.rest => 'Morgen: Ruhetag — Erholung ist Teil des Plans.',
+      };
+    }
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.cardPadding),
+      decoration: BoxDecoration(
+        color: AppColors.ok.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: AppColors.ok.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Text('🎉', style: TextStyle(fontSize: 26)),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tag ${day.dayNumber} geschafft!',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 2),
+                Text(tomorrow,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -299,7 +395,8 @@ class _RestDay extends StatelessWidget {
 
 class _BlockCard extends ConsumerWidget {
   final ExerciseBlock block;
-  const _BlockCard({required this.block});
+  final bool done;
+  const _BlockCard({required this.block, this.done = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -322,6 +419,11 @@ class _BlockCard extends ConsumerWidget {
                       children: [
                         AppBadge(label: badgeLabel, color: badgeColor),
                         const SizedBox(width: 8),
+                        if (done) ...[
+                          const Icon(Icons.check_circle,
+                              size: 16, color: AppColors.ok),
+                          const SizedBox(width: 4),
+                        ],
                         Flexible(
                           child: Text(rudiment.name,
                               maxLines: 1,
@@ -346,19 +448,25 @@ class _BlockCard extends ConsumerWidget {
               ),
               ElevatedButton(
                 onPressed: () {
-                  final bpm = block.startBpm;
-                  final q = bpm != null ? '?bpm=$bpm' : '';
+                  final params = [
+                    if (block.startBpm != null) 'bpm=${block.startBpm}',
+                    if (block.durationMinutes > 0)
+                      'min=${block.durationMinutes}',
+                    if (block.type == BlockType.tempoLadder) 'ladder=1',
+                  ].join('&');
+                  final q = params.isEmpty ? '' : '?$params';
                   context.push('/practice/${block.exerciseKey}$q');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: AppColors.textPrimary,
+                  backgroundColor: done ? AppColors.raised : AppColors.accent,
+                  foregroundColor:
+                      done ? AppColors.textSecondary : AppColors.textPrimary,
                   minimumSize: const Size(70, 38),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                 ),
-                child: const Text('Start'),
+                child: Text(done ? 'Nochmal' : 'Start'),
               ),
             ],
           ),

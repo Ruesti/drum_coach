@@ -9,6 +9,11 @@ double defaultBeatVolume(StrokeBeat b) {
   return 0.85;
 }
 
+/// Volume for a grace note (flam/drag) — as quiet as a ghost note, since a
+/// grace note is a soft stroke by definition regardless of how loud the main
+/// note it leads into is.
+const graceVolume = 0.25;
+
 /// A pattern expanded onto a fixed fine grid ([ticksPerQuarter] ticks per
 /// quarter). Each note sounds only on its onset tick; every other tick is
 /// silent (volume 0). This drives the metronome's per-tick volume array and
@@ -67,6 +72,24 @@ PatternPlayback buildPatternPlayback(
   final vols = List<double>.filled(total, 0.0);
   for (var i = 0; i < beats.length; i++) {
     vols[onsetTicks[i]] = volumeOf(beats[i]);
+
+    // Grace notes (flam = 1, drag = 2) sound as their own near-simultaneous
+    // onsets crammed into the ticks immediately before the main stroke,
+    // instead of being silent (no onset of their own) or — as a plain
+    // full-length StrokeBeat, the old encoding some content still used —
+    // sounding as a separate, evenly-spaced beat. `room` caps how many
+    // actually fit before this note without colliding with the previous
+    // note's onset, so a grace note never bleeds backward into the prior
+    // stroke on a fast passage.
+    final graces = beats[i].graces;
+    if (graces.isNotEmpty) {
+      final earliestFreeTick = i == 0 ? 0 : onsetTicks[i - 1] + 1;
+      final room = onsetTicks[i] - earliestFreeTick;
+      final placed = graces.length < room ? graces.length : room;
+      for (var g = 0; g < placed; g++) {
+        vols[onsetTicks[i] - placed + g] = graceVolume;
+      }
+    }
   }
   return PatternPlayback(
     ticksPerQuarter: ticksPerQuarter,

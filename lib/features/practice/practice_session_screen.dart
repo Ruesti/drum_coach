@@ -4,35 +4,57 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
 import '../../shared/widgets/app_badge.dart';
 import '../../shared/widgets/beat_indicator.dart';
+import '../../shared/widgets/bpm_control.dart';
 import '../../shared/widgets/notation_staff_widget.dart';
 import '../coaching/models/session_analysis.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
 import '../coaching/widgets/coach_feedback_card.dart';
+import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
+import '../program/program_provider.dart';
+import 'ladder_plan.dart';
 import 'practice_provider.dart';
+import 'session_timer_provider.dart';
+
+String _formatDuration(int seconds) {
+  final m = seconds ~/ 60;
+  final s = seconds % 60;
+  return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+}
 
 class PracticeSessionScreen extends ConsumerStatefulWidget {
   final String rudimentId;
   final bool isFromRoutine;
 
   /// Optional target tempo to preset the metronome to (e.g. a program's tempo
-  /// ladder start). Null keeps the metronome's current BPM.
+  /// ladder gate). Null presets the exercise's own suggested tempo instead.
   final int? targetBpm;
+
+  /// Suggested session length (e.g. a program block's duration). Presets the
+  /// countdown; the user can still pick another length before starting.
+  final int? targetMinutes;
+
+  /// True when launched as a program tempo-ladder block: the session climbs
+  /// through [buildLadderPlan]'s steps and ends with the clean-pass question.
+  final bool isLadder;
 
   const PracticeSessionScreen({
     super.key,
     required this.rudimentId,
     required this.isFromRoutine,
     this.targetBpm,
+    this.targetMinutes,
+    this.isLadder = false,
   });
 
   @override
@@ -41,11 +63,20 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
 }
 
 class _PracticeSessionScreenState
-    extends ConsumerState<PracticeSessionScreen> {
+    extends ConsumerState<PracticeSessionScreen> with WidgetsBindingObserver {
   int _elapsedSeconds = 0;
   int? _goalSeconds;
   Timer? _ticker;
   bool _sessionFinished = false;
+
+  // Tempo ladder (program block): plan + current step. The gate is the
+  // clean-pass tempo the ladder climbs to (+4 above it is the top step);
+  // it starts at the program's target and follows manual BPM changes.
+  LadderPlan? _ladderPlan;
+  int _ladderStepIndex = 0;
+  int? _gateBpm;
+
+  bool get _ladderActive => widget.isLadder && _gateBpm != null;
 
   // Beat log for mic correlation: recorded in build via ref.listen
   final List<BeatRecord> _beatLog = [];
@@ -59,6 +90,7 @@ class _PracticeSessionScreenState
   /// Captured in [initState] because `ref` is unsafe to read fresh inside
   /// [dispose] — by then the widget's Element may already be torn down.
   late final MetronomeNotifier _metronomeNotifier;
+  late final SessionTimerNotifier _sessionTimerNotifier;
 
   /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
   /// metronome's per-tick volumes and map the playback cursor to a note.
@@ -67,18 +99,81 @@ class _PracticeSessionScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WakelockPlus.enable();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
+    _sessionTimerNotifier = ref.read(sessionTimerNotifierProvider.notifier);
     _playback = PatternPlayback.forRudiment(
         ref.read(rudimentByIdProvider(widget.rudimentId)));
+
+    if (widget.targetMinutes != null) {
+      _goalSeconds = widget.targetMinutes! * 60;
+    }
+    _gateBpm = widget.targetBpm;
+    if (_ladderActive) {
+      _ladderPlan = buildLadderPlan(
+          startBpm: _gateBpm!, totalSeconds: _goalSeconds ?? 240);
+    }
+
+    // Restore a session interrupted by the app going to background (e.g. a
+    // phone call killed the process mid-practice).
+    final snap = SettingsService.practiceSnapshotFor(widget.rudimentId);
+    if (snap != null) {
+      _elapsedSeconds = snap.elapsedSeconds;
+      _goalSeconds = snap.goalSeconds ?? _goalSeconds;
+      SettingsService.clearPracticeSnapshot();
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final metronome = _metronomeNotifier
         ..setPatternClock(_playback.ticksPerQuarter)
         ..setPatternVolumes(_playback.tickVolumes);
-      if (widget.targetBpm != null) {
+      if (_ladderActive) {
+        metronome.setBpm(_ladderPlan!.bpmAt(_elapsedSeconds));
+      } else if (widget.targetBpm != null) {
         metronome.setBpm(widget.targetBpm!);
+      } else {
+        _presetExerciseBpm();
       }
       _initMicIfEnabled();
+      if (snap != null && mounted) {
+        _sessionTimerNotifier.restore(snap.sessionSeconds);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Unterbrochene Session fortgesetzt (${_formatDuration(snap.elapsedSeconds)})'),
+        ));
+      }
     });
+  }
+
+  /// Presets the metronome to this exercise's own suggested tempo (its BPM
+  /// progression, else its minimum) so tempo from a previously played
+  /// exercise never leaks over. Skipped once the user is already playing.
+  Future<void> _presetExerciseBpm() async {
+    final stored =
+        await ref.read(exerciseStartBpmProvider(widget.rudimentId).future);
+    if (!mounted || _sessionFinished) return;
+    final met = ref.read(metronomeNotifierProvider);
+    if (met.isPlaying || _elapsedSeconds > 0) return;
+    final minBpm = ref.read(rudimentByIdProvider(widget.rudimentId)).minBpm;
+    _metronomeNotifier.setBpm(stored ?? minBpm);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Save as soon as the app loses focus (a phone call passes through
+    // `inactive` before `paused`, and the process can be killed any time
+    // after) — the snapshot is cleared again on normal completion.
+    if (state != AppLifecycleState.resumed &&
+        _elapsedSeconds > 0 &&
+        !_sessionFinished) {
+      SettingsService.savePracticeSnapshot(
+        rudimentId: widget.rudimentId,
+        elapsedSeconds: _elapsedSeconds,
+        goalSeconds: _goalSeconds,
+        sessionSeconds: ref.read(sessionTimerNotifierProvider),
+      );
+    }
   }
 
   Future<void> _initMicIfEnabled() async {
@@ -91,7 +186,14 @@ class _PracticeSessionScreenState
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    WakelockPlus.disable();
     _ticker?.cancel();
+    // Leaving the screen while playing (e.g. backing out mid-exercise) never
+    // fires the ref.listen isPlaying transition below — that listener is
+    // gone the moment this widget is disposed — so the session timer would
+    // otherwise keep ticking forever with nothing left to pause it.
+    _sessionTimerNotifier.pause();
     // Deferred: Riverpod forbids modifying provider state synchronously
     // during a widget tree teardown (dispose runs mid-build/mid-unmount).
     Future.microtask(() {
@@ -107,9 +209,26 @@ class _PracticeSessionScreenState
 
   void _startTicker() {
     _ticker?.cancel();
+    if (_ladderActive) {
+      // Rebuild against the actually chosen session length and (re)apply the
+      // step tempo — covers both a changed goal chip and a restored session.
+      _ladderPlan = buildLadderPlan(
+          startBpm: _gateBpm!,
+          totalSeconds: _goalSeconds ?? widget.targetMinutes ?? 240);
+      _ladderStepIndex = _ladderPlan!.stepIndexAt(_elapsedSeconds);
+      _metronomeNotifier.setBpm(_ladderPlan!.bpms[_ladderStepIndex]);
+    }
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() => _elapsedSeconds++);
+      final plan = _ladderPlan;
+      if (plan != null) {
+        final step = plan.stepIndexAt(_elapsedSeconds);
+        if (step != _ladderStepIndex) {
+          _ladderStepIndex = step;
+          _metronomeNotifier.setBpm(plan.bpms[step]);
+        }
+      }
       if (_goalSeconds != null && _elapsedSeconds >= _goalSeconds!) {
         _showRatingSheet();
       }
@@ -119,6 +238,25 @@ class _PracticeSessionScreenState
   void _stopTicker() {
     _ticker?.cancel();
     _ticker = null;
+  }
+
+  /// All manual tempo input (slider, ±buttons, dialog) funnels through here.
+  /// In ladder mode a manual choice rebases the whole ladder: the current
+  /// step becomes the chosen tempo, later steps keep the same +4 spacing,
+  /// and the clean-pass gate shifts along with it — the program's stored
+  /// tempo never overrides what the player actually dialed in.
+  void _onUserBpmChanged(int bpm) {
+    _metronomeNotifier.setBpm(bpm);
+    final plan = _ladderPlan;
+    if (!_ladderActive || plan == null) return;
+    final step = plan.stepIndexAt(_elapsedSeconds);
+    if (plan.bpms[step] == bpm) return;
+    setState(() {
+      _gateBpm = _gateBpm! + (bpm - plan.bpms[step]);
+      _ladderPlan =
+          buildLadderPlan(startBpm: _gateBpm!, totalSeconds: plan.totalSeconds);
+      _ladderStepIndex = _ladderPlan!.stepIndexAt(_elapsedSeconds);
+    });
   }
 
   Future<void> _startMicRecording() async {
@@ -141,10 +279,7 @@ class _PracticeSessionScreenState
     final remaining = _goalSeconds != null
         ? (_goalSeconds! - _elapsedSeconds).clamp(0, _goalSeconds!)
         : null;
-    final seconds = remaining ?? _elapsedSeconds;
-    final m = seconds ~/ 60;
-    final s = seconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    return _formatDuration(remaining ?? _elapsedSeconds);
   }
 
   Future<void> _showRatingSheet() async {
@@ -181,6 +316,10 @@ class _PracticeSessionScreenState
           rating: rating,
           targetBpm: rudiment.targetBpm,
         );
+    await SettingsService.clearPracticeSnapshot();
+
+    String? ladderResult;
+    if (_ladderActive && mounted) ladderResult = await _askCleanPass();
 
     // Analyse mic data if available
     SessionAnalysis? analysis;
@@ -208,6 +347,7 @@ class _PracticeSessionScreenState
         durationSeconds: _elapsedSeconds,
         rating: rating,
         analysis: analysis,
+        ladderResult: ladderResult,
         aiService: _aiService,
         onClose: () => Navigator.pop(context),
       ),
@@ -216,30 +356,77 @@ class _PracticeSessionScreenState
     if (mounted) context.pop();
   }
 
+  /// §6 gate, asked right after a ladder session: a clean pass lifts the
+  /// stored clean tempo to gate + 4 and may unlock the next stage. Returns
+  /// the result line for the feedback sheet (null when dismissed).
+  Future<String?> _askCleanPass() async {
+    final gate = _gateBpm!;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Sauber & locker?'),
+        content: Text(
+          'Lief die Tempo-Leiter bis ${gate + 4} BPM gleichmäßig und locker '
+          'durch? Ja macht ${gate + 4} BPM zu deinem neuen sauberen Tempo.',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Nein'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Ja'),
+          ),
+        ],
+      ),
+    );
+    if (ok == null) return null;
+    if (!ok) return 'Sauberes Tempo bleibt bei $gate BPM — morgen wieder.';
+    await ref
+        .read(cleanTempoNotifierProvider.notifier)
+        .recordCleanPass(widget.rudimentId, gate);
+    final advanced =
+        await ref.read(programControllerProvider.notifier).advanceStageIfReady();
+    return advanced
+        ? 'Sauberes Tempo jetzt ${gate + 4} BPM · Level up: neue Stufe!'
+        : 'Sauberes Tempo jetzt ${gate + 4} BPM.';
+  }
+
   @override
   Widget build(BuildContext context) {
     final rudiment = ref.watch(rudimentByIdProvider(widget.rudimentId));
     final metState = ref.watch(metronomeNotifierProvider);
     final notifier = ref.read(metronomeNotifierProvider.notifier);
+    final sessionSeconds = ref.watch(sessionTimerNotifierProvider);
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
-      // Record beat timestamps for mic correlation
+      // Record beat timestamps for mic correlation — only pattern ticks that
+      // carry a note onset (silent grid ticks are not expected strokes), and
+      // logged as note index so the sticking pattern maps hits to hands.
       if (_micRecording &&
           next.isPlaying &&
           next.currentBeatIndex >= 0 &&
           next.currentBeatIndex != (prev?.currentBeatIndex ?? -2)) {
-        _beatLog.add((
-          beatIndex: next.currentBeatIndex,
-          timestamp: DateTime.now(),
-        ));
+        final tick = next.currentBeatIndex % _playback.totalTicks;
+        if (_playback.tickVolumes[tick] > 0) {
+          _beatLog.add((
+            beatIndex: _playback.noteIndexAtTick(tick),
+            timestamp: DateTime.now(),
+          ));
+        }
       }
 
       // Start/stop ticker and mic with metronome
       if (next.isPlaying && !(prev?.isPlaying ?? false)) {
         _startTicker();
         _startMicRecording();
+        _sessionTimerNotifier.resume();
       } else if (!next.isPlaying && (prev?.isPlaying ?? false)) {
         _stopTicker();
+        _sessionTimerNotifier.pause();
       }
     });
 
@@ -255,8 +442,22 @@ class _PracticeSessionScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(rudiment.name),
+        // Long étude names must truncate — with two timers plus icons in the
+        // actions there is little room left, and an unconstrained title
+        // overflows the toolbar.
+        title: Text(rudiment.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'Erklärung anzeigen',
+            // A plain Navigator push, not context.push('/lessons/...') — this
+            // screen lives on the top-level /practice route (outside the
+            // bottom-nav shell, see router.dart), and pushing a shell-branch
+            // route from there previously caused a duplicate-page-key crash.
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => LessonDetailScreen(rudimentId: widget.rudimentId),
+            )),
+          ),
           if (SettingsService.micAnalysisEnabled)
             Padding(
               padding: const EdgeInsets.only(right: 4),
@@ -269,6 +470,9 @@ class _PracticeSessionScreenState
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
+              // Single row, not stacked — a two-line Column here silently
+              // clipped against the AppBar's fixed toolbar height, making
+              // the session timer invisible on-device.
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -279,10 +483,23 @@ class _PracticeSessionScreenState
                   Text(
                     _timerLabel,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: timerColor,
                       fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.timelapse,
+                      size: 16, color: AppColors.textMuted),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatDuration(sessionSeconds),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                      fontFeatures: [FontFeature.tabularFigures()],
                     ),
                   ),
                 ],
@@ -293,42 +510,62 @@ class _PracticeSessionScreenState
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          padding: const EdgeInsets.fromLTRB(0, 16, 0, 20),
           child: Column(
             children: [
+              // Sheet bleeds to the screen edges (minus a tiny 4px margin) —
+              // every pixel of width matters for note spacing, unlike the
+              // controls below which read fine with normal 20px insets.
               Expanded(
-                child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: NotationStaffWidget(
                     rudiment: rudiment,
                     activeIndex: activeBeat,
+                    autoScroll: true,
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              _CompactMetronome(
-                bpm: metState.bpm,
-                isPlaying: metState.isPlaying,
-                isAccent: metState.isAccent,
-                currentBeatIndex: metState.currentBeatIndex,
-                soundType: metState.soundType,
-                onBpmChanged: notifier.setBpm,
-                onToggle: notifier.toggle,
-                onSoundTypeChanged: notifier.setSoundType,
+              if (_ladderActive && _ladderPlan != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: _LadderStepRow(
+                    bpms: _ladderPlan!.bpms,
+                    currentStep: _ladderPlan!.stepIndexAt(_elapsedSeconds),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _CompactMetronome(
+                  bpm: metState.bpm,
+                  isPlaying: metState.isPlaying,
+                  isAccent: metState.isAccent,
+                  currentBeatIndex: metState.currentBeatIndex,
+                  soundType: metState.soundType,
+                  onBpmChanged: _onUserBpmChanged,
+                  onToggle: notifier.toggle,
+                  onSoundTypeChanged: notifier.setSoundType,
+                ),
               ),
               const SizedBox(height: 10),
               if (!metState.isPlaying && _elapsedSeconds == 0)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                   child: _TimerGoalRow(
                     selected: _goalSeconds,
+                    suggestedMinutes: widget.targetMinutes,
                     onSelected: (s) => setState(() => _goalSeconds = s),
                   ),
                 ),
               const SizedBox(height: 4),
-              ElevatedButton.icon(
-                onPressed: _showRatingSheet,
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Finish Session'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ElevatedButton.icon(
+                  onPressed: _showRatingSheet,
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Finish Session'),
+                ),
               ),
             ],
           ),
@@ -338,15 +575,53 @@ class _PracticeSessionScreenState
   }
 }
 
+// ── Ladder step row ────────────────────────────────────────────────────────────
+
+/// Read-only view of the tempo-ladder steps with the active one highlighted.
+class _LadderStepRow extends StatelessWidget {
+  final List<int> bpms;
+  final int currentStep;
+
+  const _LadderStepRow({required this.bpms, required this.currentStep});
+
+  @override
+  Widget build(BuildContext context) {
+    // Wrap, not Row — on narrow phones the label plus four chips can exceed
+    // the line and must break instead of overflowing.
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        const Icon(Icons.stairs_outlined, size: 16, color: AppColors.accent),
+        const Text('Tempo-Leiter',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+        for (var i = 0; i < bpms.length; i++)
+          AppSelectableChip(
+            label: '${bpms[i]}',
+            selected: i == currentStep,
+            onTap: () {},
+          ),
+      ],
+    );
+  }
+}
+
 // ── Timer goal row ─────────────────────────────────────────────────────────────
 
 class _TimerGoalRow extends StatelessWidget {
   final int? selected;
+  final int? suggestedMinutes;
   final ValueChanged<int?> onSelected;
 
-  const _TimerGoalRow({required this.selected, required this.onSelected});
+  const _TimerGoalRow({
+    required this.selected,
+    this.suggestedMinutes,
+    required this.onSelected,
+  });
 
-  static const _options = [
+  static const _defaults = [
     (label: '5 min', seconds: 5 * 60),
     (label: '10 min', seconds: 10 * 60),
     (label: '15 min', seconds: 15 * 60),
@@ -355,18 +630,25 @@ class _TimerGoalRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: _options.map((opt) {
+    final options = [
+      if (suggestedMinutes != null &&
+          !_defaults.any((o) => o.seconds == suggestedMinutes! * 60))
+        (label: '$suggestedMinutes min ✦', seconds: suggestedMinutes! * 60),
+      ..._defaults,
+    ];
+    // Wrap, not Row — with a suggested-duration chip there are five options,
+    // which don't always fit one line on a phone.
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 6,
+      children: options.map((opt) {
         final sec = opt.seconds == 0 ? null : opt.seconds;
         final isSelected = selected == sec;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: AppSelectableChip(
-            label: opt.label,
-            selected: isSelected,
-            onTap: () => onSelected(sec),
-          ),
+        return AppSelectableChip(
+          label: opt.label,
+          selected: isSelected,
+          onTap: () => onSelected(sec),
         );
       }).toList(),
     );
@@ -421,10 +703,34 @@ class _CompactMetronome extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text('$bpm', style: AppTypography.display),
-              const SizedBox(width: 4),
-              Text('BPM', style: AppTypography.label.copyWith(color: AppColors.textMuted)),
-              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    final value = await editBpmDialog(context, current: bpm);
+                    if (value != null) onBpmChanged(value);
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('$bpm', style: AppTypography.display),
+                      const SizedBox(width: 4),
+                      Text('BPM',
+                          style: AppTypography.label
+                              .copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              BpmStepButtons(
+                bpm: bpm,
+                onChanged: onBpmChanged,
+                alignment: MainAxisAlignment.start,
+              ),
               Expanded(
                 child: Slider(
                   value: bpm.toDouble(),
@@ -580,6 +886,7 @@ class _FeedbackSheet extends StatefulWidget {
   final int durationSeconds;
   final int rating;
   final SessionAnalysis? analysis;
+  final String? ladderResult;
   final AICoachingService aiService;
   final VoidCallback onClose;
 
@@ -590,6 +897,7 @@ class _FeedbackSheet extends StatefulWidget {
     required this.durationSeconds,
     required this.rating,
     required this.analysis,
+    this.ladderResult,
     required this.aiService,
     required this.onClose,
   });
@@ -658,6 +966,26 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
             '${widget.durationSeconds ~/ 60}min ${widget.durationSeconds % 60}s',
             style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
           ),
+          if (widget.ladderResult != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.stairs_outlined,
+                    size: 16, color: AppColors.accent),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    widget.ladderResult!,
+                    style: const TextStyle(
+                        color: AppColors.accent,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (hasMicData && widget.analysis?.timing != null) ...[
             const SizedBox(height: 16),
             _AnalysisSummary(analysis: widget.analysis!),

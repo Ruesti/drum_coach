@@ -6,9 +6,14 @@ part of 'program_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$trainingProgramHash() => r'a699fa1b0e4135c1d83bbd81ccc7c9841a8a22bb';
+String _$trainingProgramHash() => r'23c9d465321c21f56b7de40699814fe3bf7df993';
 
-/// See also [trainingProgram].
+/// A lightweight description of the current adaptive program run, built from
+/// the persisted [ProgramConfig]. `phases` is intentionally empty — the
+/// adaptive program has no fixed phase list; per-day content comes from
+/// [currentProgramDay] instead.
+///
+/// Copied from [trainingProgram].
 @ProviderFor(trainingProgram)
 final trainingProgramProvider = AutoDisposeProvider<TrainingProgram>.internal(
   trainingProgram,
@@ -21,7 +26,7 @@ final trainingProgramProvider = AutoDisposeProvider<TrainingProgram>.internal(
 );
 
 typedef TrainingProgramRef = AutoDisposeProviderRef<TrainingProgram>;
-String _$programDayHash() => r'b2be4961703b783f683b36cd3bad883f6d536566';
+String _$programDayHash() => r'238c9096ae8db92a4641ba565c58c2e1ba8a09dd';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -44,22 +49,42 @@ class _SystemHash {
   }
 }
 
-/// A single expanded program day, with the stored clean tempo folded in.
+/// A single expanded program day for the current adaptive stage, with the
+/// stored clean tempo folded in. Kept only for its generated provider
+/// signature (family, non-nullable `Future<ProgramDay>`) — [currentProgramDay]
+/// builds the day directly now and no longer routes through this provider,
+/// so it throws if invoked with no config/stages rather than returning a
+/// meaningless day for an arbitrary [dayNumber].
 ///
 /// Copied from [programDay].
 @ProviderFor(programDay)
 const programDayProvider = ProgramDayFamily();
 
-/// A single expanded program day, with the stored clean tempo folded in.
+/// A single expanded program day for the current adaptive stage, with the
+/// stored clean tempo folded in. Kept only for its generated provider
+/// signature (family, non-nullable `Future<ProgramDay>`) — [currentProgramDay]
+/// builds the day directly now and no longer routes through this provider,
+/// so it throws if invoked with no config/stages rather than returning a
+/// meaningless day for an arbitrary [dayNumber].
 ///
 /// Copied from [programDay].
 class ProgramDayFamily extends Family<AsyncValue<ProgramDay>> {
-  /// A single expanded program day, with the stored clean tempo folded in.
+  /// A single expanded program day for the current adaptive stage, with the
+  /// stored clean tempo folded in. Kept only for its generated provider
+  /// signature (family, non-nullable `Future<ProgramDay>`) — [currentProgramDay]
+  /// builds the day directly now and no longer routes through this provider,
+  /// so it throws if invoked with no config/stages rather than returning a
+  /// meaningless day for an arbitrary [dayNumber].
   ///
   /// Copied from [programDay].
   const ProgramDayFamily();
 
-  /// A single expanded program day, with the stored clean tempo folded in.
+  /// A single expanded program day for the current adaptive stage, with the
+  /// stored clean tempo folded in. Kept only for its generated provider
+  /// signature (family, non-nullable `Future<ProgramDay>`) — [currentProgramDay]
+  /// builds the day directly now and no longer routes through this provider,
+  /// so it throws if invoked with no config/stages rather than returning a
+  /// meaningless day for an arbitrary [dayNumber].
   ///
   /// Copied from [programDay].
   ProgramDayProvider call(
@@ -94,11 +119,21 @@ class ProgramDayFamily extends Family<AsyncValue<ProgramDay>> {
   String? get name => r'programDayProvider';
 }
 
-/// A single expanded program day, with the stored clean tempo folded in.
+/// A single expanded program day for the current adaptive stage, with the
+/// stored clean tempo folded in. Kept only for its generated provider
+/// signature (family, non-nullable `Future<ProgramDay>`) — [currentProgramDay]
+/// builds the day directly now and no longer routes through this provider,
+/// so it throws if invoked with no config/stages rather than returning a
+/// meaningless day for an arbitrary [dayNumber].
 ///
 /// Copied from [programDay].
 class ProgramDayProvider extends AutoDisposeFutureProvider<ProgramDay> {
-  /// A single expanded program day, with the stored clean tempo folded in.
+  /// A single expanded program day for the current adaptive stage, with the
+  /// stored clean tempo folded in. Kept only for its generated provider
+  /// signature (family, non-nullable `Future<ProgramDay>`) — [currentProgramDay]
+  /// builds the day directly now and no longer routes through this provider,
+  /// so it throws if invoked with no config/stages rather than returning a
+  /// meaningless day for an arbitrary [dayNumber].
   ///
   /// Copied from [programDay].
   ProgramDayProvider(
@@ -182,10 +217,11 @@ class _ProgramDayProviderElement
   int get dayNumber => (origin as ProgramDayProvider).dayNumber;
 }
 
-String _$currentProgramDayHash() => r'ef41f142018a5f49580668e54f177999f862fc89';
+String _$currentProgramDayHash() => r'e04cd8cff6be77e0acf5796d01314822fa2e8706';
 
-/// The current program day derived from the stored start date, or null if the
-/// program has not been started (or has run past its final day).
+/// The current program day derived from the stored config + start date, or
+/// null if the program has not been started, has no config, has no exercises
+/// for the configured pool/difficulty, or has run past its final day.
 ///
 /// Copied from [currentProgramDay].
 @ProviderFor(currentProgramDay)
@@ -201,8 +237,29 @@ final currentProgramDayProvider =
 );
 
 typedef CurrentProgramDayRef = AutoDisposeFutureProviderRef<ProgramDay?>;
+String _$programDayCompletionHash() =>
+    r'658d0b9ba3327ab6191f53a3ad7685b6b4430d27';
+
+/// Which of today's program-day blocks already count as done, derived from
+/// today's finished practice sessions (ordinal per exercise key — see
+/// [completedBlockIndices]). Empty when no program day is active.
+///
+/// Copied from [programDayCompletion].
+@ProviderFor(programDayCompletion)
+final programDayCompletionProvider =
+    AutoDisposeFutureProvider<Set<int>>.internal(
+  programDayCompletion,
+  name: r'programDayCompletionProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$programDayCompletionHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef ProgramDayCompletionRef = AutoDisposeFutureProviderRef<Set<int>>;
 String _$cleanTempoNotifierHash() =>
-    r'd7aa3ea7b962beb26a5cf6033b85e8afc3e0ee97';
+    r'93a2942f9d03e4270d9246110175258327d467fd';
 
 /// Stored clean tempos keyed by exercise key (the last clean tempo per line).
 ///
@@ -220,9 +277,9 @@ final cleanTempoNotifierProvider = AutoDisposeAsyncNotifierProvider<
 );
 
 typedef _$CleanTempoNotifier = AutoDisposeAsyncNotifier<Map<String, int>>;
-String _$programControllerHash() => r'45258b13d8f502f05a210e562a42f9d89d0ae497';
+String _$programControllerHash() => r'0ae3bf79df077a6c852a42ad8ab8cacdf71f2333';
 
-/// Controls program lifecycle (start / reset).
+/// Controls program lifecycle (start / reset / stage advance).
 ///
 /// Copied from [ProgramController].
 @ProviderFor(ProgramController)

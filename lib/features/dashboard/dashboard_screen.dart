@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
+import '../../data/local/settings_service.dart';
 import '../../shared/widgets/app_card.dart';
 import '../../shared/widgets/error_state.dart';
 import '../learning/routine_provider.dart';
+import '../program/program_provider.dart';
 import '../stats/stats_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -48,13 +50,17 @@ class DashboardScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // Training program entry
+          // Training program entry — subtitle reflects the configured
+          // adaptive run, not a hardcoded curriculum.
           AppCard(
             onTap: () => context.push('/program'),
-            child: const _DashRow(
+            child: _DashRow(
               icon: Icons.fitness_center,
               title: 'Trainingsprogramm',
-              subtitle: 'Stick Control · 12 Wochen',
+              subtitle: SettingsService.programConfig == null
+                  ? 'Adaptiv · noch nicht eingerichtet'
+                  : '${ref.watch(trainingProgramProvider).name} · '
+                      '${ref.watch(trainingProgramProvider).totalWeeks} Wochen',
             ),
           ),
           const SizedBox(height: AppSpacing.md),
