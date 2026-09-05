@@ -150,13 +150,37 @@ Future<ProgramDay?> currentProgramDay(CurrentProgramDayRef ref) async {
   final stageIndex = SettingsService.programStageIndex.clamp(0, stages.length - 1);
   final stageExercises = exercisesForStage(pool, stages[stageIndex]);
 
+  // Daily technique rotation over everything from the start difficulty up to
+  // the current stage — not just the current tier — for variety.
+  final techniquePool = pool
+      .where((r) =>
+          r.difficulty.index >= config.startDifficulty.index &&
+          r.difficulty.index <= stages[stageIndex].index)
+      .toList();
+
+  // Refresh after every finished session: the ladder gate below reads the
+  // per-exercise BPM progression, which each session's rating updates.
+  ref.watch(recentSessionsProvider);
   final clean = await ref.watch(cleanTempoNotifierProvider.future);
+  final progressBpm = <String, int>{};
+  try {
+    final rows = await IsarService.instance.rudimentProgress
+        .buildQuery<RudimentProgress>()
+        .findAll();
+    for (final p in rows) {
+      progressBpm[p.exerciseId] = p.currentBpm;
+    }
+  } catch (_) {} // store unavailable (tests) — fall back to clean/minBpm
+
   return buildAdaptiveProgramDay(
     stageExercises: stageExercises,
     stage: stages[stageIndex],
     dayNumber: dayNumber,
     totalDays: config.totalDays,
-    cleanBpmFor: (k) => clean[k],
+    // Ladder gate: stored clean tempo, else the tempo the learner actually
+    // practices at (BPM progression), else the exercise minimum.
+    cleanBpmFor: (k) => clean[k] ?? progressBpm[k],
+    techniquePool: techniquePool,
   );
 }
 

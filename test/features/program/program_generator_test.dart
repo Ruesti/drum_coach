@@ -176,4 +176,53 @@ void main() {
       expect(p.status, PacingStatus.onTrack);
     });
   });
+
+  group('variety (Gerätetest-Feedback: gleiche Übungen jeden Tag)', () {
+    final stageExercises = [
+      _r('ex_a', Difficulty.beginner),
+      _r('ex_b', Difficulty.beginner),
+    ];
+    final techniquePool = [
+      _r('ex_a', Difficulty.beginner),
+      _r('ex_b', Difficulty.beginner),
+      _r('ex_c', Difficulty.beginner),
+      _r('ex_d', Difficulty.beginner),
+      _r('ex_e', Difficulty.beginner),
+    ];
+
+    test('technique rotates over the wider techniquePool when given', () {
+      final keys = [
+        for (final dayNumber in [1, 2, 3, 4, 5])
+          buildAdaptiveProgramDay(
+            stageExercises: stageExercises,
+            stage: Difficulty.beginner,
+            dayNumber: dayNumber,
+            totalDays: 56,
+            techniquePool: techniquePool,
+          ).blocks[1].exerciseKey,
+      ];
+      expect(keys.toSet(), {'ex_a', 'ex_b', 'ex_c', 'ex_d', 'ex_e'});
+    });
+
+    test('warmup variant changes from one practice day to the next', () {
+      ExerciseBlock warmupOn(int dayNumber) => buildAdaptiveProgramDay(
+            stageExercises: stageExercises,
+            stage: Difficulty.beginner,
+            dayNumber: dayNumber,
+            totalDays: 56,
+          ).blocks[0];
+      expect(warmupOn(1).variants, isNot(warmupOn(2).variants));
+    });
+
+    test('empty techniquePool falls back to the stage exercises', () {
+      final day = buildAdaptiveProgramDay(
+        stageExercises: stageExercises,
+        stage: Difficulty.beginner,
+        dayNumber: 1,
+        totalDays: 56,
+        techniquePool: const [],
+      );
+      expect(day.blocks[1].exerciseKey, 'ex_b');
+    });
+  });
 }

@@ -69,11 +69,14 @@ class _PracticeSessionScreenState
   Timer? _ticker;
   bool _sessionFinished = false;
 
-  // Tempo ladder (program block): plan + current step.
+  // Tempo ladder (program block): plan + current step. The gate is the
+  // clean-pass tempo the ladder climbs to (+4 above it is the top step);
+  // it starts at the program's target and follows manual BPM changes.
   LadderPlan? _ladderPlan;
   int _ladderStepIndex = 0;
+  int? _gateBpm;
 
-  bool get _ladderActive => widget.isLadder && widget.targetBpm != null;
+  bool get _ladderActive => widget.isLadder && _gateBpm != null;
 
   // Beat log for mic correlation: recorded in build via ref.listen
   final List<BeatRecord> _beatLog = [];
@@ -106,9 +109,10 @@ class _PracticeSessionScreenState
     if (widget.targetMinutes != null) {
       _goalSeconds = widget.targetMinutes! * 60;
     }
+    _gateBpm = widget.targetBpm;
     if (_ladderActive) {
       _ladderPlan = buildLadderPlan(
-          startBpm: widget.targetBpm!, totalSeconds: _goalSeconds ?? 240);
+          startBpm: _gateBpm!, totalSeconds: _goalSeconds ?? 240);
     }
 
     // Restore a session interrupted by the app going to background (e.g. a
@@ -133,6 +137,7 @@ class _PracticeSessionScreenState
       }
       _initMicIfEnabled();
       if (snap != null && mounted) {
+        _sessionTimerNotifier.restore(snap.sessionSeconds);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
               'Unterbrochene Session fortgesetzt (${_formatDuration(snap.elapsedSeconds)})'),
@@ -166,6 +171,7 @@ class _PracticeSessionScreenState
         rudimentId: widget.rudimentId,
         elapsedSeconds: _elapsedSeconds,
         goalSeconds: _goalSeconds,
+        sessionSeconds: ref.read(sessionTimerNotifierProvider),
       );
     }
   }
@@ -207,7 +213,7 @@ class _PracticeSessionScreenState
       // Rebuild against the actually chosen session length and (re)apply the
       // step tempo — covers both a changed goal chip and a restored session.
       _ladderPlan = buildLadderPlan(
-          startBpm: widget.targetBpm!,
+          startBpm: _gateBpm!,
           totalSeconds: _goalSeconds ?? widget.targetMinutes ?? 240);
       _ladderStepIndex = _ladderPlan!.stepIndexAt(_elapsedSeconds);
       _metronomeNotifier.setBpm(_ladderPlan!.bpms[_ladderStepIndex]);
@@ -232,6 +238,25 @@ class _PracticeSessionScreenState
   void _stopTicker() {
     _ticker?.cancel();
     _ticker = null;
+  }
+
+  /// All manual tempo input (slider, ±buttons, dialog) funnels through here.
+  /// In ladder mode a manual choice rebases the whole ladder: the current
+  /// step becomes the chosen tempo, later steps keep the same +4 spacing,
+  /// and the clean-pass gate shifts along with it — the program's stored
+  /// tempo never overrides what the player actually dialed in.
+  void _onUserBpmChanged(int bpm) {
+    _metronomeNotifier.setBpm(bpm);
+    final plan = _ladderPlan;
+    if (!_ladderActive || plan == null) return;
+    final step = plan.stepIndexAt(_elapsedSeconds);
+    if (plan.bpms[step] == bpm) return;
+    setState(() {
+      _gateBpm = _gateBpm! + (bpm - plan.bpms[step]);
+      _ladderPlan =
+          buildLadderPlan(startBpm: _gateBpm!, totalSeconds: plan.totalSeconds);
+      _ladderStepIndex = _ladderPlan!.stepIndexAt(_elapsedSeconds);
+    });
   }
 
   Future<void> _startMicRecording() async {
@@ -335,7 +360,7 @@ class _PracticeSessionScreenState
   /// stored clean tempo to gate + 4 and may unlock the next stage. Returns
   /// the result line for the feedback sheet (null when dismissed).
   Future<String?> _askCleanPass() async {
-    final gate = widget.targetBpm!;
+    final gate = _gateBpm!;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -417,7 +442,10 @@ class _PracticeSessionScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(rudiment.name),
+        // Long étude names must truncate — with two timers plus icons in the
+        // actions there is little room left, and an unconstrained title
+        // overflows the toolbar.
+        title: Text(rudiment.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
@@ -515,7 +543,7 @@ class _PracticeSessionScreenState
                   isAccent: metState.isAccent,
                   currentBeatIndex: metState.currentBeatIndex,
                   soundType: metState.soundType,
-                  onBpmChanged: notifier.setBpm,
+                  onBpmChanged: _onUserBpmChanged,
                   onToggle: notifier.toggle,
                   onSoundTypeChanged: notifier.setSoundType,
                 ),
@@ -558,22 +586,22 @@ class _LadderStepRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    // Wrap, not Row — on narrow phones the label plus four chips can exceed
+    // the line and must break instead of overflowing.
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 6,
+      runSpacing: 6,
       children: [
         const Icon(Icons.stairs_outlined, size: 16, color: AppColors.accent),
-        const SizedBox(width: 8),
         const Text('Tempo-Leiter',
             style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-        const SizedBox(width: 8),
         for (var i = 0; i < bpms.length; i++)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3),
-            child: AppSelectableChip(
-              label: '${bpms[i]}',
-              selected: i == currentStep,
-              onTap: () {},
-            ),
+          AppSelectableChip(
+            label: '${bpms[i]}',
+            selected: i == currentStep,
+            onTap: () {},
           ),
       ],
     );
@@ -608,18 +636,19 @@ class _TimerGoalRow extends StatelessWidget {
         (label: '$suggestedMinutes min ✦', seconds: suggestedMinutes! * 60),
       ..._defaults,
     ];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    // Wrap, not Row — with a suggested-duration chip there are five options,
+    // which don't always fit one line on a phone.
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 6,
       children: options.map((opt) {
         final sec = opt.seconds == 0 ? null : opt.seconds;
         final isSelected = selected == sec;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: AppSelectableChip(
-            label: opt.label,
-            selected: isSelected,
-            onTap: () => onSelected(sec),
-          ),
+        return AppSelectableChip(
+          label: opt.label,
+          selected: isSelected,
+          onTap: () => onSelected(sec),
         );
       }).toList(),
     );

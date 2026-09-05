@@ -98,9 +98,11 @@ class SettingsService {
     required String rudimentId,
     required int elapsedSeconds,
     int? goalSeconds,
+    int sessionSeconds = 0,
   }) async {
     await _prefs.setString('practice_snap_id', rudimentId);
     await _prefs.setInt('practice_snap_elapsed', elapsedSeconds);
+    await _prefs.setInt('practice_snap_session', sessionSeconds);
     if (goalSeconds != null) {
       await _prefs.setInt('practice_snap_goal', goalSeconds);
     } else {
@@ -112,7 +114,8 @@ class SettingsService {
 
   /// The stored snapshot for [rudimentId], or null if none exists, it belongs
   /// to another exercise, or it is older than [maxAge].
-  static ({int elapsedSeconds, int? goalSeconds})? practiceSnapshotFor(
+  static ({int elapsedSeconds, int? goalSeconds, int sessionSeconds})?
+      practiceSnapshotFor(
     String rudimentId, {
     Duration maxAge = const Duration(hours: 1),
   }) {
@@ -125,12 +128,14 @@ class SettingsService {
     return (
       elapsedSeconds: elapsed,
       goalSeconds: _prefs.getInt('practice_snap_goal'),
+      sessionSeconds: _prefs.getInt('practice_snap_session') ?? 0,
     );
   }
 
   static Future<void> clearPracticeSnapshot() async {
     await _prefs.remove('practice_snap_id');
     await _prefs.remove('practice_snap_elapsed');
+    await _prefs.remove('practice_snap_session');
     await _prefs.remove('practice_snap_goal');
     await _prefs.remove('practice_snap_time');
   }

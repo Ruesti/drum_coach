@@ -171,4 +171,31 @@ void main() {
     // Both AppBar timers (exercise + cross-exercise session) sit at zero.
     expect(find.text('00:00'), findsNWidgets(2));
   });
+
+  testWidgets(
+      'manuelle BPM-Änderung rebasiert die Leiter (Gerätetest-Feedback: '
+      '"100 eingestellt, startet trotzdem mit 52")', (tester) async {
+    await _pumpScreen(
+      tester,
+      screen: PracticeSessionScreen(
+        rudimentId: rudimentsSeedData.first.id,
+        isFromRoutine: false,
+        targetBpm: 60,
+        targetMinutes: 4,
+        isLadder: true,
+      ),
+    );
+    await tester.pump();
+    // Gate 60 → Stufen 52/56/60/64, Metronom auf der untersten (52).
+    expect(find.text('52'), findsNWidgets(2));
+    expect(find.text('64'), findsOneWidget);
+
+    // Manuell +5 → 57: Die aktuelle Stufe wird 57, die Leiter zieht mit
+    // (57/61/65/69) statt das Programm-Tempo zu erzwingen.
+    await tester.tap(find.text('+5'));
+    await tester.pump();
+    expect(find.text('57'), findsNWidgets(2));
+    expect(find.text('69'), findsOneWidget);
+    expect(find.text('52'), findsNothing);
+  });
 }

@@ -38,4 +38,10 @@ class SessionTimerNotifier extends _$SessionTimerNotifier {
     pause();
     state = 0;
   }
+
+  /// Restores a persisted count after process death (e.g. a phone call
+  /// killed the app mid-session). Never lowers a live count.
+  void restore(int seconds) {
+    if (seconds > state) state = seconds;
+  }
 }
