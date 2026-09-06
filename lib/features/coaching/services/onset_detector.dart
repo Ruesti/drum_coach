@@ -45,6 +45,7 @@ class OnsetDetector {
 
   final List<double> _ring = [];
   final List<int> _pending = [];
+  List<int> _prevWindow = const [];
   double _prevEnergy = 0;
   int _windowsProcessed = 0;
   double _lastHitMs = double.negativeInfinity;
@@ -87,10 +88,36 @@ class OnsetDetector {
         energy > _minEnergy &&
         energy > baseline * _medianRatio &&
         energy > _prevEnergy * _risingRatio) {
-      hits.add(OnsetHit(timeMs: windowStartMs, amplitude: energy));
+      hits.add(OnsetHit(timeMs: _refineOnsetMs(windowStartMs), amplitude: energy));
       _lastHitMs = windowStartMs;
     }
     _prevEnergy = energy;
+    _prevWindow = List.of(_pending);
+  }
+
+  /// Sub-window onset time (§1.3): window-start stamping quantizes to 10 ms,
+  /// which alone blows the < 5 ms calibration-spread budget. Look for the
+  /// attack edge — the first sample reaching half the peak — across the
+  /// previous and the triggering window (the burst may have started late in
+  /// the previous window whose energy stayed under the threshold).
+  double _refineOnsetMs(double windowStartMs) {
+    final search = [..._prevWindow, ..._pending];
+    var peak = 0;
+    for (final s in search) {
+      if (s.abs() > peak) peak = s.abs();
+    }
+    if (peak == 0) return windowStartMs;
+    final threshold = peak / 2;
+    var idx = search.length - 1;
+    for (var i = 0; i < search.length; i++) {
+      if (search[i].abs() >= threshold) {
+        idx = i;
+        break;
+      }
+    }
+    final searchStartMs =
+        windowStartMs - _prevWindow.length * 1000.0 / sampleRate;
+    return searchStartMs + idx * 1000.0 / sampleRate;
   }
 
   static double _median(List<double> values) {

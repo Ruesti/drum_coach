@@ -86,6 +86,22 @@ void main() {
       }
     });
 
+    test('Zeitstempel sind sample-genau, nicht aufs 10-ms-Fenster gerundet',
+        () {
+      // Onsets bewusst mitten in Analysefenster gelegt (Offsets 1,5 / 3,5 /
+      // 8,2 ms). Die Fensterstart-Rundung wäre bis 10 ms daneben — für die
+      // Latenz-Kalibrierung (§1.3, Spannweite < 5 ms) braucht es Sub-
+      // Fenster-Auflösung.
+      final times = [0.3015, 0.6035, 0.9082];
+      final pcm = _synth(seconds: 1.4, hitTimesSec: times);
+      final hits = _run(pcm);
+      expect(hits.length, times.length);
+      for (var i = 0; i < times.length; i++) {
+        expect(hits[i].timeMs, closeTo(times[i] * 1000, 3),
+            reason: 'hit $i must resolve inside the analysis window');
+      }
+    });
+
     test('leise Schläge (pp) werden erkannt', () {
       final times = [for (var k = 0; k < 8; k++) 0.3 + k * 0.2];
       final pcm = _synth(seconds: 2.2, hitTimesSec: times, hitAmp: 0.05);
