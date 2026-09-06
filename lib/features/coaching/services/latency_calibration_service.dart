@@ -19,39 +19,51 @@ class LatencyCalibrationService {
   /// fewer than half the clicks were found in the recording (too noisy, mic
   /// blocked, volume down).
   ///
+  /// A full record+play cycle is run and discarded first: the device test
+  /// showed consecutive runs drifting 68.5 → 53.9 → 49.8 ms — the first
+  /// cycle after idle measures a colder, slower audio pipeline, while later
+  /// runs sat within 5 ms of each other. Warming up with a discarded cycle
+  /// makes already the first reported value a steady-state measurement.
+  ///
   /// Click spacing is dithered (390–620 ms): the output side quantizes each
   /// click onto the next audio-buffer boundary, and a fixed interval would
   /// sample similar buffer phases every time — the run median then wobbles
   /// several ms between runs. Dithered spacing spreads the phases so the
   /// median converges.
   static Future<LatencyEstimate?> runOnce() async {
-    final mic = MicAnalysisService();
-    AudioSource? click;
-    try {
-      if (!await mic.hasPermission) return null;
-      if (!SoLoud.instance.isInitialized) return null;
-      click = await SoLoud.instance
-          .loadMem('calibration_click', MetronomeEngine.calibrationClickWav());
+    if (!SoLoud.instance.isInitialized) return null;
+    if (!await MicAnalysisService().hasPermission) return null;
 
+    final click = await SoLoud.instance
+        .loadMem('calibration_click', MetronomeEngine.calibrationClickWav());
+    try {
+      await _cycle(click, clicks: 4, settleMs: 250);
+      return await _cycle(click, clicks: clickCount, settleMs: 300);
+    } finally {
+      SoLoud.instance.disposeSource(click).ignore();
+    }
+  }
+
+  static Future<LatencyEstimate?> _cycle(
+    AudioSource click, {
+    required int clicks,
+    required int settleMs,
+  }) async {
+    final mic = MicAnalysisService();
+    try {
       await mic.startRecording();
       // Let the detector's median baseline warm up before the first click.
       await Future<void>.delayed(const Duration(milliseconds: 400));
 
-      // Warm-up click: the first play after idle carries extra pipeline
-      // latency; it is neither planned nor counted (the estimator treats its
-      // recording as one spurious onset, which the median shrugs off).
-      await SoLoud.instance.play(click, volume: 1.0);
-      await Future<void>.delayed(const Duration(milliseconds: 550));
-
       final rng = math.Random(7);
       final plannedMs = <double>[];
-      for (var i = 0; i < clickCount; i++) {
+      for (var i = 0; i < clicks; i++) {
         plannedMs.add(DateTime.now().microsecondsSinceEpoch / 1000.0);
         await SoLoud.instance.play(click, volume: 1.0);
         await Future<void>.delayed(
             Duration(milliseconds: 390 + rng.nextInt(230)));
       }
-      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await Future<void>.delayed(Duration(milliseconds: settleMs));
       await mic.stopRecording();
 
       final anchor = mic.sampleClockAnchor;
@@ -61,14 +73,11 @@ class LatencyCalibrationService {
         plannedClickMs: plannedMs,
         onsetMs: [for (final h in mic.detectedOnsets) anchorMs + h.timeMs],
       );
-      if (estimate == null || estimate.matchedClicks < clickCount ~/ 2) {
+      if (estimate == null || estimate.matchedClicks < clicks ~/ 2) {
         return null;
       }
       return estimate;
     } finally {
-      if (click != null) {
-        SoLoud.instance.disposeSource(click).ignore();
-      }
       mic.dispose();
     }
   }
