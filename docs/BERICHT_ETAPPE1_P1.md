@@ -4,12 +4,12 @@
 · **Brief:** `docs/BRIEF_ETAPPE1_PAD.md` §1.1–1.4 samt Freigabe-Ergänzungen
 
 **Stand 06.09. abends: Implementierung komplett (227/227 Tests). Gerätetest
-1.1 und 1.3 durchgeführt — 1.1 bestanden, 1.3 lieferte den gespeicherten
-Kalibrierwert, verfehlt aber die wörtliche < 5-ms-Spannweite (Ursache
-diagnostiziert: wandernde Ausgabelatenz der Geräte-Audiokette; Rückfrage
-unten). Der Gerätetest deckte zwei echte Messfehler auf, die behoben wurden
-(10-ms-Zeitraster, akkumulierende Sample-Uhr-Drift — siehe Protokoll).
-1.2-Gerätetest folgt mit Kopfhörern.**
+1.1 BESTANDEN; 1.3 BESTANDEN nach angepasster Abnahme (Entscheidung
+Auftraggeber 06.09., Begründung im 1.3-Abschnitt), Kalibrierwert 69 ms
+gespeichert. Der Gerätetest deckte zwei echte Messfehler auf, die behoben
+wurden (10-ms-Zeitraster, akkumulierende Sample-Uhr-Drift — siehe
+Protokoll). Offen ist allein der 1.2-Gerätetest (a/b/c, braucht
+Kopfhörer).**
 
 ---
 
@@ -144,12 +144,20 @@ Wahrnehmungsschwelle, betreffen nur die Absolutlage (nicht Hand-Balance,
 Jitter, Gleichmäßigkeit) und bleiben im pro Durchlauf ausgewiesenen Median
 sichtbar — genau der in §1.3 des Briefs vorgesehene Mechanismus.
 
-> **Rückfrage an den Auftraggeber:** Vorschlag, die 1.3-Abnahme anzupassen
-> auf: „Drei Läufe à 24 Klicks, alle Klicks erkannt, Sample-Uhr-Drift < 2 ms
-> je Lauf (Diagnosewert), gespeichert wird der Gesamt-Median; dokumentierte
-> Restunsicherheit der Absolutlage ±8 ms (Ausgabelatenz der Gerätekette)."
-> Die harten < 5 ms sind auf dieser Hardware ohne Latenz-API nicht
-> erreichbar.
+**Angepasste Abnahme (vom Auftraggeber am 06.09. entschieden):** „Drei Läufe
+à 24 Klicks, alle Klicks erkannt, Sample-Uhr-Drift < 2 ms je Lauf
+(Diagnosewert), gespeichert wird der Gesamt-Median; dokumentierte
+Restunsicherheit der Absolutlage ±8 ms (Ausgabelatenz der Gerätekette)."
+
+**Bewertung gegen die angepasste Abnahme: BESTANDEN.**
+
+| Kriterium | Ergebnis |
+|---|---|
+| Drei Läufe à 24 Klicks | ✓ (Messreihe oben) |
+| Alle Klicks erkannt | ✓ 24/24 in jedem Lauf |
+| Sample-Uhr-Drift < 2 ms je Lauf | ✓ −1,0 / 0,2 / 0,9 ms |
+| Gesamt-Median gespeichert | ✓ **69 ms** (06.09.) |
+| Restunsicherheit dokumentiert | ✓ ±8 ms, siehe oben |
 
 ## 1.4 Zuordnungsfreie Messgrößen
 
