@@ -16,6 +16,7 @@ import '../features/practice/session_timer_provider.dart';
 import '../features/program/program_screen.dart';
 import '../features/program/program_setup_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
+import '../features/settings/latency_calibration_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 
@@ -140,6 +141,11 @@ final router = GoRouter(
       path: '/settings',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/settings/latency-calibration',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, __) => const LatencyCalibrationScreen(),
     ),
     GoRoute(
       path: '/coaching/exercise-generator',

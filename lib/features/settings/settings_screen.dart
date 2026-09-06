@@ -144,6 +144,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
           AppCard(
+            onTap: () => context.push('/settings/latency-calibration'),
+            child: Row(
+              children: [
+                const Icon(Icons.graphic_eq,
+                    size: 20, color: AppColors.textMuted),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Latenz-Kalibrierung',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w600)),
+                      Text(
+                        SettingsService.latencyOffsetMs != null
+                            ? 'Gespeichert: ${SettingsService.latencyOffsetMs!.round()} ms'
+                            : 'Noch nicht kalibriert',
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right,
+                    size: 18, color: AppColors.textFaint),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

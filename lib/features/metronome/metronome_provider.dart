@@ -18,6 +18,11 @@ class MetronomeState {
   final int currentBeatIndex;
   final bool isAccent;
 
+  /// Scheduled wall-clock instant of the current beat (from the timing
+  /// isolate), null before the first beat. Used as the click side of the
+  /// shared time axis (§1.3).
+  final DateTime? lastBeatPlannedAt;
+
   const MetronomeState({
     this.isPlaying = false,
     this.bpm = 100,
@@ -25,6 +30,7 @@ class MetronomeState {
     this.soundType = SoundType.click,
     this.currentBeatIndex = -1,
     this.isAccent = false,
+    this.lastBeatPlannedAt,
   });
 
   MetronomeState copyWith({
@@ -34,6 +40,7 @@ class MetronomeState {
     SoundType? soundType,
     int? currentBeatIndex,
     bool? isAccent,
+    DateTime? lastBeatPlannedAt,
   }) {
     return MetronomeState(
       isPlaying: isPlaying ?? this.isPlaying,
@@ -42,6 +49,7 @@ class MetronomeState {
       soundType: soundType ?? this.soundType,
       currentBeatIndex: currentBeatIndex ?? this.currentBeatIndex,
       isAccent: isAccent ?? this.isAccent,
+      lastBeatPlannedAt: lastBeatPlannedAt ?? this.lastBeatPlannedAt,
     );
   }
 }
@@ -78,6 +86,7 @@ class MetronomeNotifier extends _$MetronomeNotifier {
       state = state.copyWith(
         currentBeatIndex: event.beatIndex,
         isAccent: event.isAccent,
+        lastBeatPlannedAt: event.plannedAt,
       );
     });
   }

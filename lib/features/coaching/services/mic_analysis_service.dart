@@ -7,6 +7,9 @@ import 'package:record/record.dart';
 import '../../lessons/models/rudiment.dart';
 import '../models/session_analysis.dart';
 import 'onset_detector.dart';
+import 'recording_setup.dart';
+import 'sequence_aligner.dart';
+import 'unassigned_metrics.dart';
 
 typedef BeatRecord = ({int beatIndex, DateTime timestamp});
 
@@ -17,13 +20,22 @@ class MicAnalysisService {
   OnsetDetector _detector = OnsetDetector(sampleRate: _sampleRate);
   final List<int> _byteBuffer = [];
 
+  /// The raw recording path used for the current run (§1.1); null until
+  /// [startRecording] ran once.
+  RecordingSetup? setup;
+
   /// Wall-clock instant of sample 0, estimated from the first chunk's
   /// arrival minus its own duration. Hit timestamps are anchor + sample
   /// time — wall-clock stamping per processing window is wrong, because
   /// audio arrives in batched chunks.
   DateTime? _sampleClockAnchor;
 
-  static const int _sampleRate = 16000;
+  static const int _sampleRate = RecordingSetup.sampleRate;
+
+  /// Raw detected onsets and their sample-clock anchor — exposed for the
+  /// latency calibration (§1.3), which needs times rather than an analysis.
+  List<OnsetHit> get detectedOnsets => _detector.hits;
+  DateTime? get sampleClockAnchor => _sampleClockAnchor;
 
   Future<bool> get hasPermission => _recorder.hasPermission();
 
@@ -32,11 +44,9 @@ class MicAnalysisService {
     _byteBuffer.clear();
     _sampleClockAnchor = null;
 
-    final stream = await _recorder.startStream(const RecordConfig(
-      encoder: AudioEncoder.pcm16bits,
-      sampleRate: _sampleRate,
-      numChannels: 1,
-    ));
+    setup ??= RecordingSetup.choose(
+        unprocessedSupported: await AudioCapabilities.isUnprocessedSupported());
+    final stream = await _recorder.startStream(setup!.config);
 
     _audioSub = stream.listen((chunk) {
       _sampleClockAnchor ??= DateTime.now().subtract(Duration(
@@ -67,52 +77,91 @@ class MicAnalysisService {
   SessionAnalysis analyze({
     required List<BeatRecord> beatLog,
     required List<StrokeBeat> sticking,
-    required int bpm,
+    double latencyOffsetMs = 0,
+  }) =>
+      analyzeHits(
+        hits: _detector.hits,
+        anchor: _sampleClockAnchor,
+        beatLog: beatLog,
+        sticking: sticking,
+        latencyOffsetMs: latencyOffsetMs,
+        recordingSetup: setup?.describe(),
+      );
+
+  /// Pure analysis core (§1.2/§1.4): aligns expected notes and onsets as two
+  /// sequences (omissions, insertions and time deviation all carry cost),
+  /// derives hands only from *assigned* notes, and reports per-hand values
+  /// only above the confidence gate. Assignment-free measures are always
+  /// computed. [latencyOffsetMs] (§1.3 calibration) is subtracted from onset
+  /// times before matching; the remaining systematic offset stays visible in
+  /// the unassigned median.
+  static SessionAnalysis analyzeHits({
+    required List<OnsetHit> hits,
+    required DateTime? anchor,
+    required List<BeatRecord> beatLog,
+    required List<StrokeBeat> sticking,
+    double latencyOffsetMs = 0,
+    Map<String, Object>? recordingSetup,
   }) {
-    final anchor = _sampleClockAnchor;
-    final hits = _detector.hits;
     if (hits.isEmpty || anchor == null || beatLog.isEmpty || sticking.isEmpty) {
       return SessionAnalysis(
         detectedHits: hits.length,
         expectedHits: beatLog.length,
+        recordingSetup: recordingSetup,
       );
     }
 
-    // Both lists are chronological — walk them with two pointers and match
-    // each hit to its temporally nearest expected beat (within ±250 ms).
+    final anchorMs = anchor.microsecondsSinceEpoch / 1000.0;
+    final expectedMs = [
+      for (final b in beatLog) b.timestamp.microsecondsSinceEpoch / 1000.0,
+    ];
+    final onsetMs = [
+      for (final h in hits) anchorMs + h.timeMs - latencyOffsetMs,
+    ];
+    final amplitudes = [for (final h in hits) h.amplitude];
+
+    final aligned = alignSequences(expectedMs: expectedMs, onsetMs: onsetMs);
+    final summary = AlignmentSummary(
+      expectedCount: aligned.notes.length,
+      hitCount: aligned.hitCount,
+      missedCount: aligned.missedCount,
+      extraCount: aligned.extraCount,
+      handValuesAllowed: aligned.handValuesAllowed,
+    );
+
+    final unassigned = computeUnassignedMetrics(
+      clickMs: expectedMs,
+      onsetMs: onsetMs,
+      amplitudes: amplitudes,
+    );
+
+    // Hands come exclusively from the sticking of *assigned* notes; unmatched
+    // onsets get no hand (§1.2).
     final matched = <MatchedHit>[];
-    var j = 0;
-    for (final hit in hits) {
-      final ts = anchor.add(Duration(microseconds: (hit.timeMs * 1000).round()));
-      while (j + 1 < beatLog.length &&
-          (beatLog[j + 1].timestamp.difference(ts)).abs() <=
-              (beatLog[j].timestamp.difference(ts)).abs()) {
-        j++;
-      }
-      final nearest = beatLog[j];
-      final devMs = ts.difference(nearest.timestamp).inMilliseconds.toDouble();
-      if (devMs.abs() >= 250) continue;
-      final patternPos = nearest.beatIndex % sticking.length;
+    for (var i = 0; i < aligned.notes.length; i++) {
+      final note = aligned.notes[i];
+      if (!note.hit) continue;
+      final patternPos = beatLog[i].beatIndex % sticking.length;
       matched.add(MatchedHit(
-        hitTimestamp: ts,
-        amplitude: hit.amplitude,
-        deviationMs: devMs,
+        hitTimestamp: DateTime.fromMicrosecondsSinceEpoch(
+            (onsetMs[note.onsetIndex!] * 1000).round()),
+        amplitude: amplitudes[note.onsetIndex!],
+        deviationMs: note.deviationMs!,
         hand: sticking[patternPos].hand,
       ));
     }
 
-    if (matched.length < 4) {
-      return SessionAnalysis(
-        detectedHits: hits.length,
-        expectedHits: beatLog.length,
-      );
-    }
-
+    final gateOpen = summary.handValuesAllowed && matched.length >= 4;
     return SessionAnalysis(
-      timing: _calcTiming(matched),
-      dynamics: _calcDynamics(matched),
+      timing: gateOpen ? _calcTiming(matched) : null,
+      dynamics: gateOpen ? _calcDynamics(matched) : null,
+      unassigned: unassigned,
+      alignment: summary,
+      peakLevels: amplitudes,
+      latencyOffsetAppliedMs: latencyOffsetMs,
       detectedHits: hits.length,
       expectedHits: beatLog.length,
+      recordingSetup: recordingSetup,
     );
   }
 

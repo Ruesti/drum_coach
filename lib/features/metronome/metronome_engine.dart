@@ -32,10 +32,17 @@ class BeatEvent {
   final bool isAccent;
   final Subdivision subdivision;
 
+  /// Wall-clock instant this beat was *scheduled* for, computed inside the
+  /// timing isolate from its monotonic schedule (§1.3). Free of port/UI
+  /// latency — unlike stamping DateTime.now() when the event reaches a
+  /// listener.
+  final DateTime plannedAt;
+
   const BeatEvent({
     required this.beatIndex,
     required this.isAccent,
     required this.subdivision,
+    required this.plannedAt,
   });
 }
 
@@ -89,8 +96,23 @@ int computeNextBeatDelayUs({
   required int elapsedUs,
 }) {
   final ivUs = 60000000.0 / bpm / factor;
-  final expUs = (anchorUs + (idx - anchorIdx) * ivUs).round();
+  final expUs = expectedBeatTimeUs(
+      bpm: bpm, factor: factor, idx: idx, anchorUs: anchorUs, anchorIdx: anchorIdx);
   return (expUs - elapsedUs).clamp(100, ivUs.ceil());
+}
+
+/// Planned schedule time of beat [idx] in µs on the isolate's stopwatch,
+/// measured from the current anchor. This is the beat's *intended* instant —
+/// the basis of the shared time axis for click-vs-onset comparison (§1.3).
+int expectedBeatTimeUs({
+  required int bpm,
+  required int factor,
+  required int idx,
+  required int anchorUs,
+  required int anchorIdx,
+}) {
+  final ivUs = 60000000.0 / bpm / factor;
+  return (anchorUs + (idx - anchorIdx) * ivUs).round();
 }
 
 // Top-level required by Isolate.spawn.
@@ -115,7 +137,13 @@ void _timingIsolateMain(SendPort replyPort) {
 
   void onBeat() {
     if (!playing) return;
-    replyPort.send([idx, idx % factor == 0 ? 1 : 0]);
+    // Planned wall-clock time of this beat: current wall clock minus how far
+    // the stopwatch has drifted past the scheduled instant (timer jitter).
+    final plannedUs = expectedBeatTimeUs(
+        bpm: bpm, factor: factor, idx: idx, anchorUs: anchorUs, anchorIdx: anchorIdx);
+    final plannedEpochUs = DateTime.now().microsecondsSinceEpoch -
+        (sw.elapsedMicroseconds - plannedUs);
+    replyPort.send([idx, idx % factor == 0 ? 1 : 0, plannedEpochUs]);
     idx++;
     sched();
   }
@@ -202,13 +230,14 @@ class MetronomeEngine {
         _controlPort = msg;
         if (!ready.isCompleted) ready.complete();
       } else if (msg is List<int> && _isPlaying) {
-        _onBeat(msg[0], msg[1] == 1);
+        _onBeat(msg[0], msg[1] == 1,
+            DateTime.fromMicrosecondsSinceEpoch(msg[2]));
       }
     });
     await ready.future;
   }
 
-  void _onBeat(int index, bool isAccent) {
+  void _onBeat(int index, bool isAccent, DateTime plannedAt) {
     if (!_isPlaying || _disposed) return;
 
     final volume = resolveTickVolume(
@@ -239,6 +268,7 @@ class MetronomeEngine {
       beatIndex: index,
       isAccent: isAccent,
       subdivision: _subdivision,
+      plannedAt: plannedAt,
     ));
   }
 
@@ -292,6 +322,11 @@ class MetronomeEngine {
   }
 
   // ── Sound synthesis ─────────────────────────────────────────────────────────
+
+  /// The accent click as WAV bytes — reused by the latency calibration
+  /// (§1.3) so the measured loopback matches the sound used in practice.
+  static Uint8List calibrationClickWav() =>
+      _buildClickWav(frequency: 1200, amplitude: 0.95);
 
   static Uint8List _buildClickWav({
     required double frequency,

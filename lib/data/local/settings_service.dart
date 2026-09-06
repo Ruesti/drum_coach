@@ -57,6 +57,18 @@ class SettingsService {
   static Future<void> setMicAnalysisEnabled(bool v) =>
       _prefs.setBool('mic_analysis_enabled', v);
 
+  /// Loopback-calibrated output+input latency (§1.3). `null` = never
+  /// calibrated; onsets are then compared uncorrected.
+  static double? get latencyOffsetMs => _prefs.getDouble('latency_offset_ms');
+  static Future<void> setLatencyOffsetMs(double v) async {
+    await _prefs.setDouble('latency_offset_ms', v);
+    await _prefs.setString(
+        'latency_calibrated_at', DateTime.now().toIso8601String());
+  }
+
+  static DateTime? get latencyCalibratedAt =>
+      DateTime.tryParse(_prefs.getString('latency_calibrated_at') ?? '');
+
   /// Adaptive training program configuration. `null` = not configured.
   static ProgramConfig? get programConfig {
     final weeks = _prefs.getInt('program_duration_weeks');
