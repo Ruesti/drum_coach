@@ -90,7 +90,7 @@ Anzeige im Feedback-Sheet: „Matched / missed / extra" pro Durchlauf.
   Ankunftszeit des UI-Updates. Onsets bleiben auf der Sample-Uhr mit
   Wanduhr-Anker. Beide Seiten treffen sich damit ohne Port-/Frame-Jitter.
 - **Kalibrierung** (Freigabe-Ergänzung: Ausgabe- und Eingabelatenz gemeinsam):
-  Der neue Screen *Einstellungen → Latenz-Kalibrierung* spielt 8 Klicks über
+  Der neue Screen *Einstellungen → Latenz-Kalibrierung* spielt 24 geditherte Klicks (plus verworfenen Aufwärm-Zyklus) über
   den Lautsprecher, nimmt sie über denselben rohen Aufnahmeweg auf und misst
   den Versatz geplant→aufgenommen — genau die Summe beider Latenzen
   (`latency_calibration_service.dart`, `latency_estimator.dart`,
