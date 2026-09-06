@@ -8,6 +8,7 @@ import '../../lessons/models/rudiment.dart';
 import '../models/session_analysis.dart';
 import 'onset_detector.dart';
 import 'recording_setup.dart';
+import 'sample_clock_anchor.dart';
 import 'sequence_aligner.dart';
 import 'unassigned_metrics.dart';
 
@@ -24,33 +25,30 @@ class MicAnalysisService {
   /// [startRecording] ran once.
   RecordingSetup? setup;
 
-  /// Wall-clock instant of sample 0, estimated from the first chunk's
-  /// arrival minus its own duration. Hit timestamps are anchor + sample
-  /// time — wall-clock stamping per processing window is wrong, because
-  /// audio arrives in batched chunks.
-  DateTime? _sampleClockAnchor;
+  /// Wall-clock instant of sample 0. Minimum-based over all chunks — see
+  /// [SampleClockAnchor]; hit timestamps are anchor + sample time.
+  SampleClockAnchor _anchor = SampleClockAnchor(sampleRate: _sampleRate);
 
   static const int _sampleRate = RecordingSetup.sampleRate;
 
   /// Raw detected onsets and their sample-clock anchor — exposed for the
   /// latency calibration (§1.3), which needs times rather than an analysis.
   List<OnsetHit> get detectedOnsets => _detector.hits;
-  DateTime? get sampleClockAnchor => _sampleClockAnchor;
+  DateTime? get sampleClockAnchor => _anchor.anchor;
 
   Future<bool> get hasPermission => _recorder.hasPermission();
 
   Future<void> startRecording() async {
     _detector = OnsetDetector(sampleRate: _sampleRate);
     _byteBuffer.clear();
-    _sampleClockAnchor = null;
+    _anchor = SampleClockAnchor(sampleRate: _sampleRate);
 
     setup ??= RecordingSetup.choose(
         unprocessedSupported: await AudioCapabilities.isUnprocessedSupported());
     final stream = await _recorder.startStream(setup!.config);
 
     _audioSub = stream.listen((chunk) {
-      _sampleClockAnchor ??= DateTime.now().subtract(Duration(
-          microseconds: (chunk.length ~/ 2) * 1000000 ~/ _sampleRate));
+      _anchor.addChunk(arrivedAt: DateTime.now(), samples: chunk.length ~/ 2);
       _byteBuffer.addAll(chunk);
       final usable = _byteBuffer.length & ~1;
       if (usable == 0) return;
@@ -81,7 +79,7 @@ class MicAnalysisService {
   }) =>
       analyzeHits(
         hits: _detector.hits,
-        anchor: _sampleClockAnchor,
+        anchor: _anchor.anchor,
         beatLog: beatLog,
         sticking: sticking,
         latencyOffsetMs: latencyOffsetMs,
