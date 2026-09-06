@@ -82,9 +82,9 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
             child: Text(
               'Misst den Zeitversatz zwischen geplantem Klick und Aufnahme '
               '(Ausgabe- plus Eingabelatenz). Kopfhörer abziehen, '
-              'Lautstärke hoch, ruhige Umgebung — dann Messen. '
-              'Für einen belastbaren Wert dreimal messen; die Spannweite '
-              'sollte unter 5 ms liegen.',
+              'Lautstärke hoch, ruhige Umgebung — dann Messen '
+              '(je Lauf 20 Klicks, ~10 Sekunden). Für einen belastbaren '
+              'Wert dreimal messen; die Spannweite sollte unter 5 ms liegen.',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           ),
@@ -144,8 +144,7 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
                         fontWeight: FontWeight.w600,
                         fontSize: 14),
                   ),
-                  if (_runs.length >= 3)
-                    Padding(
+                  Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         _spread < 5

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter_soloud/flutter_soloud.dart';
 
@@ -12,12 +13,17 @@ import 'mic_analysis_service.dart';
 /// output latency and input latency — exactly what must be subtracted when
 /// onsets are compared against planned click times.
 class LatencyCalibrationService {
-  static const int clickCount = 8;
-  static const Duration clickInterval = Duration(milliseconds: 500);
+  static const int clickCount = 20;
 
   /// Plays [clickCount] clicks and returns the measured offset, or null if
   /// fewer than half the clicks were found in the recording (too noisy, mic
   /// blocked, volume down).
+  ///
+  /// Click spacing is dithered (390–620 ms): the output side quantizes each
+  /// click onto the next audio-buffer boundary, and a fixed interval would
+  /// sample similar buffer phases every time — the run median then wobbles
+  /// several ms between runs. Dithered spacing spreads the phases so the
+  /// median converges.
   static Future<LatencyEstimate?> runOnce() async {
     final mic = MicAnalysisService();
     AudioSource? click;
@@ -31,11 +37,19 @@ class LatencyCalibrationService {
       // Let the detector's median baseline warm up before the first click.
       await Future<void>.delayed(const Duration(milliseconds: 400));
 
+      // Warm-up click: the first play after idle carries extra pipeline
+      // latency; it is neither planned nor counted (the estimator treats its
+      // recording as one spurious onset, which the median shrugs off).
+      await SoLoud.instance.play(click, volume: 1.0);
+      await Future<void>.delayed(const Duration(milliseconds: 550));
+
+      final rng = math.Random(7);
       final plannedMs = <double>[];
       for (var i = 0; i < clickCount; i++) {
         plannedMs.add(DateTime.now().microsecondsSinceEpoch / 1000.0);
         await SoLoud.instance.play(click, volume: 1.0);
-        await Future<void>.delayed(clickInterval);
+        await Future<void>.delayed(
+            Duration(milliseconds: 390 + rng.nextInt(230)));
       }
       await Future<void>.delayed(const Duration(milliseconds: 300));
       await mic.stopRecording();
