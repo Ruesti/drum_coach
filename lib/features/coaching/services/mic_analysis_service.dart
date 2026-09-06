@@ -8,7 +8,7 @@ import '../../lessons/models/rudiment.dart';
 import '../models/session_analysis.dart';
 import 'onset_detector.dart';
 import 'recording_setup.dart';
-import 'sample_clock_anchor.dart';
+import 'sample_clock_map.dart';
 import 'sequence_aligner.dart';
 import 'unassigned_metrics.dart';
 
@@ -25,30 +25,37 @@ class MicAnalysisService {
   /// [startRecording] ran once.
   RecordingSetup? setup;
 
-  /// Wall-clock instant of sample 0. Minimum-based over all chunks — see
-  /// [SampleClockAnchor]; hit timestamps are anchor + sample time.
-  SampleClockAnchor _anchor = SampleClockAnchor(sampleRate: _sampleRate);
+  /// Piecewise sample-clock → wall-clock mapping — see [SampleClockMap];
+  /// a single global anchor let pipeline drift accumulate over the
+  /// recording (§1.3 device test).
+  SampleClockMap _clock = SampleClockMap(sampleRate: _sampleRate);
 
   static const int _sampleRate = RecordingSetup.sampleRate;
 
-  /// Raw detected onsets and their sample-clock anchor — exposed for the
-  /// latency calibration (§1.3), which needs times rather than an analysis.
-  List<OnsetHit> get detectedOnsets => _detector.hits;
-  DateTime? get sampleClockAnchor => _anchor.anchor;
+  /// Detected onsets on the wall clock (epoch ms), each mapped through its
+  /// own chunk neighborhood — exposed for the latency calibration (§1.3).
+  List<double> get absoluteOnsetMs => [
+        for (final h in _detector.hits)
+          _clock.timeAt(h.timeMs)!.microsecondsSinceEpoch / 1000.0,
+      ];
+
+  /// How far the sample clock fell behind the wall clock over this
+  /// recording — §1.3 diagnostic.
+  double? get clockDriftMs => _clock.driftMs;
 
   Future<bool> get hasPermission => _recorder.hasPermission();
 
   Future<void> startRecording() async {
     _detector = OnsetDetector(sampleRate: _sampleRate);
     _byteBuffer.clear();
-    _anchor = SampleClockAnchor(sampleRate: _sampleRate);
+    _clock = SampleClockMap(sampleRate: _sampleRate);
 
     setup ??= RecordingSetup.choose(
         unprocessedSupported: await AudioCapabilities.isUnprocessedSupported());
     final stream = await _recorder.startStream(setup!.config);
 
     _audioSub = stream.listen((chunk) {
-      _anchor.addChunk(arrivedAt: DateTime.now(), samples: chunk.length ~/ 2);
+      _clock.addChunk(arrivedAt: DateTime.now(), samples: chunk.length ~/ 2);
       _byteBuffer.addAll(chunk);
       final usable = _byteBuffer.length & ~1;
       if (usable == 0) return;
@@ -76,15 +83,30 @@ class MicAnalysisService {
     required List<BeatRecord> beatLog,
     required List<StrokeBeat> sticking,
     double latencyOffsetMs = 0,
-  }) =>
-      analyzeHits(
-        hits: _detector.hits,
-        anchor: _anchor.anchor,
-        beatLog: beatLog,
-        sticking: sticking,
-        latencyOffsetMs: latencyOffsetMs,
-        recordingSetup: setup?.describe(),
-      );
+  }) {
+    // Rebase each hit through its chunk-local wall-clock mapping so pipeline
+    // drift within the recording cannot skew late onsets (§1.3).
+    final ref = _clock.timeAt(0);
+    final corrected = ref == null
+        ? const <OnsetHit>[]
+        : [
+            for (final h in _detector.hits)
+              OnsetHit(
+                timeMs: (_clock.timeAt(h.timeMs)!.microsecondsSinceEpoch -
+                        ref.microsecondsSinceEpoch) /
+                    1000.0,
+                amplitude: h.amplitude,
+              ),
+          ];
+    return analyzeHits(
+      hits: corrected,
+      anchor: ref,
+      beatLog: beatLog,
+      sticking: sticking,
+      latencyOffsetMs: latencyOffsetMs,
+      recordingSetup: setup?.describe(),
+    );
+  }
 
   /// Pure analysis core (§1.2/§1.4): aligns expected notes and onsets as two
   /// sequences (omissions, insertions and time deviation all carry cost),

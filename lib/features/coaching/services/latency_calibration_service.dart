@@ -68,12 +68,15 @@ class LatencyCalibrationService {
       await Future<void>.delayed(Duration(milliseconds: settleMs));
       await mic.stopRecording();
 
-      final anchor = mic.sampleClockAnchor;
-      if (anchor == null) return null;
-      final anchorMs = anchor.microsecondsSinceEpoch / 1000.0;
+      assert(() {
+        // §1.3 diagnostic: sample-clock vs wall-clock drift of this cycle.
+        // ignore: avoid_print
+        print('calibration cycle drift: ${mic.clockDriftMs?.toStringAsFixed(1)} ms');
+        return true;
+      }());
       final estimate = estimateLatencyOffset(
         plannedClickMs: plannedMs,
-        onsetMs: [for (final h in mic.detectedOnsets) anchorMs + h.timeMs],
+        onsetMs: mic.absoluteOnsetMs,
       );
       if (estimate == null || estimate.matchedClicks < clicks ~/ 2) {
         return null;
