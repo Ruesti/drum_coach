@@ -13,7 +13,9 @@ import 'mic_analysis_service.dart';
 /// output latency and input latency — exactly what must be subtracted when
 /// onsets are compared against planned click times.
 class LatencyCalibrationService {
-  static const int clickCount = 20;
+  /// 24 measured clicks = three 8-click blocks for the within-recording
+  /// spread readout.
+  static const int clickCount = 24;
 
   /// Plays [clickCount] clicks and returns the measured offset, or null if
   /// fewer than half the clicks were found in the recording (too noisy, mic

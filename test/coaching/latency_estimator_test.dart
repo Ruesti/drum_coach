@@ -42,5 +42,35 @@ void main() {
     test('returns null when nothing was recorded', () {
       expect(estimateLatencyOffset(plannedClickMs: clicks, onsetMs: []), isNull);
     });
+
+    test('exposes per-click offsets in click order', () {
+      final e = estimateLatencyOffset(
+        plannedClickMs: clicks,
+        onsetMs: clicks.map((c) => c + 120).toList(),
+      );
+      expect(e!.perClickOffsetsMs.length, 8);
+      for (final r in e.perClickOffsetsMs) {
+        expect(r, closeTo(120, 0.001));
+      }
+    });
+  });
+
+  group('blockOffsets', () {
+    test('splits per-click offsets into block medians within one recording',
+        () {
+      // 12 clicks: first block sits at 100 ms, second at 102, third at 101.
+      final planned = [for (var i = 0; i < 12; i++) i * 500.0];
+      final offsets = [100.0, 100, 100, 100, 102, 102, 102, 102, 101, 101, 101, 101];
+      final e = estimateLatencyOffset(
+        plannedClickMs: planned,
+        onsetMs: [for (var i = 0; i < 12; i++) planned[i] + offsets[i]],
+      );
+      final blocks = e!.blockOffsets(3);
+      expect(blocks.length, 3);
+      expect(blocks[0], closeTo(100, 0.001));
+      expect(blocks[1], closeTo(102, 0.001));
+      expect(blocks[2], closeTo(101, 0.001));
+      expect(e.blockSpreadMs(3), closeTo(2, 0.001));
+    });
   });
 }

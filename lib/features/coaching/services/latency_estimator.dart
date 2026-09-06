@@ -5,6 +5,8 @@
 /// to planned click times.
 library;
 
+import 'dart:math' as math;
+
 import 'sequence_aligner.dart';
 
 class LatencyEstimate {
@@ -12,11 +14,36 @@ class LatencyEstimate {
   final int matchedClicks;
   final int totalClicks;
 
+  /// Offset of each matched click in click order — the raw material for
+  /// judging stability *within* one recording, where it matters: a practice
+  /// session is a single recording too.
+  final List<double> perClickOffsetsMs;
+
   const LatencyEstimate({
     required this.offsetMs,
     required this.matchedClicks,
     required this.totalClicks,
+    this.perClickOffsetsMs = const [],
   });
+
+  /// Median offset of [n] consecutive click blocks within this recording.
+  List<double> blockOffsets(int n) {
+    if (perClickOffsetsMs.isEmpty || n < 1) return const [];
+    final size = (perClickOffsetsMs.length / n).ceil();
+    return [
+      for (var i = 0; i < perClickOffsetsMs.length; i += size)
+        _median(perClickOffsetsMs.sublist(
+            i, math.min(i + size, perClickOffsetsMs.length))),
+    ];
+  }
+
+  /// Max minus min of [blockOffsets] — the within-recording spread.
+  double? blockSpreadMs(int n) {
+    final blocks = blockOffsets(n);
+    if (blocks.length < 2) return null;
+    final sorted = List<double>.of(blocks)..sort();
+    return sorted.last - sorted.first;
+  }
 }
 
 /// Two stages: a rough offset as the median of each onset's distance to its
@@ -51,6 +78,7 @@ LatencyEstimate? estimateLatencyOffset({
     offsetMs: rough + _median(residuals),
     matchedClicks: residuals.length,
     totalClicks: plannedClickMs.length,
+    perClickOffsetsMs: [for (final r in residuals) rough + r],
   );
 }
 

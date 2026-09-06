@@ -112,20 +112,38 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: AppCard(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Messung ${i + 1}',
-                        style: const TextStyle(
-                            color: AppColors.textMuted, fontSize: 13)),
-                    const Spacer(),
-                    Text(
-                      '${_runs[i].offsetMs.toStringAsFixed(1)} ms · '
-                      '${_runs[i].matchedClicks}/${_runs[i].totalClicks} Klicks',
-                      style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600),
+                    Row(
+                      children: [
+                        Text('Messung ${i + 1}',
+                            style: const TextStyle(
+                                color: AppColors.textMuted, fontSize: 13)),
+                        const Spacer(),
+                        Text(
+                          '${_runs[i].offsetMs.toStringAsFixed(1)} ms · '
+                          '${_runs[i].matchedClicks}/${_runs[i].totalClicks} Klicks',
+                          style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
                     ),
+                    if (_runs[i].blockSpreadMs(3) != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'Blöcke: ${_runs[i].blockOffsets(3).map((b) => b.toStringAsFixed(1)).join(' / ')} '
+                          '· Δ ${_runs[i].blockSpreadMs(3)!.toStringAsFixed(1)} ms in dieser Aufnahme',
+                          style: TextStyle(
+                              color: _runs[i].blockSpreadMs(3)! < 5
+                                  ? AppColors.solidStreak
+                                  : AppColors.struggled,
+                              fontSize: 11),
+                        ),
+                      ),
                   ],
                 ),
               ),
