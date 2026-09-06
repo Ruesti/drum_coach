@@ -44,7 +44,8 @@ class DailyRoutineScreen extends ConsumerWidget {
                 _RoutineCard(
                   item: item,
                   rudiment: rudiments.firstWhere((r) => r.id == item.rudimentId),
-                  onStart: () => context.push('/routine/${item.rudimentId}'),
+                  onStart: () => context
+                      .push('/routine/${item.rudimentId}?bpm=${item.suggestedBpm}'),
                 ),
                 const SizedBox(height: 10),
               ],

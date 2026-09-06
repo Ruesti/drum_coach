@@ -332,14 +332,13 @@ const rudimentsSeedData = <Rudiment>[
     targetBpm: 120,
     difficulty: Difficulty.intermediate,
     sticking: [
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.right, isAccent: true),
-      StrokeBeat(hand: Hand.right, isGhost: true),
-      StrokeBeat(hand: Hand.left, isAccent: true),
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.right, isAccent: true),
-      StrokeBeat(hand: Hand.right, isGhost: true),
-      StrokeBeat(hand: Hand.left, isAccent: true),
+      // Each flam is one quarter-note stroke with a grace note struck just
+      // before it (see StrokeBeat.graces) — not two separate, evenly-spaced
+      // beats. 4 quarters = 1 bar, same total length as before.
+      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, graces: [Hand.right]),
+      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, graces: [Hand.left]),
+      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, graces: [Hand.right]),
     ],
     technique: [
       TechniqueSection(
@@ -385,12 +384,12 @@ const rudimentsSeedData = <Rudiment>[
     targetBpm: 100,
     difficulty: Difficulty.intermediate,
     sticking: [
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.right, isAccent: true),
+      // Flam as one quarter-note stroke with a grace note, followed by two
+      // eighth-note taps — same 2-quarters-per-group length as before.
+      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, graces: [Hand.left]),
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.right, isGhost: true),
-      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, graces: [Hand.right]),
       StrokeBeat(hand: Hand.right),
       StrokeBeat(hand: Hand.left),
     ],
@@ -435,13 +434,13 @@ const rudimentsSeedData = <Rudiment>[
     targetBpm: 90,
     difficulty: Difficulty.advanced,
     sticking: [
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.right, isAccent: true),
+      // Flam as one quarter-note stroke with a grace note, followed by the
+      // paradiddle's remaining three eighth-note taps — same length as before.
+      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, graces: [Hand.left]),
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.right),
       StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.right, isGhost: true),
-      StrokeBeat(hand: Hand.left, isAccent: true),
+      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, graces: [Hand.right]),
       StrokeBeat(hand: Hand.right),
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.left),
@@ -490,12 +489,11 @@ const rudimentsSeedData = <Rudiment>[
     targetBpm: 100,
     difficulty: Difficulty.intermediate,
     sticking: [
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.right, isAccent: true),
-      StrokeBeat(hand: Hand.right, isGhost: true),
-      StrokeBeat(hand: Hand.right, isGhost: true),
-      StrokeBeat(hand: Hand.left, isAccent: true),
+      // A drag is two grace notes struck just before the accented main
+      // stroke (see StrokeBeat.graces), not three separate, evenly-spaced
+      // beats. Dotted quarter (1.5 quarters) matches the old 3-eighths length.
+      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, dotted: true, graces: [Hand.left, Hand.left]),
+      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, dotted: true, graces: [Hand.right, Hand.right]),
     ],
     technique: [
       TechniqueSection(
@@ -540,13 +538,11 @@ const rudimentsSeedData = <Rudiment>[
     targetBpm: 80,
     difficulty: Difficulty.advanced,
     sticking: [
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.right, isAccent: true),
+      // Drag (two grace notes) + accent as one dotted-quarter stroke,
+      // followed by a tap — same 2-quarters-per-group length as before.
+      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, dotted: true, graces: [Hand.left, Hand.left]),
       StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.left, isGhost: true),
-      StrokeBeat(hand: Hand.right, isAccent: true),
+      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, dotted: true, graces: [Hand.left, Hand.left]),
       StrokeBeat(hand: Hand.left),
     ],
     technique: [

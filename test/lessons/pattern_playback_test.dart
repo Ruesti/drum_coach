@@ -60,6 +60,83 @@ void main() {
     });
   });
 
+  group('grace notes (flam/drag) get a near-simultaneous onset', () {
+    test('a flam on the very first note has no room before it — main note unaffected', () {
+      const beats = [
+        StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+        StrokeBeat(hand: Hand.left),
+      ];
+      final pp = buildPatternPlayback(beats, NoteGrid.quarter);
+      // Main note's own onset is untouched: still tick 0, full accent volume.
+      expect(pp.onsetTicks, [0, 24]);
+      expect(pp.tickVolumes[0], 2.0);
+      // Nothing before tick 0 to place the grace on — no negative index.
+      expect(pp.tickVolumes[23], 0.0);
+    });
+
+    test('a flam not on the first note gets its grace tick right before it', () {
+      const beats = [
+        StrokeBeat(hand: Hand.left),
+        StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      ];
+      final pp = buildPatternPlayback(beats, NoteGrid.quarter);
+      expect(pp.tickVolumes[23], graceVolume); // grace, one tick before onset 24
+      expect(pp.tickVolumes[24], 2.0);          // main accent, unaffected
+    });
+
+    test('a drag (2 graces) sounds two ticks before the main note', () {
+      const beats = [
+        StrokeBeat(hand: Hand.left),
+        StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left, Hand.left]),
+      ];
+      final pp = buildPatternPlayback(beats, NoteGrid.quarter);
+      expect(pp.tickVolumes[22], graceVolume);
+      expect(pp.tickVolumes[23], graceVolume);
+      expect(pp.tickVolumes[24], 2.0);
+    });
+
+    test('a grace never bleeds backward into the previous note\'s onset', () {
+      // At ticksPerQuarter: 8, two sixteenths are only 2 ticks apart — too
+      // tight for a 2-grace drag to fit without crowding the previous
+      // onset, so only what fits (1 of the 2 requested grace ticks) is
+      // scheduled, right up against the main note.
+      const beats = [
+        StrokeBeat(hand: Hand.left, value: NoteValue.sixteenth),
+        StrokeBeat(
+          hand: Hand.right,
+          value: NoteValue.sixteenth,
+          isAccent: true,
+          graces: [Hand.left, Hand.left],
+        ),
+      ];
+      final pp = buildPatternPlayback(beats, NoteGrid.sixteenth, ticksPerQuarter: 8);
+      expect(pp.onsetTicks, [0, 2]);
+      expect(pp.tickVolumes[0], 0.85); // previous note's onset: untouched
+      expect(pp.tickVolumes[1], graceVolume); // the one grace tick that fits
+      expect(pp.tickVolumes[2], 2.0);
+    });
+
+    test('no room at all (adjacent onsets) schedules nothing rather than colliding', () {
+      // At ticksPerQuarter: 8, thirtySecond notes are exactly 1 tick apart;
+      // once the middle note claims that only free tick, there's zero room
+      // left before the third note for its grace, so nothing is placed.
+      const beats = [
+        StrokeBeat(hand: Hand.left, value: NoteValue.thirtySecond),
+        StrokeBeat(hand: Hand.left, value: NoteValue.thirtySecond),
+        StrokeBeat(
+          hand: Hand.right,
+          value: NoteValue.thirtySecond,
+          isAccent: true,
+          graces: [Hand.left],
+        ),
+      ];
+      final pp = buildPatternPlayback(beats, NoteGrid.thirtySecond, ticksPerQuarter: 8);
+      expect(pp.onsetTicks, [0, 1, 2]);
+      expect(pp.tickVolumes[1], 0.85); // previous note's own onset, untouched
+      expect(pp.tickVolumes[2], 2.0);
+    });
+  });
+
   group('PatternPlayback.forRudiment', () {
     test('derives from the rudiment grid + sticking', () {
       const r = Rudiment(

@@ -156,7 +156,15 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
           ),
         );
     if (!mounted) return;
-    context.go('/program');
+    // Pop back to the ProgramScreen already underneath this one on the
+    // stack, not context.go('/program') — /program is a top-level route
+    // outside the bottom-nav shell, so a go() there replaces the entire
+    // navigation stack with no shell/back-target left underneath, stranding
+    // the user with no way back (no AppBar back button, system back exits
+    // the app). startWithConfig() above already invalidated the day
+    // provider, so popping back lets the existing ProgramScreen instance
+    // simply re-render into its now-configured state.
+    context.pop();
   }
 }
 

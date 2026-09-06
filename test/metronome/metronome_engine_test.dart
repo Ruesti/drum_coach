@@ -79,6 +79,27 @@ void main() {
     });
   });
 
+  group('resolveTickVolume', () {
+    test('falls back to accent/normal volume when no pattern is set', () {
+      expect(resolveTickVolume(beatVolumes: null, index: 0, isAccent: true), 2.0);
+      expect(resolveTickVolume(beatVolumes: null, index: 0, isAccent: false), 0.7);
+      expect(resolveTickVolume(beatVolumes: [], index: 0, isAccent: true), 2.0);
+    });
+
+    test('reads the per-tick pattern volume when set, including silent grid ticks', () {
+      final vols = [0.85, 0.0, 0.0, 0.25];
+      expect(resolveTickVolume(beatVolumes: vols, index: 0, isAccent: false), 0.85);
+      expect(resolveTickVolume(beatVolumes: vols, index: 1, isAccent: false), 0.0);
+      expect(resolveTickVolume(beatVolumes: vols, index: 3, isAccent: false), 0.25);
+    });
+
+    test('wraps around the pattern length', () {
+      final vols = [0.85, 0.0];
+      expect(resolveTickVolume(beatVolumes: vols, index: 4, isAccent: false), 0.85);
+      expect(resolveTickVolume(beatVolumes: vols, index: 5, isAccent: false), 0.0);
+    });
+  });
+
   group('fine-grid factor', () {
     test('computeNextBeatDelayUs works at 24 ticks/quarter', () {
       // 120 bpm, factor 24 => 500000us/quarter / 24 = 20833.33us/tick.

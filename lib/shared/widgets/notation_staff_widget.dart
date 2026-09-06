@@ -10,6 +10,13 @@ import 'staff_layout.dart';
 /// the middle line (snare) + stems + beams/flags, accents (>), ghost notes,
 /// grace notes, rests, and R/L sticking letters beneath each note.
 ///
+/// Noteheads, clef, time signature, flags, accents and rests are drawn with
+/// the Bravura SMuFL music font (real engraving glyphs) rather than
+/// hand-drawn Canvas primitives — that's what separates "looks like a real
+/// sheet of music" from "looks hand-sketched". Ghost-note heads, grace
+/// notes and the augmentation dot stay hand-drawn (simple shapes with no
+/// natural glyph substitute at this scale).
+///
 /// When [activeIndex] is set (during playback), the cursor logic inverts
 /// from the rest of the (dark) app: the *field* behind the active note turns
 /// amber, the ink stays black. The bar that isn't currently playing is
@@ -19,46 +26,131 @@ import 'staff_layout.dart';
 /// Geometry is duration-proportional: horizontal positions, beam runs and
 /// tuplet groups come from [computeStaffLayout] so mixed note values
 /// (quarters next to sixteenths, triplets, dotted notes) space correctly.
-class NotationStaffWidget extends StatelessWidget {
+///
+/// When [autoScroll] is true (practice playback), the widget owns its own
+/// vertical scrolling and keeps the active row in view as [activeIndex]
+/// moves to a new row — the page-length pieces run many rows long, so
+/// without this the player would have to scroll manually while playing.
+/// Static call sites (lesson detail, generated-pattern preview) leave it
+/// false and stay sized to their full content height, as before.
+class NotationStaffWidget extends StatefulWidget {
   final Rudiment rudiment;
   final int? activeIndex;
+  final bool autoScroll;
 
   const NotationStaffWidget({
     super.key,
     required this.rudiment,
     this.activeIndex,
+    this.autoScroll = false,
   });
 
-  static const _hPad = 8.0;
+  @override
+  State<NotationStaffWidget> createState() => _NotationStaffWidgetState();
+}
+
+class _NotationStaffWidgetState extends State<NotationStaffWidget> {
+  static const _hPad = 4.0;
   static const _vPad = 16.0;
+
+  final _scrollController = ScrollController();
+  _StaffPainter? _lastPainter;
+
+  @override
+  void didUpdateWidget(covariant NotationStaffWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.autoScroll &&
+        widget.activeIndex != null &&
+        widget.activeIndex != oldWidget.activeIndex) {
+      _scrollToActive();
+    }
+  }
+
+  void _scrollToActive() {
+    final painter = _lastPainter;
+    final index = widget.activeIndex;
+    if (painter == null || index == null || index >= painter._layout.placements.length) {
+      return;
+    }
+    final row = painter._layout.placements[index].row;
+    final rowTop = row * _StaffPainter._rowH;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final viewport = _scrollController.position.viewportDimension;
+      // Keep the active row roughly a quarter of the way down the visible
+      // area, so upcoming bars stay in view below it.
+      final target = (_vPad + rowTop - viewport * 0.25)
+          .clamp(0.0, _scrollController.position.maxScrollExtent);
+      _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
-      decoration: BoxDecoration(
-        color: AppColors.paper,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth.isFinite
-              ? constraints.maxWidth
-              : MediaQuery.of(context).size.width - 2 * _hPad;
-          final painter = _StaffPainter(
-            rudiment: rudiment,
-            activeIndex: activeIndex,
-            maxWidth: width,
-          );
-          return CustomPaint(
-            size: Size(width, painter.computeHeight()),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.of(context).size.width;
+        final contentWidth = width - 2 * _hPad;
+        final painter = _StaffPainter(
+          rudiment: widget.rudiment,
+          activeIndex: widget.activeIndex,
+          maxWidth: contentWidth,
+        );
+        _lastPainter = painter;
+
+        final sheet = Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
+          decoration: BoxDecoration(
+            color: AppColors.paper,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+          ),
+          child: CustomPaint(
+            size: Size(contentWidth, painter.computeHeight()),
             painter: painter,
-          );
-        },
-      ),
+          ),
+        );
+
+        if (!widget.autoScroll) return sheet;
+        return SingleChildScrollView(
+          controller: _scrollController,
+          child: sheet,
+        );
+      },
     );
   }
+}
+
+/// Bravura (SMuFL) codepoints used by the drum staff. See smufl.org.
+class _Smufl {
+  static const clefPerc = '\u{E069}'; // unpitchedPercussionClef1
+  static const noteheadBlack = '\u{E0A4}';
+  static const noteheadHalf = '\u{E0A3}';
+  static const noteheadWhole = '\u{E0A2}';
+  static const flag8Up = '\u{E240}';
+  static const flag16Up = '\u{E242}';
+  static const flag32Up = '\u{E244}';
+  static const accent = '\u{E4A0}'; // articAccentAbove
+  static const restWhole = '\u{E4E3}';
+  static const restHalf = '\u{E4E4}';
+  static const restQuarter = '\u{E4E5}';
+  static const rest8 = '\u{E4E6}';
+  static const rest16 = '\u{E4E7}';
+  static const rest32 = '\u{E4E8}';
+  static String timeSig(int digit) => String.fromCharCode(0xE080 + digit);
 }
 
 class _StaffPainter extends CustomPainter {
@@ -91,13 +183,13 @@ class _StaffPainter extends CustomPainter {
       activeIndex == null ? null : _layout.placements[activeIndex!].bar;
 
   // ── Layout metrics ────────────────────────────────────────────────────────
-  static const double _leftPad = 10;
-  static const double _rightPad = 14;
-  static const double _barGap = 14; // extra space after a barline
+  static const double _leftPad = 8;
+  static const double _rightPad = 12;
+  static const double _barGap = 12; // extra space after a barline
   static const double _rowH = 104;
 
   // Space reserved at the left of each system for the clef (+ time signature).
-  static const double _systemPad = 40;
+  static const double _systemPad = 26;
 
   // Five-line staff geometry.
   static const double _lineGap = 6; // vertical gap between adjacent staff lines
@@ -264,7 +356,7 @@ class _StaffPainter extends CustomPainter {
       final noteBeamCount = beamCountFor(resolved.value);
 
       if (p.isRest) {
-        _drawRest(canvas, Offset(x, staffY), noteBeamCount, dim(_ghostColor));
+        _drawRest(canvas, Offset(x, staffY), resolved.value, dim(_ghostColor));
         continue;
       }
 
@@ -280,11 +372,10 @@ class _StaffPainter extends CustomPainter {
             canvas, beat.graces, x, staffY, stemTopY, dim(_ghostColor));
       }
 
-      // Notehead — open (outline) for whole/half, filled otherwise.
-      final isOpen = resolved.value == NoteValue.whole ||
-          resolved.value == NoteValue.half;
+      // Notehead — Bravura glyph for filled/whole/half, hand-drawn hollow
+      // oval for ghost notes (no natural glyph substitute at this scale).
       _drawHead(canvas, Offset(x, staffY), headColor,
-          ghost: beat.isGhost, active: isActive, open: isOpen);
+          ghost: beat.isGhost, active: isActive, value: resolved.value);
 
       // Stem (up, from right of head) — whole notes are stemless.
       if (resolved.value != NoteValue.whole) {
@@ -331,47 +422,69 @@ class _StaffPainter extends CustomPainter {
   NotePlacement _placementAt(int index) => _layout.placements[index];
 
   // ── Glyph helpers ───────────────────────────────────────────────────────--
-  /// Neutral percussion clef: two thick vertical bars centred on the staff.
-  void _drawClef(Canvas canvas, double staffY) {
-    final paint = Paint()..color = _inkColor.withValues(alpha: 0.85);
-    final top = staffY - _lineGap * 1.3;
-    final h = _lineGap * 2.6;
-    for (final bx in const [_leftPad + 14.0, _leftPad + 19.0]) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(bx, top, 3.0, h),
-          const Radius.circular(1.2),
+  /// Draws a Bravura glyph centred horizontally on [center].x, with its
+  /// alphabetic baseline placed on [center].y (SMuFL noteheads/rests/clefs
+  /// register on the baseline). [dyStaffSpaces] nudges per-glyph position;
+  /// [emScale] overrides the default staff-scaled em (4 staff spaces — a
+  /// note drawn at "normal" size occupies one em in a 5-line staff).
+  void _drawGlyph(Canvas canvas, String glyph, Offset center, Color color,
+      {double dyStaffSpaces = 0, double emScale = 4}) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: glyph,
+        style: TextStyle(
+          fontFamily: 'Bravura',
+          fontSize: emScale * _lineGap,
+          color: color,
+          height: 1.0,
         ),
-        paint,
-      );
-    }
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final baseline =
+        tp.computeDistanceToActualBaseline(TextBaseline.alphabetic);
+    tp.paint(
+      canvas,
+      Offset(center.dx - tp.width / 2,
+          center.dy - baseline + dyStaffSpaces * _lineGap),
+    );
   }
 
-  /// Time signature: [Rudiment.beatsPerBar] over 4 (quarter-note pulse).
+  /// Neutral percussion clef (Bravura glyph, registered on the staff center).
+  void _drawClef(Canvas canvas, double staffY) {
+    _drawGlyph(canvas, _Smufl.clefPerc, Offset(_leftPad + 10, staffY),
+        _inkColor.withValues(alpha: 0.9));
+  }
+
+  /// Time signature: [Rudiment.beatsPerBar] over 4 (quarter-note pulse),
+  /// stacked digit glyphs.
   void _drawTimeSignature(Canvas canvas, double staffY) {
-    const x = _leftPad + 30.0;
-    _drawText(canvas, '${rudiment.beatsPerBar}', Offset(x, staffY - _lineGap),
-        _inkColor, 15,
-        bold: true);
-    _drawText(canvas, '4', Offset(x, staffY + _lineGap), _inkColor, 15,
-        bold: true);
+    const x = _leftPad + 20.0;
+    _drawGlyph(canvas, _Smufl.timeSig(rudiment.beatsPerBar),
+        Offset(x, staffY - _lineGap), _inkColor);
+    _drawGlyph(canvas, _Smufl.timeSig(4), Offset(x, staffY + _lineGap), _inkColor);
   }
 
   void _drawHead(Canvas canvas, Offset c, Color color,
-      {bool ghost = false, bool active = false, bool open = false}) {
+      {bool ghost = false, bool active = false, NoteValue? value}) {
     final rx = ghost ? _headRx * 0.78 : _headRx;
     final ry = ghost ? _headRy * 0.78 : _headRy;
     final rect = Rect.fromCenter(center: c, width: rx * 2, height: ry * 2);
-    if (ghost || open) {
-      // Outline head: ghost notes and open (whole/half) note values.
+    if (ghost) {
+      // Outline head: ghost notes read as hollow + parentheses, not a glyph.
       canvas.drawOval(
           rect,
           Paint()
             ..color = color
             ..style = PaintingStyle.stroke
-            ..strokeWidth = ghost ? 1.4 : 1.8);
+            ..strokeWidth = 1.4);
     } else {
-      canvas.drawOval(rect, Paint()..color = color);
+      final glyph = switch (value) {
+        NoteValue.whole => _Smufl.noteheadWhole,
+        NoteValue.half => _Smufl.noteheadHalf,
+        _ => _Smufl.noteheadBlack,
+      };
+      _drawGlyph(canvas, glyph, c, color);
     }
     if (active) {
       // Cursor ring — ties the note to the amber field/line behind it.
@@ -386,31 +499,18 @@ class _StaffPainter extends CustomPainter {
 
   void _drawFlags(
       Canvas canvas, double stemX, double stemTopY, Color color, int beamCount) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
-      ..strokeCap = StrokeCap.round;
-    for (var b = 0; b < beamCount; b++) {
-      final y = stemTopY + b * 5.0;
-      final path = Path()
-        ..moveTo(stemX, y)
-        ..quadraticBezierTo(stemX + 8, y + 3, stemX + 7, y + 10);
-      canvas.drawPath(path, paint);
-    }
+    final glyph = switch (beamCount) {
+      1 => _Smufl.flag8Up,
+      2 => _Smufl.flag16Up,
+      _ => _Smufl.flag32Up,
+    };
+    // Flag hangs off the stem top; register near the notehead line then lift.
+    _drawGlyph(canvas, glyph, Offset(stemX + 3, stemTopY), color,
+        dyStaffSpaces: -1.5);
   }
 
   void _drawAccent(Canvas canvas, Offset c, Color color) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
-    final path = Path()
-      ..moveTo(c.dx - 5, c.dy - 3)
-      ..lineTo(c.dx + 5, c.dy)
-      ..lineTo(c.dx - 5, c.dy + 3);
-    canvas.drawPath(path, paint);
+    _drawGlyph(canvas, _Smufl.accent, c, color, dyStaffSpaces: 0.3);
   }
 
   void _drawGraces(Canvas canvas, List<Hand> graces, double mainX,
@@ -439,30 +539,16 @@ class _StaffPainter extends CustomPainter {
         Offset(firstX + 8, stemTopY - 2), slash);
   }
 
-  void _drawRest(Canvas canvas, Offset c, int beamCount, Color color) {
-    // Simplified rest glyph that scales with the note value.
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round;
-    if (beamCount == 0) {
-      // Quarter (or longer) rest — squiggle.
-      final path = Path()
-        ..moveTo(c.dx - 3, c.dy - 9)
-        ..lineTo(c.dx + 2, c.dy - 3)
-        ..lineTo(c.dx - 3, c.dy + 2)
-        ..lineTo(c.dx + 2, c.dy + 8);
-      canvas.drawPath(path, paint);
-    } else {
-      // Eighth/sixteenth/thirty-second rest — dots (one per beam) + slash.
-      for (var b = 0; b < beamCount; b++) {
-        final y = c.dy - 6 + b * 6.0;
-        canvas.drawCircle(Offset(c.dx - 3, y), 1.6, Paint()..color = color);
-      }
-      canvas.drawLine(Offset(c.dx + 3, c.dy - 8),
-          Offset(c.dx - 3, c.dy + 8), paint);
-    }
+  void _drawRest(Canvas canvas, Offset c, NoteValue value, Color color) {
+    final glyph = switch (value) {
+      NoteValue.whole => _Smufl.restWhole,
+      NoteValue.half => _Smufl.restHalf,
+      NoteValue.quarter => _Smufl.restQuarter,
+      NoteValue.eighth => _Smufl.rest8,
+      NoteValue.sixteenth => _Smufl.rest16,
+      NoteValue.thirtySecond => _Smufl.rest32,
+    };
+    _drawGlyph(canvas, glyph, c, color);
   }
 
   /// Augmentation dot: small filled circle just right of the notehead.

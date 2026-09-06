@@ -1,173 +1,233 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
 
-/// Akzent-Workout: fünf eigenständige Pad-Übungen im Stil klassischer
-/// "wandernder Akzent"-Studien. Durchgehende 16tel-Einzelschläge (binär) bzw.
-/// Achteltriolen (ternär) laufen in RLRL- bzw. RLR/LRL-Handfolge, während ein
-/// Akzent an festen oder wandernden Positionen innerhalb der Gruppe sitzt —
-/// das trainiert Akzent-Kontrolle bei gleichzeitig unveränderter Handfolge.
-///
-/// Jede Beat-Gruppe (`sixteenths(...)` bzw. `triplet8(...)`) entspricht genau
-/// einer Zählzeit (1.0 quarters); vier Gruppen ergeben bei `beatsPerBar: 4`
-/// exakt einen Takt.
+/// Six groove-flavored pieces instead of abstract "accent walks a beat
+/// forward" drills — real single-surface drum vocabulary (funk ghost-note
+/// pocket, son clave, rock backbeat, bossa, shuffle, boom-bap) adapted to
+/// R/L pad practice, each with its own signature feel developed over the
+/// piece (state it, vary it, bring it back) rather than a technical
+/// exercise about accent position.
 
-// --- Binäre Bausteine (16tel, RLRL) -----------------------------------------
+Hand _other(Hand h) => h == R ? L : R;
 
-/// Eine Zählzeit 16tel-Einzelschläge (RLRL) mit Akzenten auf den in
-/// [accents] genannten Zellen (0-3 innerhalb der Gruppe).
-List<StrokeBeat> _binaryBeat(Set<int> accents) =>
-    sixteenths([R, L, R, L], accents: accents);
+/// Alternating R/L hand sequence of [n] strokes, starting on [start].
+List<Hand> _alt(int n, Hand start) =>
+    List.generate(n, (i) => i.isEven ? start : _other(start));
 
-// --- Ternäre Bausteine (Achteltriolen, RLR/LRL) -----------------------------
+// ── 1. Funk-Pocket ─────────────────────────────────────────────────────────
+// Classic funk ghost-note vocabulary: mostly quiet ghost strokes with sharp
+// accents on the syncopated "&of2" and "ah of4" pickups — the same pocket
+// feel a funk drummer plays on the snare under a groove.
+List<StrokeBeat> _funkPocketBar(Hand start, {Set<int> accents = const {0, 6, 8, 14}}) {
+  final hands = _alt(16, start);
+  return [
+    for (var i = 0; i < 16; i++)
+      note(hands[i], NoteValue.sixteenth,
+          accent: accents.contains(i), ghost: !accents.contains(i)),
+  ];
+}
 
-/// Eine Zählzeit Achteltriolen mit alternierender Handfolge: gerade
-/// Zählzeiten (0-basiert) spielen RLR, ungerade LRL — so bleibt die
-/// Handfolge über Zählzeit- und Taktgrenzen hinweg durchgehend.
-List<StrokeBeat> _ternaryBeat(int beatIndex, Set<int> accents) =>
-    triplet8(beatIndex.isEven ? [R, L, R] : [L, R, L], accents: accents);
+// ── 2. Latin-Clave ───────────────────────────────────────────────────────--
+// The son clave (3-2): a 2-bar, 5-hit rhythm that's the backbone of Latin
+// music. Mostly silence — the hits are what matter, so every stroke here is
+// a clear accent, not a ghost.
+List<StrokeBeat> _claveBars(Hand start) {
+  // 8th-note grid, 8 positions/bar. 3-side onsets: 0, 3, 6. 2-side: 2, 4.
+  const onsetsBar1 = {0, 3, 6};
+  const onsetsBar2 = {2, 4};
+  var hand = start;
+  final out = <StrokeBeat>[];
+  for (final onsets in [onsetsBar1, onsetsBar2]) {
+    for (var i = 0; i < 8; i++) {
+      if (onsets.contains(i)) {
+        out.add(note(hand, NoteValue.eighth, accent: true));
+        hand = _other(hand);
+      } else {
+        out.add(rest(NoteValue.eighth));
+      }
+    }
+  }
+  return out;
+}
 
-/// Akzent-Workout: fünf eigene Studien zur Akzent-Kontrolle bei laufender
-/// Handfolge — binär (16tel) und ternär (Achteltriolen), mit festem,
-/// wiederholtem oder wanderndem Akzent.
+// ── 3. Halftime-Rock ─────────────────────────────────────────────────────--
+// A steady 8th-note pulse with the backbeat (2 and 4) cracked hard — the
+// same feel as a rock snare backbeat, just on one voice.
+List<StrokeBeat> _rockBackbeatBar(Hand start) {
+  final hands = _alt(8, start);
+  const backbeat = {2, 6}; // beat 2, beat 4
+  return [
+    for (var i = 0; i < 8; i++)
+      note(hands[i], NoteValue.eighth, accent: backbeat.contains(i)),
+  ];
+}
+
+// ── 4. Bossa-Groove ──────────────────────────────────────────────────────--
+// Lighter than funk — fewer ghosts, a smooth syncopated lean typical of
+// bossa nova phrasing (accented pickup into beat 1, and the "&of3").
+List<StrokeBeat> _bossaBar(Hand start, {Set<int> accents = const {3, 10}}) {
+  final hands = _alt(16, start);
+  return [
+    for (var i = 0; i < 16; i++)
+      note(hands[i], NoteValue.sixteenth, accent: accents.contains(i)),
+  ];
+}
+
+// ── 5. Shuffle-Swing ─────────────────────────────────────────────────────--
+// Triplet-grid shuffle: accenting the first note of every triplet gives the
+// long-short "swing" lope instead of a straight, mechanical feel.
+List<StrokeBeat> _shuffleBeat(List<Hand> hands) =>
+    triplet8(hands, accents: {0});
+
+// ── 6. Boom-Bap ──────────────────────────────────────────────────────────--
+// Laid-back hip-hop pocket: sparse strong hits (beat 1, "&of3") over a bed
+// of quiet ghosts — spacious rather than busy.
+List<StrokeBeat> _boomBapBar(Hand start, {Set<int> accents = const {0, 11}}) {
+  final hands = _alt(16, start);
+  return [
+    for (var i = 0; i < 16; i++)
+      note(hands[i], NoteValue.sixteenth,
+          accent: accents.contains(i), ghost: !accents.contains(i)),
+  ];
+}
+
 final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
   Rudiment(
-    id: 'etude_pad_accent_1',
-    name: 'Akzent-Workout · Doppel-Akzent binär',
+    id: 'etude_pad_groove_funk',
+    name: 'Funk-Pocket',
     description:
-        'Durchgehende 16tel-Einzelschläge (RLRL); statt nur der Zählzeit '
-        'wird zusätzlich die dritte 16tel jeder Gruppe akzentuiert — trainiert '
-        'zwei unabhängige Akzent-Impulse pro Zählzeit.',
+        'Der klassische Funk-Ghost-Groove: leise Ghost-Notes mit scharfen '
+        'Akzenten auf dem "&" von 2 und dem "a" von 4 — die Pocket, die '
+        'unter jedem Funk-Beat sitzt.',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Akzent-Workout',
+    collectionGroup: 'Grooves',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
     targetBpm: 110,
     gridUnit: NoteGrid.sixteenth,
     beatsPerBar: 4,
-    skills: {Skill.control, Skill.coordination},
+    skills: {Skill.control, Skill.groove},
     sticking: [
-      // Bar 1: 4 Zählzeiten mit Akzent auf Zelle 0 und Zelle 2.
-      ..._binaryBeat({0, 2}),
-      ..._binaryBeat({0, 2}),
-      ..._binaryBeat({0, 2}),
-      ..._binaryBeat({0, 2}),
-      // Bar 2: identisch wiederholt.
-      ..._binaryBeat({0, 2}),
-      ..._binaryBeat({0, 2}),
-      ..._binaryBeat({0, 2}),
-      ..._binaryBeat({0, 2}),
+      // Takt 1-4: die Pocket, viermal gefestigt.
+      for (var i = 0; i < 4; i++) ..._funkPocketBar(i.isEven ? R : L),
+      // Takt 5-6: kleine Variation — der zweite Akzent rutscht eine 16tel weiter.
+      ..._funkPocketBar(R, accents: {0, 7, 8, 14}),
+      ..._funkPocketBar(L, accents: {0, 7, 8, 14}),
+      // Takt 7-8: zurück zur Original-Pocket, sauber ausgespielt.
+      ..._funkPocketBar(R),
+      ..._funkPocketBar(L),
     ],
   ),
   Rudiment(
-    id: 'etude_pad_accent_2',
-    name: 'Akzent-Workout · Fester Nachschlag-Akzent',
+    id: 'etude_pad_groove_clave',
+    name: 'Latin-Clave',
     description:
-        'Durchgehende 16tel-Einzelschläge (RLRL); der Akzent sitzt fest auf '
-        'der letzten 16tel jeder Zählzeit (dem "e"-Nachschlag) — trainiert '
-        'einen Akzent, der nicht auf der Zählzeit selbst liegt.',
+        'Der Son-Clave-Rhythmus (3-2) — das rhythmische Rückgrat lateinamerikanischer '
+        'Musik, hier auf Hand-zu-Hand-Wechsel übertragen: fünf klare Schläge, '
+        'viel Stille dazwischen.',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Akzent-Workout',
+    collectionGroup: 'Grooves',
     difficulty: Difficulty.intermediate,
-    minBpm: 70,
-    targetBpm: 110,
-    gridUnit: NoteGrid.sixteenth,
-    beatsPerBar: 4,
-    skills: {Skill.control, Skill.coordination},
-    sticking: [
-      // Bar 1: 4 Zählzeiten mit Akzent auf Zelle 3.
-      ..._binaryBeat({3}),
-      ..._binaryBeat({3}),
-      ..._binaryBeat({3}),
-      ..._binaryBeat({3}),
-      // Bar 2: identisch wiederholt.
-      ..._binaryBeat({3}),
-      ..._binaryBeat({3}),
-      ..._binaryBeat({3}),
-      ..._binaryBeat({3}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_accent_3',
-    name: 'Akzent-Workout · Triolen-Downbeat',
-    description:
-        'Durchgehende Achteltriolen mit alternierender Handfolge (RLR/LRL); '
-        'der erste Schlag jeder Triole wird akzentuiert — überträgt das '
-        'Akzent-Kontrolle-Training ins ternäre Feld.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Akzent-Workout',
-    difficulty: Difficulty.intermediate,
-    minBpm: 70,
-    targetBpm: 110,
-    gridUnit: NoteGrid.triplet,
-    beatsPerBar: 4,
-    skills: {Skill.control, Skill.coordination},
-    sticking: [
-      // Bar 1: 4 Zählzeiten, Akzent jeweils auf dem ersten Triolen-Schlag.
-      ..._ternaryBeat(0, {0}),
-      ..._ternaryBeat(1, {0}),
-      ..._ternaryBeat(2, {0}),
-      ..._ternaryBeat(3, {0}),
-      // Bar 2: identisch fortgesetzt.
-      ..._ternaryBeat(4, {0}),
-      ..._ternaryBeat(5, {0}),
-      ..._ternaryBeat(6, {0}),
-      ..._ternaryBeat(7, {0}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_accent_4',
-    name: 'Akzent-Workout · Wandernder Triolen-Akzent',
-    description:
-        'Durchgehende Achteltriolen mit alternierender Handfolge (RLR/LRL); '
-        'der Akzent wandert innerhalb der Triole von Schlag 1 über 2 nach 3 '
-        'und wieder zurück — anspruchsvolle Akzent-Kontrolle im 3er-Raster.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Akzent-Workout',
-    difficulty: Difficulty.advanced,
-    minBpm: 90,
-    targetBpm: 140,
-    gridUnit: NoteGrid.triplet,
-    beatsPerBar: 4,
-    skills: {Skill.control, Skill.coordination},
-    sticking: [
-      // Bar 1: Akzent wandert 0 -> 1 -> 2 -> 1 (hin und zurück).
-      ..._ternaryBeat(0, {0}),
-      ..._ternaryBeat(1, {1}),
-      ..._ternaryBeat(2, {2}),
-      ..._ternaryBeat(3, {1}),
-      // Bar 2: derselbe Wanderweg wiederholt.
-      ..._ternaryBeat(4, {0}),
-      ..._ternaryBeat(5, {1}),
-      ..._ternaryBeat(6, {2}),
-      ..._ternaryBeat(7, {1}),
-    ],
-  ),
-  Rudiment(
-    id: 'etude_pad_accent_5',
-    name: 'Akzent-Workout · Binär/Ternär im Vergleich',
-    description:
-        'Takt 1 durchgehende 16tel mit wanderndem Akzent (binär), Takt 2 '
-        'Achteltriolen mit wanderndem Akzent (ternär) — derselbe Wander-Akzent '
-        'unmittelbar im Wechsel zwischen 4er- und 3er-Raster gespielt.',
-    collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Akzent-Workout',
-    difficulty: Difficulty.advanced,
-    minBpm: 90,
+    minBpm: 80,
     targetBpm: 130,
+    gridUnit: NoteGrid.eighth,
+    beatsPerBar: 4,
+    skills: {Skill.control, Skill.groove, Skill.coordination},
+    sticking: [
+      // 4x die 2-Takt-Clave, damit sich die Pocket setzen kann.
+      ..._claveBars(R),
+      ..._claveBars(R),
+      ..._claveBars(L),
+      ..._claveBars(L),
+    ],
+  ),
+  Rudiment(
+    id: 'etude_pad_groove_rock',
+    name: 'Halftime-Rock',
+    description:
+        'Durchgehende Achtel mit hart gecrackter Backbeat (Zählzeit 2+4) — '
+        'derselbe Drive wie eine Rock-Snare, nur auf einer Stimme.',
+    collection: ExerciseCollection.padWorkouts,
+    collectionGroup: 'Grooves',
+    difficulty: Difficulty.beginner,
+    minBpm: 80,
+    targetBpm: 140,
+    gridUnit: NoteGrid.eighth,
+    beatsPerBar: 4,
+    skills: {Skill.control, Skill.groove},
+    sticking: [
+      for (var i = 0; i < 8; i++) ..._rockBackbeatBar(i.isEven ? R : L),
+    ],
+  ),
+  Rudiment(
+    id: 'etude_pad_groove_bossa',
+    name: 'Bossa-Groove',
+    description:
+        'Leichter, synkopierter Bossa-Nova-Feel — weniger Ghost-Notes als '
+        'Funk, dafür ein sanfter Auftakt-Schwung in den Akzenten.',
+    collection: ExerciseCollection.padWorkouts,
+    collectionGroup: 'Grooves',
+    difficulty: Difficulty.intermediate,
+    minBpm: 80,
+    targetBpm: 130,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 4,
+    skills: {Skill.control, Skill.groove},
+    sticking: [
+      // Takt 1-4: die Bossa-Idee gefestigt.
+      for (var i = 0; i < 4; i++) ..._bossaBar(i.isEven ? R : L),
+      // Takt 5-6: Variation — Akzente einen Hauch später.
+      ..._bossaBar(R, accents: {4, 11}),
+      ..._bossaBar(L, accents: {4, 11}),
+      // Takt 7-8: zurück zur Original-Idee.
+      ..._bossaBar(R),
+      ..._bossaBar(L),
+    ],
+  ),
+  Rudiment(
+    id: 'etude_pad_groove_shuffle',
+    name: 'Shuffle-Swing',
+    description:
+        'Triolische Achtel mit Akzent auf dem ersten Schlag jeder Triole — '
+        'der Long-Short-Schlenker, der einen Shuffle schwingen statt '
+        'mechanisch klappern lässt.',
+    collection: ExerciseCollection.padWorkouts,
+    collectionGroup: 'Grooves',
+    difficulty: Difficulty.advanced,
+    minBpm: 70,
+    targetBpm: 120,
     gridUnit: NoteGrid.triplet,
     beatsPerBar: 4,
-    skills: {Skill.control, Skill.coordination},
+    skills: {Skill.control, Skill.groove, Skill.coordination},
     sticking: [
-      // Bar 1 (binär): Akzent wandert 0 -> 1 -> 2 -> 3 durch die 16tel-Gruppe.
-      ..._binaryBeat({0}),
-      ..._binaryBeat({1}),
-      ..._binaryBeat({2}),
-      ..._binaryBeat({3}),
-      // Bar 2 (ternär): Akzent wandert 0 -> 1 -> 2 -> 1 durch die Triole.
-      ..._ternaryBeat(4, {0}),
-      ..._ternaryBeat(5, {1}),
-      ..._ternaryBeat(6, {2}),
-      ..._ternaryBeat(7, {1}),
+      for (var i = 0; i < 32; i++)
+        ..._shuffleBeat(i.isEven ? [R, L, R] : [L, R, L]),
+    ],
+  ),
+  Rudiment(
+    id: 'etude_pad_groove_boombap',
+    name: 'Boom-Bap',
+    description:
+        'Entspannter Hip-Hop-Groove: wenige starke Schläge (Zählzeit 1 und '
+        'das "&" von 3) über einem Teppich leiser Ghost-Notes — Raum statt '
+        'Dichte.',
+    collection: ExerciseCollection.padWorkouts,
+    collectionGroup: 'Grooves',
+    difficulty: Difficulty.advanced,
+    minBpm: 60,
+    targetBpm: 100,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 4,
+    skills: {Skill.control, Skill.groove},
+    sticking: [
+      // Takt 1-4: die Pocket, gefestigt.
+      for (var i = 0; i < 4; i++) ..._boomBapBar(i.isEven ? R : L),
+      // Takt 5-6: Variation — ein zusätzlicher Akzent auf der "1" von Takt 2.
+      ..._boomBapBar(R, accents: {0, 11}),
+      ..._boomBapBar(L, accents: {0, 8, 11}),
+      // Takt 7-8: zurück zur Original-Pocket.
+      ..._boomBapBar(R),
+      ..._boomBapBar(L),
     ],
   ),
 ];

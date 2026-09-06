@@ -3,6 +3,7 @@ import 'package:drum_coach/features/program/program_setup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -60,5 +61,41 @@ void main() {
     // "24" now appears twice: the big current-value display and the
     // slider's static max-range label below it.
     expect(find.text('24'), findsNWidgets(2));
+  });
+
+  testWidgets(
+      'starting a program pops back to /program instead of collapsing the '
+      'whole nav stack', (tester) async {
+    // /program lives outside the bottom-nav shell (see router.dart), so
+    // context.go('/program') after starting would replace the *entire*
+    // stack with just /program — nothing left below it to pop to (no
+    // AppBar back button, system back exits the app instead of navigating).
+    // _start() must context.pop() back to the existing /program screen
+    // instead, leaving whatever was under it (here: '/') intact.
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, __) => const Scaffold(body: Text('root'))),
+        GoRoute(path: '/program', builder: (_, __) => const Scaffold(body: Text('program'))),
+        GoRoute(path: '/program/setup', builder: (_, __) => const ProgramSetupScreen()),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(child: MaterialApp.router(routerConfig: router)),
+    );
+
+    router.push('/program');
+    await tester.pumpAndSettle();
+    router.push('/program/setup');
+    await tester.pumpAndSettle();
+    expect(find.byType(ProgramSetupScreen), findsOneWidget);
+
+    await tester.tap(find.text('Programm starten'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('program'), findsOneWidget);
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator).first);
+    expect(navigator.canPop(), isTrue,
+        reason: 'root ("/") must still be reachable by popping once more');
   });
 }

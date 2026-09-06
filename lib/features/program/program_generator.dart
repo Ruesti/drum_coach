@@ -62,22 +62,39 @@ String _stageHint(Difficulty stage) => switch (stage) {
       Difficulty.professional => 'Musikalische Anwendung',
     };
 
+/// Daily rotation of warmup variants so the fixed single-stroke warmup still
+/// feels different every practice day (§4 variants).
+const _warmupVariants = [
+  Variant.even,
+  Variant.accentTap,
+  Variant.pp,
+  Variant.crescendo,
+  Variant.ff,
+];
+
 /// Expands a single [ProgramDay] from the current stage's exercises, using
 /// the existing weekly practice/light/rest rhythm ([dayTypeForDayNumber]).
 /// Pure: [cleanBpmFor] returns the stored clean tempo for an exercise id (or
-/// null → the focus exercise's [Rudiment.minBpm] is used).
+/// null → the focus exercise's [Rudiment.minBpm] is used). [techniquePool]
+/// (default: the stage's own exercises) widens the daily technique rotation —
+/// e.g. to every pool exercise up to the current stage — so consecutive days
+/// don't cycle through the same two or three lines.
 ProgramDay buildAdaptiveProgramDay({
   required List<Rudiment> stageExercises,
   required Difficulty stage,
   required int dayNumber,
   required int totalDays,
   int? Function(String id)? cleanBpmFor,
+  List<Rudiment>? techniquePool,
 }) {
   assert(dayNumber >= 1 && dayNumber <= totalDays);
   assert(stageExercises.isNotEmpty);
 
   final focus = stageFocus(stageExercises);
-  final technique = stageExercises[dayNumber % stageExercises.length];
+  final rotation =
+      (techniquePool == null || techniquePool.isEmpty) ? stageExercises : techniquePool;
+  final technique = rotation[dayNumber % rotation.length];
+  final warmupVariant = _warmupVariants[dayNumber % _warmupVariants.length];
   final type = dayTypeForDayNumber(dayNumber);
   final week = ((dayNumber - 1) ~/ 7) + 1;
   final totalWeeks = ((totalDays - 1) ~/ 7) + 1;
@@ -97,10 +114,10 @@ ProgramDay buildAdaptiveProgramDay({
   switch (type) {
     case DayType.practice:
       blocks = [
-        const ExerciseBlock(
+        ExerciseBlock(
           type: BlockType.warmup,
           exerciseKey: 'single_stroke_roll',
-          variants: [Variant.even],
+          variants: [warmupVariant],
           durationMinutes: 3,
         ),
         ExerciseBlock(

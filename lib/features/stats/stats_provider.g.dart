@@ -52,7 +52,7 @@ final last14DaysMinutesProvider =
 );
 
 typedef Last14DaysMinutesRef = AutoDisposeFutureProviderRef<List<DailyMinutes>>;
-String _$streakDaysHash() => r'48e4f5e12a577c6380c2a0a9fb7c01c46a95ad5d';
+String _$streakDaysHash() => r'53d7c2886269bf9b168707f7eefce3c69cc9521c';
 
 /// Current streak with a one-day grace, skipping scheduled program rest days.
 /// See [computeCurrentStreak].
@@ -69,7 +69,7 @@ final streakDaysProvider = AutoDisposeFutureProvider<int>.internal(
 );
 
 typedef StreakDaysRef = AutoDisposeFutureProviderRef<int>;
-String _$longestStreakHash() => r'ee85bd5d57b208c10df5e1d2fded644361bfa8f2';
+String _$longestStreakHash() => r'd62aef39e7d817576d51c8ad1ee6247472a5e589';
 
 /// The longest consecutive-day run ever recorded (no grace), bridging
 /// scheduled program rest days. See [computeLongestStreak].

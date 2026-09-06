@@ -6,6 +6,7 @@ import '../../app/design_tokens.dart';
 import '../../shared/widgets/app_badge.dart';
 import '../../shared/widgets/app_card.dart';
 import '../../shared/widgets/notation_staff_widget.dart';
+import '../learning/suggested_bpm_provider.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
 
@@ -67,7 +68,13 @@ class LessonDetailScreen extends ConsumerWidget {
             ],
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              onPressed: () => context.push('/practice/${rudiment.id}'),
+              onPressed: () async {
+                final bpm =
+                    await ref.read(suggestedBpmProvider(rudiment.id).future);
+                if (context.mounted) {
+                  context.push('/practice/${rudiment.id}?bpm=$bpm');
+                }
+              },
               icon: const Icon(Icons.play_arrow_rounded),
               label: const Text('Start Practice'),
             ),

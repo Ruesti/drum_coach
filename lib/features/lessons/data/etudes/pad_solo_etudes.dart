@@ -1,281 +1,230 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
 
-/// Four original "Pad-Solo" études — short, self-contained 4-bar (4/4) solo
-/// pieces that combine quarter, eighth and sixteenth notes with rests into a
-/// musical arc, rather than a uniform technical drill. Each piece opens
-/// calmer, builds in rhythmic density, includes a dramatic rest ("break"),
-/// and resolves with an accented cadence. Nr. 1-2 are intermediate (mostly
-/// quarters/eighths with a short sixteenth flourish), Nr. 3-4 are advanced
-/// (longer sixteenth passages, a dotted-eighth-sixteenth figure and a
-/// hemiola-style accent shift). Sticking stays strictly alternating R/L
-/// across all played (non-rest) notes throughout every piece.
+// ── Reusable phrase blocks ───────────────────────────────────────────────
+// Each solo is built the way a real short snare solo is written: state a
+// clear 2-bar theme, repeat or vary it, contrast it with a second idea, then
+// return to the theme for a cadence. Accents always mark the strong beats
+// (1 and 3) or the theme's own rhythm — never a random cell. Rests only
+// ever fall at the END of a 2-bar phrase (a breath before the next idea),
+// never mid-phrase. That's what makes it read as a piece of music instead
+// of a pattern grab-bag.
+
+/// One bar of steady quarters, downbeat + beat-3 accented (march feel).
+List<StrokeBeat> _quarterBar(Hand lead) {
+  final other = lead == R ? L : R;
+  return [
+    note(lead, NoteValue.quarter, accent: true),
+    note(other, NoteValue.quarter),
+    note(lead, NoteValue.quarter, accent: true),
+    note(other, NoteValue.quarter),
+  ];
+}
+
+/// One bar of straight eighths, accented on beats 1 and 3.
+List<StrokeBeat> _eighthBar(Hand lead) {
+  final other = lead == R ? L : R;
+  return [
+    note(lead, NoteValue.eighth, accent: true), note(other, NoteValue.eighth),
+    note(lead, NoteValue.eighth), note(other, NoteValue.eighth),
+    note(lead, NoteValue.eighth, accent: true), note(other, NoteValue.eighth),
+    note(lead, NoteValue.eighth), note(other, NoteValue.eighth),
+  ];
+}
+
+/// One bar (4 beats) of straight sixteenths, accent on [accentIndex] of
+/// every beat (0 = downbeat feel, 1/2/3 = pushed off the beat).
+List<StrokeBeat> _sixteenthBar(Hand lead, int accentIndex) {
+  final other = lead == R ? L : R;
+  return [
+    for (var i = 0; i < 4; i++)
+      ...sixteenths([lead, other, lead, other], accents: {accentIndex}),
+  ];
+}
+
+/// Three quarters + a closing quarter rest — a one-bar "breath" that ends a
+/// phrase without breaking the pulse.
+List<StrokeBeat> _breathBar(Hand lead) {
+  final other = lead == R ? L : R;
+  return [
+    note(lead, NoteValue.quarter, accent: true),
+    note(other, NoteValue.quarter),
+    note(lead, NoteValue.quarter),
+    rest(NoteValue.quarter),
+  ];
+}
+
+/// Closing cadence: an eighth-note push into two accented quarters.
+List<StrokeBeat> _cadenceBar(Hand lead) {
+  final other = lead == R ? L : R;
+  return [
+    note(lead, NoteValue.eighth), note(other, NoteValue.eighth),
+    note(lead, NoteValue.eighth), note(other, NoteValue.eighth),
+    note(lead, NoteValue.quarter, accent: true),
+    note(other, NoteValue.quarter, accent: true),
+  ];
+}
+
+/// A one-bar roll fill (continuous doubles) leading into the final accent.
+List<StrokeBeat> _rollFillBar(Hand lead) {
+  final other = lead == R ? L : R;
+  return sixteenths([
+    lead, lead, other, other, lead, lead, other, other,
+    lead, lead, other, other, lead, lead, other, other,
+  ]);
+}
+
 final List<Rudiment> padSoloEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_pad_solo_1',
-    name: 'Pad-Solo · Nr. 1',
+    name: 'Pad-Solo · Antrittsfigur',
     description:
-        'Ruhiges Solo-Stück, das von Vierteln über Achtel zu einer kurzen '
-        '16tel-Passage führt und mit einem Break zur Kadenz findet.',
+        'Marschartiges Thema in Vierteln/Achteln, kontrastiert mit einer '
+        '16tel-Passage, kehrt zum Thema zurück und schließt mit einer '
+        'Kadenz — ein Solo mit klarem roten Faden statt loser Figuren.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Pad-Solo',
     difficulty: Difficulty.intermediate,
     minBpm: 60,
-    targetBpm: 92,
+    targetBpm: 110,
     gridUnit: NoteGrid.sixteenth,
     beatsPerBar: 4,
     skills: {Skill.control, Skill.fill},
     sticking: [
-      // Takt 1: ruhiger Start, vier Viertel, Akzent auf 1.
-      // 1.0 + 1.0 + 1.0 + 1.0 = 4.0 ✓
-      note(R, NoteValue.quarter, accent: true),
-      note(L, NoteValue.quarter),
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.quarter),
-
-      // Takt 2: Achtel-Bewegung setzt ein, schließt wieder mit Vierteln.
-      // (0.5*4) + 1.0 + 1.0 = 2.0 + 1.0 + 1.0 = 4.0 ✓
-      note(R, NoteValue.eighth, accent: true),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.quarter),
-      note(L, NoteValue.quarter),
-
-      // Takt 3: Steigerung – 16tel-Flourish, dann Achtel, dann eine Viertel
-      // gefolgt von einer Viertelpause als kurzer Atemzug vor dem Break.
-      // (0.25*4) + (0.5*2) + 1.0 + 1.0 = 1.0 + 1.0 + 1.0 + 1.0 = 4.0 ✓
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.quarter),
-      rest(NoteValue.quarter),
-
-      // Takt 4: Break (Viertelpause), dann Achtel, 16tel-Lauf und
-      // akzentuierte Schluss-Viertel als Kadenz.
-      // 1.0 + (0.5*2) + (0.25*4) + 1.0 = 1.0 + 1.0 + 1.0 + 1.0 = 4.0 ✓
-      rest(NoteValue.quarter),
-      note(L, NoteValue.eighth, accent: true),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.quarter, accent: true),
+      // A: Thema (2 Takte).
+      ..._quarterBar(R), ..._eighthBar(R),
+      // A': Thema wiederholt, andere Hand führt.
+      ..._quarterBar(L), ..._eighthBar(L),
+      // B: Kontrast — 16tel, Akzent auf der Zählzeit, dann leicht verschoben.
+      ..._sixteenthBar(R, 0), ..._sixteenthBar(R, 1),
+      // A: Thema kehrt zurück, endet mit Atemzug + Kadenz.
+      ..._breathBar(R), ..._cadenceBar(R),
     ],
   ),
   Rudiment(
     id: 'etude_pad_solo_2',
-    name: 'Pad-Solo · Nr. 2',
+    name: 'Pad-Solo · Achtel trifft Sechzehntel',
     description:
-        'Frage-und-Antwort-Solo mit Achtel-Synkopen, einem 16tel-Aufbau und '
-        'einem energischen Schluss nach einer kurzen Generalpause.',
+        'Eine Achtel-Idee wird von einer schnelleren 16tel-Version '
+        'beantwortet, zweimal durchlaufen mit wechselnder Führungshand, '
+        'Schluss mit Roll-Fill und Kadenz.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Pad-Solo',
     difficulty: Difficulty.intermediate,
     minBpm: 66,
-    targetBpm: 100,
+    targetBpm: 116,
     gridUnit: NoteGrid.sixteenth,
     beatsPerBar: 4,
-    skills: {Skill.control, Skill.fill},
+    skills: {Skill.control, Skill.fill, Skill.coordination},
     sticking: [
-      // Takt 1: synkopierte Achtel-"Frage" mit Atemzug in der Mitte,
-      // schließt mit Viertel + Viertelpause.
-      // (0.5*4) + 1.0 + 1.0 = 2.0 + 1.0 + 1.0 = 4.0 ✓
-      note(R, NoteValue.eighth, accent: true),
-      note(L, NoteValue.eighth),
-      rest(NoteValue.eighth),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.quarter),
-      rest(NoteValue.quarter),
-
-      // Takt 2: 16tel-"Antwort", dann Achtel, kurzer Atemzug, akzentuierte
-      // Schluss-Viertel.
-      // (0.25*4) + (0.5*2) + 1.0 + 1.0 = 1.0 + 1.0 + 1.0 + 1.0 = 4.0 ✓
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.eighth),
-      rest(NoteValue.quarter),
-      note(R, NoteValue.quarter, accent: true),
-
-      // Takt 3: Break zu Beginn (zwei Achtelpausen), dann eine ruhigere
-      // Achtel-Phrase, die in einer Viertel ausklingt.
-      // (0.5*2) + (0.5*4) + 1.0 = 1.0 + 2.0 + 1.0 = 4.0 ✓
-      rest(NoteValue.eighth),
-      rest(NoteValue.eighth),
-      note(L, NoteValue.eighth, accent: true),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.quarter),
-
-      // Takt 4: großer 16tel-Aufbau über zwei Schläge, kurzer Atemzug,
-      // akzentuierte Schluss-Viertel als Kadenz.
-      // (0.25*8) + (0.5*2) + 1.0 = 2.0 + 1.0 + 1.0 = 4.0 ✓
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      rest(NoteValue.eighth),
-      rest(NoteValue.eighth),
-      note(R, NoteValue.quarter, accent: true),
+      // Frage (Achtel) + Antwort (16tel), rechts geführt.
+      ..._eighthBar(R), ..._sixteenthBar(R, 0),
+      // Dieselbe Frage & Antwort, links geführt (Wiedererkennung + Balance).
+      ..._eighthBar(L), ..._sixteenthBar(L, 0),
+      // Steigerung: Antwort jetzt off-beat akzentuiert.
+      ..._eighthBar(R), ..._sixteenthBar(R, 2),
+      // Schluss: Roll-Fill führt in die Kadenz.
+      ..._rollFillBar(R), ..._cadenceBar(L),
     ],
   ),
   Rudiment(
     id: 'etude_pad_solo_3',
-    name: 'Pad-Solo · Nr. 3',
+    name: 'Pad-Solo · Wellenbewegung',
     description:
-        'Anspruchsvolles Solo mit durchgehenden 16tel-Läufen, einer '
-        'punktierten Achtel-16tel-Figur und einem dramatischen Break in '
-        'Takt 3.',
+        'Durchgehendes 16tel-Thema mit wanderndem Akzent (0→1→2→3), das '
+        'einmal komplett "wandert" bevor der Atemzug zur Kadenz führt.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Pad-Solo',
     difficulty: Difficulty.advanced,
-    minBpm: 84,
+    minBpm: 78,
     targetBpm: 126,
     gridUnit: NoteGrid.sixteenth,
     beatsPerBar: 4,
-    skills: {Skill.control, Skill.endurance, Skill.fill},
+    skills: {Skill.control, Skill.endurance, Skill.coordination},
     sticking: [
-      // Takt 1: zwei 16tel-Gruppen, Achtelpaar, dann punktierte Achtel +
-      // 16tel-Figur (0.75 + 0.25 = 1 Schlag) zum Taktschluss.
-      // (0.25*4) + (0.25*4) + (0.5*2) + (0.75+0.25) = 1.0+1.0+1.0+1.0 = 4.0 ✓
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.eighth, accent: true),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.eighth, dotted: true, accent: true),
-      note(L, NoteValue.sixteenth),
-
-      // Takt 2: kurzer Atemzug, dann zwei weitere 16tel-Gruppen und eine
-      // akzentuierte Schluss-Viertel.
-      // (0.5*2) + (0.25*4) + (0.25*4) + 1.0 = 1.0+1.0+1.0+1.0 = 4.0 ✓
-      rest(NoteValue.eighth),
-      rest(NoteValue.eighth),
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.quarter, accent: true),
-
-      // Takt 3: der Break – eine volle Viertelpause zur Spannung, danach
-      // eine Achtel-Phrase und ein 16tel-Lauf als Wiedereinstieg.
-      // 1.0 + (0.5*4) + (0.25*4) = 1.0 + 2.0 + 1.0 = 4.0 ✓
-      rest(NoteValue.quarter),
-      note(L, NoteValue.eighth, accent: true),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.sixteenth, accent: true),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-
-      // Takt 4: zwei 16tel-Gruppen, punktierte Achtel-16tel-Figur, und eine
-      // akzentuierte Schluss-Viertel als finale Kadenz.
-      // (0.25*4) + (0.25*4) + (0.75+0.25) + 1.0 = 1.0+1.0+1.0+1.0 = 4.0 ✓
-      note(L, NoteValue.sixteenth, accent: true),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth, accent: true),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.eighth, dotted: true, accent: true),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.quarter, accent: true),
+      // Thema: wandernder Akzent, ein voller Durchlauf 0-1-2-3 (2 Takte).
+      ..._sixteenthBar(R, 0), ..._sixteenthBar(R, 1),
+      // Wiederholung des Wanderns, Führung wechselt für Balance.
+      ..._sixteenthBar(L, 2), ..._sixteenthBar(L, 3),
+      // Kontrast: ruhigere Achtel-Passage als Erholung vor dem Finale.
+      ..._eighthBar(R), ..._eighthBar(L),
+      // Schluss: Atemzug, dann Roll-Fill in die Kadenz.
+      ..._breathBar(R), ..._rollFillBar(R),
     ],
   ),
   Rudiment(
     id: 'etude_pad_solo_4',
-    name: 'Pad-Solo · Nr. 4',
+    name: 'Pad-Solo · Groove-Break',
     description:
-        'Virtuoses Abschluss-Solo mit synkopiertem Auftakt, wandernden '
-        'Akzenten über durchgehenden 16teln (Hemiole-Gefühl) und einer '
-        'zweischlägigen Generalpause vor dem finalen Lauf.',
+        'Achtel-Groove-Thema, das von einem markanten Break (Viertelpause + '
+        'Roll-Fill) unterbrochen wird, bevor Thema und Kadenz zurückkehren.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Pad-Solo',
     difficulty: Difficulty.advanced,
-    minBpm: 90,
+    minBpm: 80,
+    targetBpm: 130,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 4,
+    skills: {Skill.control, Skill.fill, Skill.coordination},
+    sticking: [
+      // Thema (2 Takte Achtel-Groove).
+      ..._eighthBar(R), ..._eighthBar(R),
+      // Der Break: Atemzug, dann Roll-Fill als Ausrufezeichen.
+      ..._breathBar(L), ..._rollFillBar(L),
+      // Thema kehrt zurück, jetzt links geführt.
+      ..._eighthBar(L), ..._eighthBar(L),
+      // Finale: 16tel-Steigerung in die Kadenz.
+      ..._sixteenthBar(R, 0), ..._cadenceBar(R),
+    ],
+  ),
+  Rudiment(
+    id: 'etude_pad_solo_5',
+    name: 'Pad-Solo · Aufbau',
+    description:
+        'Ein Thema, das sich takt-für-takt steigert — von Vierteln über '
+        'Achtel zu 16teln — und in einem doppelten Roll-Fill-Finale endet.',
+    collection: ExerciseCollection.padWorkouts,
+    collectionGroup: 'Pad-Solo',
+    difficulty: Difficulty.intermediate,
+    minBpm: 64,
+    targetBpm: 118,
+    gridUnit: NoteGrid.sixteenth,
+    beatsPerBar: 4,
+    skills: {Skill.control, Skill.endurance},
+    sticking: [
+      // Aufbau: Viertel → Achtel → Viertel → Achtel (Thema gefestigt).
+      ..._quarterBar(R), ..._eighthBar(R),
+      ..._quarterBar(L), ..._eighthBar(L),
+      // Steigerung: 16tel, Akzent auf der Zählzeit, dann verschoben.
+      ..._sixteenthBar(R, 0), ..._sixteenthBar(R, 1),
+      // Finale: Roll-Fill, Atemzug, dann Kadenz.
+      ..._rollFillBar(R), ..._cadenceBar(L),
+    ],
+  ),
+  Rudiment(
+    id: 'etude_pad_solo_6',
+    name: 'Pad-Solo · Zuruf & Echo',
+    description:
+        'Ein Viertel-Zuruf bekommt jedes Mal eine schnellere 16tel-Antwort, '
+        'dreimal variiert (Führungshand, Akzentposition), bevor das große '
+        'Finale mit zwei Roll-Fills schließt.',
+    collection: ExerciseCollection.padWorkouts,
+    collectionGroup: 'Pad-Solo',
+    difficulty: Difficulty.advanced,
+    minBpm: 84,
     targetBpm: 132,
     gridUnit: NoteGrid.sixteenth,
     beatsPerBar: 4,
-    skills: {Skill.control, Skill.endurance, Skill.fill, Skill.coordination},
+    skills: {Skill.control, Skill.fill, Skill.coordination, Skill.endurance},
     sticking: [
-      // Takt 1: synkopierter 16tel-Auftakt (Pause auf der "1"), Achtelpaar,
-      // 16tel-Gruppe, akzentuierte Schluss-Viertel.
-      // (0.25*4) + (0.5*2) + (0.25*4) + 1.0 = 1.0+1.0+1.0+1.0 = 4.0 ✓
-      rest(NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.eighth, accent: true),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.sixteenth, accent: true),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.quarter, accent: true),
-
-      // Takt 2: acht durchgehende 16tel mit wanderndem Akzent alle drei
-      // Schläge (Hemiole-Gefühl: Index 0, 3, 6), dann Atemzug und
-      // akzentuierte Schluss-Viertel.
-      // (0.25*8) + 1.0 + 1.0 = 2.0 + 1.0 + 1.0 = 4.0 ✓
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth, accent: true),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth, accent: true),
-      note(L, NoteValue.sixteenth),
-      rest(NoteValue.quarter),
-      note(R, NoteValue.quarter, accent: true),
-
-      // Takt 3: der große Break – eine halbe Pause (zwei Schläge Stille),
-      // dann eine synkopierte Achtel-Phrase als Wiedereinstieg.
-      // 2.0 + (0.5*4) = 2.0 + 2.0 = 4.0 ✓
-      rest(NoteValue.half),
-      note(L, NoteValue.eighth, accent: true),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.eighth),
-      note(R, NoteValue.eighth),
-
-      // Takt 4: finaler 16tel-Lauf über zwei Schläge, Achtelpaar, und eine
-      // akzentuierte Schluss-Viertel als große Kadenz.
-      // (0.25*8) + (0.5*2) + 1.0 = 2.0 + 1.0 + 1.0 = 4.0 ✓
-      note(L, NoteValue.sixteenth, accent: true),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth, accent: true),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.sixteenth),
-      note(R, NoteValue.sixteenth),
-      note(L, NoteValue.eighth, accent: true),
-      note(R, NoteValue.eighth),
-      note(L, NoteValue.quarter, accent: true),
+      // Ruf (Viertel) + Antwort (16tel, Downbeat-Akzent).
+      ..._quarterBar(R), ..._sixteenthBar(R, 0),
+      // Ruf + Antwort, links geführt, Akzent verschoben.
+      ..._quarterBar(L), ..._sixteenthBar(L, 1),
+      // Ruf + Antwort, rechts, Akzent weiter verschoben — Spannungsaufbau.
+      ..._quarterBar(R), ..._sixteenthBar(R, 2),
+      // Finale: zwei Roll-Fills in Folge, letzter mit Kadenz-Feeling.
+      ..._rollFillBar(L), ..._cadenceBar(R),
     ],
   ),
 ];
