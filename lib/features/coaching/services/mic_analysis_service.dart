@@ -141,16 +141,35 @@ class MicAnalysisService {
     final amplitudes = [for (final h in hits) h.amplitude];
 
     final aligned = alignSequences(expectedMs: expectedMs, onsetMs: onsetMs);
+
+    // Assess only the window from the first to the last note actually hit:
+    // expected notes before the player joined and after they stopped (the
+    // click keeps running until Stop is tapped) are not omissions — the
+    // device test showed 9-10 phantom misses per run from the tail alone.
+    // Omissions *inside* the window keep counting.
+    var firstHit = -1, lastHit = -1;
+    for (var i = 0; i < aligned.notes.length; i++) {
+      if (!aligned.notes[i].hit) continue;
+      if (firstHit < 0) firstHit = i;
+      lastHit = i;
+    }
+    final assessed = firstHit < 0
+        ? aligned.notes
+        : aligned.notes.sublist(firstHit, lastHit + 1);
+
+    final hitCount = assessed.where((n) => n.hit).length;
     final summary = AlignmentSummary(
-      expectedCount: aligned.notes.length,
-      hitCount: aligned.hitCount,
-      missedCount: aligned.missedCount,
+      expectedCount: assessed.length,
+      hitCount: hitCount,
+      missedCount: assessed.length - hitCount,
       extraCount: aligned.extraCount,
-      handValuesAllowed: aligned.handValuesAllowed,
+      handValuesAllowed: assessed.isNotEmpty &&
+          hitCount / assessed.length >= 0.9 &&
+          aligned.extraCount / assessed.length < 0.05,
     );
 
     final unassigned = computeUnassignedMetrics(
-      clickMs: expectedMs,
+      clickMs: [for (final n in assessed) n.expectedMs],
       onsetMs: onsetMs,
       amplitudes: amplitudes,
     );
@@ -158,10 +177,11 @@ class MicAnalysisService {
     // Hands come exclusively from the sticking of *assigned* notes; unmatched
     // onsets get no hand (§1.2).
     final matched = <MatchedHit>[];
-    for (var i = 0; i < aligned.notes.length; i++) {
-      final note = aligned.notes[i];
+    final deviations = <double>[];
+    for (final note in assessed) {
       if (!note.hit) continue;
-      final patternPos = beatLog[i].beatIndex % sticking.length;
+      deviations.add(note.deviationMs!);
+      final patternPos = beatLog[note.noteIndex].beatIndex % sticking.length;
       matched.add(MatchedHit(
         hitTimestamp: DateTime.fromMicrosecondsSinceEpoch(
             (onsetMs[note.onsetIndex!] * 1000).round()),
@@ -178,6 +198,7 @@ class MicAnalysisService {
       unassigned: unassigned,
       alignment: summary,
       peakLevels: amplitudes,
+      deviationsMs: deviations,
       latencyOffsetAppliedMs: latencyOffsetMs,
       detectedHits: hits.length,
       expectedHits: beatLog.length,

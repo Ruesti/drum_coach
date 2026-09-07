@@ -41,6 +41,10 @@ class SessionAnalysis {
   /// Peak level of every detected onset, chronological (§1.1 check).
   final List<double> peakLevels;
 
+  /// Deviation of each assigned note in note order (§1.2 check: an early
+  /// stroke shows up as its own outlier here).
+  final List<double> deviationsMs;
+
   /// The stored calibration offset that was subtracted from onset times
   /// before matching; 0 = uncalibrated (§1.3).
   final double latencyOffsetAppliedMs;
@@ -59,6 +63,7 @@ class SessionAnalysis {
     this.unassigned,
     this.alignment,
     this.peakLevels = const [],
+    this.deviationsMs = const [],
     this.latencyOffsetAppliedMs = 0,
     required this.detectedHits,
     required this.expectedHits,

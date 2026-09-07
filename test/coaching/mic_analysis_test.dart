@@ -53,9 +53,10 @@ void main() {
     test('below the confidence gate: no hand values, unassigned still there',
         () {
       final grid = [for (var i = 0; i < 8; i++) i * 500.0];
-      // Only 5 of 8 strokes played — 62.5% hit rate.
+      // 5 of 8 strokes played with the misses *inside* the run (notes 1, 3
+      // and 5 skipped) — 62.5% hit rate in the assessed window.
       final a = MicAnalysisService.analyzeHits(
-        hits: hitsAt(grid.sublist(0, 5)),
+        hits: hitsAt([grid[0], grid[2], grid[4], grid[6], grid[7]]),
         anchor: anchor,
         beatLog: beatLogAt(grid),
         sticking: rlrl,
@@ -121,6 +122,44 @@ void main() {
         sticking: rlrl,
       );
       expect(a.peakLevels, amps);
+    });
+
+    test('unplayed lead-in and tail notes are not counted as omissions', () {
+      // 20 expected notes; the player joins at note 3 and stops after
+      // note 16 (session kept clicking) — plus one real omission at note 9.
+      final grid = [for (var i = 0; i < 20; i++) i * 500.0];
+      final played = [
+        for (var i = 3; i <= 16; i++)
+          if (i != 9) grid[i],
+      ];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(played),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+      );
+      expect(a.alignment!.expectedCount, 14,
+          reason: 'only notes 3..16 are assessed');
+      expect(a.alignment!.missedCount, 1,
+          reason: 'the mid-run omission stays an omission');
+      expect(a.alignment!.extraCount, 0);
+      expect(a.alignment!.handValuesAllowed, isTrue,
+          reason: '13/14 = 93% within the assessed window');
+      expect(a.unassigned!.expectedCount, 14);
+    });
+
+    test('deviations of assigned notes are exposed in note order', () {
+      final grid = [for (var i = 0; i < 8; i++) i * 500.0];
+      final onsets = [...grid]..[3] = grid[3] - 150; // one early stroke
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+      );
+      expect(a.deviationsMs.length, 8);
+      expect(a.deviationsMs[3], closeTo(-150, 0.5));
+      expect(a.deviationsMs[0], closeTo(0, 0.5));
     });
 
     test('no anchor or no hits yields counts only', () {

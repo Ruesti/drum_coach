@@ -1104,6 +1104,7 @@ class _AnalysisSummary extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Pegel (×100): ${analysis.peakLevels.map((p) => (p * 100).round()).join(' ')}\n'
+                    'Abweichung (ms): ${analysis.deviationsMs.map((d) => d.round()).join(' ')}\n'
                     'Aufnahme: ${analysis.recordingSetup ?? 'unbekannt'}',
                     style: const TextStyle(
                         color: AppColors.textFaint,
