@@ -85,7 +85,7 @@ aufgeklappt — der ~−150-Einzelwert wurde nicht notiert, das Kriterium
 „richtige Note statt Sprung" ist durch 27/27 besetzte Noten dennoch
 zwingend belegt).
 
-**Vierter durch den Gerätetest gefundener Messfehler (07.09., behoben
+**Dritter echter, durch den Gerätetest gefundener Messfehler (07.09., behoben
 `3d9a6d5`):** Die erste a/b/c-Runde zeigte 9–10 Phantom-Auslassungen pro
 Durchlauf, weil der Klick vor dem Einstieg und nach dem letzten Schlag bis
 zum Stop weiterzählte. Bewertet wird seither nur das Fenster vom ersten bis
