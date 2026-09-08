@@ -3,13 +3,13 @@
 **Datum:** 06.09.2026 · **Basis:** main nach Merge von PR #14 und #15 (`60d0ffd`)
 · **Brief:** `docs/BRIEF_ETAPPE1_PAD.md` §1.1–1.4 samt Freigabe-Ergänzungen
 
-**Stand 06.09. abends: Implementierung komplett (227/227 Tests). Gerätetest
-1.1 BESTANDEN; 1.3 BESTANDEN nach angepasster Abnahme (Entscheidung
-Auftraggeber 06.09., Begründung im 1.3-Abschnitt), Kalibrierwert 69 ms
-gespeichert. Der Gerätetest deckte zwei echte Messfehler auf, die behoben
-wurden (10-ms-Zeitraster, akkumulierende Sample-Uhr-Drift — siehe
-Protokoll). Offen ist allein der 1.2-Gerätetest (a/b/c, braucht
-Kopfhörer).**
+**Stand 08.09.: PHASE 1 KOMPLETT ABGENOMMEN (229/229 Tests). Gerätetest
+1.1 BESTANDEN (06.09.); 1.3 BESTANDEN nach angepasster Abnahme
+(Entscheidung Auftraggeber 06.09., Kalibrierwert 69 ms gespeichert);
+1.2 BESTANDEN (08.09., a/b/c-Tabelle unten). Der Gerätetest deckte
+insgesamt drei echte Messfehler auf, die behoben wurden (10-ms-Zeitraster,
+akkumulierende Sample-Uhr-Drift, Phantom-Auslassungen am Session-Rand —
+siehe Protokolle in 1.2/1.3).**
 
 ---
 
@@ -73,13 +73,31 @@ Unit-Tests umgesetzt und bestanden (`test/coaching/sequence_aligner_test.dart`,
 `test/coaching/mic_analysis_test.dart`); dieselben drei Durchläufe sind am
 Gerät zu bestätigen.
 
-| Fall | Vorher (Stand #14, aus §0 belegt) | Nachher (Unit-Test) | Gerätetest |
+| Fall | Vorher (Stand #14, aus §0 belegt) | Nachher (Unit-Test) | Gerätetest 08.09. |
 |---|---|---|---|
-| (a) ein Schlag ausgelassen | Auslassung wird nicht gezählt oder gemeldet | genau 1 Auslassung an der richtigen Position; Folge-Hände korrekt ✓ | ☐ |
-| (b) ein Schlag doppelt | beide Onsets erhalten dieselbe Note und Hand | 1 Onset zugeordnet, 1 als überzählig; jede Note höchstens einmal ✓ | ☐ |
-| (c) ein Schlag ~150 ms zu früh | je nach Tempo Sprung auf die Nachbarnote | Zuordnung zur richtigen Note mit −150 ms Abweichung ✓ (Raster 200 ms) | ☐ |
+| (a) ein Schlag ausgelassen | Auslassung wird nicht gezählt oder gemeldet | genau 1 Auslassung an der richtigen Position; Folge-Hände korrekt ✓ | ✓ **31 / 1 / 0** (74 BPM) — genau 1 Auslassung; Hand-Werte offen (97 %): R +73,5 / L +73,8 ms |
+| (b) ein Schlag doppelt | beide Onsets erhalten dieselbe Note und Hand | 1 Onset zugeordnet, 1 als überzählig; jede Note höchstens einmal ✓ | ✓ **26 / 4 / 1** (65 BPM) — der Doppelschlag als genau 1 überzähliger Onset; die 4 Auslassungen waren real (2 Schläge mit Pegel 1–2, kaum angespielt), Gate korrekt zu |
+| (c) ein Schlag ~150 ms zu früh | je nach Tempo Sprung auf die Nachbarnote | Zuordnung zur richtigen Note mit −150 ms Abweichung ✓ (Raster 200 ms) | ✓ **27 / 0 / 2** (71 BPM) — **0 Auslassungen** = kein Nachbarnoten-Sprung (der hätte zwingend 1 missed erzeugt); Ausreißer sichtbar als Streuung ±77,1 ms (vs. ±28,7 in (a)); Gate korrekt zu (2 extra ≥ 5 %) |
 
-Anzeige im Feedback-Sheet: „Matched / missed / extra" pro Durchlauf.
+Anzeige im Feedback-Sheet: „Matched / missed / extra" pro Durchlauf; die
+Einzelabweichungen stehen seit dem 08.09. in den Messdetails (in (c) nicht
+aufgeklappt — der ~−150-Einzelwert wurde nicht notiert, das Kriterium
+„richtige Note statt Sprung" ist durch 27/27 besetzte Noten dennoch
+zwingend belegt).
+
+**Vierter durch den Gerätetest gefundener Messfehler (07.09., behoben
+`3d9a6d5`):** Die erste a/b/c-Runde zeigte 9–10 Phantom-Auslassungen pro
+Durchlauf, weil der Klick vor dem Einstieg und nach dem letzten Schlag bis
+zum Stop weiterzählte. Bewertet wird seither nur das Fenster vom ersten bis
+zum letzten getroffenen Schlag; Auslassungen mittendrin zählen unverändert.
+
+**Beobachtung Kopfhörer-Betrieb (erwartet, §1.3-Mechanik):** Mit
+USB-C-Kopfhörern erscheint ein systematischer Median-Versatz von
++41…+65 ms — die Kopfhörer-Ausgabelatenz unterscheidet sich vom
+Lautsprecher-Loopback-Kalibrierwert. Er wird ausgewiesen, nicht verrechnet,
+genau wie im Brief vorgesehen. Falls die Absolutlage im Alltag stören
+sollte, wäre eine zweite Kopfhörer-Kalibrierung (Klick über Kopfhörer auf
+den Pad-Schlag statt Loopback) eine Phase-3+-Option.
 
 ## 1.3 Latenz-Bezug zwischen Klick und Aufnahme
 
@@ -171,7 +189,7 @@ sichtbar:
 
 ## Tests
 
-- **Gesamtsuite: 227 Tests, alle grün** (`flutter test`); Analyzer ohne neue
+- **Gesamtsuite: 229 Tests, alle grün** (`flutter test`); Analyzer ohne neue
   Befunde.
 - Neu in Phase 1: 36 Tests — `sequence_aligner_test.dart` (9, inkl. a/b/c),
   `unassigned_metrics_test.dart` (7), `latency_estimator_test.dart` (5),
