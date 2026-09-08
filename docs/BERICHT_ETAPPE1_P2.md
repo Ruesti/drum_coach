@@ -71,11 +71,58 @@ Verfügung).
 
 ## Umsetzung
 
-*(folgt nach der Implementierung)*
+- **Ereignisliste:** `analyzeHits` liefert jetzt pro erkanntem Onset ein
+  Roh-Ereignis (`OnsetEventData`: rohe epoch-ms-Zeit ohne Latenzabzug,
+  Spitzenpegel, Notenposition oder überzählig, Hand nur über der
+  §1.2-Schwelle, Abweichung) —
+  `lib/features/coaching/models/session_analysis.dart`,
+  `mic_analysis_service.dart`; Tests in `test/coaching/mic_analysis_test.dart`.
+- **Modell + Persistenz:** Neue Isar-Collection `SessionLog` mit
+  eingebetteten `OnsetEvent`s (`lib/data/local/models/session_log.dart`),
+  registriert in `isar_service.dart`; Aufbau aus Analyse + Kontext als pure
+  Funktion `buildSessionLog` (`session_log_service.dart`, Tests in
+  `test/data/session_log_builder_test.dart`). **Jede** Session wird geloggt;
+  ohne Mikrofon mit `audioSource: "off"` und leeren Ereignis-/Klick-Listen
+  (kleine Schema-Ergänzung gegenüber der Ankündigung).
+- **JSONL:** `sessionLogToJsonl` (`session_log_codec.dart`, Tests in
+  `test/data/session_log_codec_test.dart`); Tages-Export = aneinander-
+  gereihte Session-Blöcke.
+- **Export:** Feedback-Sheet-Button „Session exportieren (JSONL)" für die
+  frische Session; *Einstellungen → Session-Logs von heute exportieren* für
+  den Tages-Export — beides über den Android-Teilen-Dialog (`share_plus`).
+- **Kopfhörer-Erkennung + Gerät:** Neue MethodChannel-Methoden
+  `headphonesType` (`none`/`wired`/`bluetooth` via
+  `AudioManager.getDevices`) und `deviceInfo` (Build.MODEL,
+  Android-Version) in `MainActivity.kt`; Dart-Wrapper mit Channel-Mock-Tests
+  (`recording_setup.dart`, `recording_setup_test.dart`).
+- **Tests:** Gesamtsuite **239/239 grün**, 10 neue in Phase 2.
+
+### Beispiel (Format-Illustration aus dem Unit-Test; echte Datei folgt unten)
+
+```jsonl
+{"type":"session","sessionUid":"1757354000000-single_stroke_roll","startedAt":"2026-09-08T18:30:00.000Z","exerciseId":"single_stroke_roll","mode":"learn","bpm":74,"durationSeconds":17,"deviceModel":"SM-S918B","androidVersion":"14","audioSource":"voice_recognition","sampleRate":16000,"autoGain":false,"echoCancel":false,"noiseSuppress":false,"unprocessedSupported":false,"headphones":"wired","latencyOffsetMs":69.0,"rating":2,"clickTimesMs":[1000.5,1500.5],"clickNoteIndices":[0,1]}
+{"type":"onset","timeMs":1074.2,"peakLevel":0.31,"notePosition":0,"hand":"R","deviationMs":4.7}
+{"type":"onset","timeMs":1290.0,"peakLevel":0.12,"notePosition":null,"hand":null,"deviationMs":null}
+```
 
 ## Abnahme
 
 **Brief:** Eine echte Übungssession exportieren, auf dem Laptop öffnen,
 alle Felder befüllt. Beispieldatei in den Bericht.
 
-*(offen — Gerätetest)*
+**Gerätetest-Anleitung:**
+1. Übung mit Mikrofon-Analyse und Kopfhörern spielen (~20 Schläge),
+   beenden, bewerten.
+2. Im Feedback-Sheet „Session exportieren (JSONL)" → im Teilen-Dialog einen
+   Weg zum Laptop wählen (oder Datei speichern; alternativ hole ich sie per
+   Kabel aus dem App-Cache).
+3. Datei am Laptop öffnen: Kopfzeile vollständig (inkl. `headphones:
+   "wired"`, `latencyOffsetMs: 69`, Gerät), eine Onset-Zeile pro Schlag mit
+   Notenposition/Hand/Abweichung, Klick-Zeiten befüllt.
+
+| Prüfpunkt | Ergebnis |
+|---|---|
+| Alle Kopf-Felder befüllt | ☐ |
+| Onset-Zeilen mit Zuordnung/Hand/Abweichung | ☐ |
+| Klick-Zeiten + Notenindizes vorhanden | ☐ |
+| Beispieldatei im Bericht verlinkt/eingefügt | ☐ |
