@@ -327,7 +327,7 @@ class _PracticeSessionScreenState
       analysis = _micService!.analyze(
         beatLog: _beatLog,
         sticking: rudiment.sticking,
-        bpm: metState.bpm,
+        latencyOffsetMs: SettingsService.latencyOffsetMs ?? 0,
       );
     }
 
@@ -414,7 +414,9 @@ class _PracticeSessionScreenState
         if (_playback.tickVolumes[tick] > 0) {
           _beatLog.add((
             beatIndex: _playback.noteIndexAtTick(tick),
-            timestamp: DateTime.now(),
+            // Scheduled instant from the timing isolate (§1.3) — not the
+            // arrival time of this state update in the UI.
+            timestamp: next.lastBeatPlannedAt ?? DateTime.now(),
           ));
         }
       }
@@ -986,7 +988,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               ],
             ),
           ],
-          if (hasMicData && widget.analysis?.timing != null) ...[
+          if (hasMicData && widget.analysis?.unassigned != null) ...[
             const SizedBox(height: 16),
             _AnalysisSummary(analysis: widget.analysis!),
           ],
@@ -1013,10 +1015,14 @@ class _AnalysisSummary extends StatelessWidget {
   final SessionAnalysis analysis;
   const _AnalysisSummary({required this.analysis});
 
+  String _signed(double v) => '${v > 0 ? '+' : ''}${v.toStringAsFixed(1)} ms';
+
   @override
   Widget build(BuildContext context) {
-    final t = analysis.timing!;
+    final t = analysis.timing;
     final d = analysis.dynamics;
+    final u = analysis.unassigned!;
+    final al = analysis.alignment;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1032,36 +1038,82 @@ class _AnalysisSummary extends StatelessWidget {
                   fontSize: 13,
                   color: AppColors.textSecondary)),
           const SizedBox(height: 10),
+          // Assignment-free measures (§1.4) — always shown.
           _Row(
-            label: 'Overall timing',
-            value:
-                '${t.overallDeviationMs > 0 ? '+' : ''}${t.overallDeviationMs.toStringAsFixed(1)} ms '
-                '(${t.overallDeviationMs > 0 ? 'late' : 'early'})',
+            label: 'Timing vs click',
+            value: '${_signed(u.timingMedianMs)} median · '
+                '±${u.timingSpreadMs.toStringAsFixed(1)} ms',
           ),
           _Row(
-            label: 'R hand',
-            value:
-                '${t.rightHandDeviationMs > 0 ? '+' : ''}${t.rightHandDeviationMs.toStringAsFixed(1)} ms',
+            label: 'Evenness',
+            value: '±${u.intervalSpreadMs.toStringAsFixed(1)} ms',
           ),
-          _Row(
-            label: 'L hand',
-            value:
-                '${t.leftHandDeviationMs > 0 ? '+' : ''}${t.leftHandDeviationMs.toStringAsFixed(1)} ms',
-          ),
-          _Row(
-            label: 'Consistency',
-            value: '±${t.jitterMs.toStringAsFixed(1)} ms jitter',
-          ),
-          if (d != null)
+          if (u.dynamicsSpread != null)
             _Row(
-              label: 'Dynamics R / L',
-              value:
-                  '${(d.rightHandLevel * 100).round()}% / ${(d.leftHandLevel * 100).round()}%',
+              label: 'Dynamics spread',
+              value: '${(u.dynamicsSpread! * 100).round()}%',
             ),
           _Row(
-            label: 'Hits detected',
-            value:
-                '${analysis.detectedHits} / ${analysis.expectedHits} expected',
+            label: 'Strokes',
+            value: '${u.playedCount} / ${u.expectedCount} expected',
+          ),
+          if (al != null)
+            _Row(
+              label: 'Matched / missed / extra',
+              value: '${al.hitCount} / ${al.missedCount} / ${al.extraCount}',
+            ),
+          if (analysis.latencyOffsetAppliedMs != 0)
+            _Row(
+              label: 'Latency correction',
+              value:
+                  '−${analysis.latencyOffsetAppliedMs.toStringAsFixed(0)} ms',
+            ),
+          // Per-hand values only above the §1.2 confidence gate.
+          if (t != null) ...[
+            const Divider(height: 18, color: AppColors.textFaint),
+            _Row(label: 'R hand', value: _signed(t.rightHandDeviationMs)),
+            _Row(label: 'L hand', value: _signed(t.leftHandDeviationMs)),
+            _Row(
+              label: 'Consistency',
+              value: '±${t.jitterMs.toStringAsFixed(1)} ms jitter',
+            ),
+            if (d != null)
+              _Row(
+                label: 'Dynamics R / L',
+                value:
+                    '${(d.rightHandLevel * 100).round()}% / ${(d.leftHandLevel * 100).round()}%',
+              ),
+          ] else ...[
+            const SizedBox(height: 6),
+            const Text(
+              'Zu viele Aussetzer für eine Hand-Analyse — Werte pro Hand '
+              'erst ab 90 % sauber getroffenen Schlägen.',
+              style: TextStyle(color: AppColors.textFaint, fontSize: 12),
+            ),
+          ],
+          // Raw numbers for the §1.1/§1.3 device checks (peak levels must
+          // keep their loud/soft ratio; setup documents the audio path).
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('Messdetails',
+                  style: TextStyle(color: AppColors.textFaint, fontSize: 12)),
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Pegel (×100): ${analysis.peakLevels.map((p) => (p * 100).round()).join(' ')}\n'
+                    'Abweichung (ms): ${analysis.deviationsMs.map((d) => d.round()).join(' ')}\n'
+                    'Aufnahme: ${analysis.recordingSetup ?? 'unbekannt'}',
+                    style: const TextStyle(
+                        color: AppColors.textFaint,
+                        fontSize: 11,
+                        fontFamily: 'monospace'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

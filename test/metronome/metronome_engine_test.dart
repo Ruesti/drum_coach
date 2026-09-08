@@ -63,6 +63,24 @@ void main() {
       expect(delay, 300000);
     });
 
+    test('expectedBeatTimeUs gives the planned schedule time of a beat', () {
+      // 100 BPM quarters: beat 5 is planned at exactly 3,000,000 µs.
+      expect(
+        expectedBeatTimeUs(bpm: 100, factor: 1, idx: 5, anchorUs: 0, anchorIdx: 0),
+        3000000,
+      );
+    });
+
+    test('expectedBeatTimeUs respects a re-anchored schedule', () {
+      // Re-anchored at (idx=4, 2,000,000 µs) with new tempo 120 BPM:
+      // beat 5 is planned one 500,000 µs interval after the anchor.
+      expect(
+        expectedBeatTimeUs(
+            bpm: 120, factor: 1, idx: 5, anchorUs: 2000000, anchorIdx: 4),
+        2500000,
+      );
+    });
+
     test('a live subdivision (factor) change re-anchors the same way', () {
       // 5 quarter-note beats at 120 BPM (factor 1) = 2,500,000 µs elapsed.
       // Switching to eighth notes (factor 2) at that instant re-anchors.
