@@ -25,6 +25,25 @@ class AlignmentSummary {
   double get extraRate => expectedCount == 0 ? 0 : extraCount / expectedCount;
 }
 
+/// One detected onset as raw session-log material (Brief Phase 2): time is
+/// the unclipped wall-clock instant (no latency subtracted — nothing is
+/// computed away from logged data), assignment and hand are derived views.
+class OnsetEventData {
+  final double timeMs;      // raw epoch ms on the shared time axis
+  final double peakLevel;
+  final int? notePosition;  // assigned note index, null = surplus onset
+  final String? hand;       // 'R'/'L', only when assigned and gate open
+  final double? deviationMs;
+
+  const OnsetEventData({
+    required this.timeMs,
+    required this.peakLevel,
+    this.notePosition,
+    this.hand,
+    this.deviationMs,
+  });
+}
+
 class SessionAnalysis {
   /// Per-hand timing — only present when the run cleared the §1.2 gate.
   final TimingAnalysis? timing;
@@ -45,6 +64,10 @@ class SessionAnalysis {
   /// stroke shows up as its own outlier here).
   final List<double> deviationsMs;
 
+  /// One raw event per detected onset, chronological — the per-event half
+  /// of the Phase-2 session log.
+  final List<OnsetEventData> events;
+
   /// The stored calibration offset that was subtracted from onset times
   /// before matching; 0 = uncalibrated (§1.3).
   final double latencyOffsetAppliedMs;
@@ -64,6 +87,7 @@ class SessionAnalysis {
     this.alignment,
     this.peakLevels = const [],
     this.deviationsMs = const [],
+    this.events = const [],
     this.latencyOffsetAppliedMs = 0,
     required this.detectedHits,
     required this.expectedHits,

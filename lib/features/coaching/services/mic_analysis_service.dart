@@ -192,6 +192,34 @@ class MicAnalysisService {
     }
 
     final gateOpen = summary.handValuesAllowed && matched.length >= 4;
+
+    // Raw event list for the Phase-2 session log: one entry per onset, time
+    // WITHOUT the latency correction (raw data stays raw; the applied offset
+    // is logged in the session header instead).
+    final noteByOnset = <int, AlignedNote>{
+      for (final n in assessed)
+        if (n.hit) n.onsetIndex!: n,
+    };
+    final events = <OnsetEventData>[
+      for (var j = 0; j < onsetMs.length; j++)
+        OnsetEventData(
+          timeMs: onsetMs[j] + latencyOffsetMs,
+          peakLevel: amplitudes[j],
+          notePosition: noteByOnset[j] == null
+              ? null
+              : beatLog[noteByOnset[j]!.noteIndex].beatIndex,
+          hand: noteByOnset[j] == null || !gateOpen
+              ? null
+              : (sticking[beatLog[noteByOnset[j]!.noteIndex].beatIndex %
+                              sticking.length]
+                          .hand ==
+                      Hand.right
+                  ? 'R'
+                  : 'L'),
+          deviationMs: noteByOnset[j]?.deviationMs,
+        ),
+    ];
+
     return SessionAnalysis(
       timing: gateOpen ? _calcTiming(matched) : null,
       dynamics: gateOpen ? _calcDynamics(matched) : null,
@@ -199,6 +227,7 @@ class MicAnalysisService {
       alignment: summary,
       peakLevels: amplitudes,
       deviationsMs: deviations,
+      events: events,
       latencyOffsetAppliedMs: latencyOffsetMs,
       detectedHits: hits.length,
       expectedHits: beatLog.length,
