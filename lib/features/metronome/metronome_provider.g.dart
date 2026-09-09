@@ -6,7 +6,7 @@ part of 'metronome_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$metronomeNotifierHash() => r'0d2ef0dc2f54c946ff2db9af606d787fb2c1d45a';
+String _$metronomeNotifierHash() => r'aef068c8712ddb9c0ba40ca82d353231d01a1dab';
 
 /// See also [MetronomeNotifier].
 @ProviderFor(MetronomeNotifier)

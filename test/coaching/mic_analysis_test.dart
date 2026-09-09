@@ -162,6 +162,56 @@ void main() {
       expect(a.deviationsMs[0], closeTo(0, 0.5));
     });
 
+    test('emits one raw event per onset for the session log (Phase 2)', () {
+      // 24 notes, all hit on time, plus one extra stroke between notes 4
+      // and 5 — extra rate 1/24 < 5%, so the gate stays open and assigned
+      // events carry hands. Stored latency offset 100 ms: event times must
+      // stay RAW (nothing is subtracted from logged data).
+      final grid = [for (var i = 0; i < 24; i++) i * 500.0];
+      final shifted = [for (final g in grid) g + 100];
+      final onsets = [...shifted, 2250.0 + 100]..sort();
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        latencyOffsetMs: 100,
+      );
+      expect(a.events.length, 25);
+
+      final extra = a.events.where((e) => e.notePosition == null).toList();
+      expect(extra.length, 1);
+      expect(extra.single.hand, isNull);
+      expect(extra.single.deviationMs, isNull);
+
+      final assigned = a.events.where((e) => e.notePosition != null).toList();
+      expect(assigned.length, 24);
+      expect(assigned.first.notePosition, 0);
+      expect(assigned.first.hand, 'R');
+      expect(assigned[1].hand, 'L');
+      expect(assigned.first.deviationMs, closeTo(0, 0.5));
+
+      // Raw time: anchor epoch + 100 ms shift, latency NOT subtracted.
+      final anchorMs = anchor.microsecondsSinceEpoch / 1000.0;
+      expect(assigned.first.timeMs, closeTo(anchorMs + 100, 0.5));
+      expect(assigned.first.peakLevel, closeTo(0.5, 0.001));
+    });
+
+    test('events carry no hands when the run is below the gate', () {
+      final grid = [for (var i = 0; i < 8; i++) i * 500.0];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt([grid[0], grid[2], grid[4], grid[6], grid[7]]),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+      );
+      expect(a.events.length, 5);
+      expect(a.events.every((e) => e.hand == null), isTrue,
+          reason: 'below the gate no event gets a hand');
+      expect(a.events.first.notePosition, 0,
+          reason: 'assignment itself is still recorded');
+    });
+
     test('no anchor or no hits yields counts only', () {
       final a = MicAnalysisService.analyzeHits(
         hits: [],

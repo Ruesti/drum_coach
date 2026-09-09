@@ -68,4 +68,48 @@ void main() {
       expect(await AudioCapabilities.isUnprocessedSupported(), isFalse);
     });
   });
+
+  group('AudioCapabilities.headphonesType', () {
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(AudioCapabilities.channel, null);
+    });
+
+    test('returns the platform answer', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(AudioCapabilities.channel, (call) async {
+        expect(call.method, 'headphonesType');
+        return 'wired';
+      });
+      expect(await AudioCapabilities.headphonesType(), 'wired');
+    });
+
+    test('answers none when the platform side is missing', () async {
+      expect(await AudioCapabilities.headphonesType(), 'none');
+    });
+  });
+
+  group('AudioCapabilities.deviceInfo', () {
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(AudioCapabilities.channel, null);
+    });
+
+    test('returns model and android version', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(AudioCapabilities.channel, (call) async {
+        expect(call.method, 'deviceInfo');
+        return {'model': 'SM-S918B', 'androidVersion': '14'};
+      });
+      final info = await AudioCapabilities.deviceInfo();
+      expect(info.model, 'SM-S918B');
+      expect(info.androidVersion, '14');
+    });
+
+    test('falls back to unknown when the platform side is missing', () async {
+      final info = await AudioCapabilities.deviceInfo();
+      expect(info.model, 'unknown');
+      expect(info.androidVersion, 'unknown');
+    });
+  });
 }

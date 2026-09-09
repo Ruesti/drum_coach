@@ -12,7 +12,12 @@ import '../../shared/widgets/app_badge.dart';
 import '../../shared/widgets/beat_indicator.dart';
 import '../../shared/widgets/bpm_control.dart';
 import '../../shared/widgets/notation_staff_widget.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../../data/local/models/session_log.dart';
+import '../../data/local/session_log_service.dart';
 import '../coaching/models/session_analysis.dart';
+import '../coaching/services/recording_setup.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
 import '../coaching/widgets/coach_feedback_card.dart';
@@ -331,6 +336,27 @@ class _PracticeSessionScreenState
       );
     }
 
+    // Raw session log (Brief Phase 2) — every session, mic or not.
+    SessionLog? sessionLog;
+    try {
+      sessionLog = buildSessionLog(
+        analysis: analysis,
+        beatLog: _beatLog,
+        exerciseId: widget.rudimentId,
+        bpm: metState.bpm,
+        durationSeconds: _elapsedSeconds,
+        rating: rating,
+        startedAt:
+            DateTime.now().subtract(Duration(seconds: _elapsedSeconds)),
+        headphones: await AudioCapabilities.headphonesType(),
+        device: await AudioCapabilities.deviceInfo(),
+        latencyOffsetMs: SettingsService.latencyOffsetMs,
+      );
+      await SessionLogService.save(sessionLog);
+    } catch (e) {
+      debugPrint('session log failed: $e');
+    }
+
     if (!mounted) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -347,6 +373,7 @@ class _PracticeSessionScreenState
         durationSeconds: _elapsedSeconds,
         rating: rating,
         analysis: analysis,
+        sessionLog: sessionLog,
         ladderResult: ladderResult,
         aiService: _aiService,
         onClose: () => Navigator.pop(context),
@@ -888,6 +915,7 @@ class _FeedbackSheet extends StatefulWidget {
   final int durationSeconds;
   final int rating;
   final SessionAnalysis? analysis;
+  final SessionLog? sessionLog;
   final String? ladderResult;
   final AICoachingService aiService;
   final VoidCallback onClose;
@@ -899,6 +927,7 @@ class _FeedbackSheet extends StatefulWidget {
     required this.durationSeconds,
     required this.rating,
     required this.analysis,
+    this.sessionLog,
     this.ladderResult,
     required this.aiService,
     required this.onClose,
@@ -998,6 +1027,22 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
             hasAnalysis: hasMicData,
           ),
           const SizedBox(height: 20),
+          if (widget.sessionLog != null) ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.ios_share, size: 18),
+                label: const Text('Session exportieren (JSONL)'),
+                onPressed: () async {
+                  final file =
+                      await SessionLogService.exportSession(widget.sessionLog!);
+                  await SharePlus.instance.share(
+                      ShareParams(files: [XFile(file.path)]));
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(

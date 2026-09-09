@@ -217,7 +217,7 @@ class _ProgramDayProviderElement
   int get dayNumber => (origin as ProgramDayProvider).dayNumber;
 }
 
-String _$currentProgramDayHash() => r'e04cd8cff6be77e0acf5796d01314822fa2e8706';
+String _$currentProgramDayHash() => r'3c5c392bb1e47737383a3f1ec2a788de5250760b';
 
 /// The current program day derived from the stored config + start date, or
 /// null if the program has not been started, has no config, has no exercises

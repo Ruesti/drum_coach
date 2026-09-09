@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/design_tokens.dart';
+import '../../data/local/session_log_service.dart';
 import '../../data/local/settings_service.dart';
 import '../../services/notification_service.dart';
 import '../../shared/widgets/app_badge.dart';
@@ -141,6 +143,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: 'Misst Timing & Dynamik während der Session',
             value: _micEnabled,
             onChanged: _setMicEnabled,
+          ),
+          const SizedBox(height: 12),
+          AppCard(
+            onTap: () async {
+              final file = await SessionLogService.exportDay(DateTime.now());
+              if (!context.mounted) return;
+              if (file == null) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Heute noch keine Session-Logs.')));
+                return;
+              }
+              await SharePlus.instance
+                  .share(ShareParams(files: [XFile(file.path)]));
+            },
+            child: const Row(
+              children: [
+                Icon(Icons.ios_share, size: 20, color: AppColors.textMuted),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Session-Logs von heute exportieren',
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Roh-Daten als JSONL über den Teilen-Dialog',
+                        style: TextStyle(
+                            color: AppColors.textMuted, fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 18, color: AppColors.textFaint),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           AppCard(

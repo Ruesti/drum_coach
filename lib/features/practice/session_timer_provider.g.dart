@@ -7,12 +7,15 @@ part of 'session_timer_provider.dart';
 // **************************************************************************
 
 String _$sessionTimerNotifierHash() =>
-    r'8052a01cb7ca910c699f57d19372342495899c27';
+    r'baea1c9b2fb81a3e5f0f3f70ac58e8d5ead0cf44';
 
-/// Elapsed seconds for the whole training session (may span several
-/// exercises back-to-back), shown alongside the per-exercise lesson timer.
-/// Ticks continuously once started; [reset] is called when the user returns
-/// to the Dashboard.
+/// Elapsed seconds of actual playing time for the whole training session
+/// (may span several exercises back-to-back), shown alongside the
+/// per-exercise lesson timer. Mirrors the lesson timer's own play/pause
+/// behavior — [resume]/[pause] are called in lockstep with the metronome's
+/// isPlaying transitions, so this only counts while an exercise is actually
+/// being played, not time spent paused or browsing between exercises.
+/// [reset] is called when the user returns to the Dashboard.
 ///
 /// Copied from [SessionTimerNotifier].
 @ProviderFor(SessionTimerNotifier)

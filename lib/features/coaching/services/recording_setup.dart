@@ -4,6 +4,12 @@ import 'package:record/record.dart';
 /// Runtime query for Android audio capabilities (Brief Etappe 1, §1.1):
 /// whether the device offers the UNPROCESSED audio source
 /// (PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED).
+class DeviceInfo {
+  final String model;
+  final String androidVersion;
+  const DeviceInfo({required this.model, required this.androidVersion});
+}
+
 class AudioCapabilities {
   static const channel = MethodChannel('drum_coach/audio');
 
@@ -15,6 +21,33 @@ class AudioCapabilities {
       return false;
     } on MissingPluginException {
       return false;
+    }
+  }
+
+  /// Current headphone routing: `none` | `wired` | `bluetooth` — the
+  /// Phase-2 session-header field the §0 survey found missing entirely.
+  static Future<String> headphonesType() async {
+    try {
+      return await channel.invokeMethod<String>('headphonesType') ?? 'none';
+    } on PlatformException {
+      return 'none';
+    } on MissingPluginException {
+      return 'none';
+    }
+  }
+
+  /// Device model and Android version for the session header.
+  static Future<DeviceInfo> deviceInfo() async {
+    try {
+      final map = await channel.invokeMapMethod<String, String>('deviceInfo');
+      return DeviceInfo(
+        model: map?['model'] ?? 'unknown',
+        androidVersion: map?['androidVersion'] ?? 'unknown',
+      );
+    } on PlatformException {
+      return const DeviceInfo(model: 'unknown', androidVersion: 'unknown');
+    } on MissingPluginException {
+      return const DeviceInfo(model: 'unknown', androidVersion: 'unknown');
     }
   }
 }
