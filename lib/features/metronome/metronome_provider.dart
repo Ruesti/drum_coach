@@ -65,12 +65,17 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   @override
   MetronomeState build() {
     ref.onDispose(_cleanup);
+    // Construct synchronously: commands arriving before the async init
+    // finishes (practice screen's post-frame callback on a cold start) must
+    // land in the engine's fields instead of being dropped on a null target —
+    // otherwise the isolate keeps ticking at its 100-BPM default while the
+    // UI shows the requested tempo.
+    _engine = MetronomeEngine();
     Future.microtask(_initAsync);
     return const MetronomeState();
   }
 
   Future<void> _initAsync() async {
-    _engine = MetronomeEngine();
     try {
       await _engine!.init();
     } catch (_) {
@@ -90,6 +95,9 @@ class MetronomeNotifier extends _$MetronomeNotifier {
       );
     });
   }
+
+  @visibleForTesting
+  MetronomeEngine? get debugEngine => _engine;
 
   void _cleanup() {
     _disposed = true;

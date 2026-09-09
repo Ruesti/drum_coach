@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:isolate';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 
@@ -235,6 +235,12 @@ class MetronomeEngine {
       }
     });
     await ready.future;
+
+    // A start requested while the isolate handshake was still pending went
+    // to a null control port — replay it now with the current tempo/factor.
+    if (_isPlaying) {
+      _controlPort!.send([_cmdStart, _bpm, _factor]);
+    }
   }
 
   // §Wiedergabe-Diagnose: how late the main isolate fires the click vs the
@@ -329,6 +335,11 @@ class MetronomeEngine {
 
   void setSoundType(SoundType t)      => _soundType   = t;
   void setBeatVolumes(List<double>? v) => _beatVolumes = v;
+
+  @visibleForTesting
+  int get debugBpm => _bpm;
+  @visibleForTesting
+  int get debugFactor => _factor;
 
   void dispose() {
     _disposed  = true;
