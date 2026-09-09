@@ -3,8 +3,10 @@
 **Datum:** 08.09.2026 · **Basis:** main nach Merge von PR #16 (`73a1273`)
 · **Brief:** `docs/BRIEF_ETAPPE1_PAD.md` Phase 2
 
-**Stand: Schema angekündigt (dieser Abschnitt, gemäß Arbeitsweise-Regel des
-Briefs), Umsetzung folgt darunter.**
+**Stand 09.09.: PHASE 2 KOMPLETT ABGENOMMEN — Schema wurde vor der
+Umsetzung angekündigt (Commit `4c799bd`), Implementierung mit 239/239
+Tests, Export-Abnahme am Gerät bestanden (echte Session exportiert, am
+Laptop geprüft, Beispieldatei in `docs/beispiele/`).**
 
 ---
 
@@ -120,9 +122,12 @@ alle Felder befüllt. Beispieldatei in den Bericht.
    "wired"`, `latencyOffsetMs: 69`, Gerät), eine Onset-Zeile pro Schlag mit
    Notenposition/Hand/Abweichung, Klick-Zeiten befüllt.
 
+**Gerätetest 09.09. (S23 Ultra, Single Paradiddle, 120 BPM, 20 s, Export
+über Teilen-Dialog → Laptop): BESTANDEN.**
+
 | Prüfpunkt | Ergebnis |
 |---|---|
-| Alle Kopf-Felder befüllt | ☐ |
-| Onset-Zeilen mit Zuordnung/Hand/Abweichung | ☐ |
-| Klick-Zeiten + Notenindizes vorhanden | ☐ |
-| Beispieldatei im Bericht verlinkt/eingefügt | ☐ |
+| Alle Kopf-Felder befüllt | ✓ — kein null-Feld; u. a. `deviceModel: SM-S918B`, `androidVersion: 16`, `audioSource: voice_recognition`, `unprocessedSupported: false`, **`headphones: wired`** (neue Erkennung greift), `latencyOffsetMs: 68.53`, `rating: 3` |
+| Onset-Zeilen mit Zuordnung/Hand/Abweichung | ✓ — 85 Ereignisse: 69 zugeordnet (Notenposition + Abweichung −39…+158 ms), 16 überzählig (`notePosition: null`). `hand` in dieser Session überall `null` — **regelkonform**, da der Durchlauf (69/81, 16 Extras) unter der §1.2-Schwelle lag; das Brief-Schema definiert Hand als „falls zugeordnet und über Schwelle". Befüllte Hände über der Schwelle sind durch den P1-(a)-Gerätetest und Unit-Tests belegt. |
+| Klick-Zeiten + Notenindizes vorhanden | ✓ — 81 geplante Klicks, epoch-ms, mit Sticking-Notenindizes |
+| Beispieldatei im Bericht verlinkt/eingefügt | ✓ — `docs/beispiele/session_1788976279072-single_paradiddle.jsonl` (86 Zeilen, unverändert) |
