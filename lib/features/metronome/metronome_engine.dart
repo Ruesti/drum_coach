@@ -240,6 +240,7 @@ class MetronomeEngine {
   // §Wiedergabe-Diagnose: how late the main isolate fires the click vs the
   // isolate's planned instant. Audible jitter lives exactly here.
   final List<int> _fireDelaysUs = [];
+  int _maxVoices = 0;
 
   void _onBeat(int index, bool isAccent, DateTime plannedAt) {
     if (!_isPlaying || _disposed) return;
@@ -247,6 +248,9 @@ class MetronomeEngine {
     assert(() {
       _fireDelaysUs.add(
           DateTime.now().difference(plannedAt).inMicroseconds);
+      final voices =
+          SoLoud.instance.isInitialized ? SoLoud.instance.getActiveVoiceCount() : 0;
+      if (voices > _maxVoices) _maxVoices = voices;
       if (_fireDelaysUs.length >= 200) {
         final sorted = List<int>.of(_fireDelaysUs)..sort();
         String ms(int us) => (us / 1000).toStringAsFixed(1);
@@ -254,8 +258,9 @@ class MetronomeEngine {
         print('click fire delay ms over ${sorted.length} ticks: '
             'p50=${ms(sorted[sorted.length ~/ 2])} '
             'p90=${ms(sorted[(sorted.length * 9) ~/ 10])} '
-            'max=${ms(sorted.last)}');
+            'max=${ms(sorted.last)} voicesMax=$_maxVoices');
         _fireDelaysUs.clear();
+        _maxVoices = 0;
       }
       return true;
     }());
