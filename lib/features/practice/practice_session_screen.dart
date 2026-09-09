@@ -425,7 +425,6 @@ class _PracticeSessionScreenState
   @override
   Widget build(BuildContext context) {
     final rudiment = ref.watch(rudimentByIdProvider(widget.rudimentId));
-    final metState = ref.watch(metronomeNotifierProvider);
     final notifier = ref.read(metronomeNotifierProvider.notifier);
     final sessionSeconds = ref.watch(sessionTimerNotifierProvider);
 
@@ -459,10 +458,22 @@ class _PracticeSessionScreenState
       }
     });
 
-    final activeBeat = metState.isPlaying && metState.currentBeatIndex >= 0
-        ? _playback.noteIndexAtTick(
-            metState.currentBeatIndex % _playback.totalTicks)
-        : null;
+    // Selective watches: the pattern clock updates currentBeatIndex up to
+    // ~80×/s, but everything visible here changes only per NOTE. Watching
+    // the whole state rebuilt the entire screen on every tick and clogged
+    // the main-isolate queue the click playback runs through (measured
+    // 20-30 ms click-fire spikes every few seconds, §Wiedergabe-Diagnose).
+    final activeBeat = ref.watch(metronomeNotifierProvider.select((s) =>
+        s.isPlaying && s.currentBeatIndex >= 0
+            ? _playback.noteIndexAtTick(s.currentBeatIndex % _playback.totalTicks)
+            : null));
+    final isPlaying =
+        ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
+    final bpm = ref.watch(metronomeNotifierProvider.select((s) => s.bpm));
+    final soundType =
+        ref.watch(metronomeNotifierProvider.select((s) => s.soundType));
+    final isAccent =
+        ref.watch(metronomeNotifierProvider.select((s) => s.isAccent));
 
     final isCountdown = _goalSeconds != null;
     final timerColor = isCountdown && (_goalSeconds! - _elapsedSeconds) <= 30
@@ -567,18 +578,18 @@ class _PracticeSessionScreenState
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: _CompactMetronome(
-                  bpm: metState.bpm,
-                  isPlaying: metState.isPlaying,
-                  isAccent: metState.isAccent,
-                  currentBeatIndex: metState.currentBeatIndex,
-                  soundType: metState.soundType,
+                  bpm: bpm,
+                  isPlaying: isPlaying,
+                  isAccent: isAccent,
+                  currentBeatIndex: activeBeat ?? -1,
+                  soundType: soundType,
                   onBpmChanged: _onUserBpmChanged,
                   onToggle: notifier.toggle,
                   onSoundTypeChanged: notifier.setSoundType,
                 ),
               ),
               const SizedBox(height: 10),
-              if (!metState.isPlaying && _elapsedSeconds == 0)
+              if (!isPlaying && _elapsedSeconds == 0)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                   child: _TimerGoalRow(
