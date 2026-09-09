@@ -237,8 +237,28 @@ class MetronomeEngine {
     await ready.future;
   }
 
+  // §Wiedergabe-Diagnose: how late the main isolate fires the click vs the
+  // isolate's planned instant. Audible jitter lives exactly here.
+  final List<int> _fireDelaysUs = [];
+
   void _onBeat(int index, bool isAccent, DateTime plannedAt) {
     if (!_isPlaying || _disposed) return;
+
+    assert(() {
+      _fireDelaysUs.add(
+          DateTime.now().difference(plannedAt).inMicroseconds);
+      if (_fireDelaysUs.length >= 200) {
+        final sorted = List<int>.of(_fireDelaysUs)..sort();
+        String ms(int us) => (us / 1000).toStringAsFixed(1);
+        // ignore: avoid_print
+        print('click fire delay ms over ${sorted.length} ticks: '
+            'p50=${ms(sorted[sorted.length ~/ 2])} '
+            'p90=${ms(sorted[(sorted.length * 9) ~/ 10])} '
+            'max=${ms(sorted.last)}');
+        _fireDelaysUs.clear();
+      }
+      return true;
+    }());
 
     final volume = resolveTickVolume(
       beatVolumes: _beatVolumes,
