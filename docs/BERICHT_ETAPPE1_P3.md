@@ -80,14 +80,39 @@ keine hörbaren Tempo-Schwankungen oder Aussetzer mehr. ☐
 Gesamtsuite **247/247 grün**; neu: 5 Loop-Renderer, 1 Kommando-Race,
 2 Modus-Gate. Analyzer ohne Befunde.
 
+## Nachtrag 10.09. — Kopfhörer-Routing (behoben, `43bee59`)
+
+Gerätetest deckte auf: Kopfhörer einstecken tötete die Audio-Ausgabe
+dauerhaft (auch nach Ausstecken still) — SoLoud überlebt Android-
+Routing-Wechsel nicht von selbst. Fix: `AudioDeviceCallback` in
+`MainActivity` meldet Gerätewechsel nach Flutter; die Engine wechselt
+debounced per `changeDevice()` aufs Default-Gerät und startet einen
+laufenden Loop neu.
+
 ## Abnahme Phase 3 (Gerätetest)
 
-Dieselbe Übung zweimal spielen:
+**Fern-Verifikation 10.09. (Analysemodus-Pfad, per adb gesteuerte
+Sessions, Lautsprecher-Klicks als Onsets):**
+
+| Prüfpunkt | Ergebnis |
+|---|---|
+| Analysemodus über Schwelle → Hand-Werte | ✓ 213/0/9 bzw. 164/0/1 → R/L-Zeilen erscheinen (z. B. R −43,5 / L −45,9 ms) |
+| Analysemodus unter Schwelle → Brief-Ansage, keine Hand-Werte | ✓ erzwungene Stille-Lücke: 145/63/2 (70 %) → „Zu viele Aussetzer für eine Hand-Analyse — das sitzt noch nicht." |
+| Umschalter sichtbar/persistiert (orange = aktiv) | ✓ |
+
+**Wichtige Einordnung aus dem Nutzertest:** „Schlampig, aber vollzählig"
+gespielte Durchläufe liegen per Brief-Definition ÜBER der Schwelle (sie
+zählt Auslassungen/Überzählige, nicht Timing-Streuung; das Alignment
+toleriert ±250 ms) — es erscheinen dann Hand-Werte, keine Ansage. Falls
+zusätzlich hoher Timing-Jitter die Hand-Analyse sperren soll, wäre das
+eine Erweiterung des Vertrauensmaßes → Entscheidung Auftraggeber.
+
+**Verbleibende Nutzer-Abnahmen:**
 
 | Prüfpunkt | Ergebnis |
 |---|---|
 | Lernmodus (Standard): keine Hand-Werte im Feedback, Lernmodus-Hinweis sichtbar | ☐ |
-| Analysemodus (Umschalter aktiv): Hand-Werte bei sauberem Durchlauf | ☐ |
-| Analysemodus mit absichtlich vielen Aussetzern: Ansage „Zu viele Aussetzer …", keine Hand-Werte | ☐ |
+| Hörtest ~2 min: Klick gleichmäßig (erster Test: „Abstände absolut gleich", aber gelegentliches Rest-Stottern — Eingrenzung läuft: tritt es ohne Mikrofon-Analyse ebenfalls auf?) | ☐ |
+| Kopfhörer rein/raus während des Klicks: Ton wechselt und bleibt | ☐ |
 | Modus bleibt pro Übung gemerkt (Screen verlassen und neu öffnen) | ☐ |
 | Session-Log `mode`-Feld korrekt (`learn`/`analysis`, im JSONL-Export sichtbar) | ☐ |
