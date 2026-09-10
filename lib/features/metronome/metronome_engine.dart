@@ -336,6 +336,26 @@ class MetronomeEngine {
         const Duration(milliseconds: 150), () => unawaited(_startLoop()));
   }
 
+  Timer? _routeChangeDebounce;
+
+  /// Headphones were plugged or unplugged: SoLoud's output stream does not
+  /// survive the Android routing change on its own — switch the engine to
+  /// the (new) default device and restart a running loop. Debounced because
+  /// one plug event fires several add/remove callbacks.
+  void handleAudioRouteChanged() {
+    if (_disposed) return;
+    _routeChangeDebounce?.cancel();
+    _routeChangeDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (_disposed || !_soloudReady) return;
+      try {
+        SoLoud.instance.changeDevice();
+      } catch (_) {
+        // Device list mid-transition — the retry rides on the next event.
+      }
+      if (_isPlaying) unawaited(_startLoop());
+    });
+  }
+
   // §Wiedergabe-Diagnose: how late the main isolate fires the click vs the
   // isolate's planned instant. Audible jitter lives exactly here.
   final List<int> _fireDelaysUs = [];
@@ -437,6 +457,7 @@ class MetronomeEngine {
     _disposed  = true;
     _isPlaying = false;
     _loopRebuildDebounce?.cancel();
+    _routeChangeDebounce?.cancel();
     _controlPort?.send([_cmdStop]);
     _receivePort?.close();
     _isolate?.kill(priority: Isolate.immediate);

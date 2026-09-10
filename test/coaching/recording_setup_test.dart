@@ -89,6 +89,22 @@ void main() {
     });
   });
 
+  group('AudioCapabilities.onDevicesChanged', () {
+    test('invokes the registered callback when the platform notifies', () async {
+      var calls = 0;
+      AudioCapabilities.onDevicesChanged(() => calls++);
+      addTearDown(() => AudioCapabilities.onDevicesChanged(null));
+
+      final envelope = const StandardMethodCodec()
+          .encodeMethodCall(const MethodCall('audioDevicesChanged'));
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage(
+              AudioCapabilities.channel.name, envelope, (_) {});
+      expect(calls, 1,
+          reason: 'headphone plug/unplug must reach the audio engine');
+    });
+  });
+
   group('AudioCapabilities.deviceInfo', () {
     tearDown(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

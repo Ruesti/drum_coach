@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/local/settings_service.dart';
+import '../coaching/services/recording_setup.dart';
 import 'metronome_engine.dart';
 
 part 'metronome_provider.g.dart';
@@ -71,6 +72,11 @@ class MetronomeNotifier extends _$MetronomeNotifier {
     // otherwise the isolate keeps ticking at its 100-BPM default while the
     // UI shows the requested tempo.
     _engine = MetronomeEngine();
+    // Headphone plug/unplug: reroute the audio engine (it does not survive
+    // Android routing changes on its own). The notifier is keepAlive, so
+    // this listener lives for the app's lifetime.
+    AudioCapabilities.onDevicesChanged(
+        () => _engine?.handleAudioRouteChanged());
     Future.microtask(_initAsync);
     return const MetronomeState();
   }
