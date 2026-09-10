@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 
+import 'click_loop_renderer.dart';
+
 enum Subdivision {
   quarter(factor: 1, label: '♩', name: '1/4'),
   eighth(factor: 2, label: '♪', name: '1/8'),
@@ -189,9 +191,16 @@ class MetronomeEngine {
   final _beatCtrl = StreamController<BeatEvent>.broadcast();
   Stream<BeatEvent> get beatStream => _beatCtrl.stream;
 
-  AudioSource? _clickAccent, _clickNormal;
-  AudioSource? _rimAccent,   _rimNormal;
-  AudioSource? _snareSample;
+  /// Decoded PCM of the recorded snare sample for the loop renderer.
+  List<double> _snarePcm = const [];
+
+  /// The click track: one pattern cycle rendered as WAV, played natively
+  /// with looping — sample-exact and immune to main-isolate congestion
+  /// (§Wiedergabe-Diagnose: per-tick play() showed 20-30 ms firing spikes).
+  AudioSource? _loopSource;
+  SoundHandle? _loopHandle;
+  int _loopGeneration = 0;
+  Timer? _loopRebuildDebounce;
 
   int          _bpm        = 100;
   Subdivision  _subdivision = Subdivision.quarter;
@@ -206,18 +215,30 @@ class MetronomeEngine {
   SendPort?     _controlPort;
 
   Future<void> init() async {
-    _clickAccent = await SoLoud.instance.loadMem(
-        'click_accent', _buildClickWav(frequency: 1200, amplitude: 0.95));
-    _clickNormal = await SoLoud.instance.loadMem(
-        'click_normal', _buildClickWav(frequency: 800,  amplitude: 0.55));
-    _rimAccent   = await SoLoud.instance.loadMem(
-        'rim_accent',   _buildRimWav(amplitude: 0.95));
-    _rimNormal   = await SoLoud.instance.loadMem(
-        'rim_normal',   _buildRimWav(amplitude: 0.55));
-    final snareBytes = (await rootBundle.load('assets/audio/snare.mp3'))
-        .buffer
-        .asUint8List();
-    _snareSample = await SoLoud.instance.loadMem('snare.mp3', snareBytes);
+    // Decode the recorded snare once to raw PCM for the loop renderer. The
+    // temporary source only serves to learn the sample's true length so
+    // readSamplesFromMem is asked for a 1:1 (non-resampling) sample count.
+    // Audio failures (no SoLoud in host tests, broken audio stack) must not
+    // abort init — the timing isolate below still has to run.
+    try {
+      final snareBytes = (await rootBundle.load('assets/audio/snare.mp3'))
+          .buffer
+          .asUint8List();
+      final snareSource =
+          await SoLoud.instance.loadMem('snare_len_probe', snareBytes);
+      final snareLen = SoLoud.instance.getLength(snareSource);
+      unawaited(SoLoud.instance.disposeSource(snareSource));
+      final snareSampleCount =
+          (snareLen.inMicroseconds * 44100 / 1000000).round();
+      if (snareSampleCount > 0) {
+        final floats = await SoLoud.instance
+            .readSamplesFromMem(snareBytes, snareSampleCount);
+        _snarePcm = List<double>.from(floats);
+      }
+    } catch (_) {
+      // Loop rendering for the snare falls back to an empty sample; click
+      // and rim stay synthetic and unaffected.
+    }
 
     if (_disposed) return;
 
@@ -240,7 +261,79 @@ class MetronomeEngine {
     // to a null control port — replay it now with the current tempo/factor.
     if (_isPlaying) {
       _controlPort!.send([_cmdStart, _bpm, _factor]);
+      unawaited(_startLoop());
     }
+  }
+
+  // ── Click-track loop ────────────────────────────────────────────────────────
+
+  /// SoLoud reachable and initialized? Merely touching [SoLoud.instance]
+  /// throws in host tests (no FFI bindings), so every audio path goes
+  /// through this guard.
+  static bool get _soloudReady {
+    try {
+      return SoLoud.instance.isInitialized;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Per-tick volumes of one loop cycle: the pattern's own volumes, or a
+  /// single quarter (accent + normal subdivisions) in plain metronome mode —
+  /// matching the old per-tick logic (accent when idx % factor == 0).
+  List<double> _loopVolumes() =>
+      _beatVolumes != null && _beatVolumes!.isNotEmpty
+          ? _beatVolumes!
+          : [2.0, for (var i = 1; i < _factor; i++) 0.7];
+
+  Future<void> _startLoop() async {
+    if (_disposed || !_soloudReady) return;
+    final generation = ++_loopGeneration;
+    await _stopLoop();
+    final synthetic = _soundType != SoundType.snare;
+    final wav = buildLoopWav(
+      bpm: _bpm,
+      factor: _factor,
+      tickVolumes: _loopVolumes(),
+      accentSamples: synthetic
+          ? synthSamples(_soundType, accent: true)
+          : _snarePcm,
+      normalSamples: synthetic
+          ? synthSamples(_soundType, accent: false)
+          : _snarePcm,
+    );
+    final source =
+        await SoLoud.instance.loadMem('click_loop_$generation', wav);
+    // A newer rebuild or stop may have superseded this one while awaiting.
+    if (_disposed || !_isPlaying || generation != _loopGeneration) {
+      unawaited(SoLoud.instance.disposeSource(source));
+      return;
+    }
+    _loopSource = source;
+    _loopHandle = await SoLoud.instance.play(source, looping: true);
+  }
+
+  Future<void> _stopLoop() async {
+    final handle = _loopHandle;
+    final source = _loopSource;
+    _loopHandle = null;
+    _loopSource = null;
+    if ((handle == null && source == null) || !_soloudReady) return;
+    if (handle != null) {
+      await SoLoud.instance.stop(handle);
+    }
+    if (source != null) {
+      unawaited(SoLoud.instance.disposeSource(source));
+    }
+  }
+
+  /// Rebuild the running loop shortly after the last parameter change —
+  /// debounced so a BPM slider drag doesn't re-render dozens of loops.
+  void _scheduleLoopRebuild() {
+    if (!_isPlaying) return;
+    _loopRebuildDebounce?.cancel();
+    _loopRebuildDebounce = Timer(
+        const Duration(milliseconds: 150), () => unawaited(_startLoop()));
   }
 
   // §Wiedergabe-Diagnose: how late the main isolate fires the click vs the
@@ -254,8 +347,7 @@ class MetronomeEngine {
     assert(() {
       _fireDelaysUs.add(
           DateTime.now().difference(plannedAt).inMicroseconds);
-      final voices =
-          SoLoud.instance.isInitialized ? SoLoud.instance.getActiveVoiceCount() : 0;
+      final voices = _soloudReady ? SoLoud.instance.getActiveVoiceCount() : 0;
       if (voices > _maxVoices) _maxVoices = voices;
       if (_fireDelaysUs.length >= 200) {
         final sorted = List<int>.of(_fireDelaysUs)..sort();
@@ -276,24 +368,11 @@ class MetronomeEngine {
       index: index,
       isAccent: isAccent,
     );
-    final useAccentSrc = _beatVolumes != null && _beatVolumes!.isNotEmpty
-        ? volume >= 1.2
-        : isAccent;
 
-    final source = switch ((_soundType, useAccentSrc)) {
-      (SoundType.click, true)  => _clickAccent,
-      (SoundType.click, false) => _clickNormal,
-      (SoundType.rim,   true)  => _rimAccent,
-      (SoundType.rim,   false) => _rimNormal,
-      (SoundType.snare, true)  => _snareSample,
-      (SoundType.snare, false) => _snareSample,
-    };
-
-    if (volume <= 0) return; // silent grid tick — no sound, no UI trigger
-
-    if (source != null && SoLoud.instance.isInitialized) {
-      SoLoud.instance.play(source, volume: volume).ignore();
-    }
+    // Audio comes from the natively looped click track (_startLoop) — the
+    // isolate beats only drive UI (cursor, indicator) and the beat log's
+    // planned instants.
+    if (volume <= 0) return; // silent grid tick — no UI trigger
 
     _beatCtrl.add(BeatEvent(
       beatIndex: index,
@@ -307,22 +386,27 @@ class MetronomeEngine {
     if (_isPlaying) return;
     _isPlaying = true;
     _controlPort?.send([_cmdStart, _bpm, _factor]);
+    unawaited(_startLoop());
   }
 
   void stop() {
     _isPlaying = false;
+    _loopRebuildDebounce?.cancel();
     _controlPort?.send([_cmdStop]);
+    unawaited(_stopLoop());
   }
 
   void setBpm(int bpm) {
     _bpm = bpm.clamp(40, 240);
     _controlPort?.send([_cmdBpm, _bpm]);
+    _scheduleLoopRebuild();
   }
 
   void setSubdivision(Subdivision subdivision) {
     _subdivision = subdivision;
     _factor = subdivision.factor;
     _controlPort?.send([_cmdFactor, _factor]);
+    _scheduleLoopRebuild();
   }
 
   /// Set an arbitrary integer tick factor for pattern playback (e.g. 24
@@ -331,10 +415,18 @@ class MetronomeEngine {
   void setPatternClock(int ticksPerQuarter) {
     _factor = ticksPerQuarter;
     _controlPort?.send([_cmdFactor, _factor]);
+    _scheduleLoopRebuild();
   }
 
-  void setSoundType(SoundType t)      => _soundType   = t;
-  void setBeatVolumes(List<double>? v) => _beatVolumes = v;
+  void setSoundType(SoundType t) {
+    _soundType = t;
+    _scheduleLoopRebuild();
+  }
+
+  void setBeatVolumes(List<double>? v) {
+    _beatVolumes = v;
+    _scheduleLoopRebuild();
+  }
 
   @visibleForTesting
   int get debugBpm => _bpm;
@@ -344,17 +436,12 @@ class MetronomeEngine {
   void dispose() {
     _disposed  = true;
     _isPlaying = false;
+    _loopRebuildDebounce?.cancel();
     _controlPort?.send([_cmdStop]);
     _receivePort?.close();
     _isolate?.kill(priority: Isolate.immediate);
     if (!_beatCtrl.isClosed) _beatCtrl.close();
-    for (final s in [
-      _clickAccent, _clickNormal,
-      _rimAccent,   _rimNormal,
-      _snareSample,
-    ]) {
-      s?.let((src) => SoLoud.instance.disposeSource(src).ignore());
-    }
+    unawaited(_stopLoop());
   }
 
   // ── Sound synthesis ─────────────────────────────────────────────────────────
@@ -363,6 +450,45 @@ class MetronomeEngine {
   /// (§1.3) so the measured loopback matches the sound used in practice.
   static Uint8List calibrationClickWav() =>
       _buildClickWav(frequency: 1200, amplitude: 0.95);
+
+  /// Raw float samples of one stroke sound — shared by the per-tick sources
+  /// and the loop renderer so both playback paths sound identical.
+  static List<double> synthSamples(
+    SoundType type, {
+    required bool accent,
+    int sampleRate = 44100,
+  }) {
+    final amplitude = accent ? 0.95 : 0.55;
+    switch (type) {
+      case SoundType.click:
+        final frequency = accent ? 1200.0 : 800.0;
+        final n = (sampleRate * 0.030).round();
+        return [
+          for (var i = 0; i < n; i++)
+            amplitude *
+                math.exp(-140.0 * (i / sampleRate)) *
+                math.sin(2 * math.pi * frequency * (i / sampleRate)),
+        ];
+      case SoundType.rim:
+        final n = (sampleRate * 0.10).round();
+        return [
+          for (var i = 0; i < n; i++)
+            _rimSample(i / sampleRate, amplitude),
+        ];
+      case SoundType.snare:
+        // The snare is a real recorded sample (assets/audio/snare.mp3); its
+        // PCM is decoded once at init via readSamplesFromMem and kept in
+        // [_snarePcm] for the loop renderer.
+        throw ArgumentError('snare is sample-based; use the decoded PCM');
+    }
+  }
+
+  static double _rimSample(double t, double amplitude) {
+    final shell = math.sin(2 * math.pi * 280 * t) * math.exp(-55.0 * t) * 0.45;
+    final rim = math.sin(2 * math.pi * 680 * t) * math.exp(-130.0 * t) * 0.60;
+    final snap = math.sin(2 * math.pi * 2100 * t) * math.exp(-600.0 * t) * 0.35;
+    return amplitude * (shell + rim + snap);
+  }
 
   static Uint8List _buildClickWav({
     required double frequency,
@@ -374,18 +500,6 @@ class MetronomeEngine {
     return _buildWav(n, (i) {
       final t = i / sr;
       return amplitude * math.exp(-140.0 * t) * math.sin(2 * math.pi * frequency * t);
-    });
-  }
-
-  static Uint8List _buildRimWav({double amplitude = 0.8}) {
-    const sr = 44100;
-    final n  = (sr * 0.10).round();
-    return _buildWav(n, (i) {
-      final t     = i / sr;
-      final shell = math.sin(2 * math.pi * 280  * t) * math.exp( -55.0 * t) * 0.45;
-      final rim   = math.sin(2 * math.pi * 680  * t) * math.exp(-130.0 * t) * 0.60;
-      final snap  = math.sin(2 * math.pi * 2100 * t) * math.exp(-600.0 * t) * 0.35;
-      return amplitude * (shell + rim + snap);
     });
   }
 
@@ -411,11 +525,5 @@ class MetronomeEngine {
       bd.setInt16(44 + i * 2, s16, Endian.little);
     }
     return bd.buffer.asUint8List();
-  }
-}
-
-extension _NullableExt<T> on T? {
-  void let(void Function(T) fn) {
-    if (this != null) fn(this as T);
   }
 }
