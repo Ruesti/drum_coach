@@ -311,6 +311,11 @@ class MetronomeEngine {
     }
     _loopSource = source;
     _loopHandle = await SoLoud.instance.play(source, looping: true);
+    assert(() {
+      // ignore: avoid_print
+      print('click loop start #$generation');
+      return true;
+    }());
   }
 
   Future<void> _stopLoop() async {
@@ -344,6 +349,11 @@ class MetronomeEngine {
   /// one plug event fires several add/remove callbacks.
   void handleAudioRouteChanged() {
     if (_disposed) return;
+    assert(() {
+      // ignore: avoid_print
+      print('audio route change event');
+      return true;
+    }());
     _routeChangeDebounce?.cancel();
     _routeChangeDebounce = Timer(const Duration(milliseconds: 400), () {
       if (_disposed || !_soloudReady) return;
