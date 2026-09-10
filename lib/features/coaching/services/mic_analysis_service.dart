@@ -83,6 +83,7 @@ class MicAnalysisService {
     required List<BeatRecord> beatLog,
     required List<StrokeBeat> sticking,
     double latencyOffsetMs = 0,
+    bool analysisMode = false,
   }) {
     // Rebase each hit through its chunk-local wall-clock mapping so pipeline
     // drift within the recording cannot skew late onsets (§1.3).
@@ -104,6 +105,7 @@ class MicAnalysisService {
       beatLog: beatLog,
       sticking: sticking,
       latencyOffsetMs: latencyOffsetMs,
+      analysisMode: analysisMode,
       recordingSetup: setup?.describe(),
     );
   }
@@ -115,12 +117,17 @@ class MicAnalysisService {
   /// computed. [latencyOffsetMs] (§1.3 calibration) is subtracted from onset
   /// times before matching; the remaining systematic offset stays visible in
   /// the unassigned median.
+  /// [analysisMode] (Brief Phase 3): hand values are exclusive to the
+  /// analysis mode — learn mode (default) reports only assignment-free
+  /// measures, however clean the run. The gate itself stays computed so
+  /// reports can show how close a run was.
   static SessionAnalysis analyzeHits({
     required List<OnsetHit> hits,
     required DateTime? anchor,
     required List<BeatRecord> beatLog,
     required List<StrokeBeat> sticking,
     double latencyOffsetMs = 0,
+    bool analysisMode = false,
     Map<String, Object>? recordingSetup,
   }) {
     if (hits.isEmpty || anchor == null || beatLog.isEmpty || sticking.isEmpty) {
@@ -191,7 +198,8 @@ class MicAnalysisService {
       ));
     }
 
-    final gateOpen = summary.handValuesAllowed && matched.length >= 4;
+    final gateOpen =
+        analysisMode && summary.handValuesAllowed && matched.length >= 4;
 
     // Raw event list for the Phase-2 session log: one entry per onset, time
     // WITHOUT the latency correction (raw data stays raw; the applied offset

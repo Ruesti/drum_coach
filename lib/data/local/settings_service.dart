@@ -69,6 +69,13 @@ class SettingsService {
   static DateTime? get latencyCalibratedAt =>
       DateTime.tryParse(_prefs.getString('latency_calibrated_at') ?? '');
 
+  /// Analysis mode is remembered per exercise (Brief Phase 3); learn mode is
+  /// the default.
+  static bool analysisModeFor(String exerciseId) =>
+      _prefs.getBool('analysis_mode_$exerciseId') ?? false;
+  static Future<void> setAnalysisModeFor(String exerciseId, bool v) =>
+      _prefs.setBool('analysis_mode_$exerciseId', v);
+
   /// Adaptive training program configuration. `null` = not configured.
   static ProgramConfig? get programConfig {
     final weeks = _prefs.getInt('program_duration_weeks');

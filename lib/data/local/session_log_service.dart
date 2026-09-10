@@ -24,13 +24,14 @@ SessionLog buildSessionLog({
   required String headphones,
   required DeviceInfo device,
   required double? latencyOffsetMs,
+  String mode = 'learn',
 }) {
   final setup = analysis?.recordingSetup;
   return SessionLog()
     ..sessionUid = '${startedAt.millisecondsSinceEpoch}-$exerciseId'
     ..startedAt = startedAt
     ..exerciseId = exerciseId
-    ..mode = 'learn'
+    ..mode = mode
     ..bpm = bpm
     ..durationSeconds = durationSeconds
     ..deviceModel = device.model
