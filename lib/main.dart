@@ -16,7 +16,7 @@ Future<void> main() async {
     // robustness against CPU spikes is what matters. Device test: recording
     // running in parallel caused ~7 audible drop-outs per 5 min with the
     // default 2048-sample buffer.
-    SoLoud.instance.init(bufferSize: 8192),
+    SoLoud.instance.init(),
     IsarService.init(),
     SettingsService.init(),
   ]);
