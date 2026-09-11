@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -50,9 +49,9 @@ class BeatEvent {
 
 /// Playback volume for tick [index]: from the per-tick pattern array if one
 /// is set, otherwise a flat accent/normal volume. A tick with volume 0 is
-/// silent — no sound, and (per [MetronomeEngine._onBeat]) no [BeatEvent], so
-/// grid-filler ticks in fine-grained pattern playback don't drive the UI's
-/// beat indicator. Pure so it's unit-testable without SoLoud/isolates.
+/// silent — no sound and (per [MetronomeEngine._pollBeat]) no [BeatEvent],
+/// so grid-filler ticks in fine-grained pattern playback don't drive the
+/// UI's beat indicator. Pure so it's unit-testable without SoLoud.
 double resolveTickVolume({
   required List<double>? beatVolumes,
   required int index,
@@ -62,127 +61,6 @@ double resolveTickVolume({
     return beatVolumes[index % beatVolumes.length];
   }
   return isAccent ? 2.0 : 0.7;
-}
-
-// ── Timing isolate ────────────────────────────────────────────────────────────
-// Runs in its own isolate so Flutter's UI frame schedule cannot delay beats.
-//
-// Commands  (main → isolate): List<int> [cmdId, ...args]
-// Beat msgs (isolate → main): List<int> [beatIndex, isAccent 0|1]
-
-const _cmdStart  = 0; // [0, bpm, subdivisionFactor]
-const _cmdStop   = 1; // [1]
-const _cmdBpm    = 2; // [2, bpm]
-const _cmdFactor = 3; // [3, subdivisionFactor]
-
-/// Microsecond delay until beat [idx] should fire, given the current tempo
-/// ([bpm]/[factor]) and an anchor point ([anchorUs], [anchorIdx]) the
-/// schedule is measured from. Re-anchoring on every bpm/factor change (see
-/// `_cmdBpm`/`_cmdFactor` below) is what makes a live tempo change take
-/// effect from *now* instead of retroactively rewriting the timing of beats
-/// already played — using `idx * interval` unconditionally (anchored at
-/// idx=0) would compute a wildly wrong expected time for any idx reached
-/// under a *different*, earlier tempo.
-///
-/// Clamped so a beat never fires earlier than 100 µs from now (avoids a
-/// zero/negative `Timer` duration) and never waits longer than one full
-/// interval (avoids stalling if the clock is far behind schedule).
-///
-/// Pure and isolate-independent so it's unit-testable directly.
-int computeNextBeatDelayUs({
-  required int bpm,
-  required int factor,
-  required int idx,
-  required int anchorUs,
-  required int anchorIdx,
-  required int elapsedUs,
-}) {
-  final ivUs = 60000000.0 / bpm / factor;
-  final expUs = expectedBeatTimeUs(
-      bpm: bpm, factor: factor, idx: idx, anchorUs: anchorUs, anchorIdx: anchorIdx);
-  return (expUs - elapsedUs).clamp(100, ivUs.ceil());
-}
-
-/// Planned schedule time of beat [idx] in µs on the isolate's stopwatch,
-/// measured from the current anchor. This is the beat's *intended* instant —
-/// the basis of the shared time axis for click-vs-onset comparison (§1.3).
-int expectedBeatTimeUs({
-  required int bpm,
-  required int factor,
-  required int idx,
-  required int anchorUs,
-  required int anchorIdx,
-}) {
-  final ivUs = 60000000.0 / bpm / factor;
-  return (anchorUs + (idx - anchorIdx) * ivUs).round();
-}
-
-// Top-level required by Isolate.spawn.
-void _timingIsolateMain(SendPort replyPort) {
-  final port = ReceivePort();
-  replyPort.send(port.sendPort); // give main the control port
-
-  var bpm    = 100;
-  var factor = 1;
-  var playing = false;
-  var idx     = 0;
-  final sw    = Stopwatch();
-  Timer? t;
-
-  // See computeNextBeatDelayUs doc comment.
-  var anchorUs  = 0;
-  var anchorIdx = 0;
-
-  // Mutual recursion via late variable — required because Dart forbids
-  // a local function referencing another that isn't declared yet.
-  late void Function() sched;
-
-  void onBeat() {
-    if (!playing) return;
-    // Planned wall-clock time of this beat: current wall clock minus how far
-    // the stopwatch has drifted past the scheduled instant (timer jitter).
-    final plannedUs = expectedBeatTimeUs(
-        bpm: bpm, factor: factor, idx: idx, anchorUs: anchorUs, anchorIdx: anchorIdx);
-    final plannedEpochUs = DateTime.now().microsecondsSinceEpoch -
-        (sw.elapsedMicroseconds - plannedUs);
-    replyPort.send([idx, idx % factor == 0 ? 1 : 0, plannedEpochUs]);
-    idx++;
-    sched();
-  }
-
-  sched = () {
-    if (!playing) return;
-    final delayUs = computeNextBeatDelayUs(
-      bpm: bpm,
-      factor: factor,
-      idx: idx,
-      anchorUs: anchorUs,
-      anchorIdx: anchorIdx,
-      elapsedUs: sw.elapsedMicroseconds,
-    );
-    t = Timer(Duration(microseconds: delayUs), onBeat);
-  };
-
-  port.listen((msg) {
-    if (msg is! List<int>) return;
-    switch (msg[0]) {
-      case _cmdStart:
-        if (playing) return;
-        bpm = msg[1]; factor = msg[2];
-        playing = true; idx = 0;
-        anchorUs = 0; anchorIdx = 0;
-        sw..reset()..start();
-        onBeat(); // first beat fires immediately, rest are timer-driven
-      case _cmdStop:
-        playing = false; t?.cancel(); sw.stop();
-      case _cmdBpm:
-        if (playing) { anchorUs = sw.elapsedMicroseconds; anchorIdx = idx; }
-        bpm = msg[1];
-      case _cmdFactor:
-        if (playing) { anchorUs = sw.elapsedMicroseconds; anchorIdx = idx; }
-        factor = msg[1];
-    }
-  });
 }
 
 // ── MetronomeEngine ───────────────────────────────────────────────────────────
@@ -210,36 +88,17 @@ class MetronomeEngine {
   bool          _isPlaying  = false;
   bool          _disposed   = false;
 
-  Isolate?      _isolate;
-  ReceivePort?  _receivePort;
-  SendPort?     _controlPort;
+  // Beat derivation from the loop's audio position (single clock).
+  Timer? _beatPoller;
+  int _lastGlobalTick = -1;
+  double _loopTickDurMs = 500;
+  List<double> _loopVolumesActive = const [2.0];
 
   Future<void> init() async {
-    // Timing isolate FIRST: it needs no audio, and every audio call below
-    // can stall while SoLoud is still starting up (device test: silent
-    // sessions with neither ticks nor loop — init hung before the spawn).
-    // Audio preparation runs decoupled afterwards.
-    _receivePort = ReceivePort();
-    _isolate = await Isolate.spawn(_timingIsolateMain, _receivePort!.sendPort);
-
-    final ready = Completer<void>();
-    _receivePort!.listen((msg) {
-      if (msg is SendPort) {
-        _controlPort = msg;
-        if (!ready.isCompleted) ready.complete();
-      } else if (msg is List<int> && _isPlaying) {
-        _onBeat(msg[0], msg[1] == 1,
-            DateTime.fromMicrosecondsSinceEpoch(msg[2]));
-      }
-    });
-    await ready.future;
-
-    // A start requested while the isolate handshake was still pending went
-    // to a null control port — replay it now with the current tempo/factor.
-    if (_isPlaying) {
-      _controlPort!.send([_cmdStart, _bpm, _factor]);
-    }
-
+    // All beat timing derives from the loop's audio position — there is no
+    // separate clock to start. Audio preparation runs decoupled; every call
+    // in it is timeout-guarded (a stalled audio engine must never block
+    // anything else).
     unawaited(_prepareAudio());
   }
 
@@ -321,12 +180,63 @@ class MetronomeEngine {
       return;
     }
     _loopSource = source;
+    final volumes = List<double>.of(_loopVolumes());
+    _loopTickDurMs = 60000.0 / _bpm / _factor;
+    _loopVolumesActive = volumes;
+    // Keep the global tick counter monotone across rebuilds: the new loop
+    // starts at its pattern beginning, so continue at the next multiple of
+    // the loop length.
+    final ticks = volumes.length;
+    _lastGlobalTick = _lastGlobalTick < 0
+        ? -1
+        : ((_lastGlobalTick + ticks) ~/ ticks) * ticks - 1;
     _loopHandle = await SoLoud.instance.play(source, looping: true);
+    _beatPoller?.cancel();
+    _beatPoller =
+        Timer.periodic(const Duration(milliseconds: 10), (_) => _pollBeat());
     assert(() {
       // ignore: avoid_print
       print('click loop start #$generation');
       return true;
     }());
+  }
+
+  /// Derives beat events from the loop's playback position — display and
+  /// planned click times share the audio clock, so they cannot drift against
+  /// what the ear hears (isolate clock vs. loop phase previously diverged by
+  /// up to a full note after tempo changes). plannedAt is back-computed from
+  /// the in-tick offset, so the 10-ms poll cadence does not blur it.
+  void _pollBeat() {
+    final handle = _loopHandle;
+    if (handle == null || !_isPlaying || _disposed) return;
+    double posMs;
+    try {
+      posMs = SoLoud.instance.getPosition(handle).inMicroseconds / 1000.0;
+    } catch (_) {
+      return;
+    }
+    final ticks = _loopVolumesActive.length;
+    final t = tickAtPosition(
+        positionMs: posMs, tickDurMs: _loopTickDurMs, ticksInLoop: ticks);
+    final global = advanceGlobalTick(
+        lastGlobalTick: _lastGlobalTick < 0 ? 0 : _lastGlobalTick,
+        tickInLoop: t.tickInLoop,
+        ticksInLoop: ticks);
+    if (_lastGlobalTick >= 0 && global == _lastGlobalTick) return;
+    final now = DateTime.now();
+    final from = _lastGlobalTick < 0 ? global : _lastGlobalTick + 1;
+    for (var g = from; g <= global; g++) {
+      if (_loopVolumesActive[g % ticks] <= 0) continue;
+      final agoMs = t.inTickMs + (global - g) * _loopTickDurMs;
+      _beatCtrl.add(BeatEvent(
+        beatIndex: g,
+        isAccent: g % _factor == 0,
+        subdivision: _subdivision,
+        plannedAt:
+            now.subtract(Duration(microseconds: (agoMs * 1000).round())),
+      ));
+    }
+    _lastGlobalTick = global;
   }
 
   Future<void> _stopLoop() async {
@@ -377,85 +287,36 @@ class MetronomeEngine {
     });
   }
 
-  // §Wiedergabe-Diagnose: how late the main isolate fires the click vs the
-  // isolate's planned instant. Audible jitter lives exactly here.
-  final List<int> _fireDelaysUs = [];
-  int _maxVoices = 0;
-
-  void _onBeat(int index, bool isAccent, DateTime plannedAt) {
-    if (!_isPlaying || _disposed) return;
-
-    assert(() {
-      _fireDelaysUs.add(
-          DateTime.now().difference(plannedAt).inMicroseconds);
-      final voices = _soloudReady ? SoLoud.instance.getActiveVoiceCount() : 0;
-      if (voices > _maxVoices) _maxVoices = voices;
-      if (_fireDelaysUs.length >= 200) {
-        final sorted = List<int>.of(_fireDelaysUs)..sort();
-        String ms(int us) => (us / 1000).toStringAsFixed(1);
-        // ignore: avoid_print
-        print('click fire delay ms over ${sorted.length} ticks: '
-            'p50=${ms(sorted[sorted.length ~/ 2])} '
-            'p90=${ms(sorted[(sorted.length * 9) ~/ 10])} '
-            'max=${ms(sorted.last)} voicesMax=$_maxVoices');
-        _fireDelaysUs.clear();
-        _maxVoices = 0;
-      }
-      return true;
-    }());
-
-    final volume = resolveTickVolume(
-      beatVolumes: _beatVolumes,
-      index: index,
-      isAccent: isAccent,
-    );
-
-    // Audio comes from the natively looped click track (_startLoop) — the
-    // isolate beats only drive UI (cursor, indicator) and the beat log's
-    // planned instants.
-    if (volume <= 0) return; // silent grid tick — no UI trigger
-
-    _beatCtrl.add(BeatEvent(
-      beatIndex: index,
-      isAccent: isAccent,
-      subdivision: _subdivision,
-      plannedAt: plannedAt,
-    ));
-  }
-
   void start() {
     if (_isPlaying) return;
     _isPlaying = true;
-    _controlPort?.send([_cmdStart, _bpm, _factor]);
+    _lastGlobalTick = -1;
     unawaited(_startLoop());
   }
 
   void stop() {
     _isPlaying = false;
     _loopRebuildDebounce?.cancel();
-    _controlPort?.send([_cmdStop]);
+    _beatPoller?.cancel();
+    _beatPoller = null;
     unawaited(_stopLoop());
   }
 
   void setBpm(int bpm) {
     _bpm = bpm.clamp(40, 240);
-    _controlPort?.send([_cmdBpm, _bpm]);
     _scheduleLoopRebuild();
   }
 
   void setSubdivision(Subdivision subdivision) {
     _subdivision = subdivision;
     _factor = subdivision.factor;
-    _controlPort?.send([_cmdFactor, _factor]);
     _scheduleLoopRebuild();
   }
 
   /// Set an arbitrary integer tick factor for pattern playback (e.g. 24
-  /// ticks/quarter), bypassing the [Subdivision] enum. The timing isolate
-  /// already treats `factor` generically.
+  /// ticks/quarter), bypassing the [Subdivision] enum.
   void setPatternClock(int ticksPerQuarter) {
     _factor = ticksPerQuarter;
-    _controlPort?.send([_cmdFactor, _factor]);
     _scheduleLoopRebuild();
   }
 
@@ -479,9 +340,7 @@ class MetronomeEngine {
     _isPlaying = false;
     _loopRebuildDebounce?.cancel();
     _routeChangeDebounce?.cancel();
-    _controlPort?.send([_cmdStop]);
-    _receivePort?.close();
-    _isolate?.kill(priority: Isolate.immediate);
+    _beatPoller?.cancel();
     if (!_beatCtrl.isClosed) _beatCtrl.close();
     unawaited(_stopLoop());
   }
