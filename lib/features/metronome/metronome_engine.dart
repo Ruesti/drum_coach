@@ -228,6 +228,12 @@ class MetronomeEngine {
     for (var g = from; g <= global; g++) {
       if (_loopVolumesActive[g % ticks] <= 0) continue;
       final agoMs = t.inTickMs + (global - g) * _loopTickDurMs;
+      assert(() {
+        // ignore: avoid_print
+        print('emit g=$g inLoop=${g % ticks} '
+            'at=${now.millisecondsSinceEpoch % 100000} agoMs=${agoMs.toStringAsFixed(1)}');
+        return true;
+      }());
       _beatCtrl.add(BeatEvent(
         beatIndex: g,
         isAccent: g % _factor == 0,
