@@ -94,6 +94,13 @@ class MetronomeEngine {
   double _loopTickDurMs = 500;
   List<double> _loopVolumesActive = const [2.0];
 
+  /// Wall-time milliseconds per POSITION millisecond: getPosition's scale is
+  /// not guaranteed to be wall time (device: factor ~1.24). The audible loop
+  /// length in wall time IS the Dart-computed length (the WAV renders the
+  /// BPM grid exactly), so dartLoopMs / soloudLoopMs converts ago-offsets
+  /// into wall time for plannedAt.
+  double _wallPerPos = 1.0;
+
   Future<void> init() async {
     // All beat timing derives from the loop's audio position — there is no
     // separate clock to start. Audio preparation runs decoupled; every call
@@ -181,8 +188,27 @@ class MetronomeEngine {
     }
     _loopSource = source;
     final volumes = List<double>.of(_loopVolumes());
-    _loopTickDurMs = 60000.0 / _bpm / _factor;
+    // Tick grid in POSITION time, derived from getLength of the same source
+    // getPosition reports on. Device trace: the position scale ran a factor
+    // ~1.24 off wall time — deriving the grid from the BPM formula made the
+    // cursor lag ~36 ms per note and bundle the last note with the next
+    // cycle's first (skipped-last-note-every-2nd-run bug).
+    final realLoopMs =
+        SoLoud.instance.getLength(source).inMicroseconds / 1000.0;
+    final dartLoopMs = 60000.0 / _bpm / _factor * volumes.length;
+    _loopTickDurMs = realLoopMs > 1
+        ? realLoopMs / volumes.length
+        : 60000.0 / _bpm / _factor;
+    assert(() {
+      // ignore: avoid_print
+      print('loop len: dart=${dartLoopMs.toStringAsFixed(1)}ms '
+          'soloud=${realLoopMs.toStringAsFixed(1)}ms');
+      return true;
+    }());
     _loopVolumesActive = volumes;
+    _wallPerPos = dartLoopMs > 1 && realLoopMs > 1
+        ? dartLoopMs / realLoopMs
+        : 1.0;
     // Keep the global tick counter monotone across rebuilds: the new loop
     // starts at its pattern beginning, so continue at the next multiple of
     // the loop length.
@@ -227,7 +253,8 @@ class MetronomeEngine {
     final from = _lastGlobalTick < 0 ? global : _lastGlobalTick + 1;
     for (var g = from; g <= global; g++) {
       if (_loopVolumesActive[g % ticks] <= 0) continue;
-      final agoMs = t.inTickMs + (global - g) * _loopTickDurMs;
+      final agoMs =
+          (t.inTickMs + (global - g) * _loopTickDurMs) * _wallPerPos;
       assert(() {
         // ignore: avoid_print
         print('emit g=$g inLoop=${g % ticks} '
