@@ -188,23 +188,18 @@ class MetronomeEngine {
     }
     _loopSource = source;
     final volumes = List<double>.of(_loopVolumes());
-    // Tick grid in POSITION time, derived from getLength of the same source
-    // getPosition reports on. Device trace: the position scale ran a factor
-    // ~1.24 off wall time — deriving the grid from the BPM formula made the
-    // cursor lag ~36 ms per note and bundle the last note with the next
-    // cycle's first (skipped-last-note-every-2nd-run bug).
+    // Tick grid derived from getLength of the same source getPosition
+    // reports on — defensive: with a healthy engine both equal the Dart
+    // formula, but any position-scale quirk then shifts grid and position
+    // together instead of skewing the cursor. (The observed ~1.24 slowdown
+    // itself turned out to be a side effect of an enlarged init bufferSize,
+    // reverted in main.dart.)
     final realLoopMs =
         SoLoud.instance.getLength(source).inMicroseconds / 1000.0;
     final dartLoopMs = 60000.0 / _bpm / _factor * volumes.length;
     _loopTickDurMs = realLoopMs > 1
         ? realLoopMs / volumes.length
         : 60000.0 / _bpm / _factor;
-    assert(() {
-      // ignore: avoid_print
-      print('loop len: dart=${dartLoopMs.toStringAsFixed(1)}ms '
-          'soloud=${realLoopMs.toStringAsFixed(1)}ms');
-      return true;
-    }());
     _loopVolumesActive = volumes;
     _wallPerPos = dartLoopMs > 1 && realLoopMs > 1
         ? dartLoopMs / realLoopMs
@@ -255,12 +250,6 @@ class MetronomeEngine {
       if (_loopVolumesActive[g % ticks] <= 0) continue;
       final agoMs =
           (t.inTickMs + (global - g) * _loopTickDurMs) * _wallPerPos;
-      assert(() {
-        // ignore: avoid_print
-        print('emit g=$g inLoop=${g % ticks} '
-            'at=${now.millisecondsSinceEpoch % 100000} agoMs=${agoMs.toStringAsFixed(1)}');
-        return true;
-      }());
       _beatCtrl.add(BeatEvent(
         beatIndex: g,
         isAccent: g % _factor == 0,

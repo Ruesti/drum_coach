@@ -11,11 +11,9 @@ import 'services/notification_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Future.wait([
-    // Large output buffer (~186 ms at 44.1 kHz): the click is a native loop,
-    // so output latency is irrelevant (it sits in the calibration value) —
-    // robustness against CPU spikes is what matters. Device test: recording
-    // running in parallel caused ~7 audible drop-outs per 5 min with the
-    // default 2048-sample buffer.
+    // Default buffer size on purpose: raising it to 8192 slowed playback by
+    // ~24% on-device (flutter_soloud/miniaudio side effect) — do NOT try to
+    // fight recording-induced drop-outs that way again.
     SoLoud.instance.init(),
     IsarService.init(),
     SettingsService.init(),
