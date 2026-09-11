@@ -3,10 +3,12 @@
 **Datum:** 10.09.2026 · **Basis:** main nach Merge von PR #17 (`2bfba95`)
 · **Brief:** `docs/BRIEF_ETAPPE1_PAD.md` Phase 3 · **Branch/PR:** #18
 
-**Stand: Implementierung komplett (247/247 Tests). Der Gerätetest (beide
-Modi an derselben Übung) steht aus. Vorgelagert wurden zwei vom Auftraggeber
-gemeldete Wiedergabe-Probleme diagnostiziert und behoben (eigener Abschnitt
-unten) — Leitprinzip „Messung glaubwürdig vor Features".**
+**Stand 11.09.: Implementierung komplett (245/245 Tests) inkl.
+Jitter-Gate-Erweiterung; alle fern-prüfbaren Abnahmen ✓ (Tabellen unten).
+Offen sind nur noch die Nutzer-Abnahmen Hörtest, Kopfhörer rein/raus und
+die Neu-Kalibrierung. Vorgelagert wurden sechs vom Auftraggeber gemeldete
+Wiedergabe-Probleme diagnostiziert und behoben (eigene Abschnitte unten)
+— Leitprinzip „Messung glaubwürdig vor Features".**
 
 ---
 
@@ -73,12 +75,22 @@ keine hörbaren Tempo-Schwankungen oder Aussetzer mehr. ☐
   *„Zu viele Aussetzer für eine Hand-Analyse — das sitzt noch nicht."*
 - **Session-Log:** `mode` = `learn` | `analysis` wird pro Session
   festgehalten (Phase-2-Schema war dafür vorbereitet).
+- **Jitter-Gate (Nachtrag 11.09., Auftraggeber-Entscheidung):** Das
+  Vertrauensmaß sperrt die Hand-Analyse zusätzlich, wenn die
+  Timing-Streuung der bewerteten Noten (Standardabweichung) über
+  **50 ms** liegt — „schlampig, aber vollzählig" bekommt damit ebenfalls
+  die „sitzt noch nicht"-Ansage statt Hand-Werten. Eigener Wortlaut im
+  Feedback-Sheet: *„Zu unruhig für eine Hand-Analyse — das sitzt noch
+  nicht."* (unterscheidbar von der Aussetzer-Ansage). Greift erst ab
+  4 bewerteten Treffern; `jitterLimitExceeded` wird im Alignment
+  festgehalten. TDD: 2 neue Tests (hoher Jitter sperrt, moderater
+  ±15 ms lässt offen).
 - **Nicht enthalten (laut Brief):** automatischer Modus-Vorschlag.
 
 ## Tests
 
-Gesamtsuite **247/247 grün**; neu: 5 Loop-Renderer, 1 Kommando-Race,
-2 Modus-Gate. Analyzer ohne Befunde.
+Gesamtsuite **245/245 grün** (Stand 11.09.: Isolate-Engine-Tests mit dem
+Isolate entfernt, 2 Jitter-Gate-Tests neu); Analyzer ohne Befunde.
 
 ## Nachtrag 10.09. — Kopfhörer-Routing (behoben, `43bee59`)
 
@@ -121,18 +133,27 @@ Sessions, Lautsprecher-Klicks als Onsets):**
 | Umschalter sichtbar/persistiert (orange = aktiv) | ✓ |
 
 **Wichtige Einordnung aus dem Nutzertest:** „Schlampig, aber vollzählig"
-gespielte Durchläufe liegen per Brief-Definition ÜBER der Schwelle (sie
+gespielte Durchläufe lagen per Brief-Definition ÜBER der Schwelle (sie
 zählt Auslassungen/Überzählige, nicht Timing-Streuung; das Alignment
-toleriert ±250 ms) — es erscheinen dann Hand-Werte, keine Ansage. Falls
-zusätzlich hoher Timing-Jitter die Hand-Analyse sperren soll, wäre das
-eine Erweiterung des Vertrauensmaßes → Entscheidung Auftraggeber.
+toleriert ±250 ms) — es erschienen Hand-Werte, keine Ansage. Der
+Auftraggeber entschied daraufhin die Jitter-Gate-Erweiterung (Abschnitt
+oben).
+
+**Fern-Verifikation 11.09. (nach Jitter-Gate, per adb gesteuerte
+Sessions, Lautsprecher-Klicks als Onsets):**
+
+| Prüfpunkt | Ergebnis |
+|---|---|
+| Jitter-Gate: vollzählig, aber unruhig → eigene Ansage | ✓ 131/131 Schläge, 130/1/1 gematcht, Streuung ±64,4 ms > 50 ms → „Zu unruhig für eine Hand-Analyse — das sitzt noch nicht.", keine Hand-Werte (die ±64 ms stammen aus der Chunk-Quantisierung der Lautsprecher-Onsets bei 200 BPM — als Gate-Auslöser genau richtig) |
+| Lernmodus: keine Hand-Werte + Hinweis | ✓ 142/143 gematcht (99 %, weit über Schwelle) → trotzdem keine R/L-Zeilen, Hinweis „Lernmodus — Timing und Gleichmäßigkeit ohne Hand-Analyse. Fehler sind hier normal."; zuordnungsfreie Größen bleiben sichtbar |
+| Modus-Persistenz über App-Neustart | ✓ force-stop + Neustart → Insights-Symbol wieder orange |
+| Modus-Persistenz beim Screen verlassen/neu öffnen | ✓ Übung verlassen und neu geöffnet → Symbol weiterhin orange; nach Umschalten grau |
+| Session-Log `mode`-Feld im JSONL | ✓ `"mode":"analysis"` und `"mode":"learn"` in den zwei exportierten Sessions (aus `cache/session_*.jsonl` gelesen) |
 
 **Verbleibende Nutzer-Abnahmen:**
 
 | Prüfpunkt | Ergebnis |
 |---|---|
-| Lernmodus (Standard): keine Hand-Werte im Feedback, Lernmodus-Hinweis sichtbar | ☐ |
-| Hörtest ~2 min: Klick gleichmäßig (erster Test: „Abstände absolut gleich", aber gelegentliches Rest-Stottern — Eingrenzung läuft: tritt es ohne Mikrofon-Analyse ebenfalls auf?) | ☐ |
+| Hörtest ~2 min: Klick gleichmäßig (erster Test: „Abstände absolut gleich", aber gelegentliches Rest-Stottern — Eingrenzung läuft: Release-Build-Test) | ☐ |
 | Kopfhörer rein/raus während des Klicks: Ton wechselt und bleibt | ☐ |
-| Modus bleibt pro Übung gemerkt (Screen verlassen und neu öffnen) | ☐ |
-| Session-Log `mode`-Feld korrekt (`learn`/`analysis`, im JSONL-Export sichtbar) | ☐ |
+| Neu-Kalibrierung (der gespeicherte 136-ms-Wert entstand auf dem verlangsamten System; Soll wieder ~70 ms) | ☐ |
