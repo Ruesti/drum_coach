@@ -89,6 +89,26 @@ Routing-Wechsel nicht von selbst. Fix: `AudioDeviceCallback` in
 debounced per `changeDevice()` aufs Default-Gerät und startet einen
 laufenden Loop neu.
 
+## Nachtrag 11.09. — Eine Uhr für Ton, Cursor und Messung
+
+- **Cursor-Drift behoben (`d1e4070`):** Balken-Cursor und Mess-Sollzeiten
+  wichen nach Tempowechseln um bis zu eine Note vom Ton ab (Isolate-Uhr vs.
+  Loop-Phase). Beats entstehen jetzt per Positions-Poller direkt aus
+  `SoLoud.getPosition` — Anzeige und geplante Klickzeiten teilen die Uhr
+  des hörbaren Tons; der Timing-Isolate wurde komplett entfernt.
+  **Vom Auftraggeber bestätigt: „Balken läuft korrekt immer bis zur letzten
+  Note."** (Zwischenzeitlicher Cursor-Bündelungs-Bug am Loop-Ende per
+  Emit-Trace diagnostiziert.)
+- **Puffer-Lektion (`e4cc88f`):** Der Versuch, aufnahme-induzierte Aussetzer
+  mit `bufferSize: 8192` zu bändigen, verlangsamte die Wiedergabe am Gerät
+  um ~24 % (Emit-Raster 186 statt 150 ms) — revertiert und im Code
+  dokumentiert. **Folge: Nach diesem Stand einmal neu kalibrieren** (der
+  zwischenzeitliche 136-ms-Wert entstand auf dem verlangsamten System).
+- **Offen (bekannt):** Vereinzelte hörbare Aussetzer, deutlich häufiger bei
+  laufender Mikrofon-Aufnahme (~7/5 min, ohne Mikro ~1/5 min) — nächste
+  Kandidaten: Aufnahme-DSP in eigenen Isolate verlagern und/oder
+  Release-Build-Verhalten prüfen (Debug-Overhead als CPU-Spitzen-Treiber).
+
 ## Abnahme Phase 3 (Gerätetest)
 
 **Fern-Verifikation 10.09. (Analysemodus-Pfad, per adb gesteuerte
