@@ -248,6 +248,43 @@ void main() {
       expect(a.events.first.hand, 'R');
     });
 
+    test('high timing jitter blocks hand values in analysis mode (P3)', () {
+      // All 20 notes played, none missing — but wildly uneven: alternating
+      // ±80 ms around the grid (std dev ≈ 80 ms, far above the 50 ms gate).
+      final grid = [for (var i = 0; i < 20; i++) i * 500.0];
+      final onsets = [
+        for (var i = 0; i < 20; i++) grid[i] + (i.isEven ? 80 : -80),
+      ];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.hitCount, 20, reason: 'nothing was missed');
+      expect(a.alignment!.jitterLimitExceeded, isTrue);
+      expect(a.timing, isNull,
+          reason: 'sloppy-but-complete must not get hand values');
+      expect(a.unassigned, isNotNull);
+    });
+
+    test('moderate jitter keeps the analysis gate open', () {
+      final grid = [for (var i = 0; i < 20; i++) i * 500.0];
+      final onsets = [
+        for (var i = 0; i < 20; i++) grid[i] + (i.isEven ? 15 : -15),
+      ];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.jitterLimitExceeded, isFalse);
+      expect(a.timing, isNotNull);
+    });
+
     test('no anchor or no hits yields counts only', () {
       final a = MicAnalysisService.analyzeHits(
         hits: [],

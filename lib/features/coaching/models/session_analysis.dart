@@ -13,12 +13,18 @@ class AlignmentSummary {
   final int extraCount;
   final bool handValuesAllowed;
 
+  /// P3 extension (Auftraggeber-Entscheidung 11.09.): complete-but-wobbly
+  /// runs (timing std dev above the jitter gate) also block hand values —
+  /// with their own announcement wording in the UI.
+  final bool jitterLimitExceeded;
+
   const AlignmentSummary({
     required this.expectedCount,
     required this.hitCount,
     required this.missedCount,
     required this.extraCount,
     required this.handValuesAllowed,
+    this.jitterLimitExceeded = false,
   });
 
   double get hitRate => expectedCount == 0 ? 0 : hitCount / expectedCount;

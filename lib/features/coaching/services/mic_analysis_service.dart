@@ -32,6 +32,10 @@ class MicAnalysisService {
 
   static const int _sampleRate = RecordingSetup.sampleRate;
 
+  /// P3 jitter gate: above this timing std dev the analysis mode withholds
+  /// hand values and announces it (Auftraggeber-Entscheidung 11.09.).
+  static const double jitterGateMs = 50;
+
   /// Detected onsets on the wall clock (epoch ms), each mapped through its
   /// own chunk neighborhood — exposed for the latency calibration (§1.3).
   List<double> get absoluteOnsetMs => [
@@ -165,6 +169,15 @@ class MicAnalysisService {
         : aligned.notes.sublist(firstHit, lastHit + 1);
 
     final hitCount = assessed.where((n) => n.hit).length;
+    // Jitter gate (P3): std dev of the assigned notes' deviations. A run can
+    // be complete yet so uneven that per-hand values would be noise.
+    final assessedDevs = [
+      for (final n in assessed)
+        if (n.hit) n.deviationMs!,
+    ];
+    final jitterMs = _stdDev(assessedDevs);
+    final jitterExceeded =
+        assessedDevs.length >= 4 && jitterMs > jitterGateMs;
     final summary = AlignmentSummary(
       expectedCount: assessed.length,
       hitCount: hitCount,
@@ -172,7 +185,9 @@ class MicAnalysisService {
       extraCount: aligned.extraCount,
       handValuesAllowed: assessed.isNotEmpty &&
           hitCount / assessed.length >= 0.9 &&
-          aligned.extraCount / assessed.length < 0.05,
+          aligned.extraCount / assessed.length < 0.05 &&
+          !jitterExceeded,
+      jitterLimitExceeded: jitterExceeded,
     );
 
     final unassigned = computeUnassignedMetrics(
@@ -256,7 +271,7 @@ class MicAnalysisService {
       overallDeviationMs: avgAll,
       rightHandDeviationMs: right.isEmpty ? 0 : _mean(right),
       leftHandDeviationMs: left.isEmpty ? 0 : _mean(left),
-      jitterMs: _stdDev(all, avgAll),
+      jitterMs: _stdDevWithMean(all, avgAll),
     );
   }
 
@@ -274,7 +289,13 @@ class MicAnalysisService {
 
   static double _mean(List<double> v) => v.reduce((a, b) => a + b) / v.length;
 
-  static double _stdDev(List<double> v, double mean) {
+  static double _stdDev(List<double> v) {
+    if (v.length < 2) return 0;
+    final mean = v.reduce((a, b) => a + b) / v.length;
+    return _stdDevWithMean(v, mean);
+  }
+
+  static double _stdDevWithMean(List<double> v, double mean) {
     final variance =
         v.map((x) => (x - mean) * (x - mean)).reduce((a, b) => a + b) /
             v.length;

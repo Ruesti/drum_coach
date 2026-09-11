@@ -1172,9 +1172,13 @@ class _AnalysisSummary extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               analysisMode
-                  // Brief Phase 3 wording for a below-gate analysis run.
-                  ? 'Zu viele Aussetzer für eine Hand-Analyse — das sitzt '
-                      'noch nicht.'
+                  // Brief Phase 3 wording, split by cause: omissions/extras
+                  // vs. the jitter gate (Auftraggeber-Erweiterung 11.09.).
+                  ? (analysis.alignment?.jitterLimitExceeded == true
+                      ? 'Zu unruhig für eine Hand-Analyse — das sitzt '
+                          'noch nicht.'
+                      : 'Zu viele Aussetzer für eine Hand-Analyse — das '
+                          'sitzt noch nicht.')
                   : 'Lernmodus — Timing und Gleichmäßigkeit ohne '
                       'Hand-Analyse. Fehler sind hier normal.',
               style:
