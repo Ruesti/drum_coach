@@ -13,6 +13,23 @@ class DeviceInfo {
 class AudioCapabilities {
   static const channel = MethodChannel('drum_coach/audio');
 
+  static void Function()? _devicesChanged;
+
+  /// Register (or clear with null) the listener for platform-side audio
+  /// device changes — headphones plugged/unplugged. SoLoud does not reroute
+  /// on its own: without reacting, the output stream dies on plug events
+  /// and stays silent even after unplugging.
+  static void onDevicesChanged(void Function()? callback) {
+    _devicesChanged = callback;
+    channel.setMethodCallHandler(callback == null
+        ? null
+        : (call) async {
+            if (call.method == 'audioDevicesChanged') {
+              _devicesChanged?.call();
+            }
+          });
+  }
+
   static Future<bool> isUnprocessedSupported() async {
     try {
       return await channel.invokeMethod<bool>('isUnprocessedSupported') ??

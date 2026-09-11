@@ -11,6 +11,9 @@ import 'services/notification_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Future.wait([
+    // Default buffer size on purpose: raising it to 8192 slowed playback by
+    // ~24% on-device (flutter_soloud/miniaudio side effect) — do NOT try to
+    // fight recording-induced drop-outs that way again.
     SoLoud.instance.init(),
     IsarService.init(),
     SettingsService.init(),

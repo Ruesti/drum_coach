@@ -95,6 +95,10 @@ class _PracticeSessionScreenState
   /// Captured in [initState] because `ref` is unsafe to read fresh inside
   /// [dispose] — by then the widget's Element may already be torn down.
   late final MetronomeNotifier _metronomeNotifier;
+
+  /// Analysis mode (Brief Phase 3): remembered per exercise, learn is the
+  /// default. Only the analysis mode may show per-hand values.
+  late bool _analysisMode = SettingsService.analysisModeFor(widget.rudimentId);
   late final SessionTimerNotifier _sessionTimerNotifier;
 
   /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
@@ -333,6 +337,7 @@ class _PracticeSessionScreenState
         beatLog: _beatLog,
         sticking: rudiment.sticking,
         latencyOffsetMs: SettingsService.latencyOffsetMs ?? 0,
+        analysisMode: _analysisMode,
       );
     }
 
@@ -351,6 +356,7 @@ class _PracticeSessionScreenState
         headphones: await AudioCapabilities.headphonesType(),
         device: await AudioCapabilities.deviceInfo(),
         latencyOffsetMs: SettingsService.latencyOffsetMs,
+        mode: _analysisMode ? 'analysis' : 'learn',
       );
       await SessionLogService.save(sessionLog);
     } catch (e) {
@@ -373,6 +379,7 @@ class _PracticeSessionScreenState
         durationSeconds: _elapsedSeconds,
         rating: rating,
         analysis: analysis,
+        analysisMode: _analysisMode,
         sessionLog: sessionLog,
         ladderResult: ladderResult,
         aiService: _aiService,
@@ -425,7 +432,6 @@ class _PracticeSessionScreenState
   @override
   Widget build(BuildContext context) {
     final rudiment = ref.watch(rudimentByIdProvider(widget.rudimentId));
-    final metState = ref.watch(metronomeNotifierProvider);
     final notifier = ref.read(metronomeNotifierProvider.notifier);
     final sessionSeconds = ref.watch(sessionTimerNotifierProvider);
 
@@ -459,10 +465,22 @@ class _PracticeSessionScreenState
       }
     });
 
-    final activeBeat = metState.isPlaying && metState.currentBeatIndex >= 0
-        ? _playback.noteIndexAtTick(
-            metState.currentBeatIndex % _playback.totalTicks)
-        : null;
+    // Selective watches: the pattern clock updates currentBeatIndex up to
+    // ~80×/s, but everything visible here changes only per NOTE. Watching
+    // the whole state rebuilt the entire screen on every tick and clogged
+    // the main-isolate queue the click playback runs through (measured
+    // 20-30 ms click-fire spikes every few seconds, §Wiedergabe-Diagnose).
+    final activeBeat = ref.watch(metronomeNotifierProvider.select((s) =>
+        s.isPlaying && s.currentBeatIndex >= 0
+            ? _playback.noteIndexAtTick(s.currentBeatIndex % _playback.totalTicks)
+            : null));
+    final isPlaying =
+        ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
+    final bpm = ref.watch(metronomeNotifierProvider.select((s) => s.bpm));
+    final soundType =
+        ref.watch(metronomeNotifierProvider.select((s) => s.soundType));
+    final isAccent =
+        ref.watch(metronomeNotifierProvider.select((s) => s.isAccent));
 
     final isCountdown = _goalSeconds != null;
     final timerColor = isCountdown && (_goalSeconds! - _elapsedSeconds) <= 30
@@ -487,6 +505,23 @@ class _PracticeSessionScreenState
               builder: (_) => LessonDetailScreen(rudimentId: widget.rudimentId),
             )),
           ),
+          if (SettingsService.micAnalysisEnabled)
+            IconButton(
+              icon: Icon(
+                _analysisMode ? Icons.insights : Icons.insights_outlined,
+                size: 20,
+                color:
+                    _analysisMode ? AppColors.accent : AppColors.textFaint,
+              ),
+              tooltip: _analysisMode
+                  ? 'Analysemodus (Hand-Werte) — tippen für Lernmodus'
+                  : 'Lernmodus — tippen für Hand-Analyse',
+              onPressed: () {
+                setState(() => _analysisMode = !_analysisMode);
+                SettingsService.setAnalysisModeFor(
+                    widget.rudimentId, _analysisMode);
+              },
+            ),
           if (SettingsService.micAnalysisEnabled)
             Padding(
               padding: const EdgeInsets.only(right: 4),
@@ -567,18 +602,18 @@ class _PracticeSessionScreenState
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: _CompactMetronome(
-                  bpm: metState.bpm,
-                  isPlaying: metState.isPlaying,
-                  isAccent: metState.isAccent,
-                  currentBeatIndex: metState.currentBeatIndex,
-                  soundType: metState.soundType,
+                  bpm: bpm,
+                  isPlaying: isPlaying,
+                  isAccent: isAccent,
+                  currentBeatIndex: activeBeat ?? -1,
+                  soundType: soundType,
                   onBpmChanged: _onUserBpmChanged,
                   onToggle: notifier.toggle,
                   onSoundTypeChanged: notifier.setSoundType,
                 ),
               ),
               const SizedBox(height: 10),
-              if (!metState.isPlaying && _elapsedSeconds == 0)
+              if (!isPlaying && _elapsedSeconds == 0)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                   child: _TimerGoalRow(
@@ -915,6 +950,7 @@ class _FeedbackSheet extends StatefulWidget {
   final int durationSeconds;
   final int rating;
   final SessionAnalysis? analysis;
+  final bool analysisMode;
   final SessionLog? sessionLog;
   final String? ladderResult;
   final AICoachingService aiService;
@@ -927,6 +963,7 @@ class _FeedbackSheet extends StatefulWidget {
     required this.durationSeconds,
     required this.rating,
     required this.analysis,
+    this.analysisMode = false,
     this.sessionLog,
     this.ladderResult,
     required this.aiService,
@@ -1019,7 +1056,9 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
           ],
           if (hasMicData && widget.analysis?.unassigned != null) ...[
             const SizedBox(height: 16),
-            _AnalysisSummary(analysis: widget.analysis!),
+            _AnalysisSummary(
+                analysis: widget.analysis!,
+                analysisMode: widget.analysisMode),
           ],
           CoachFeedbackCard(
             feedback: _feedback,
@@ -1058,7 +1097,8 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
 
 class _AnalysisSummary extends StatelessWidget {
   final SessionAnalysis analysis;
-  const _AnalysisSummary({required this.analysis});
+  final bool analysisMode;
+  const _AnalysisSummary({required this.analysis, this.analysisMode = false});
 
   String _signed(double v) => '${v > 0 ? '+' : ''}${v.toStringAsFixed(1)} ms';
 
@@ -1130,10 +1170,19 @@ class _AnalysisSummary extends StatelessWidget {
               ),
           ] else ...[
             const SizedBox(height: 6),
-            const Text(
-              'Zu viele Aussetzer für eine Hand-Analyse — Werte pro Hand '
-              'erst ab 90 % sauber getroffenen Schlägen.',
-              style: TextStyle(color: AppColors.textFaint, fontSize: 12),
+            Text(
+              analysisMode
+                  // Brief Phase 3 wording, split by cause: omissions/extras
+                  // vs. the jitter gate (Auftraggeber-Erweiterung 11.09.).
+                  ? (analysis.alignment?.jitterLimitExceeded == true
+                      ? 'Zu unruhig für eine Hand-Analyse — das sitzt '
+                          'noch nicht.'
+                      : 'Zu viele Aussetzer für eine Hand-Analyse — das '
+                          'sitzt noch nicht.')
+                  : 'Lernmodus — Timing und Gleichmäßigkeit ohne '
+                      'Hand-Analyse. Fehler sind hier normal.',
+              style:
+                  const TextStyle(color: AppColors.textFaint, fontSize: 12),
             ),
           ],
           // Raw numbers for the §1.1/§1.3 device checks (peak levels must

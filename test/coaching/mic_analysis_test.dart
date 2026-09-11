@@ -39,6 +39,7 @@ void main() {
         anchor: anchor,
         beatLog: beatLogAt(grid),
         sticking: rlrl,
+        analysisMode: true,
       );
       expect(a.alignment, isNotNull);
       expect(a.alignment!.handValuesAllowed, isTrue);
@@ -78,6 +79,7 @@ void main() {
         anchor: anchor,
         beatLog: beatLogAt(grid),
         sticking: rlrl,
+        analysisMode: true,
       );
       expect(a.alignment!.missedCount, 1);
       expect(a.alignment!.extraCount, 0);
@@ -97,6 +99,7 @@ void main() {
         beatLog: beatLogAt(grid),
         sticking: rlrl,
         latencyOffsetMs: 130,
+        analysisMode: true,
       );
       expect(withOffset.timing!.overallDeviationMs, closeTo(0, 0.5));
       expect(withOffset.latencyOffsetAppliedMs, 130);
@@ -176,6 +179,7 @@ void main() {
         beatLog: beatLogAt(grid),
         sticking: rlrl,
         latencyOffsetMs: 100,
+        analysisMode: true,
       );
       expect(a.events.length, 25);
 
@@ -210,6 +214,75 @@ void main() {
           reason: 'below the gate no event gets a hand');
       expect(a.events.first.notePosition, 0,
           reason: 'assignment itself is still recorded');
+    });
+
+    test('learn mode never reports hand values, even on a clean run (P3)',
+        () {
+      final grid = [for (var i = 0; i < 8; i++) i * 500.0];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(grid),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: false,
+      );
+      expect(a.alignment!.handValuesAllowed, isTrue,
+          reason: 'the gate itself stays computed for the report');
+      expect(a.timing, isNull, reason: 'learn mode: no hand values');
+      expect(a.dynamics, isNull);
+      expect(a.events.every((e) => e.hand == null), isTrue,
+          reason: 'logged events carry no hands in learn mode');
+      expect(a.unassigned, isNotNull);
+    });
+
+    test('analysis mode reports hand values above the gate (P3)', () {
+      final grid = [for (var i = 0; i < 8; i++) i * 500.0];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(grid),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.timing, isNotNull);
+      expect(a.events.first.hand, 'R');
+    });
+
+    test('high timing jitter blocks hand values in analysis mode (P3)', () {
+      // All 20 notes played, none missing — but wildly uneven: alternating
+      // ±80 ms around the grid (std dev ≈ 80 ms, far above the 50 ms gate).
+      final grid = [for (var i = 0; i < 20; i++) i * 500.0];
+      final onsets = [
+        for (var i = 0; i < 20; i++) grid[i] + (i.isEven ? 80 : -80),
+      ];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.hitCount, 20, reason: 'nothing was missed');
+      expect(a.alignment!.jitterLimitExceeded, isTrue);
+      expect(a.timing, isNull,
+          reason: 'sloppy-but-complete must not get hand values');
+      expect(a.unassigned, isNotNull);
+    });
+
+    test('moderate jitter keeps the analysis gate open', () {
+      final grid = [for (var i = 0; i < 20; i++) i * 500.0];
+      final onsets = [
+        for (var i = 0; i < 20; i++) grid[i] + (i.isEven ? 15 : -15),
+      ];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.jitterLimitExceeded, isFalse);
+      expect(a.timing, isNotNull);
     });
 
     test('no anchor or no hits yields counts only', () {

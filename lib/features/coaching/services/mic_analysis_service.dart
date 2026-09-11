@@ -32,6 +32,10 @@ class MicAnalysisService {
 
   static const int _sampleRate = RecordingSetup.sampleRate;
 
+  /// P3 jitter gate: above this timing std dev the analysis mode withholds
+  /// hand values and announces it (Auftraggeber-Entscheidung 11.09.).
+  static const double jitterGateMs = 50;
+
   /// Detected onsets on the wall clock (epoch ms), each mapped through its
   /// own chunk neighborhood — exposed for the latency calibration (§1.3).
   List<double> get absoluteOnsetMs => [
@@ -83,6 +87,7 @@ class MicAnalysisService {
     required List<BeatRecord> beatLog,
     required List<StrokeBeat> sticking,
     double latencyOffsetMs = 0,
+    bool analysisMode = false,
   }) {
     // Rebase each hit through its chunk-local wall-clock mapping so pipeline
     // drift within the recording cannot skew late onsets (§1.3).
@@ -104,6 +109,7 @@ class MicAnalysisService {
       beatLog: beatLog,
       sticking: sticking,
       latencyOffsetMs: latencyOffsetMs,
+      analysisMode: analysisMode,
       recordingSetup: setup?.describe(),
     );
   }
@@ -115,12 +121,17 @@ class MicAnalysisService {
   /// computed. [latencyOffsetMs] (§1.3 calibration) is subtracted from onset
   /// times before matching; the remaining systematic offset stays visible in
   /// the unassigned median.
+  /// [analysisMode] (Brief Phase 3): hand values are exclusive to the
+  /// analysis mode — learn mode (default) reports only assignment-free
+  /// measures, however clean the run. The gate itself stays computed so
+  /// reports can show how close a run was.
   static SessionAnalysis analyzeHits({
     required List<OnsetHit> hits,
     required DateTime? anchor,
     required List<BeatRecord> beatLog,
     required List<StrokeBeat> sticking,
     double latencyOffsetMs = 0,
+    bool analysisMode = false,
     Map<String, Object>? recordingSetup,
   }) {
     if (hits.isEmpty || anchor == null || beatLog.isEmpty || sticking.isEmpty) {
@@ -158,6 +169,15 @@ class MicAnalysisService {
         : aligned.notes.sublist(firstHit, lastHit + 1);
 
     final hitCount = assessed.where((n) => n.hit).length;
+    // Jitter gate (P3): std dev of the assigned notes' deviations. A run can
+    // be complete yet so uneven that per-hand values would be noise.
+    final assessedDevs = [
+      for (final n in assessed)
+        if (n.hit) n.deviationMs!,
+    ];
+    final jitterMs = _stdDev(assessedDevs);
+    final jitterExceeded =
+        assessedDevs.length >= 4 && jitterMs > jitterGateMs;
     final summary = AlignmentSummary(
       expectedCount: assessed.length,
       hitCount: hitCount,
@@ -165,7 +185,9 @@ class MicAnalysisService {
       extraCount: aligned.extraCount,
       handValuesAllowed: assessed.isNotEmpty &&
           hitCount / assessed.length >= 0.9 &&
-          aligned.extraCount / assessed.length < 0.05,
+          aligned.extraCount / assessed.length < 0.05 &&
+          !jitterExceeded,
+      jitterLimitExceeded: jitterExceeded,
     );
 
     final unassigned = computeUnassignedMetrics(
@@ -191,7 +213,8 @@ class MicAnalysisService {
       ));
     }
 
-    final gateOpen = summary.handValuesAllowed && matched.length >= 4;
+    final gateOpen =
+        analysisMode && summary.handValuesAllowed && matched.length >= 4;
 
     // Raw event list for the Phase-2 session log: one entry per onset, time
     // WITHOUT the latency correction (raw data stays raw; the applied offset
@@ -248,7 +271,7 @@ class MicAnalysisService {
       overallDeviationMs: avgAll,
       rightHandDeviationMs: right.isEmpty ? 0 : _mean(right),
       leftHandDeviationMs: left.isEmpty ? 0 : _mean(left),
-      jitterMs: _stdDev(all, avgAll),
+      jitterMs: _stdDevWithMean(all, avgAll),
     );
   }
 
@@ -266,7 +289,13 @@ class MicAnalysisService {
 
   static double _mean(List<double> v) => v.reduce((a, b) => a + b) / v.length;
 
-  static double _stdDev(List<double> v, double mean) {
+  static double _stdDev(List<double> v) {
+    if (v.length < 2) return 0;
+    final mean = v.reduce((a, b) => a + b) / v.length;
+    return _stdDevWithMean(v, mean);
+  }
+
+  static double _stdDevWithMean(List<double> v, double mean) {
     final variance =
         v.map((x) => (x - mean) * (x - mean)).reduce((a, b) => a + b) /
             v.length;
