@@ -61,10 +61,11 @@ class MicAnalysisService {
 
     setup ??= RecordingSetup.choose(
       unprocessedSupported: await AudioCapabilities.isUnprocessedSupported(),
-      // Pin the built-in mic: with a headset plugged in Android would
-      // otherwise record through the inline mic, which barely hears the pad
-      // but gets the click bleeding from the earpieces (13.09.).
-      builtinMicId: await AudioCapabilities.builtinMicId(),
+      // NO builtinMicId pin: pinning TYPE_BUILTIN_MIC on the S23 collapsed
+      // the recorded stroke levels from ~0.8 to ≤0.14 (13.09., 17:0x
+      // sessions) — multiple built-in mics, and an explicit device breaks
+      // the source tuning. Default routing records the pad fine; the
+      // headset-inline-mic case stays a documented open issue instead.
     );
     final stream = await _recorder.startStream(setup!.config);
 
