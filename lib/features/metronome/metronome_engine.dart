@@ -139,6 +139,12 @@ class MetronomeEngine {
     // back then bailed on !_soloudReady. Catch up now.
     if (_isPlaying && _loopHandle == null) {
       unawaited(_startLoop());
+    } else if (_isPlaying &&
+        _soundType == SoundType.snare &&
+        _snarePcm.isNotEmpty) {
+      // A snare loop started before the PCM finished decoding plays the
+      // synthetic fallback — swap in the real sound now.
+      _scheduleLoopRebuild();
     }
   }
 
@@ -167,16 +173,22 @@ class MetronomeEngine {
     if (_disposed || !_soloudReady) return;
     final generation = ++_loopGeneration;
     await _stopLoop();
-    final synthetic = _soundType != SoundType.snare;
+    // Snare uses decoded PCM; if that decode failed or has not finished yet,
+    // fall back to the synthetic click — an audible loop always beats a
+    // silent one (a silent fallback here cost two days of "Übung startet
+    // nicht" reports).
+    final synthetic = _soundType != SoundType.snare || _snarePcm.isEmpty;
+    final fallbackSound =
+        _soundType == SoundType.snare ? SoundType.click : _soundType;
     final wav = buildLoopWav(
       bpm: _bpm,
       factor: _factor,
       tickVolumes: _loopVolumes(),
       accentSamples: synthetic
-          ? synthSamples(_soundType, accent: true)
+          ? synthSamples(fallbackSound, accent: true)
           : _snarePcm,
       normalSamples: synthetic
-          ? synthSamples(_soundType, accent: false)
+          ? synthSamples(fallbackSound, accent: false)
           : _snarePcm,
     );
     final source =
@@ -225,15 +237,27 @@ class MetronomeEngine {
 
   Timer? _outputWatchdog;
   bool _outputRescueTried = false;
+  double _lastPolledPosMs = -1;
+  int _stallPolls = 0;
 
-  /// SoLoud can lose its output device silently (observed after the latency
-  /// calibration's record start/stop triggered a device switch): play() then
-  /// hands out a handle whose position never advances — no sound, cursor
-  /// stuck on note 1. If the loop has not moved shortly after starting,
-  /// switch back to the default device and rebuild once.
+  /// SoLoud can lose its output device silently — seen after the latency
+  /// calibration's record start/stop triggered a device switch, and after
+  /// Android reclaimed the stream while the app sat in the background:
+  /// play() then hands out a handle whose position FREEZES (not necessarily
+  /// at zero) — no sound, cursor stuck. So the check is movement between two
+  /// readings, not position > 0. No movement → switch to the default device
+  /// and rebuild once.
   void _scheduleOutputWatchdog(int generation) {
     _outputWatchdog?.cancel();
-    _outputWatchdog = Timer(const Duration(milliseconds: 450), () {
+    double posAtArm = -1;
+    final handleAtArm = _loopHandle;
+    if (handleAtArm != null && _soloudReady) {
+      try {
+        posAtArm =
+            SoLoud.instance.getPosition(handleAtArm).inMicroseconds / 1000.0;
+      } catch (_) {}
+    }
+    _outputWatchdog = Timer(const Duration(milliseconds: 600), () {
       if (_disposed || !_isPlaying || generation != _loopGeneration) return;
       final handle = _loopHandle;
       if (handle == null || !_soloudReady) return;
@@ -243,7 +267,10 @@ class MetronomeEngine {
       } catch (_) {
         return;
       }
-      if (posMs > 0) {
+      // 600 ms of healthy playback move the position by ~600 ms (loop wrap
+      // landing on the exact same value is practically impossible).
+      final moved = posAtArm < 0 || (posMs - posAtArm).abs() > 1.0;
+      if (moved) {
         _outputRescueTried = false;
         return;
       }
@@ -274,6 +301,29 @@ class MetronomeEngine {
       posMs = SoLoud.instance.getPosition(handle).inMicroseconds / 1000.0;
     } catch (_) {
       return;
+    }
+    // Mid-session stall detector: a stream Android reclaimed (app went to
+    // the background) freezes the position at an arbitrary value while the
+    // poller keeps running. One second without movement → rescue.
+    if (posMs == _lastPolledPosMs) {
+      _stallPolls++;
+      if (_stallPolls == 100 && !_outputRescueTried) {
+        _outputRescueTried = true;
+        assert(() {
+          // ignore: avoid_print
+          print('click loop rescue: position frozen mid-session');
+          return true;
+        }());
+        try {
+          SoLoud.instance.changeDevice();
+        } catch (_) {}
+        unawaited(_startLoop());
+        return;
+      }
+    } else {
+      _lastPolledPosMs = posMs;
+      _stallPolls = 0;
+      _outputRescueTried = false;
     }
     final ticks = _loopVolumesActive.length;
     final t = tickAtPosition(
