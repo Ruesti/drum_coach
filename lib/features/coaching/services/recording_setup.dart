@@ -91,23 +91,29 @@ class RecordingSetup {
 
   final RecordConfig config;
   final bool unprocessedSupported;
+  final bool headphonesPlugged;
 
   const RecordingSetup._({
     required this.config,
     required this.unprocessedSupported,
+    this.headphonesPlugged = false,
   });
 
-  /// [builtinMicId] pins the recording to the phone's built-in microphone.
-  /// Without it Android reroutes the input to a plugged USB/wired headset's
-  /// inline mic — which hears the pad only faintly but the click bleeding
-  /// straight out of the earpieces next to it, drowning every measurement
-  /// (found 13.09.: user's pause was invisible, all peaks ~0.14).
+  /// [headphonesPlugged] switches to the CAMCORDER source: with a headset
+  /// plugged in, the default sources record through its inline mic, which
+  /// hears the pad only faintly (A/B measurement 13.09.: stroke levels
+  /// 0.8 without vs 0.2-0.4 with headphones). CAMCORDER always uses the
+  /// phone's built-in mics — the established route for this. [builtinMicId]
+  /// (explicit device pin) exists but is NOT used in production: pinning
+  /// collapsed the levels on the S23 (see report, Nachtrag 13.09. (4)).
   static RecordingSetup choose({
     required bool unprocessedSupported,
+    bool headphonesPlugged = false,
     String? builtinMicId,
   }) {
     return RecordingSetup._(
       unprocessedSupported: unprocessedSupported,
+      headphonesPlugged: headphonesPlugged,
       config: RecordConfig(
         encoder: AudioEncoder.pcm16bits,
         sampleRate: sampleRate,
@@ -119,16 +125,21 @@ class RecordingSetup {
             ? null
             : InputDevice(id: builtinMicId, label: 'builtin-mic'),
         androidConfig: AndroidRecordConfig(
-          audioSource: unprocessedSupported
-              ? AndroidAudioSource.unprocessed
-              : AndroidAudioSource.voiceRecognition,
+          audioSource: headphonesPlugged
+              ? AndroidAudioSource.camcorder
+              : unprocessedSupported
+                  ? AndroidAudioSource.unprocessed
+                  : AndroidAudioSource.voiceRecognition,
         ),
       ),
     );
   }
 
-  String get audioSourceName =>
-      unprocessedSupported ? 'unprocessed' : 'voice_recognition';
+  String get audioSourceName => headphonesPlugged
+      ? 'camcorder'
+      : unprocessedSupported
+          ? 'unprocessed'
+          : 'voice_recognition';
 
   Map<String, Object> describe() => {
         'audioSource': audioSourceName,

@@ -59,13 +59,13 @@ class MicAnalysisService {
     _byteBuffer.clear();
     _clock = SampleClockMap(sampleRate: _sampleRate);
 
-    setup ??= RecordingSetup.choose(
+    // Re-chosen on every start: the headphone state can change between
+    // sessions, and with a headset plugged the CAMCORDER source keeps the
+    // recording on the built-in mics (A/B 13.09.; an explicit device pin is
+    // NOT used — it collapsed the levels on the S23).
+    setup = RecordingSetup.choose(
       unprocessedSupported: await AudioCapabilities.isUnprocessedSupported(),
-      // NO builtinMicId pin: pinning TYPE_BUILTIN_MIC on the S23 collapsed
-      // the recorded stroke levels from ~0.8 to ≤0.14 (13.09., 17:0x
-      // sessions) — multiple built-in mics, and an explicit device breaks
-      // the source tuning. Default routing records the pad fine; the
-      // headset-inline-mic case stays a documented open issue instead.
+      headphonesPlugged: (await AudioCapabilities.headphonesType()) != 'none',
     );
     final stream = await _recorder.startStream(setup!.config);
 

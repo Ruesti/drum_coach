@@ -59,6 +59,29 @@ void main() {
       expect(s.describe()['inputDevice'], 'builtin');
     });
 
+    test(
+        'with headphones plugged the CAMCORDER source records through the '
+        'built-in mics — A/B measurement 13.09.: the inline headset mic '
+        'collapsed stroke levels from 0.8 to 0.2-0.4', () {
+      final s = RecordingSetup.choose(
+          unprocessedSupported: false, headphonesPlugged: true);
+      expect(
+          s.config.androidConfig.audioSource, AndroidAudioSource.camcorder);
+      expect(s.audioSourceName, 'camcorder');
+      expect(s.describe()['audioSource'], 'camcorder');
+      // Effects stay explicitly off on this path too (§1.1).
+      expect(s.config.autoGain, isFalse);
+      expect(s.config.echoCancel, isFalse);
+      expect(s.config.noiseSuppress, isFalse);
+    });
+
+    test('without headphones the source choice stays unchanged', () {
+      final s = RecordingSetup.choose(
+          unprocessedSupported: false, headphonesPlugged: false);
+      expect(s.config.androidConfig.audioSource,
+          AndroidAudioSource.voiceRecognition);
+    });
+
     test('without a known built-in mic id the device stays default', () {
       final s = RecordingSetup.choose(unprocessedSupported: false);
       expect(s.config.device, isNull);
