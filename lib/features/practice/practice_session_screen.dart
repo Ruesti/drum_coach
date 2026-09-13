@@ -1054,7 +1054,12 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               ],
             ),
           ],
-          if (hasMicData && widget.analysis?.unassigned != null) ...[
+          // Render the card also when the recording was too weak to judge —
+          // exactly then the user needs its announcement (13.09.: card
+          // vanished entirely and the session looked unanalyzed).
+          if (hasMicData &&
+              (widget.analysis?.unassigned != null ||
+                  widget.analysis?.signalTooWeak == true)) ...[
             const SizedBox(height: 16),
             _AnalysisSummary(
                 analysis: widget.analysis!,
@@ -1106,7 +1111,9 @@ class _AnalysisSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = analysis.timing;
     final d = analysis.dynamics;
-    final u = analysis.unassigned!;
+    // Null when the recording was too weak to judge (signalTooWeak): the
+    // card must still render — it carries the "too quiet" announcement.
+    final u = analysis.unassigned;
     final al = analysis.alignment;
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1123,25 +1130,27 @@ class _AnalysisSummary extends StatelessWidget {
                   fontSize: 13,
                   color: AppColors.textSecondary)),
           const SizedBox(height: 10),
-          // Assignment-free measures (§1.4) — always shown.
-          _Row(
-            label: 'Timing vs click',
-            value: '${_signed(u.timingMedianMs)} median · '
-                '±${u.timingSpreadMs.toStringAsFixed(1)} ms',
-          ),
-          _Row(
-            label: 'Evenness',
-            value: '±${u.intervalSpreadMs.toStringAsFixed(1)} ms',
-          ),
-          if (u.dynamicsSpread != null)
+          // Assignment-free measures (§1.4) — shown whenever computed.
+          if (u != null) ...[
             _Row(
-              label: 'Dynamics spread',
-              value: '${(u.dynamicsSpread! * 100).round()}%',
+              label: 'Timing vs click',
+              value: '${_signed(u.timingMedianMs)} median · '
+                  '±${u.timingSpreadMs.toStringAsFixed(1)} ms',
             ),
-          _Row(
-            label: 'Strokes',
-            value: '${u.playedCount} / ${u.expectedCount} expected',
-          ),
+            _Row(
+              label: 'Evenness',
+              value: '±${u.intervalSpreadMs.toStringAsFixed(1)} ms',
+            ),
+            if (u.dynamicsSpread != null)
+              _Row(
+                label: 'Dynamics spread',
+                value: '${(u.dynamicsSpread! * 100).round()}%',
+              ),
+            _Row(
+              label: 'Strokes',
+              value: '${u.playedCount} / ${u.expectedCount} expected',
+            ),
+          ],
           if (al != null)
             _Row(
               label: 'Matched / missed / extra',
