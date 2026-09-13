@@ -244,6 +244,36 @@ Stummschalt-Versuchen abgebrochen — Blindtap-Risiko überstieg den
 Nutzen (dabei versehentlich die Standard-SMS-App des Testgeräts
 verstellt; Rückstellung an den Auftraggeber übergeben, s. Protokoll).
 
+## Nachtrag 13.09. (4) — Messgrundlage der Einbruch-Erkennung: Irrweg und Rückbau
+
+Drei Nutzertests der Einbruch-Erkennung schlugen fehl; die Ursachen lagen
+jeweils in der **Aufnahmekette**, nicht im Detektor (der Replay der
+16:38-Session durch die echte Pipeline lieferte korrekt einen Lapse):
+
+1. **Headset-Inline-Mikrofon** (Session 16:38, `inputDevice=default`):
+   Mit gesteckten USB-Kopfhörern nahm Android über deren Inline-Mikro
+   auf — Pad kaum hörbar, Klick-Bleed aus den Hörern füllte die
+   Spielpause (Pegel ≤0,14; Abweichungen konstant +40…90 ms = der in P1
+   dokumentierte Kopfhörer-Versatz).
+2. **Fehlversuch Mikrofon-Pin** (`437ea20`, 17:0x): Das explizite Pinnen
+   von TYPE_BUILTIN_MIC **kollabierte die Schlag-Pegel von ~0,8 auf
+   ≤0,14** (mehrere eingebaute Mikros; preferredDevice umgeht das
+   Source-Tuning) — mit Handy direkt am Pad. **Rückgebaut (`9057352`):
+   Aufnahme wieder über Default-Routing** (Pegel-Referenz der
+   14:36/15:25-Sessions: ~0,8).
+3. **Behalten:** Schlag-Pegel-Filter (< 0,18 zählt nicht als Schlag;
+   Klick-Bleed-Schutz) + ehrliche Ansage „Aufnahme zu leise für eine
+   Analyse" statt Urteilen aus Rauschen (`f10af69`), inkl. UI-Fix, dass
+   die Karte dabei sichtbar bleibt (`51acfc4`).
+
+**Offen (bewusst vertagt statt weiter iteriert):** Einbruch-Erkennung mit
+Kopfhörern setzt voraus, dass NICHT das Inline-Mikro aufnimmt; der
+Pin-Ansatz ist verbrannt. Nächster Schritt ist eine kontrollierte
+Mess-Session (eine Aufnahme, JSONL-Export, Pegel-/Routing-Analyse) und
+erst DANN eine Umsetzungsentscheidung — kein Trial-and-Error mehr über
+installierte Builds. Ohne Kopfhörer (Übe-Standard des Auftraggebers,
+Sessions 14:36/15:25) ist die Messkette funktionsfähig.
+
 ## Nachtrag 13.09. (2) — Wurzel der „Übung startet nicht"-Serie (behoben, `e78fd82`)
 
 Nach dem Kalibrier-Fix trat das Symptom erneut auf (App war im
