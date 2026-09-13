@@ -18,7 +18,13 @@ Future<void> main() async {
     IsarService.init(),
     SettingsService.init(),
   ]);
-  await NotificationService.init();
+  // Reminders are a convenience — a plugin failure here must never keep the
+  // app stuck on the splash screen (seen in release: R8 + notifications).
+  try {
+    await NotificationService.init().timeout(const Duration(seconds: 5));
+  } catch (e) {
+    debugPrint('NotificationService.init skipped: $e');
+  }
   runApp(
     const ProviderScope(
       child: DrumCoachApp(),
