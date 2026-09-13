@@ -215,11 +215,50 @@ class MetronomeEngine {
     _beatPoller?.cancel();
     _beatPoller =
         Timer.periodic(const Duration(milliseconds: 10), (_) => _pollBeat());
+    _scheduleOutputWatchdog(generation);
     assert(() {
       // ignore: avoid_print
       print('click loop start #$generation');
       return true;
     }());
+  }
+
+  Timer? _outputWatchdog;
+  bool _outputRescueTried = false;
+
+  /// SoLoud can lose its output device silently (observed after the latency
+  /// calibration's record start/stop triggered a device switch): play() then
+  /// hands out a handle whose position never advances — no sound, cursor
+  /// stuck on note 1. If the loop has not moved shortly after starting,
+  /// switch back to the default device and rebuild once.
+  void _scheduleOutputWatchdog(int generation) {
+    _outputWatchdog?.cancel();
+    _outputWatchdog = Timer(const Duration(milliseconds: 450), () {
+      if (_disposed || !_isPlaying || generation != _loopGeneration) return;
+      final handle = _loopHandle;
+      if (handle == null || !_soloudReady) return;
+      double posMs;
+      try {
+        posMs = SoLoud.instance.getPosition(handle).inMicroseconds / 1000.0;
+      } catch (_) {
+        return;
+      }
+      if (posMs > 0) {
+        _outputRescueTried = false;
+        return;
+      }
+      if (_outputRescueTried) return; // one rescue per stall, no loops
+      _outputRescueTried = true;
+      assert(() {
+        // ignore: avoid_print
+        print('click loop rescue: output stalled, changing device');
+        return true;
+      }());
+      try {
+        SoLoud.instance.changeDevice();
+      } catch (_) {}
+      unawaited(_startLoop());
+    });
   }
 
   /// Derives beat events from the loop's playback position — display and
@@ -312,6 +351,7 @@ class MetronomeEngine {
   void start() {
     if (_isPlaying) return;
     _isPlaying = true;
+    _outputRescueTried = false;
     _lastGlobalTick = -1;
     unawaited(_startLoop());
   }
@@ -319,6 +359,8 @@ class MetronomeEngine {
   void stop() {
     _isPlaying = false;
     _loopRebuildDebounce?.cancel();
+    _outputWatchdog?.cancel();
+    _outputRescueTried = false;
     _beatPoller?.cancel();
     _beatPoller = null;
     unawaited(_stopLoop());
@@ -362,6 +404,7 @@ class MetronomeEngine {
     _isPlaying = false;
     _loopRebuildDebounce?.cancel();
     _routeChangeDebounce?.cancel();
+    _outputWatchdog?.cancel();
     _beatPoller?.cancel();
     if (!_beatCtrl.isClosed) _beatCtrl.close();
     unawaited(_stopLoop());

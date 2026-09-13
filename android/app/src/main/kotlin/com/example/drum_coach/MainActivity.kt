@@ -22,13 +22,21 @@ class MainActivity : FlutterActivity() {
 
         // Push headphone plug/unplug events to Flutter: SoLoud's output
         // stream does not survive an Android routing change on its own.
+        // Only OUTPUT (sink) changes matter — recorder start/stop (mic
+        // analysis, latency calibration) fires input-side callbacks, and
+        // reacting to those with a device switch killed the click output
+        // ("Übung läuft nicht an" after calibrating).
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val callback = object : AudioDeviceCallback() {
             override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>) {
-                channel.invokeMethod("audioDevicesChanged", null)
+                if (added.any { it.isSink }) {
+                    channel.invokeMethod("audioDevicesChanged", null)
+                }
             }
             override fun onAudioDevicesRemoved(removed: Array<out AudioDeviceInfo>) {
-                channel.invokeMethod("audioDevicesChanged", null)
+                if (removed.any { it.isSink }) {
+                    channel.invokeMethod("audioDevicesChanged", null)
+                }
             }
         }
         deviceCallback = callback
