@@ -206,6 +206,30 @@ Sessions, Lautsprecher-Klicks als Onsets):**
 
 | Prüfpunkt | Ergebnis |
 |---|---|
-| Hörtest ~2 min: Klick gleichmäßig (erster Test: „Abstände absolut gleich", aber gelegentliches Rest-Stottern — Eingrenzung läuft: Release-Build-Test) | ☐ |
+| Hörtest/Aussetzer im Release mit Mikro | ✓ 13.09.: **1 „Verschlucken" in 8 min** (Debug-Referenz ~7 in 5 min) — Debug-Overhead war der Haupttreiber; Rest-Aussetzer ~1/8 min dokumentiert |
+| Jitter-Ansage im echten Spiel | ✓ 13.09.: 8-min-Session absichtlich unregelmäßig (1603/1915 Schläge, 77 % zugeordnet) → „Zu unruhig für eine Hand-Analyse — das sitzt noch nicht." erschien |
+| Neu-Kalibrierung nach bufferSize-Revert | ✓ 13.09.: 71 bzw. 73 ms gespeichert (Vor-bufferSize-Niveau ~70 ms) |
 | Kopfhörer rein/raus während des Klicks: Ton wechselt und bleibt | ☐ |
-| Neu-Kalibrierung (der gespeicherte 136-ms-Wert entstand auf dem verlangsamten System; Soll wieder ~70 ms) | ☐ |
+
+**Hinweis:** Die Ansage kommt konzeptgemäß nach Session-Ende im
+Feedback-Sheet, nicht live während des Spielens (Live-Hinweis wäre eine
+Erweiterung → Entscheidung Auftraggeber). Nebenbefund: Die
+Spread-Anzeigen (±2184/±3184 ms) sind bei stark lückigem Spiel
+ausreißergetrieben — kosmetisch, Glättung optional.
+
+## Nachtrag 13.09. (2) — Wurzel der „Übung startet nicht"-Serie (behoben, `e78fd82`)
+
+Nach dem Kalibrier-Fix trat das Symptom erneut auf (App war im
+Hintergrund gewesen bzw. USB getrennt). Wurzel: `loadMem`/`play` in
+`_startLoop` hatten kein Zeitlimit, und sämtliche Wächter entstehen erst
+NACH `play()` — eine tote Audio-Engine (Stream vom System einkassiert)
+ließ den Startpfad ewig hängen, bevor irgendeine Selbstheilung existierte;
+`changeDevice()` lief über dieselbe tote Engine. Fix: Zeitlimits auf alle
+Audio-Aufrufe im Startpfad; **Start-Supervisor** (reiner Dart-Timer, 3 s)
+außerhalb der Audio-Kette; Eskalation zum **harten Engine-Neustart**
+(`deinit()`/`init()` + Neuladen) — max. 2 Versuche pro Start. Zusätzlich
+(`8b90de0`): Stillstands-Detektor prüft Positions-BEWEGUNG (eingefrorene
+Position ≠ 0 bestand den alten „> 0"-Check), und ein leeres Snare-PCM
+fällt hörbar auf den synthetischen Click zurück statt auf Stille.
+**Nutzerbestätigung 13.09.: 8-min-Session lief durch** (1 Verschlucken,
+s. Tabelle).
