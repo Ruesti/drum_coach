@@ -274,6 +274,22 @@ erst DANN eine Umsetzungsentscheidung — kein Trial-and-Error mehr über
 installierte Builds. Ohne Kopfhörer (Übe-Standard des Auftraggebers,
 Sessions 14:36/15:25) ist die Messkette funktionsfähig.
 
+**Auflösung am selben Abend (messdatenbasiert, `17d2563`):**
+A/B-Mess-Sessions des Auftraggebers (19:38 mit / 19:41 ohne Kopfhörer,
+JSONL-Export): ohne Kopfhörer Schlag-Pegel 0,80–0,84 (219/219 erfasst),
+mit Kopfhörern 0,14–0,49 (Inline-Mikro, nur 70 % über der
+Schlag-Schwelle). Fix nach Freigabe: **CAMCORDER-Aufnahmequelle bei
+gesteckten Kopfhörern** (nimmt immer über die eingebauten Mikros auf;
+Quelle wird pro Aufnahme-Start neu gewählt, Effekte bleiben aus).
+**Verifikation Mess-Session 20:20** (Kopfhörer, `audioSource=camcorder`):
+Pegel 0,22–0,47 konsistent, **96 % über der Schlag-Schwelle, 270 Schläge
+zu 274 Klicks** — Klick-Bleed (≤0,14) sauber unterhalb des Filters. Die
+Messkette ist damit erstmals auch mit Kopfhörern tragfähig; die
+Einbruch-Verifikation durch den Auftraggeber kann auf dieser Grundlage
+stattfinden. (Hinweis: Camcorder-Pegel liegen systematisch unter dem
+Ohne-Kopfhörer-Niveau ~0,8 — sollte später Ghost-Note-Erkennung wichtig
+werden, ist eine adaptive statt fester Schlag-Schwelle die Option.)
+
 ## Nachtrag 13.09. (2) — Wurzel der „Übung startet nicht"-Serie (behoben, `e78fd82`)
 
 Nach dem Kalibrier-Fix trat das Symptom erneut auf (App war im
