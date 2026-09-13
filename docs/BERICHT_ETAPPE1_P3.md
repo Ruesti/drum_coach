@@ -121,6 +121,33 @@ laufenden Loop neu.
   Kandidaten: Aufnahme-DSP in eigenen Isolate verlagern und/oder
   Release-Build-Verhalten prüfen (Debug-Overhead als CPU-Spitzen-Treiber).
 
+## Nachtrag 12./13.09. — Release-Build (Auftrag: Aussetzer-Test)
+
+Anlass: Aussetzer treten mit laufender Mikrofon-Analyse ~7×/5 min auf
+(ohne ~1×) — Verdacht Debug-Overhead. Der Brief nannte ein bekanntes
+Release-Problem mit Isar; beim ersten `flutter build apk --release`
+traten nacheinander **zwei** Blocker auf, beide behoben:
+
+1. **isar_flutter_libs scheiterte an `verifyReleaseResources`**
+   (`android:attr/lStar not found` — das Plugin baut mit eigenem, altem
+   compileSdk 30). Fix (`952490b`): Root-Gradle hebt Plugin-compileSdks
+   < 31 aufs App-compileSdk.
+2. **App hing im Release dauerhaft am Start-Screen** (vom Auftraggeber
+   gemeldet). Logcat: `Missing type parameter.` aus
+   `flutter_local_notifications` — R8 entfernt Gson-TypeToken-
+   Signaturen; die Exception in `NotificationService.init()` verhinderte
+   `runApp`. Fix (`9f5c676`): ProGuard-Regeln (Ursache) + `main()`
+   kapselt die Notification-Init in try/catch mit 5-s-Timeout, damit
+   Reminder-Probleme den App-Start nie wieder blockieren können.
+   (Kein Host-Test möglich — reines R8/Release-Verhalten; Verifikation
+   am Gerät, s. u.)
+
+**Verifikation 13.09. am Gerät:** Kaltstart des Release-Builds → Logcat
+ohne Exception, Dashboard vollständig gerendert, Nutzerdaten intakt
+(Release ist mit Debug-Keys signiert, `install -r` erhält die Daten).
+**Der eigentliche Aussetzer-Vergleichstest (5 min Double Stroke mit
+Mikro, Referenz Debug ~7×) steht beim Auftraggeber aus.** ☐
+
 ## Abnahme Phase 3 (Gerätetest)
 
 **Fern-Verifikation 10.09. (Analysemodus-Pfad, per adb gesteuerte
