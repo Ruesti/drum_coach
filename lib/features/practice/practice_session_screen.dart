@@ -1171,18 +1171,24 @@ class _AnalysisSummary extends StatelessWidget {
           ] else ...[
             const SizedBox(height: 6),
             Text(
-              analysisMode
-                  // Brief Phase 3 wording, split by cause: a located lapse
-                  // (13.09.) beats the global reasons — the player should
-                  // hear WHERE they fell off, not just that they did.
-                  ? (_lapseText(analysis.alignment) ??
-                      (analysis.alignment?.jitterLimitExceeded == true
-                          ? 'Zu unruhig für eine Hand-Analyse — das sitzt '
-                              'noch nicht.'
-                          : 'Zu viele Aussetzer für eine Hand-Analyse — das '
-                              'sitzt noch nicht.'))
-                  : 'Lernmodus — Timing und Gleichmäßigkeit ohne '
-                      'Hand-Analyse. Fehler sind hier normal.',
+              // A too-weak recording gets no verdict in either mode — the
+              // mic mostly heard click bleed, not strokes (13.09.).
+              analysis.signalTooWeak
+                  ? 'Aufnahme zu leise für eine Analyse — leg das Handy '
+                      'näher ans Pad.'
+                  : analysisMode
+                      // Brief Phase 3 wording, split by cause: a located
+                      // lapse (13.09.) beats the global reasons — the player
+                      // should hear WHERE they fell off, not just that they
+                      // did.
+                      ? (_lapseText(analysis.alignment) ??
+                          (analysis.alignment?.jitterLimitExceeded == true
+                              ? 'Zu unruhig für eine Hand-Analyse — das '
+                                  'sitzt noch nicht.'
+                              : 'Zu viele Aussetzer für eine Hand-Analyse — '
+                                  'das sitzt noch nicht.'))
+                      : 'Lernmodus — Timing und Gleichmäßigkeit ohne '
+                          'Hand-Analyse. Fehler sind hier normal.',
               style:
                   const TextStyle(color: AppColors.textFaint, fontSize: 12),
             ),

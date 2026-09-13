@@ -327,6 +327,56 @@ void main() {
       expect(a.timing, isNotNull);
     });
 
+    test(
+        'click bleed (quiet, on-grid onsets) is ignored — a real pause stays '
+        'a hole even while the headphone click leaks into the mic (13.09.)',
+        () {
+      // 60 s of 8ths at 120 BPM (250 ms grid, 240 notes). The player hits
+      // loud (0.8) but pauses between 20 s and 35 s; during the WHOLE
+      // session the click bleeds from the headphones at level 0.08.
+      final grid = [for (var i = 0; i < 240; i++) i * 250.0];
+      final onsets = <double>[];
+      final amps = <double>[];
+      for (var i = 0; i < 240; i++) {
+        final t = grid[i];
+        onsets.add(t + 55); // bleed: constant headphone latency
+        amps.add(0.08);
+        if (t < 20000 || t >= 35000) {
+          onsets.add(t + 5); // the real stroke
+          amps.add(0.8);
+        }
+      }
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets, amps: amps),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.signalTooWeak, isFalse);
+      expect(a.alignment!.lapses.length, 1,
+          reason: 'the pause must survive the click bleed');
+      final l = a.alignment!.lapses.single;
+      expect(l.startMs, closeTo(20000, 1500));
+      expect(l.endMs, closeTo(35000, 1500));
+    });
+
+    test('an all-quiet recording is declared too weak, not judged', () {
+      final grid = [for (var i = 0; i < 60; i++) i * 250.0];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt([for (final g in grid) g + 55],
+            amps: List.filled(60, 0.09)),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.signalTooWeak, isTrue);
+      expect(a.timing, isNull);
+      expect(a.alignment, isNull,
+          reason: 'no verdicts from a signal that carries no strokes');
+    });
+
     test('no anchor or no hits yields counts only', () {
       final a = MicAnalysisService.analyzeHits(
         hits: [],

@@ -96,6 +96,12 @@ class SessionAnalysis {
   /// written into the session header.
   final Map<String, Object>? recordingSetup;
 
+  /// True when the recording carried (almost) no stroke-level onsets — only
+  /// quiet click bleed or noise. No verdicts are computed then; the UI asks
+  /// to move the phone closer instead of judging a signal that holds no
+  /// strokes (13.09.: headphone click at level ≤0.14 was all the mic heard).
+  final bool signalTooWeak;
+
   const SessionAnalysis({
     this.timing,
     this.dynamics,
@@ -105,6 +111,7 @@ class SessionAnalysis {
     this.deviationsMs = const [],
     this.events = const [],
     this.latencyOffsetAppliedMs = 0,
+    this.signalTooWeak = false,
     required this.detectedHits,
     required this.expectedHits,
     this.recordingSetup,

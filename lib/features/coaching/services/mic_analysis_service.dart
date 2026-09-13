@@ -37,6 +37,10 @@ class MicAnalysisService {
   /// hand values and announces it (Auftraggeber-Entscheidung 11.09.).
   static const double jitterGateMs = 50;
 
+  /// Minimum peak level an onset needs to count as a stroke: headphone
+  /// click bleed measured ≤~0.14, real pad strokes ~0.8 (13.09. sessions).
+  static const double minStrokeLevel = 0.18;
+
   /// Detected onsets on the wall clock (epoch ms), each mapped through its
   /// own chunk neighborhood — exposed for the latency calibration (§1.3).
   List<double> get absoluteOnsetMs => [
@@ -149,13 +153,48 @@ class MicAnalysisService {
     }
 
     final anchorMs = anchor.microsecondsSinceEpoch / 1000.0;
+
+    // Stroke-level filter (13.09.): the click bleeding out of headphones
+    // registers as quiet on-grid onsets (level ≤~0.14) and fakes a perfect
+    // run — a real pause then never reaches the analysis. Onsets below the
+    // stroke threshold never count as strokes; if almost nothing remains,
+    // the recording is declared too weak instead of being judged.
+    final strokes = [
+      for (final h in hits)
+        if (h.amplitude >= minStrokeLevel) h,
+    ];
+    final dropped = [
+      for (final h in hits)
+        if (h.amplitude < minStrokeLevel) h,
+    ];
+    if (hits.length >= 8 && strokes.length < hits.length * 0.2) {
+      return SessionAnalysis(
+        detectedHits: strokes.length,
+        expectedHits: beatLog.length,
+        recordingSetup: recordingSetup,
+        signalTooWeak: true,
+        peakLevels: [for (final h in hits) h.amplitude],
+        // Raw events stay logged (Phase 2) — unassigned, no verdicts.
+        events: [
+          for (final h in hits)
+            OnsetEventData(
+              timeMs: anchorMs + h.timeMs,
+              peakLevel: h.amplitude,
+              notePosition: null,
+              hand: null,
+              deviationMs: null,
+            ),
+        ],
+      );
+    }
+
     final expectedMs = [
       for (final b in beatLog) b.timestamp.microsecondsSinceEpoch / 1000.0,
     ];
     final onsetMs = [
-      for (final h in hits) anchorMs + h.timeMs - latencyOffsetMs,
+      for (final h in strokes) anchorMs + h.timeMs - latencyOffsetMs,
     ];
-    final amplitudes = [for (final h in hits) h.amplitude];
+    final amplitudes = [for (final h in strokes) h.amplitude];
 
     final aligned = alignSequences(expectedMs: expectedMs, onsetMs: onsetMs);
 
@@ -259,6 +298,17 @@ class MicAnalysisService {
           deviationMs: noteByOnset[j]?.deviationMs,
         ),
     ];
+    // Below-threshold onsets (click bleed) stay in the raw log, unassigned.
+    for (final h in dropped) {
+      events.add(OnsetEventData(
+        timeMs: anchorMs + h.timeMs,
+        peakLevel: h.amplitude,
+        notePosition: null,
+        hand: null,
+        deviationMs: null,
+      ));
+    }
+    events.sort((a, b) => a.timeMs.compareTo(b.timeMs));
 
     return SessionAnalysis(
       timing: gateOpen ? _calcTiming(matched) : null,
@@ -269,7 +319,7 @@ class MicAnalysisService {
       deviationsMs: deviations,
       events: events,
       latencyOffsetAppliedMs: latencyOffsetMs,
-      detectedHits: hits.length,
+      detectedHits: strokes.length,
       expectedHits: beatLog.length,
       recordingSetup: recordingSetup,
     );
