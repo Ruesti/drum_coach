@@ -217,6 +217,33 @@ Erweiterung → Entscheidung Auftraggeber). Nebenbefund: Die
 Spread-Anzeigen (±2184/±3184 ms) sind bei stark lückigem Spiel
 ausreißergetrieben — kosmetisch, Glättung optional.
 
+## Nachtrag 13.09. (3) — Einbruch-Erkennung (Auftraggeber-Entscheidung, `ace89ca`)
+
+Einwand des Auftraggebers zur Jitter-Abnahme: *„Wenn ich 10 Minuten
+spiele und davon 1 Minute schlecht, bin ich noch bei 90 % — das geht
+nicht."* Alle bisherigen Schwellen (90 %-Trefferquote, 50-ms-Jitter)
+sind Session-Globalwerte und verwässern lokale Schwächephasen.
+
+**Umsetzung:** Gleitende Fenster (8 s, Schritt 2 s) über die bewerteten
+Noten; ein Fenster mit Trefferquote < 70 % ODER Streuung > 50 ms ist ein
+Einbruch; überlappende Fenster verschmelzen und werden auf die
+erste/letzte schlechte Note getrimmt. **Jeder Einbruch sperrt die
+Hand-Analyse**, die Ansage nennt die Stelle: *„Bei 6:10 für ~12 s
+rausgekommen — das sitzt noch nicht."* Kurzläufe unter einer
+Fensterlänge deckt weiter das globale Gate ab. Keine Schema-Änderung
+(das Log speichert Rohdaten; Einbrüche sind daraus reberechenbar).
+Parameter (8 s / 70 % / 50 ms) sind Startwerte → Feinjustierung nach
+Nutzertest.
+
+TDD: 6 Detektor- + 2 Integrationstests (u. a. 96,7-%-Lauf mit 10-s-Loch
+→ gesperrt mit korrekt lokalisiertem Einbruch), Gesamtsuite 253/253.
+**Geräteverifikation durch den Auftraggeber ausstehend** (Vorschlag:
+30 s spielen, ~15 s aussetzen, 30 s weiterspielen → Ansage mit
+Ortsangabe). Fern-Verifikation wurde nach zwei fehlgeschlagenen
+Stummschalt-Versuchen abgebrochen — Blindtap-Risiko überstieg den
+Nutzen (dabei versehentlich die Standard-SMS-App des Testgeräts
+verstellt; Rückstellung an den Auftraggeber übergeben, s. Protokoll).
+
 ## Nachtrag 13.09. (2) — Wurzel der „Übung startet nicht"-Serie (behoben, `e78fd82`)
 
 Nach dem Kalibrier-Fix trat das Symptom erneut auf (App war im
