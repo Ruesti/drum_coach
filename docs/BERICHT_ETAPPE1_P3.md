@@ -148,6 +148,31 @@ ohne Exception, Dashboard vollständig gerendert, Nutzerdaten intakt
 **Der eigentliche Aussetzer-Vergleichstest (5 min Double Stroke mit
 Mikro, Referenz Debug ~7×) steht beim Auftraggeber aus.** ☐
 
+## Nachtrag 13.09. — „Übung läuft nicht an" nach Kalibrierung (behoben, `eef96e6`)
+
+Vom Auftraggeber zweimal gemeldet (11.09. Debug, 13.09. Release), fern
+reproduziert: **Nach einer Latenz-Kalibrierung startete keine Übung mehr**
+— Play zeigte „läuft", aber kein Ton, Cursor blieb auf Note 1; erst ein
+App-Neustart half. Ursache: Das Starten/Stoppen der Aufnahme (Kalibrierung
+wie Mikrofon-Analyse) feuert Android-`AudioDeviceCallback`s, die keine
+Kopfhörer-Ereignisse sind; der Kopfhörer-Handler reagierte darauf mit
+`SoLoud.changeDevice()` — lief dabei kein Klick-Loop, blieb SoLoud ohne
+lebendes Ausgabegerät zurück (Belegkette: AAudio-Streams im Logcat nach
+Kalibrierung geschlossen, nie wieder geöffnet; `play()` liefert dann ein
+Handle, dessen `getPosition` bei 0 stehen bleibt).
+
+Fix auf zwei Ebenen: (1) `MainActivity` meldet nur noch Änderungen an
+**Ausgabe**-Geräten (`isSink`) nach Flutter; (2) ein Watchdog in der
+Engine prüft 450 ms nach jedem Loop-Start, ob die Wiedergabeposition
+fortschreitet — wenn nicht, einmalig `changeDevice()` + Loop-Neustart
+(heilt jeden stillen Ausgabe-Tod, auch künftige Routing-Fälle).
+
+**Verifikation am Gerät (Debug mit Traces, dann Release):** Kalibrierung
+→ direkt Übung → Klick läuft, Cursor wandert (zwei Screenshots), kein
+Route-Ereignis mehr während der Kalibrierzyklen, Watchdog musste nicht
+eingreifen. Kalibrierwert des Auftraggebers heute: 71 → 73 ms (plausibel,
+Vor-bufferSize-Niveau ~70 ms). ✓
+
 ## Abnahme Phase 3 (Gerätetest)
 
 **Fern-Verifikation 10.09. (Analysemodus-Pfad, per adb gesteuerte
