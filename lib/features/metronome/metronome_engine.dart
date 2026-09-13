@@ -191,8 +191,17 @@ class MetronomeEngine {
           ? synthSamples(fallbackSound, accent: false)
           : _snarePcm,
     );
-    final source =
-        await SoLoud.instance.loadMem('click_loop_$generation', wav);
+    // Timeout-guarded: on a dead audio engine loadMem never answers — this
+    // path must FAIL fast so the start supervisor can revive the engine,
+    // instead of hanging forever before any watchdog exists.
+    final AudioSource source;
+    try {
+      source = await SoLoud.instance
+          .loadMem('click_loop_$generation', wav)
+          .timeout(const Duration(seconds: 3));
+    } catch (_) {
+      return; // supervisor escalates
+    }
     // A newer rebuild or stop may have superseded this one while awaiting.
     if (_disposed || !_isPlaying || generation != _loopGeneration) {
       unawaited(SoLoud.instance.disposeSource(source));
@@ -223,7 +232,14 @@ class MetronomeEngine {
     _lastGlobalTick = _lastGlobalTick < 0
         ? -1
         : ((_lastGlobalTick + ticks) ~/ ticks) * ticks - 1;
-    _loopHandle = await SoLoud.instance.play(source, looping: true);
+    try {
+      _loopHandle = await SoLoud.instance
+          .play(source, looping: true)
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {
+      unawaited(SoLoud.instance.disposeSource(source));
+      return; // supervisor escalates
+    }
     _beatPoller?.cancel();
     _beatPoller =
         Timer.periodic(const Duration(milliseconds: 10), (_) => _pollBeat());
@@ -274,7 +290,11 @@ class MetronomeEngine {
         _outputRescueTried = false;
         return;
       }
-      if (_outputRescueTried) return; // one rescue per stall, no loops
+      if (_outputRescueTried) {
+        // The soft rescue did not stick — the engine itself is dead.
+        unawaited(_reviveAudioEngine());
+        return;
+      }
       _outputRescueTried = true;
       assert(() {
         // ignore: avoid_print
@@ -307,17 +327,23 @@ class MetronomeEngine {
     // poller keeps running. One second without movement → rescue.
     if (posMs == _lastPolledPosMs) {
       _stallPolls++;
-      if (_stallPolls == 100 && !_outputRescueTried) {
-        _outputRescueTried = true;
-        assert(() {
-          // ignore: avoid_print
-          print('click loop rescue: position frozen mid-session');
-          return true;
-        }());
-        try {
-          SoLoud.instance.changeDevice();
-        } catch (_) {}
-        unawaited(_startLoop());
+      if (_stallPolls == 100) {
+        _stallPolls = 0;
+        if (!_outputRescueTried) {
+          _outputRescueTried = true;
+          assert(() {
+            // ignore: avoid_print
+            print('click loop rescue: position frozen mid-session');
+            return true;
+          }());
+          try {
+            SoLoud.instance.changeDevice();
+          } catch (_) {}
+          unawaited(_startLoop());
+        } else {
+          // The soft rescue did not stick — the engine itself is dead.
+          unawaited(_reviveAudioEngine());
+        }
         return;
       }
     } else {
@@ -398,18 +424,73 @@ class MetronomeEngine {
     });
   }
 
+  Timer? _startSupervisor;
+  bool _reviving = false;
+  int _reviveAttempts = 0;
+
+  /// Last-resort repair: SoLoud can end up so dead (stream reclaimed while
+  /// the app was backgrounded) that loadMem/play/changeDevice never answer —
+  /// every softer rescue then hangs with it. Tear the engine down and bring
+  /// it back up; _prepareAudio reloads the snare PCM and, because
+  /// _isPlaying is still true and no loop handle exists, restarts the loop.
+  Future<void> _reviveAudioEngine() async {
+    if (_disposed || _reviving) return;
+    if (_reviveAttempts >= 2) return; // give up until the next manual start
+    _reviveAttempts++;
+    _reviving = true;
+    assert(() {
+      // ignore: avoid_print
+      print('audio engine revive #$_reviveAttempts');
+      return true;
+    }());
+    try {
+      _loopHandle = null;
+      _loopSource = null;
+      try {
+        SoLoud.instance.deinit();
+      } catch (_) {}
+      try {
+        await SoLoud.instance.init().timeout(const Duration(seconds: 5));
+      } catch (_) {
+        return; // engine unreachable — next attempt or manual restart
+      }
+      _snarePcm = const [];
+      await _prepareAudio();
+    } finally {
+      _reviving = false;
+    }
+    // Still no loop? Keep supervising (capped by _reviveAttempts).
+    if (!_disposed && _isPlaying && _loopHandle == null) {
+      _armStartSupervisor();
+    }
+  }
+
+  /// Supervisor OUTSIDE the SoLoud call chain: if no loop handle exists
+  /// shortly after starting, the audio calls hung or bailed — revive. This
+  /// is the only guard that still fires when loadMem/play never return.
+  void _armStartSupervisor() {
+    _startSupervisor?.cancel();
+    _startSupervisor = Timer(const Duration(seconds: 3), () {
+      if (_disposed || !_isPlaying || _loopHandle != null) return;
+      unawaited(_reviveAudioEngine());
+    });
+  }
+
   void start() {
     if (_isPlaying) return;
     _isPlaying = true;
     _outputRescueTried = false;
+    _reviveAttempts = 0;
     _lastGlobalTick = -1;
     unawaited(_startLoop());
+    _armStartSupervisor();
   }
 
   void stop() {
     _isPlaying = false;
     _loopRebuildDebounce?.cancel();
     _outputWatchdog?.cancel();
+    _startSupervisor?.cancel();
     _outputRescueTried = false;
     _beatPoller?.cancel();
     _beatPoller = null;
@@ -455,6 +536,7 @@ class MetronomeEngine {
     _loopRebuildDebounce?.cancel();
     _routeChangeDebounce?.cancel();
     _outputWatchdog?.cancel();
+    _startSupervisor?.cancel();
     _beatPoller?.cancel();
     if (!_beatCtrl.isClosed) _beatCtrl.close();
     unawaited(_stopLoop());
