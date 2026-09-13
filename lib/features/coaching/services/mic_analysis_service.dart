@@ -6,6 +6,7 @@ import 'package:record/record.dart';
 
 import '../../lessons/models/rudiment.dart';
 import '../models/session_analysis.dart';
+import 'lapse_detector.dart';
 import 'onset_detector.dart';
 import 'recording_setup.dart';
 import 'sample_clock_map.dart';
@@ -178,6 +179,15 @@ class MicAnalysisService {
     final jitterMs = _stdDev(assessedDevs);
     final jitterExceeded =
         assessedDevs.length >= 4 && jitterMs > jitterGateMs;
+    // Lapse detection (P3, 13.09.): averages dilute a locally bad stretch
+    // (1 bad minute in 10 is still 90%) — scan sliding windows instead.
+    // Note times relative to the session's first click so lapse positions
+    // read as exercise time (mm:ss) directly.
+    final sessionStartMs = expectedMs.isNotEmpty ? expectedMs.first : 0.0;
+    final lapses = detectLapses(
+      noteTimesMs: [for (final n in assessed) n.expectedMs - sessionStartMs],
+      deviationsMs: [for (final n in assessed) n.hit ? n.deviationMs : null],
+    );
     final summary = AlignmentSummary(
       expectedCount: assessed.length,
       hitCount: hitCount,
@@ -186,8 +196,10 @@ class MicAnalysisService {
       handValuesAllowed: assessed.isNotEmpty &&
           hitCount / assessed.length >= 0.9 &&
           aligned.extraCount / assessed.length < 0.05 &&
-          !jitterExceeded,
+          !jitterExceeded &&
+          lapses.isEmpty,
       jitterLimitExceeded: jitterExceeded,
+      lapses: lapses,
     );
 
     final unassigned = computeUnassignedMetrics(

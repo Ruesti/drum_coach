@@ -1172,13 +1172,15 @@ class _AnalysisSummary extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               analysisMode
-                  // Brief Phase 3 wording, split by cause: omissions/extras
-                  // vs. the jitter gate (Auftraggeber-Erweiterung 11.09.).
-                  ? (analysis.alignment?.jitterLimitExceeded == true
-                      ? 'Zu unruhig für eine Hand-Analyse — das sitzt '
-                          'noch nicht.'
-                      : 'Zu viele Aussetzer für eine Hand-Analyse — das '
-                          'sitzt noch nicht.')
+                  // Brief Phase 3 wording, split by cause: a located lapse
+                  // (13.09.) beats the global reasons — the player should
+                  // hear WHERE they fell off, not just that they did.
+                  ? (_lapseText(analysis.alignment) ??
+                      (analysis.alignment?.jitterLimitExceeded == true
+                          ? 'Zu unruhig für eine Hand-Analyse — das sitzt '
+                              'noch nicht.'
+                          : 'Zu viele Aussetzer für eine Hand-Analyse — das '
+                              'sitzt noch nicht.'))
                   : 'Lernmodus — Timing und Gleichmäßigkeit ohne '
                       'Hand-Analyse. Fehler sind hier normal.',
               style:
@@ -1238,4 +1240,23 @@ class _Row extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Announcement for located lapses (P3, 13.09.): names the spot where the
+/// player fell off instead of a global verdict. Null when there are none.
+String? _lapseText(AlignmentSummary? a) {
+  if (a == null || a.lapses.isEmpty) return null;
+  String mmss(double ms) {
+    final s = (ms / 1000).round();
+    return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+  }
+
+  final first = a.lapses.first;
+  final durS = (first.durationMs / 1000).round().clamp(1, 999);
+  if (a.lapses.length == 1) {
+    return 'Bei ${mmss(first.startMs)} für ~$durS s rausgekommen — '
+        'das sitzt noch nicht.';
+  }
+  return '${a.lapses.length} Einbrüche (erster bei ${mmss(first.startMs)}) — '
+      'das sitzt noch nicht.';
 }

@@ -1,6 +1,8 @@
 import '../../lessons/models/rudiment.dart';
+import '../services/lapse_detector.dart';
 import '../services/unassigned_metrics.dart';
 
+export '../services/lapse_detector.dart' show Lapse;
 export '../services/unassigned_metrics.dart' show UnassignedMetrics;
 
 /// Alignment outcome of one run (§1.2): how many expected notes were hit or
@@ -18,6 +20,13 @@ class AlignmentSummary {
   /// with their own announcement wording in the UI.
   final bool jitterLimitExceeded;
 
+  /// Locally bad stretches (Auftraggeber-Entscheidung 13.09.): a run whose
+  /// averages look fine can still contain a stretch where the player fell
+  /// off — detected per sliding window, times relative to the session's
+  /// first click. Any lapse blocks hand values and gets announced with its
+  /// position.
+  final List<Lapse> lapses;
+
   const AlignmentSummary({
     required this.expectedCount,
     required this.hitCount,
@@ -25,6 +34,7 @@ class AlignmentSummary {
     required this.extraCount,
     required this.handValuesAllowed,
     this.jitterLimitExceeded = false,
+    this.lapses = const [],
   });
 
   double get hitRate => expectedCount == 0 ? 0 : hitCount / expectedCount;

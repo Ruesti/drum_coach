@@ -269,6 +269,48 @@ void main() {
       expect(a.unassigned, isNotNull);
     });
 
+    test(
+        'a short local collapse in a long run blocks hand values even though '
+        'the whole-session average stays above 90% (P3, 13.09.)', () {
+      // 4 minutes of 8ths at 150 BPM (200 ms grid, 1200 notes). Between
+      // 60 s and 70 s the player falls off: only every 5th note lands.
+      // Overall: 1160/1200 = 96.7% — the old global gate would pass this.
+      final grid = [for (var i = 0; i < 1200; i++) i * 200.0];
+      final onsets = <double>[
+        for (var i = 0; i < 1200; i++)
+          if (grid[i] < 60000 || grid[i] >= 70000 || i % 5 == 0) grid[i],
+      ];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.hitRate, greaterThan(0.9),
+          reason: 'the averages alone would let this run pass');
+      expect(a.alignment!.lapses.length, 1);
+      final lapse = a.alignment!.lapses.single;
+      expect(lapse.startMs, closeTo(60000, 1500));
+      expect(lapse.endMs, closeTo(70000, 1500));
+      expect(a.alignment!.handValuesAllowed, isFalse);
+      expect(a.timing, isNull,
+          reason: 'a local collapse must block hand values');
+    });
+
+    test('clean long run reports no lapses', () {
+      final grid = [for (var i = 0; i < 600; i++) i * 200.0];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(grid),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.lapses, isEmpty);
+      expect(a.timing, isNotNull);
+    });
+
     test('moderate jitter keeps the analysis gate open', () {
       final grid = [for (var i = 0; i < 20; i++) i * 500.0];
       final onsets = [
