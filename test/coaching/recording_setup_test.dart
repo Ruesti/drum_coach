@@ -45,7 +45,24 @@ void main() {
         'autoGain': false,
         'echoCancel': false,
         'noiseSuppress': false,
+        'inputDevice': 'default',
       });
+    });
+
+    test(
+        'pins the built-in mic when its id is known — a plugged USB headset '
+        'must never divert the analysis to its inline mic (13.09.)', () {
+      final s = RecordingSetup.choose(
+          unprocessedSupported: false, builtinMicId: '22');
+      expect(s.config.device, isNotNull);
+      expect(s.config.device!.id, '22');
+      expect(s.describe()['inputDevice'], 'builtin');
+    });
+
+    test('without a known built-in mic id the device stays default', () {
+      final s = RecordingSetup.choose(unprocessedSupported: false);
+      expect(s.config.device, isNull);
+      expect(s.describe()['inputDevice'], 'default');
     });
   });
 

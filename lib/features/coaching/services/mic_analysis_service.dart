@@ -56,7 +56,12 @@ class MicAnalysisService {
     _clock = SampleClockMap(sampleRate: _sampleRate);
 
     setup ??= RecordingSetup.choose(
-        unprocessedSupported: await AudioCapabilities.isUnprocessedSupported());
+      unprocessedSupported: await AudioCapabilities.isUnprocessedSupported(),
+      // Pin the built-in mic: with a headset plugged in Android would
+      // otherwise record through the inline mic, which barely hears the pad
+      // but gets the click bleeding from the earpieces (13.09.).
+      builtinMicId: await AudioCapabilities.builtinMicId(),
+    );
     final stream = await _recorder.startStream(setup!.config);
 
     _audioSub = stream.listen((chunk) {

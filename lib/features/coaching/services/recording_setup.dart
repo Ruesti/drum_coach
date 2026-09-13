@@ -53,6 +53,19 @@ class AudioCapabilities {
     }
   }
 
+  /// Id of the phone's built-in microphone (AudioDeviceInfo id), or null
+  /// when it cannot be determined — used to pin the analysis recording to
+  /// the built-in mic even while a headset is plugged in.
+  static Future<String?> builtinMicId() async {
+    try {
+      return await channel.invokeMethod<String>('builtinMicId');
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    }
+  }
+
   /// Device model and Android version for the session header.
   static Future<DeviceInfo> deviceInfo() async {
     try {
@@ -84,7 +97,15 @@ class RecordingSetup {
     required this.unprocessedSupported,
   });
 
-  static RecordingSetup choose({required bool unprocessedSupported}) {
+  /// [builtinMicId] pins the recording to the phone's built-in microphone.
+  /// Without it Android reroutes the input to a plugged USB/wired headset's
+  /// inline mic — which hears the pad only faintly but the click bleeding
+  /// straight out of the earpieces next to it, drowning every measurement
+  /// (found 13.09.: user's pause was invisible, all peaks ~0.14).
+  static RecordingSetup choose({
+    required bool unprocessedSupported,
+    String? builtinMicId,
+  }) {
     return RecordingSetup._(
       unprocessedSupported: unprocessedSupported,
       config: RecordConfig(
@@ -94,6 +115,9 @@ class RecordingSetup {
         autoGain: false,
         echoCancel: false,
         noiseSuppress: false,
+        device: builtinMicId == null
+            ? null
+            : InputDevice(id: builtinMicId, label: 'builtin-mic'),
         androidConfig: AndroidRecordConfig(
           audioSource: unprocessedSupported
               ? AndroidAudioSource.unprocessed
@@ -113,5 +137,6 @@ class RecordingSetup {
         'autoGain': config.autoGain,
         'echoCancel': config.echoCancel,
         'noiseSuppress': config.noiseSuppress,
+        'inputDevice': config.device == null ? 'default' : 'builtin',
       };
 }

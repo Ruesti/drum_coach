@@ -72,6 +72,12 @@ class MainActivity : FlutterActivity() {
                         }
                         result.success(type)
                     }
+                    "builtinMicId" -> {
+                        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                        val mic = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS)
+                            .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_MIC }
+                        result.success(mic?.id?.toString())
+                    }
                     "deviceInfo" -> {
                         result.success(mapOf(
                             "model" to Build.MODEL,
