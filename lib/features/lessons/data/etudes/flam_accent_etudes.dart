@@ -42,9 +42,9 @@ List<StrokeBeat> _bar(List<Hand> leads, {bool ghostTaps = false}) => [
 final List<Rudiment> flamAccentEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_flam_accent_1',
-    name: 'Flam Accent · Étude 1',
+    name: 'Flam Accent · Etude 1',
     description:
-        'Reine Flam Accents im Triolen-Feel, die Führung wechselt bei jedem Schlag zwischen rechts und links.',
+        'Pure flam accents in a triplet feel, the lead alternating between right and left on every beat.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.beginner,
@@ -60,9 +60,9 @@ final List<Rudiment> flamAccentEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_flam_accent_2',
-    name: 'Flam Accent · Étude 2',
+    name: 'Flam Accent · Etude 2',
     description:
-        'Wie Étude 1, aber die beiden Tap-Noten werden geghostet – mehr dynamischer Kontrast zum betonten Flam.',
+        'Like Etude 1, but the two tap notes are ghosted – more dynamic contrast with the accented flam.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.beginner,
@@ -78,9 +78,9 @@ final List<Rudiment> flamAccentEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_flam_accent_3',
-    name: 'Flam Accent · Étude 3',
+    name: 'Flam Accent · Etude 3',
     description:
-        'Phrasiert: ein Schlag wird durch eine ausgehaltene Viertelnote statt der Triolen-Dreiergruppe ersetzt – schafft Raum im Lauf.',
+        'Phrased: one beat is replaced by a sustained quarter note instead of the triplet group – creates space in the run.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.intermediate,
@@ -102,9 +102,9 @@ final List<Rudiment> flamAccentEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_flam_accent_4',
-    name: 'Flam Accent · Étude 4',
+    name: 'Flam Accent · Etude 4',
     description:
-        'Vier Takte im Wechsel: Flam-Accent-Takt im Triolen-Feel gegen einen geraden Achtel-Akzent-Takt, mit steigender Akzentdichte.',
+        'Four alternating bars: a flam accent bar in triplet feel against a straight eighth-note accent bar, with rising accent density.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.advanced,
@@ -126,9 +126,9 @@ final List<Rudiment> flamAccentEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_flam_accent_5',
-    name: 'Flam Accent · Étude 5',
+    name: 'Flam Accent · Etude 5',
     description:
-        'Herausforderung: durchgehende Flam Accents bis zum Zieltempo, letzter Takt dichter mit doppeltem Akzent und Ghost-Note pro Schlag.',
+        'Challenge: continuous flam accents up to the target tempo; the last bar gets denser with a double accent and a ghost note per beat.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.professional,

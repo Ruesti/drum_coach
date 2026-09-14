@@ -104,12 +104,12 @@ List<StrokeBeat> _fullEighthsAccent2and4() =>
 final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_pad_basics_1',
-    name: 'Grundlagen · Achtelgruppe 1→3',
+    name: 'Fundamentals · Eighth Group 1→3',
     description:
-        'Eine Achtelgruppe wandert von Zählzeit 1 (Takt 1–2) zu Zählzeit 3 '
-        '(Takt 3–4) — dieselbe Idee, nur an anderer Stelle im Takt.',
+        'An eighth-note group moves from beat 1 (bars 1–2) to beat 3 '
+        '(bars 3–4) — the same idea, just at a different spot in the bar.',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
+    collectionGroup: 'Fundamentals',
     difficulty: Difficulty.beginner,
     minBpm: 50,
     targetBpm: 100,
@@ -123,12 +123,12 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_2',
-    name: 'Grundlagen · Achtelgruppe 2→4',
+    name: 'Fundamentals · Eighth Group 2→4',
     description:
-        'Eine Achtelgruppe wandert von Zählzeit 2 (Takt 1–2) zu Zählzeit 4 '
-        '(Takt 3–4).',
+        'An eighth-note group moves from beat 2 (bars 1–2) to beat 4 '
+        '(bars 3–4).',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
+    collectionGroup: 'Fundamentals',
     difficulty: Difficulty.beginner,
     minBpm: 50,
     targetBpm: 100,
@@ -142,12 +142,12 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_3',
-    name: 'Grundlagen · Zwei Achtelgruppen springen',
+    name: 'Fundamentals · Two Eighth Groups Jump',
     description:
-        'Zwei Achtelgruppen springen von den Zählzeiten 1+3 (Takt 1–2) zu '
-        'den Zählzeiten 2+4 (Takt 3–4).',
+        'Two eighth-note groups jump from beats 1+3 (bars 1–2) to '
+        'beats 2+4 (bars 3–4).',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
+    collectionGroup: 'Fundamentals',
     difficulty: Difficulty.beginner,
     minBpm: 50,
     targetBpm: 100,
@@ -161,12 +161,12 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_4',
-    name: 'Grundlagen · Vorne nach hinten',
+    name: 'Fundamentals · Front to Back',
     description:
-        'Zwei Achtelgruppen wandern von vorne im Takt (Zählzeit 1+2, Takt '
-        '1–2) nach hinten (Zählzeit 3+4, Takt 3–4).',
+        'Two eighth-note groups move from the front of the bar (beats 1+2, '
+        'bars 1–2) to the back (beats 3+4, bars 3–4).',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
+    collectionGroup: 'Fundamentals',
     difficulty: Difficulty.beginner,
     minBpm: 50,
     targetBpm: 100,
@@ -180,13 +180,13 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_5',
-    name: 'Grundlagen · Kadenz wandert',
+    name: 'Fundamentals · Moving Cadence',
     description:
-        'Durchgehende Achtel mit einer Viertel-Kadenz, die vom Taktende '
-        '(Zählzeit 4, Takt 1–2) an den Taktanfang (Zählzeit 1, Takt 3–4) '
-        'wandert.',
+        'Continuous eighths with a quarter-note cadence that moves from '
+        'the end of the bar (beat 4, bars 1–2) to the start '
+        '(beat 1, bars 3–4).',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
+    collectionGroup: 'Fundamentals',
     difficulty: Difficulty.beginner,
     minBpm: 50,
     targetBpm: 100,
@@ -200,12 +200,12 @@ final List<Rudiment> beginnerCountEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_basics_6',
-    name: 'Grundlagen · Wandernder Akzent',
+    name: 'Fundamentals · Moving Accent',
     description:
-        'Durchgehende Achtel, deren Akzent auf dem Zwischenschlag von '
-        'Zählzeit 1+3 (Takt 1–2) zu Zählzeit 2+4 (Takt 3–4) wandert.',
+        'Continuous eighths whose offbeat accent moves from beats 1+3 '
+        '(bars 1–2) to beats 2+4 (bars 3–4).',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Grundlagen',
+    collectionGroup: 'Fundamentals',
     difficulty: Difficulty.beginner,
     minBpm: 50,
     targetBpm: 100,

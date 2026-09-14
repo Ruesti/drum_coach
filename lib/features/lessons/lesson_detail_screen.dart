@@ -54,7 +54,7 @@ class LessonDetailScreen extends ConsumerWidget {
             if (rudiment.technique.isNotEmpty) ...[
               const SizedBox(height: 32),
               Text(
-                'TECHNIK',
+                'TECHNIQUE',
                 style: AppTypography.label.copyWith(
                   color: AppColors.accent,
                   letterSpacing: 2,
@@ -197,7 +197,7 @@ class _Legend extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            'Snare auf der mittleren Linie; die Taktart steht am Anfang.',
+            'Snare on the middle line; the time signature is at the start.',
             style: AppTypography.label.copyWith(color: AppColors.textMuted),
           ),
         ),
@@ -208,7 +208,7 @@ class _Legend extends StatelessWidget {
             _LegendItem(
               symbol: '>',
               color: AppColors.accent,
-              label: 'Akzent',
+              label: 'Accent',
             ),
             _LegendItem(
               symbol: '( )',
@@ -219,7 +219,7 @@ class _Legend extends StatelessWidget {
             _LegendItem(
               symbol: '♪',
               color: AppColors.textMuted,
-              label: 'Vorschlag (Flam/Drag)',
+              label: 'Grace note (flam/drag)',
               small: true,
             ),
           ],

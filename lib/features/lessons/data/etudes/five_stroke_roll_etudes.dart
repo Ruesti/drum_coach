@@ -47,8 +47,8 @@ List<StrokeBeat> _roll(
 final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_five_stroke_roll_1',
-    name: 'Five Stroke Roll · Étude 1',
-    description: 'Reine Fünferwirbel im Wechsel – RRLL R> und LLRR L>, sauber und langsam.',
+    name: 'Five Stroke Roll · Etude 1',
+    description: 'Pure alternating five stroke rolls – RRLL R> and LLRR L>, clean and slow.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.beginner,
@@ -68,8 +68,8 @@ final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_five_stroke_roll_2',
-    name: 'Five Stroke Roll · Étude 2',
-    description: 'Wirbel geghostet, damit der akzentuierte Abschlussschlag klar heraussticht.',
+    name: 'Five Stroke Roll · Etude 2',
+    description: 'The roll is ghosted so the accented release stroke stands out clearly.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.beginner,
@@ -89,8 +89,8 @@ final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_five_stroke_roll_3',
-    name: 'Five Stroke Roll · Étude 3',
-    description: 'Der Abschlussakzent wird zur knackigen Achtel mit Achtelpause phrasiert.',
+    name: 'Five Stroke Roll · Etude 3',
+    description: 'The closing accent is phrased as a crisp eighth note with an eighth rest.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.intermediate,
@@ -110,8 +110,8 @@ final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_five_stroke_roll_4',
-    name: 'Five Stroke Roll · Étude 4',
-    description: 'Fünferwirbel-Takte im Wechsel mit einem Dauer-Doppelschlag-Takt für Ausdauer.',
+    name: 'Five Stroke Roll · Etude 4',
+    description: 'Five stroke roll bars alternating with a continuous double stroke bar for endurance.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.advanced,
@@ -141,9 +141,9 @@ final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_five_stroke_roll_5',
-    name: 'Five Stroke Roll · Étude 5',
+    name: 'Five Stroke Roll · Etude 5',
     description:
-        'Herausforderung: der Akzent wandert durch alle fünf Positionen der Gruppe, bevor der Wirbel im höchsten Tempo dichter wird.',
+        'Challenge: the accent moves through all five positions of the group before the roll gets denser at top speed.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.professional,

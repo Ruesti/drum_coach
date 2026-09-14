@@ -53,13 +53,13 @@ bool isStageComplete(Rudiment focus,
 // Adaptive day builder + pacing
 // ---------------------------------------------------------------------------
 
-/// A short German focus hint shown alongside the stage name (§9.2-style
+/// A short focus hint shown alongside the stage name (§9.2-style
 /// one-thought cue, adapted for the adaptive program's per-difficulty stages).
 String _stageHint(Difficulty stage) => switch (stage) {
-      Difficulty.beginner => 'Saubere Grundschläge',
-      Difficulty.intermediate => 'Kontrolle bei Tempo',
-      Difficulty.advanced => 'Präzision unter Druck',
-      Difficulty.professional => 'Musikalische Anwendung',
+      Difficulty.beginner => 'Clean basic strokes',
+      Difficulty.intermediate => 'Control at tempo',
+      Difficulty.advanced => 'Precision under pressure',
+      Difficulty.professional => 'Musical application',
     };
 
 /// Daily rotation of warmup variants so the fixed single-stroke warmup still
