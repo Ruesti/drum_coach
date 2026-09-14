@@ -3,12 +3,14 @@
 **Datum:** 10.09.2026 · **Basis:** main nach Merge von PR #17 (`2bfba95`)
 · **Brief:** `docs/BRIEF_ETAPPE1_PAD.md` Phase 3 · **Branch/PR:** #18
 
-**Stand 11.09.: Implementierung komplett (245/245 Tests) inkl.
-Jitter-Gate-Erweiterung; alle fern-prüfbaren Abnahmen ✓ (Tabellen unten).
-Offen sind nur noch die Nutzer-Abnahmen Hörtest, Kopfhörer rein/raus und
-die Neu-Kalibrierung. Vorgelagert wurden sechs vom Auftraggeber gemeldete
-Wiedergabe-Probleme diagnostiziert und behoben (eigene Abschnitte unten)
-— Leitprinzip „Messung glaubwürdig vor Features".**
+**Stand 14.09.: PHASE 3 KOMPLETT ABGENOMMEN (264/264 Tests).** Alle
+Abnahmen ✓ — Modi, Jitter-Gate, Einbruch-Erkennung mit Urteils-Banner,
+Release-Build (1 Aussetzer/8 min), Kalibrierung 73 ms, Kopfhörer-Kette
+(Camcorder-Quelle) und Kopfhörer-Wechseltest. Vorgelagert wurden sechs
+Wiedergabe-Probleme, drei Release-Blocker und die Mess-Robustheit
+(Klick-Bleed/Mikro-Routing) diagnostiziert und behoben (eigene Abschnitte
+unten) — Leitprinzip „Messung glaubwürdig vor Features". **Wartet auf
+Merge-Freigabe.**
 
 ---
 
@@ -209,7 +211,13 @@ Sessions, Lautsprecher-Klicks als Onsets):**
 | Hörtest/Aussetzer im Release mit Mikro | ✓ 13.09.: **1 „Verschlucken" in 8 min** (Debug-Referenz ~7 in 5 min) — Debug-Overhead war der Haupttreiber; Rest-Aussetzer ~1/8 min dokumentiert |
 | Jitter-Ansage im echten Spiel | ✓ 13.09.: 8-min-Session absichtlich unregelmäßig (1603/1915 Schläge, 77 % zugeordnet) → „Zu unruhig für eine Hand-Analyse — das sitzt noch nicht." erschien |
 | Neu-Kalibrierung nach bufferSize-Revert | ✓ 13.09.: 71 bzw. 73 ms gespeichert (Vor-bufferSize-Niveau ~70 ms) |
-| Kopfhörer rein/raus während des Klicks: Ton wechselt und bleibt | ☐ |
+| Kopfhörer rein/raus während des Klicks: Ton wechselt und bleibt | ✓ 14.09. vom Auftraggeber bestätigt („kopfhörer wechseltest bestanden") |
+
+**Damit sind sämtliche Phase-3-Abnahmen erfüllt (14.09.).** Zusätzlich
+nutzerabgenommen: Einbruch-Erkennung (2 Einbrüche mit plausiblen Stellen —
+0:14 unsauber, ~0:40 Pause) und das Urteils-Banner (Ansage unübersehbar
+ganz oben; grüne Erfolgs-Variante fern-verifiziert). PR #18 wartet auf
+Merge-Freigabe; danach Phase 4.
 
 **Hinweis:** Die Ansage kommt konzeptgemäß nach Session-Ende im
 Feedback-Sheet, nicht live während des Spielens (Live-Hinweis wäre eine
