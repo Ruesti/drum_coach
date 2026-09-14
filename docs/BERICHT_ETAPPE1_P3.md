@@ -286,7 +286,16 @@ Pegel 0,22–0,47 konsistent, **96 % über der Schlag-Schwelle, 270 Schläge
 zu 274 Klicks** — Klick-Bleed (≤0,14) sauber unterhalb des Filters. Die
 Messkette ist damit erstmals auch mit Kopfhörern tragfähig; die
 Einbruch-Verifikation durch den Auftraggeber kann auf dieser Grundlage
-stattfinden. (Hinweis: Camcorder-Pegel liegen systematisch unter dem
+stattfinden.
+
+**Nutzer-Abnahme Einbruch-Erkennung 14.09. ✓:** Test-Session des
+Auftraggebers (115 BPM, 1:15, Kopfhörer, Camcorder-Quelle) mit
+absichtlichen Aussetzern → Feedback-Sheet: 238/272 Schläge, 237/35/1,
+Ansage **„2 Einbrüche (erster bei 0:14) — das sitzt noch nicht."** —
+lokalisierte Einbruch-Ansage im echten Spiel, die Pausen erscheinen als
+echte Löcher in den Messdaten. Damit ist die Kernanforderung vom 13.09.
+(lokale Schwächephasen dürfen nicht im Session-Durchschnitt verschwinden)
+am Gerät erfüllt. (Hinweis: Camcorder-Pegel liegen systematisch unter dem
 Ohne-Kopfhörer-Niveau ~0,8 — sollte später Ghost-Note-Erkennung wichtig
 werden, ist eine adaptive statt fester Schlag-Schwelle die Option.)
 
