@@ -1,18 +1,48 @@
 package com.example.drum_coach
 
 import android.content.Context
+import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var audioChannel: MethodChannel? = null
+    private var deviceCallback: AudioDeviceCallback? = null
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "drum_coach/audio")
-            .setMethodCallHandler { call, result ->
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "drum_coach/audio")
+        audioChannel = channel
+
+        // Push headphone plug/unplug events to Flutter: SoLoud's output
+        // stream does not survive an Android routing change on its own.
+        // Only OUTPUT (sink) changes matter — recorder start/stop (mic
+        // analysis, latency calibration) fires input-side callbacks, and
+        // reacting to those with a device switch killed the click output
+        // ("Übung läuft nicht an" after calibrating).
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val callback = object : AudioDeviceCallback() {
+            override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>) {
+                if (added.any { it.isSink }) {
+                    channel.invokeMethod("audioDevicesChanged", null)
+                }
+            }
+            override fun onAudioDevicesRemoved(removed: Array<out AudioDeviceInfo>) {
+                if (removed.any { it.isSink }) {
+                    channel.invokeMethod("audioDevicesChanged", null)
+                }
+            }
+        }
+        deviceCallback = callback
+        audioManager.registerAudioDeviceCallback(callback, Handler(Looper.getMainLooper()))
+
+        channel.setMethodCallHandler { call, result ->
                 when (call.method) {
                     "isUnprocessedSupported" -> {
                         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -42,6 +72,12 @@ class MainActivity : FlutterActivity() {
                         }
                         result.success(type)
                     }
+                    "builtinMicId" -> {
+                        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                        val mic = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS)
+                            .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_MIC }
+                        result.success(mic?.id?.toString())
+                    }
                     "deviceInfo" -> {
                         result.success(mapOf(
                             "model" to Build.MODEL,
@@ -51,5 +87,14 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    override fun onDestroy() {
+        deviceCallback?.let {
+            (getSystemService(Context.AUDIO_SERVICE) as AudioManager)
+                .unregisterAudioDeviceCallback(it)
+        }
+        deviceCallback = null
+        super.onDestroy()
     }
 }

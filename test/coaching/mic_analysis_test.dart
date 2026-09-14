@@ -39,6 +39,7 @@ void main() {
         anchor: anchor,
         beatLog: beatLogAt(grid),
         sticking: rlrl,
+        analysisMode: true,
       );
       expect(a.alignment, isNotNull);
       expect(a.alignment!.handValuesAllowed, isTrue);
@@ -78,6 +79,7 @@ void main() {
         anchor: anchor,
         beatLog: beatLogAt(grid),
         sticking: rlrl,
+        analysisMode: true,
       );
       expect(a.alignment!.missedCount, 1);
       expect(a.alignment!.extraCount, 0);
@@ -97,6 +99,7 @@ void main() {
         beatLog: beatLogAt(grid),
         sticking: rlrl,
         latencyOffsetMs: 130,
+        analysisMode: true,
       );
       expect(withOffset.timing!.overallDeviationMs, closeTo(0, 0.5));
       expect(withOffset.latencyOffsetAppliedMs, 130);
@@ -176,6 +179,7 @@ void main() {
         beatLog: beatLogAt(grid),
         sticking: rlrl,
         latencyOffsetMs: 100,
+        analysisMode: true,
       );
       expect(a.events.length, 25);
 
@@ -210,6 +214,167 @@ void main() {
           reason: 'below the gate no event gets a hand');
       expect(a.events.first.notePosition, 0,
           reason: 'assignment itself is still recorded');
+    });
+
+    test('learn mode never reports hand values, even on a clean run (P3)',
+        () {
+      final grid = [for (var i = 0; i < 8; i++) i * 500.0];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(grid),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: false,
+      );
+      expect(a.alignment!.handValuesAllowed, isTrue,
+          reason: 'the gate itself stays computed for the report');
+      expect(a.timing, isNull, reason: 'learn mode: no hand values');
+      expect(a.dynamics, isNull);
+      expect(a.events.every((e) => e.hand == null), isTrue,
+          reason: 'logged events carry no hands in learn mode');
+      expect(a.unassigned, isNotNull);
+    });
+
+    test('analysis mode reports hand values above the gate (P3)', () {
+      final grid = [for (var i = 0; i < 8; i++) i * 500.0];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(grid),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.timing, isNotNull);
+      expect(a.events.first.hand, 'R');
+    });
+
+    test('high timing jitter blocks hand values in analysis mode (P3)', () {
+      // All 20 notes played, none missing — but wildly uneven: alternating
+      // ±80 ms around the grid (std dev ≈ 80 ms, far above the 50 ms gate).
+      final grid = [for (var i = 0; i < 20; i++) i * 500.0];
+      final onsets = [
+        for (var i = 0; i < 20; i++) grid[i] + (i.isEven ? 80 : -80),
+      ];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.hitCount, 20, reason: 'nothing was missed');
+      expect(a.alignment!.jitterLimitExceeded, isTrue);
+      expect(a.timing, isNull,
+          reason: 'sloppy-but-complete must not get hand values');
+      expect(a.unassigned, isNotNull);
+    });
+
+    test(
+        'a short local collapse in a long run blocks hand values even though '
+        'the whole-session average stays above 90% (P3, 13.09.)', () {
+      // 4 minutes of 8ths at 150 BPM (200 ms grid, 1200 notes). Between
+      // 60 s and 70 s the player falls off: only every 5th note lands.
+      // Overall: 1160/1200 = 96.7% — the old global gate would pass this.
+      final grid = [for (var i = 0; i < 1200; i++) i * 200.0];
+      final onsets = <double>[
+        for (var i = 0; i < 1200; i++)
+          if (grid[i] < 60000 || grid[i] >= 70000 || i % 5 == 0) grid[i],
+      ];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.hitRate, greaterThan(0.9),
+          reason: 'the averages alone would let this run pass');
+      expect(a.alignment!.lapses.length, 1);
+      final lapse = a.alignment!.lapses.single;
+      expect(lapse.startMs, closeTo(60000, 1500));
+      expect(lapse.endMs, closeTo(70000, 1500));
+      expect(a.alignment!.handValuesAllowed, isFalse);
+      expect(a.timing, isNull,
+          reason: 'a local collapse must block hand values');
+    });
+
+    test('clean long run reports no lapses', () {
+      final grid = [for (var i = 0; i < 600; i++) i * 200.0];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(grid),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.lapses, isEmpty);
+      expect(a.timing, isNotNull);
+    });
+
+    test('moderate jitter keeps the analysis gate open', () {
+      final grid = [for (var i = 0; i < 20; i++) i * 500.0];
+      final onsets = [
+        for (var i = 0; i < 20; i++) grid[i] + (i.isEven ? 15 : -15),
+      ];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.alignment!.jitterLimitExceeded, isFalse);
+      expect(a.timing, isNotNull);
+    });
+
+    test(
+        'click bleed (quiet, on-grid onsets) is ignored — a real pause stays '
+        'a hole even while the headphone click leaks into the mic (13.09.)',
+        () {
+      // 60 s of 8ths at 120 BPM (250 ms grid, 240 notes). The player hits
+      // loud (0.8) but pauses between 20 s and 35 s; during the WHOLE
+      // session the click bleeds from the headphones at level 0.08.
+      final grid = [for (var i = 0; i < 240; i++) i * 250.0];
+      final onsets = <double>[];
+      final amps = <double>[];
+      for (var i = 0; i < 240; i++) {
+        final t = grid[i];
+        onsets.add(t + 55); // bleed: constant headphone latency
+        amps.add(0.08);
+        if (t < 20000 || t >= 35000) {
+          onsets.add(t + 5); // the real stroke
+          amps.add(0.8);
+        }
+      }
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt(onsets, amps: amps),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.signalTooWeak, isFalse);
+      expect(a.alignment!.lapses.length, 1,
+          reason: 'the pause must survive the click bleed');
+      final l = a.alignment!.lapses.single;
+      expect(l.startMs, closeTo(20000, 1500));
+      expect(l.endMs, closeTo(35000, 1500));
+    });
+
+    test('an all-quiet recording is declared too weak, not judged', () {
+      final grid = [for (var i = 0; i < 60; i++) i * 250.0];
+      final a = MicAnalysisService.analyzeHits(
+        hits: hitsAt([for (final g in grid) g + 55],
+            amps: List.filled(60, 0.09)),
+        anchor: anchor,
+        beatLog: beatLogAt(grid),
+        sticking: rlrl,
+        analysisMode: true,
+      );
+      expect(a.signalTooWeak, isTrue);
+      expect(a.timing, isNull);
+      expect(a.alignment, isNull,
+          reason: 'no verdicts from a signal that carries no strokes');
     });
 
     test('no anchor or no hits yields counts only', () {

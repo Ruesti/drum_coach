@@ -1,6 +1,8 @@
 import '../../lessons/models/rudiment.dart';
+import '../services/lapse_detector.dart';
 import '../services/unassigned_metrics.dart';
 
+export '../services/lapse_detector.dart' show Lapse;
 export '../services/unassigned_metrics.dart' show UnassignedMetrics;
 
 /// Alignment outcome of one run (§1.2): how many expected notes were hit or
@@ -13,12 +15,26 @@ class AlignmentSummary {
   final int extraCount;
   final bool handValuesAllowed;
 
+  /// P3 extension (Auftraggeber-Entscheidung 11.09.): complete-but-wobbly
+  /// runs (timing std dev above the jitter gate) also block hand values —
+  /// with their own announcement wording in the UI.
+  final bool jitterLimitExceeded;
+
+  /// Locally bad stretches (Auftraggeber-Entscheidung 13.09.): a run whose
+  /// averages look fine can still contain a stretch where the player fell
+  /// off — detected per sliding window, times relative to the session's
+  /// first click. Any lapse blocks hand values and gets announced with its
+  /// position.
+  final List<Lapse> lapses;
+
   const AlignmentSummary({
     required this.expectedCount,
     required this.hitCount,
     required this.missedCount,
     required this.extraCount,
     required this.handValuesAllowed,
+    this.jitterLimitExceeded = false,
+    this.lapses = const [],
   });
 
   double get hitRate => expectedCount == 0 ? 0 : hitCount / expectedCount;
@@ -80,6 +96,12 @@ class SessionAnalysis {
   /// written into the session header.
   final Map<String, Object>? recordingSetup;
 
+  /// True when the recording carried (almost) no stroke-level onsets — only
+  /// quiet click bleed or noise. No verdicts are computed then; the UI asks
+  /// to move the phone closer instead of judging a signal that holds no
+  /// strokes (13.09.: headphone click at level ≤0.14 was all the mic heard).
+  final bool signalTooWeak;
+
   const SessionAnalysis({
     this.timing,
     this.dynamics,
@@ -89,6 +111,7 @@ class SessionAnalysis {
     this.deviationsMs = const [],
     this.events = const [],
     this.latencyOffsetAppliedMs = 0,
+    this.signalTooWeak = false,
     required this.detectedHits,
     required this.expectedHits,
     this.recordingSetup,

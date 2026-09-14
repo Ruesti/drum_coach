@@ -45,7 +45,47 @@ void main() {
         'autoGain': false,
         'echoCancel': false,
         'noiseSuppress': false,
+        'inputDevice': 'default',
       });
+    });
+
+    test(
+        'pins the built-in mic when its id is known — a plugged USB headset '
+        'must never divert the analysis to its inline mic (13.09.)', () {
+      final s = RecordingSetup.choose(
+          unprocessedSupported: false, builtinMicId: '22');
+      expect(s.config.device, isNotNull);
+      expect(s.config.device!.id, '22');
+      expect(s.describe()['inputDevice'], 'builtin');
+    });
+
+    test(
+        'with headphones plugged the CAMCORDER source records through the '
+        'built-in mics — A/B measurement 13.09.: the inline headset mic '
+        'collapsed stroke levels from 0.8 to 0.2-0.4', () {
+      final s = RecordingSetup.choose(
+          unprocessedSupported: false, headphonesPlugged: true);
+      expect(
+          s.config.androidConfig.audioSource, AndroidAudioSource.camcorder);
+      expect(s.audioSourceName, 'camcorder');
+      expect(s.describe()['audioSource'], 'camcorder');
+      // Effects stay explicitly off on this path too (§1.1).
+      expect(s.config.autoGain, isFalse);
+      expect(s.config.echoCancel, isFalse);
+      expect(s.config.noiseSuppress, isFalse);
+    });
+
+    test('without headphones the source choice stays unchanged', () {
+      final s = RecordingSetup.choose(
+          unprocessedSupported: false, headphonesPlugged: false);
+      expect(s.config.androidConfig.audioSource,
+          AndroidAudioSource.voiceRecognition);
+    });
+
+    test('without a known built-in mic id the device stays default', () {
+      final s = RecordingSetup.choose(unprocessedSupported: false);
+      expect(s.config.device, isNull);
+      expect(s.describe()['inputDevice'], 'default');
     });
   });
 
@@ -86,6 +126,22 @@ void main() {
 
     test('answers none when the platform side is missing', () async {
       expect(await AudioCapabilities.headphonesType(), 'none');
+    });
+  });
+
+  group('AudioCapabilities.onDevicesChanged', () {
+    test('invokes the registered callback when the platform notifies', () async {
+      var calls = 0;
+      AudioCapabilities.onDevicesChanged(() => calls++);
+      addTearDown(() => AudioCapabilities.onDevicesChanged(null));
+
+      final envelope = const StandardMethodCodec()
+          .encodeMethodCall(const MethodCall('audioDevicesChanged'));
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage(
+              AudioCapabilities.channel.name, envelope, (_) {});
+      expect(calls, 1,
+          reason: 'headphone plug/unplug must reach the audio engine');
     });
   });
 

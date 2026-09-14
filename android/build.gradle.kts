@@ -29,6 +29,19 @@ subprojects {
                 if (android.namespace == null) {
                     android.namespace = group.toString()
                 }
+                // isar_flutter_libs 3.x also ships compileSdk 30, which cannot
+                // resolve android:attr/lStar in verifyReleaseResources. Lift
+                // such plugins to the app's compileSdk.
+                val pluginSdk = android.compileSdkVersion
+                    ?.removePrefix("android-")?.toIntOrNull()
+                if (pluginSdk != null && pluginSdk < 31) {
+                    val appSdk = rootProject.project(":app").extensions
+                        .getByType<com.android.build.gradle.BaseExtension>()
+                        .compileSdkVersion
+                    if (appSdk != null) {
+                        android.compileSdkVersion(appSdk)
+                    }
+                }
             }
         }
     }

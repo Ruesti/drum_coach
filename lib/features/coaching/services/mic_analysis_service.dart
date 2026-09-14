@@ -6,6 +6,7 @@ import 'package:record/record.dart';
 
 import '../../lessons/models/rudiment.dart';
 import '../models/session_analysis.dart';
+import 'lapse_detector.dart';
 import 'onset_detector.dart';
 import 'recording_setup.dart';
 import 'sample_clock_map.dart';
@@ -32,6 +33,14 @@ class MicAnalysisService {
 
   static const int _sampleRate = RecordingSetup.sampleRate;
 
+  /// P3 jitter gate: above this timing std dev the analysis mode withholds
+  /// hand values and announces it (Auftraggeber-Entscheidung 11.09.).
+  static const double jitterGateMs = 50;
+
+  /// Minimum peak level an onset needs to count as a stroke: headphone
+  /// click bleed measured ≤~0.14, real pad strokes ~0.8 (13.09. sessions).
+  static const double minStrokeLevel = 0.18;
+
   /// Detected onsets on the wall clock (epoch ms), each mapped through its
   /// own chunk neighborhood — exposed for the latency calibration (§1.3).
   List<double> get absoluteOnsetMs => [
@@ -50,8 +59,14 @@ class MicAnalysisService {
     _byteBuffer.clear();
     _clock = SampleClockMap(sampleRate: _sampleRate);
 
-    setup ??= RecordingSetup.choose(
-        unprocessedSupported: await AudioCapabilities.isUnprocessedSupported());
+    // Re-chosen on every start: the headphone state can change between
+    // sessions, and with a headset plugged the CAMCORDER source keeps the
+    // recording on the built-in mics (A/B 13.09.; an explicit device pin is
+    // NOT used — it collapsed the levels on the S23).
+    setup = RecordingSetup.choose(
+      unprocessedSupported: await AudioCapabilities.isUnprocessedSupported(),
+      headphonesPlugged: (await AudioCapabilities.headphonesType()) != 'none',
+    );
     final stream = await _recorder.startStream(setup!.config);
 
     _audioSub = stream.listen((chunk) {
@@ -83,6 +98,7 @@ class MicAnalysisService {
     required List<BeatRecord> beatLog,
     required List<StrokeBeat> sticking,
     double latencyOffsetMs = 0,
+    bool analysisMode = false,
   }) {
     // Rebase each hit through its chunk-local wall-clock mapping so pipeline
     // drift within the recording cannot skew late onsets (§1.3).
@@ -104,6 +120,7 @@ class MicAnalysisService {
       beatLog: beatLog,
       sticking: sticking,
       latencyOffsetMs: latencyOffsetMs,
+      analysisMode: analysisMode,
       recordingSetup: setup?.describe(),
     );
   }
@@ -115,12 +132,17 @@ class MicAnalysisService {
   /// computed. [latencyOffsetMs] (§1.3 calibration) is subtracted from onset
   /// times before matching; the remaining systematic offset stays visible in
   /// the unassigned median.
+  /// [analysisMode] (Brief Phase 3): hand values are exclusive to the
+  /// analysis mode — learn mode (default) reports only assignment-free
+  /// measures, however clean the run. The gate itself stays computed so
+  /// reports can show how close a run was.
   static SessionAnalysis analyzeHits({
     required List<OnsetHit> hits,
     required DateTime? anchor,
     required List<BeatRecord> beatLog,
     required List<StrokeBeat> sticking,
     double latencyOffsetMs = 0,
+    bool analysisMode = false,
     Map<String, Object>? recordingSetup,
   }) {
     if (hits.isEmpty || anchor == null || beatLog.isEmpty || sticking.isEmpty) {
@@ -132,13 +154,48 @@ class MicAnalysisService {
     }
 
     final anchorMs = anchor.microsecondsSinceEpoch / 1000.0;
+
+    // Stroke-level filter (13.09.): the click bleeding out of headphones
+    // registers as quiet on-grid onsets (level ≤~0.14) and fakes a perfect
+    // run — a real pause then never reaches the analysis. Onsets below the
+    // stroke threshold never count as strokes; if almost nothing remains,
+    // the recording is declared too weak instead of being judged.
+    final strokes = [
+      for (final h in hits)
+        if (h.amplitude >= minStrokeLevel) h,
+    ];
+    final dropped = [
+      for (final h in hits)
+        if (h.amplitude < minStrokeLevel) h,
+    ];
+    if (hits.length >= 8 && strokes.length < hits.length * 0.2) {
+      return SessionAnalysis(
+        detectedHits: strokes.length,
+        expectedHits: beatLog.length,
+        recordingSetup: recordingSetup,
+        signalTooWeak: true,
+        peakLevels: [for (final h in hits) h.amplitude],
+        // Raw events stay logged (Phase 2) — unassigned, no verdicts.
+        events: [
+          for (final h in hits)
+            OnsetEventData(
+              timeMs: anchorMs + h.timeMs,
+              peakLevel: h.amplitude,
+              notePosition: null,
+              hand: null,
+              deviationMs: null,
+            ),
+        ],
+      );
+    }
+
     final expectedMs = [
       for (final b in beatLog) b.timestamp.microsecondsSinceEpoch / 1000.0,
     ];
     final onsetMs = [
-      for (final h in hits) anchorMs + h.timeMs - latencyOffsetMs,
+      for (final h in strokes) anchorMs + h.timeMs - latencyOffsetMs,
     ];
-    final amplitudes = [for (final h in hits) h.amplitude];
+    final amplitudes = [for (final h in strokes) h.amplitude];
 
     final aligned = alignSequences(expectedMs: expectedMs, onsetMs: onsetMs);
 
@@ -158,6 +215,24 @@ class MicAnalysisService {
         : aligned.notes.sublist(firstHit, lastHit + 1);
 
     final hitCount = assessed.where((n) => n.hit).length;
+    // Jitter gate (P3): std dev of the assigned notes' deviations. A run can
+    // be complete yet so uneven that per-hand values would be noise.
+    final assessedDevs = [
+      for (final n in assessed)
+        if (n.hit) n.deviationMs!,
+    ];
+    final jitterMs = _stdDev(assessedDevs);
+    final jitterExceeded =
+        assessedDevs.length >= 4 && jitterMs > jitterGateMs;
+    // Lapse detection (P3, 13.09.): averages dilute a locally bad stretch
+    // (1 bad minute in 10 is still 90%) — scan sliding windows instead.
+    // Note times relative to the session's first click so lapse positions
+    // read as exercise time (mm:ss) directly.
+    final sessionStartMs = expectedMs.isNotEmpty ? expectedMs.first : 0.0;
+    final lapses = detectLapses(
+      noteTimesMs: [for (final n in assessed) n.expectedMs - sessionStartMs],
+      deviationsMs: [for (final n in assessed) n.hit ? n.deviationMs : null],
+    );
     final summary = AlignmentSummary(
       expectedCount: assessed.length,
       hitCount: hitCount,
@@ -165,7 +240,11 @@ class MicAnalysisService {
       extraCount: aligned.extraCount,
       handValuesAllowed: assessed.isNotEmpty &&
           hitCount / assessed.length >= 0.9 &&
-          aligned.extraCount / assessed.length < 0.05,
+          aligned.extraCount / assessed.length < 0.05 &&
+          !jitterExceeded &&
+          lapses.isEmpty,
+      jitterLimitExceeded: jitterExceeded,
+      lapses: lapses,
     );
 
     final unassigned = computeUnassignedMetrics(
@@ -191,7 +270,8 @@ class MicAnalysisService {
       ));
     }
 
-    final gateOpen = summary.handValuesAllowed && matched.length >= 4;
+    final gateOpen =
+        analysisMode && summary.handValuesAllowed && matched.length >= 4;
 
     // Raw event list for the Phase-2 session log: one entry per onset, time
     // WITHOUT the latency correction (raw data stays raw; the applied offset
@@ -219,6 +299,17 @@ class MicAnalysisService {
           deviationMs: noteByOnset[j]?.deviationMs,
         ),
     ];
+    // Below-threshold onsets (click bleed) stay in the raw log, unassigned.
+    for (final h in dropped) {
+      events.add(OnsetEventData(
+        timeMs: anchorMs + h.timeMs,
+        peakLevel: h.amplitude,
+        notePosition: null,
+        hand: null,
+        deviationMs: null,
+      ));
+    }
+    events.sort((a, b) => a.timeMs.compareTo(b.timeMs));
 
     return SessionAnalysis(
       timing: gateOpen ? _calcTiming(matched) : null,
@@ -229,7 +320,7 @@ class MicAnalysisService {
       deviationsMs: deviations,
       events: events,
       latencyOffsetAppliedMs: latencyOffsetMs,
-      detectedHits: hits.length,
+      detectedHits: strokes.length,
       expectedHits: beatLog.length,
       recordingSetup: recordingSetup,
     );
@@ -248,7 +339,7 @@ class MicAnalysisService {
       overallDeviationMs: avgAll,
       rightHandDeviationMs: right.isEmpty ? 0 : _mean(right),
       leftHandDeviationMs: left.isEmpty ? 0 : _mean(left),
-      jitterMs: _stdDev(all, avgAll),
+      jitterMs: _stdDevWithMean(all, avgAll),
     );
   }
 
@@ -266,7 +357,13 @@ class MicAnalysisService {
 
   static double _mean(List<double> v) => v.reduce((a, b) => a + b) / v.length;
 
-  static double _stdDev(List<double> v, double mean) {
+  static double _stdDev(List<double> v) {
+    if (v.length < 2) return 0;
+    final mean = v.reduce((a, b) => a + b) / v.length;
+    return _stdDevWithMean(v, mean);
+  }
+
+  static double _stdDevWithMean(List<double> v, double mean) {
     final variance =
         v.map((x) => (x - mean) * (x - mean)).reduce((a, b) => a + b) /
             v.length;

@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:isolate';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
+
+import 'click_loop_renderer.dart';
 
 enum Subdivision {
   quarter(factor: 1, label: '♩', name: '1/4'),
@@ -48,9 +49,9 @@ class BeatEvent {
 
 /// Playback volume for tick [index]: from the per-tick pattern array if one
 /// is set, otherwise a flat accent/normal volume. A tick with volume 0 is
-/// silent — no sound, and (per [MetronomeEngine._onBeat]) no [BeatEvent], so
-/// grid-filler ticks in fine-grained pattern playback don't drive the UI's
-/// beat indicator. Pure so it's unit-testable without SoLoud/isolates.
+/// silent — no sound and (per [MetronomeEngine._pollBeat]) no [BeatEvent],
+/// so grid-filler ticks in fine-grained pattern playback don't drive the
+/// UI's beat indicator. Pure so it's unit-testable without SoLoud.
 double resolveTickVolume({
   required List<double>? beatVolumes,
   required int index,
@@ -62,136 +63,22 @@ double resolveTickVolume({
   return isAccent ? 2.0 : 0.7;
 }
 
-// ── Timing isolate ────────────────────────────────────────────────────────────
-// Runs in its own isolate so Flutter's UI frame schedule cannot delay beats.
-//
-// Commands  (main → isolate): List<int> [cmdId, ...args]
-// Beat msgs (isolate → main): List<int> [beatIndex, isAccent 0|1]
-
-const _cmdStart  = 0; // [0, bpm, subdivisionFactor]
-const _cmdStop   = 1; // [1]
-const _cmdBpm    = 2; // [2, bpm]
-const _cmdFactor = 3; // [3, subdivisionFactor]
-
-/// Microsecond delay until beat [idx] should fire, given the current tempo
-/// ([bpm]/[factor]) and an anchor point ([anchorUs], [anchorIdx]) the
-/// schedule is measured from. Re-anchoring on every bpm/factor change (see
-/// `_cmdBpm`/`_cmdFactor` below) is what makes a live tempo change take
-/// effect from *now* instead of retroactively rewriting the timing of beats
-/// already played — using `idx * interval` unconditionally (anchored at
-/// idx=0) would compute a wildly wrong expected time for any idx reached
-/// under a *different*, earlier tempo.
-///
-/// Clamped so a beat never fires earlier than 100 µs from now (avoids a
-/// zero/negative `Timer` duration) and never waits longer than one full
-/// interval (avoids stalling if the clock is far behind schedule).
-///
-/// Pure and isolate-independent so it's unit-testable directly.
-int computeNextBeatDelayUs({
-  required int bpm,
-  required int factor,
-  required int idx,
-  required int anchorUs,
-  required int anchorIdx,
-  required int elapsedUs,
-}) {
-  final ivUs = 60000000.0 / bpm / factor;
-  final expUs = expectedBeatTimeUs(
-      bpm: bpm, factor: factor, idx: idx, anchorUs: anchorUs, anchorIdx: anchorIdx);
-  return (expUs - elapsedUs).clamp(100, ivUs.ceil());
-}
-
-/// Planned schedule time of beat [idx] in µs on the isolate's stopwatch,
-/// measured from the current anchor. This is the beat's *intended* instant —
-/// the basis of the shared time axis for click-vs-onset comparison (§1.3).
-int expectedBeatTimeUs({
-  required int bpm,
-  required int factor,
-  required int idx,
-  required int anchorUs,
-  required int anchorIdx,
-}) {
-  final ivUs = 60000000.0 / bpm / factor;
-  return (anchorUs + (idx - anchorIdx) * ivUs).round();
-}
-
-// Top-level required by Isolate.spawn.
-void _timingIsolateMain(SendPort replyPort) {
-  final port = ReceivePort();
-  replyPort.send(port.sendPort); // give main the control port
-
-  var bpm    = 100;
-  var factor = 1;
-  var playing = false;
-  var idx     = 0;
-  final sw    = Stopwatch();
-  Timer? t;
-
-  // See computeNextBeatDelayUs doc comment.
-  var anchorUs  = 0;
-  var anchorIdx = 0;
-
-  // Mutual recursion via late variable — required because Dart forbids
-  // a local function referencing another that isn't declared yet.
-  late void Function() sched;
-
-  void onBeat() {
-    if (!playing) return;
-    // Planned wall-clock time of this beat: current wall clock minus how far
-    // the stopwatch has drifted past the scheduled instant (timer jitter).
-    final plannedUs = expectedBeatTimeUs(
-        bpm: bpm, factor: factor, idx: idx, anchorUs: anchorUs, anchorIdx: anchorIdx);
-    final plannedEpochUs = DateTime.now().microsecondsSinceEpoch -
-        (sw.elapsedMicroseconds - plannedUs);
-    replyPort.send([idx, idx % factor == 0 ? 1 : 0, plannedEpochUs]);
-    idx++;
-    sched();
-  }
-
-  sched = () {
-    if (!playing) return;
-    final delayUs = computeNextBeatDelayUs(
-      bpm: bpm,
-      factor: factor,
-      idx: idx,
-      anchorUs: anchorUs,
-      anchorIdx: anchorIdx,
-      elapsedUs: sw.elapsedMicroseconds,
-    );
-    t = Timer(Duration(microseconds: delayUs), onBeat);
-  };
-
-  port.listen((msg) {
-    if (msg is! List<int>) return;
-    switch (msg[0]) {
-      case _cmdStart:
-        if (playing) return;
-        bpm = msg[1]; factor = msg[2];
-        playing = true; idx = 0;
-        anchorUs = 0; anchorIdx = 0;
-        sw..reset()..start();
-        onBeat(); // first beat fires immediately, rest are timer-driven
-      case _cmdStop:
-        playing = false; t?.cancel(); sw.stop();
-      case _cmdBpm:
-        if (playing) { anchorUs = sw.elapsedMicroseconds; anchorIdx = idx; }
-        bpm = msg[1];
-      case _cmdFactor:
-        if (playing) { anchorUs = sw.elapsedMicroseconds; anchorIdx = idx; }
-        factor = msg[1];
-    }
-  });
-}
-
 // ── MetronomeEngine ───────────────────────────────────────────────────────────
 
 class MetronomeEngine {
   final _beatCtrl = StreamController<BeatEvent>.broadcast();
   Stream<BeatEvent> get beatStream => _beatCtrl.stream;
 
-  AudioSource? _clickAccent, _clickNormal;
-  AudioSource? _rimAccent,   _rimNormal;
-  AudioSource? _snareSample;
+  /// Decoded PCM of the recorded snare sample for the loop renderer.
+  List<double> _snarePcm = const [];
+
+  /// The click track: one pattern cycle rendered as WAV, played natively
+  /// with looping — sample-exact and immune to main-isolate congestion
+  /// (§Wiedergabe-Diagnose: per-tick play() showed 20-30 ms firing spikes).
+  AudioSource? _loopSource;
+  SoundHandle? _loopHandle;
+  int _loopGeneration = 0;
+  Timer? _loopRebuildDebounce;
 
   int          _bpm        = 100;
   Subdivision  _subdivision = Subdivision.quarter;
@@ -201,124 +88,458 @@ class MetronomeEngine {
   bool          _isPlaying  = false;
   bool          _disposed   = false;
 
-  Isolate?      _isolate;
-  ReceivePort?  _receivePort;
-  SendPort?     _controlPort;
+  // Beat derivation from the loop's audio position (single clock).
+  Timer? _beatPoller;
+  int _lastGlobalTick = -1;
+  double _loopTickDurMs = 500;
+  List<double> _loopVolumesActive = const [2.0];
+
+  /// Wall-time milliseconds per POSITION millisecond: getPosition's scale is
+  /// not guaranteed to be wall time (device: factor ~1.24). The audible loop
+  /// length in wall time IS the Dart-computed length (the WAV renders the
+  /// BPM grid exactly), so dartLoopMs / soloudLoopMs converts ago-offsets
+  /// into wall time for plannedAt.
+  double _wallPerPos = 1.0;
 
   Future<void> init() async {
-    _clickAccent = await SoLoud.instance.loadMem(
-        'click_accent', _buildClickWav(frequency: 1200, amplitude: 0.95));
-    _clickNormal = await SoLoud.instance.loadMem(
-        'click_normal', _buildClickWav(frequency: 800,  amplitude: 0.55));
-    _rimAccent   = await SoLoud.instance.loadMem(
-        'rim_accent',   _buildRimWav(amplitude: 0.95));
-    _rimNormal   = await SoLoud.instance.loadMem(
-        'rim_normal',   _buildRimWav(amplitude: 0.55));
-    final snareBytes = (await rootBundle.load('assets/audio/snare.mp3'))
-        .buffer
-        .asUint8List();
-    _snareSample = await SoLoud.instance.loadMem('snare.mp3', snareBytes);
-
-    if (_disposed) return;
-
-    _receivePort = ReceivePort();
-    _isolate = await Isolate.spawn(_timingIsolateMain, _receivePort!.sendPort);
-
-    final ready = Completer<void>();
-    _receivePort!.listen((msg) {
-      if (msg is SendPort) {
-        _controlPort = msg;
-        if (!ready.isCompleted) ready.complete();
-      } else if (msg is List<int> && _isPlaying) {
-        _onBeat(msg[0], msg[1] == 1,
-            DateTime.fromMicrosecondsSinceEpoch(msg[2]));
-      }
-    });
-    await ready.future;
+    // All beat timing derives from the loop's audio position — there is no
+    // separate clock to start. Audio preparation runs decoupled; every call
+    // in it is timeout-guarded (a stalled audio engine must never block
+    // anything else).
+    unawaited(_prepareAudio());
   }
 
-  void _onBeat(int index, bool isAccent, DateTime plannedAt) {
-    if (!_isPlaying || _disposed) return;
-
-    final volume = resolveTickVolume(
-      beatVolumes: _beatVolumes,
-      index: index,
-      isAccent: isAccent,
-    );
-    final useAccentSrc = _beatVolumes != null && _beatVolumes!.isNotEmpty
-        ? volume >= 1.2
-        : isAccent;
-
-    final source = switch ((_soundType, useAccentSrc)) {
-      (SoundType.click, true)  => _clickAccent,
-      (SoundType.click, false) => _clickNormal,
-      (SoundType.rim,   true)  => _rimAccent,
-      (SoundType.rim,   false) => _rimNormal,
-      (SoundType.snare, true)  => _snareSample,
-      (SoundType.snare, false) => _snareSample,
-    };
-
-    if (volume <= 0) return; // silent grid tick — no sound, no UI trigger
-
-    if (source != null && SoLoud.instance.isInitialized) {
-      SoLoud.instance.play(source, volume: volume).ignore();
+  /// Snare-PCM decoding and, if a start already happened, the loop start.
+  /// Every SoLoud call is timeout-guarded: a stalled audio engine must never
+  /// silence the metronome forever — the loop is retried on the next start.
+  Future<void> _prepareAudio() async {
+    try {
+      final snareBytes = (await rootBundle.load('assets/audio/snare.mp3'))
+          .buffer
+          .asUint8List();
+      final snareSource = await SoLoud.instance
+          .loadMem('snare_len_probe', snareBytes)
+          .timeout(const Duration(seconds: 5));
+      final snareLen = SoLoud.instance.getLength(snareSource);
+      unawaited(SoLoud.instance.disposeSource(snareSource));
+      final snareSampleCount =
+          (snareLen.inMicroseconds * 44100 / 1000000).round();
+      if (snareSampleCount > 0) {
+        final floats = await SoLoud.instance
+            .readSamplesFromMem(snareBytes, snareSampleCount)
+            .timeout(const Duration(seconds: 5));
+        _snarePcm = List<double>.from(floats);
+      }
+    } catch (_) {
+      // Loop rendering for the snare falls back to an empty sample; click
+      // and rim stay synthetic and unaffected.
     }
+    if (_disposed) return;
+    // A start may have happened while audio was not ready — the loop start
+    // back then bailed on !_soloudReady. Catch up now.
+    if (_isPlaying && _loopHandle == null) {
+      unawaited(_startLoop());
+    } else if (_isPlaying &&
+        _soundType == SoundType.snare &&
+        _snarePcm.isNotEmpty) {
+      // A snare loop started before the PCM finished decoding plays the
+      // synthetic fallback — swap in the real sound now.
+      _scheduleLoopRebuild();
+    }
+  }
 
-    _beatCtrl.add(BeatEvent(
-      beatIndex: index,
-      isAccent: isAccent,
-      subdivision: _subdivision,
-      plannedAt: plannedAt,
-    ));
+  // ── Click-track loop ────────────────────────────────────────────────────────
+
+  /// SoLoud reachable and initialized? Merely touching [SoLoud.instance]
+  /// throws in host tests (no FFI bindings), so every audio path goes
+  /// through this guard.
+  static bool get _soloudReady {
+    try {
+      return SoLoud.instance.isInitialized;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Per-tick volumes of one loop cycle: the pattern's own volumes, or a
+  /// single quarter (accent + normal subdivisions) in plain metronome mode —
+  /// matching the old per-tick logic (accent when idx % factor == 0).
+  List<double> _loopVolumes() =>
+      _beatVolumes != null && _beatVolumes!.isNotEmpty
+          ? _beatVolumes!
+          : [2.0, for (var i = 1; i < _factor; i++) 0.7];
+
+  Future<void> _startLoop() async {
+    if (_disposed || !_soloudReady) return;
+    final generation = ++_loopGeneration;
+    await _stopLoop();
+    // Snare uses decoded PCM; if that decode failed or has not finished yet,
+    // fall back to the synthetic click — an audible loop always beats a
+    // silent one (a silent fallback here cost two days of "Übung startet
+    // nicht" reports).
+    final synthetic = _soundType != SoundType.snare || _snarePcm.isEmpty;
+    final fallbackSound =
+        _soundType == SoundType.snare ? SoundType.click : _soundType;
+    final wav = buildLoopWav(
+      bpm: _bpm,
+      factor: _factor,
+      tickVolumes: _loopVolumes(),
+      accentSamples: synthetic
+          ? synthSamples(fallbackSound, accent: true)
+          : _snarePcm,
+      normalSamples: synthetic
+          ? synthSamples(fallbackSound, accent: false)
+          : _snarePcm,
+    );
+    // Timeout-guarded: on a dead audio engine loadMem never answers — this
+    // path must FAIL fast so the start supervisor can revive the engine,
+    // instead of hanging forever before any watchdog exists.
+    final AudioSource source;
+    try {
+      source = await SoLoud.instance
+          .loadMem('click_loop_$generation', wav)
+          .timeout(const Duration(seconds: 3));
+    } catch (_) {
+      return; // supervisor escalates
+    }
+    // A newer rebuild or stop may have superseded this one while awaiting.
+    if (_disposed || !_isPlaying || generation != _loopGeneration) {
+      unawaited(SoLoud.instance.disposeSource(source));
+      return;
+    }
+    _loopSource = source;
+    final volumes = List<double>.of(_loopVolumes());
+    // Tick grid derived from getLength of the same source getPosition
+    // reports on — defensive: with a healthy engine both equal the Dart
+    // formula, but any position-scale quirk then shifts grid and position
+    // together instead of skewing the cursor. (The observed ~1.24 slowdown
+    // itself turned out to be a side effect of an enlarged init bufferSize,
+    // reverted in main.dart.)
+    final realLoopMs =
+        SoLoud.instance.getLength(source).inMicroseconds / 1000.0;
+    final dartLoopMs = 60000.0 / _bpm / _factor * volumes.length;
+    _loopTickDurMs = realLoopMs > 1
+        ? realLoopMs / volumes.length
+        : 60000.0 / _bpm / _factor;
+    _loopVolumesActive = volumes;
+    _wallPerPos = dartLoopMs > 1 && realLoopMs > 1
+        ? dartLoopMs / realLoopMs
+        : 1.0;
+    // Keep the global tick counter monotone across rebuilds: the new loop
+    // starts at its pattern beginning, so continue at the next multiple of
+    // the loop length.
+    final ticks = volumes.length;
+    _lastGlobalTick = _lastGlobalTick < 0
+        ? -1
+        : ((_lastGlobalTick + ticks) ~/ ticks) * ticks - 1;
+    try {
+      _loopHandle = await SoLoud.instance
+          .play(source, looping: true)
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {
+      unawaited(SoLoud.instance.disposeSource(source));
+      return; // supervisor escalates
+    }
+    _beatPoller?.cancel();
+    _beatPoller =
+        Timer.periodic(const Duration(milliseconds: 10), (_) => _pollBeat());
+    _scheduleOutputWatchdog(generation);
+    assert(() {
+      // ignore: avoid_print
+      print('click loop start #$generation');
+      return true;
+    }());
+  }
+
+  Timer? _outputWatchdog;
+  bool _outputRescueTried = false;
+  double _lastPolledPosMs = -1;
+  int _stallPolls = 0;
+
+  /// SoLoud can lose its output device silently — seen after the latency
+  /// calibration's record start/stop triggered a device switch, and after
+  /// Android reclaimed the stream while the app sat in the background:
+  /// play() then hands out a handle whose position FREEZES (not necessarily
+  /// at zero) — no sound, cursor stuck. So the check is movement between two
+  /// readings, not position > 0. No movement → switch to the default device
+  /// and rebuild once.
+  void _scheduleOutputWatchdog(int generation) {
+    _outputWatchdog?.cancel();
+    double posAtArm = -1;
+    final handleAtArm = _loopHandle;
+    if (handleAtArm != null && _soloudReady) {
+      try {
+        posAtArm =
+            SoLoud.instance.getPosition(handleAtArm).inMicroseconds / 1000.0;
+      } catch (_) {}
+    }
+    _outputWatchdog = Timer(const Duration(milliseconds: 600), () {
+      if (_disposed || !_isPlaying || generation != _loopGeneration) return;
+      final handle = _loopHandle;
+      if (handle == null || !_soloudReady) return;
+      double posMs;
+      try {
+        posMs = SoLoud.instance.getPosition(handle).inMicroseconds / 1000.0;
+      } catch (_) {
+        return;
+      }
+      // 600 ms of healthy playback move the position by ~600 ms (loop wrap
+      // landing on the exact same value is practically impossible).
+      final moved = posAtArm < 0 || (posMs - posAtArm).abs() > 1.0;
+      if (moved) {
+        _outputRescueTried = false;
+        return;
+      }
+      if (_outputRescueTried) {
+        // The soft rescue did not stick — the engine itself is dead.
+        unawaited(_reviveAudioEngine());
+        return;
+      }
+      _outputRescueTried = true;
+      assert(() {
+        // ignore: avoid_print
+        print('click loop rescue: output stalled, changing device');
+        return true;
+      }());
+      try {
+        SoLoud.instance.changeDevice();
+      } catch (_) {}
+      unawaited(_startLoop());
+    });
+  }
+
+  /// Derives beat events from the loop's playback position — display and
+  /// planned click times share the audio clock, so they cannot drift against
+  /// what the ear hears (isolate clock vs. loop phase previously diverged by
+  /// up to a full note after tempo changes). plannedAt is back-computed from
+  /// the in-tick offset, so the 10-ms poll cadence does not blur it.
+  void _pollBeat() {
+    final handle = _loopHandle;
+    if (handle == null || !_isPlaying || _disposed) return;
+    double posMs;
+    try {
+      posMs = SoLoud.instance.getPosition(handle).inMicroseconds / 1000.0;
+    } catch (_) {
+      return;
+    }
+    // Mid-session stall detector: a stream Android reclaimed (app went to
+    // the background) freezes the position at an arbitrary value while the
+    // poller keeps running. One second without movement → rescue.
+    if (posMs == _lastPolledPosMs) {
+      _stallPolls++;
+      if (_stallPolls == 100) {
+        _stallPolls = 0;
+        if (!_outputRescueTried) {
+          _outputRescueTried = true;
+          assert(() {
+            // ignore: avoid_print
+            print('click loop rescue: position frozen mid-session');
+            return true;
+          }());
+          try {
+            SoLoud.instance.changeDevice();
+          } catch (_) {}
+          unawaited(_startLoop());
+        } else {
+          // The soft rescue did not stick — the engine itself is dead.
+          unawaited(_reviveAudioEngine());
+        }
+        return;
+      }
+    } else {
+      _lastPolledPosMs = posMs;
+      _stallPolls = 0;
+      _outputRescueTried = false;
+    }
+    final ticks = _loopVolumesActive.length;
+    final t = tickAtPosition(
+        positionMs: posMs, tickDurMs: _loopTickDurMs, ticksInLoop: ticks);
+    final global = advanceGlobalTick(
+        lastGlobalTick: _lastGlobalTick < 0 ? 0 : _lastGlobalTick,
+        tickInLoop: t.tickInLoop,
+        ticksInLoop: ticks);
+    if (_lastGlobalTick >= 0 && global == _lastGlobalTick) return;
+    final now = DateTime.now();
+    final from = _lastGlobalTick < 0 ? global : _lastGlobalTick + 1;
+    for (var g = from; g <= global; g++) {
+      if (_loopVolumesActive[g % ticks] <= 0) continue;
+      final agoMs =
+          (t.inTickMs + (global - g) * _loopTickDurMs) * _wallPerPos;
+      _beatCtrl.add(BeatEvent(
+        beatIndex: g,
+        isAccent: g % _factor == 0,
+        subdivision: _subdivision,
+        plannedAt:
+            now.subtract(Duration(microseconds: (agoMs * 1000).round())),
+      ));
+    }
+    _lastGlobalTick = global;
+  }
+
+  Future<void> _stopLoop() async {
+    final handle = _loopHandle;
+    final source = _loopSource;
+    _loopHandle = null;
+    _loopSource = null;
+    if ((handle == null && source == null) || !_soloudReady) return;
+    if (handle != null) {
+      await SoLoud.instance.stop(handle);
+    }
+    if (source != null) {
+      unawaited(SoLoud.instance.disposeSource(source));
+    }
+  }
+
+  /// Rebuild the running loop shortly after the last parameter change —
+  /// debounced so a BPM slider drag doesn't re-render dozens of loops.
+  void _scheduleLoopRebuild() {
+    if (!_isPlaying) return;
+    _loopRebuildDebounce?.cancel();
+    _loopRebuildDebounce = Timer(
+        const Duration(milliseconds: 150), () => unawaited(_startLoop()));
+  }
+
+  Timer? _routeChangeDebounce;
+
+  /// Headphones were plugged or unplugged: SoLoud's output stream does not
+  /// survive the Android routing change on its own — switch the engine to
+  /// the (new) default device and restart a running loop. Debounced because
+  /// one plug event fires several add/remove callbacks.
+  void handleAudioRouteChanged() {
+    if (_disposed) return;
+    assert(() {
+      // ignore: avoid_print
+      print('audio route change event');
+      return true;
+    }());
+    _routeChangeDebounce?.cancel();
+    _routeChangeDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (_disposed || !_soloudReady) return;
+      try {
+        SoLoud.instance.changeDevice();
+      } catch (_) {
+        // Device list mid-transition — the retry rides on the next event.
+      }
+      if (_isPlaying) unawaited(_startLoop());
+    });
+  }
+
+  Timer? _startSupervisor;
+  bool _reviving = false;
+  int _reviveAttempts = 0;
+
+  /// Last-resort repair: SoLoud can end up so dead (stream reclaimed while
+  /// the app was backgrounded) that loadMem/play/changeDevice never answer —
+  /// every softer rescue then hangs with it. Tear the engine down and bring
+  /// it back up; _prepareAudio reloads the snare PCM and, because
+  /// _isPlaying is still true and no loop handle exists, restarts the loop.
+  Future<void> _reviveAudioEngine() async {
+    if (_disposed || _reviving) return;
+    if (_reviveAttempts >= 2) return; // give up until the next manual start
+    _reviveAttempts++;
+    _reviving = true;
+    assert(() {
+      // ignore: avoid_print
+      print('audio engine revive #$_reviveAttempts');
+      return true;
+    }());
+    try {
+      _loopHandle = null;
+      _loopSource = null;
+      try {
+        SoLoud.instance.deinit();
+      } catch (_) {}
+      try {
+        await SoLoud.instance.init().timeout(const Duration(seconds: 5));
+      } catch (_) {
+        return; // engine unreachable — next attempt or manual restart
+      }
+      _snarePcm = const [];
+      await _prepareAudio();
+    } finally {
+      _reviving = false;
+    }
+    // Still no loop? Keep supervising (capped by _reviveAttempts).
+    if (!_disposed && _isPlaying && _loopHandle == null) {
+      _armStartSupervisor();
+    }
+  }
+
+  /// Supervisor OUTSIDE the SoLoud call chain: if no loop handle exists
+  /// shortly after starting, the audio calls hung or bailed — revive. This
+  /// is the only guard that still fires when loadMem/play never return.
+  void _armStartSupervisor() {
+    _startSupervisor?.cancel();
+    _startSupervisor = Timer(const Duration(seconds: 3), () {
+      if (_disposed || !_isPlaying || _loopHandle != null) return;
+      unawaited(_reviveAudioEngine());
+    });
   }
 
   void start() {
     if (_isPlaying) return;
     _isPlaying = true;
-    _controlPort?.send([_cmdStart, _bpm, _factor]);
+    _outputRescueTried = false;
+    _reviveAttempts = 0;
+    _lastGlobalTick = -1;
+    unawaited(_startLoop());
+    _armStartSupervisor();
   }
 
   void stop() {
     _isPlaying = false;
-    _controlPort?.send([_cmdStop]);
+    _loopRebuildDebounce?.cancel();
+    _outputWatchdog?.cancel();
+    _startSupervisor?.cancel();
+    _outputRescueTried = false;
+    _beatPoller?.cancel();
+    _beatPoller = null;
+    unawaited(_stopLoop());
   }
 
   void setBpm(int bpm) {
     _bpm = bpm.clamp(40, 240);
-    _controlPort?.send([_cmdBpm, _bpm]);
+    _scheduleLoopRebuild();
   }
 
   void setSubdivision(Subdivision subdivision) {
     _subdivision = subdivision;
     _factor = subdivision.factor;
-    _controlPort?.send([_cmdFactor, _factor]);
+    _scheduleLoopRebuild();
   }
 
   /// Set an arbitrary integer tick factor for pattern playback (e.g. 24
-  /// ticks/quarter), bypassing the [Subdivision] enum. The timing isolate
-  /// already treats `factor` generically.
+  /// ticks/quarter), bypassing the [Subdivision] enum.
   void setPatternClock(int ticksPerQuarter) {
     _factor = ticksPerQuarter;
-    _controlPort?.send([_cmdFactor, _factor]);
+    _scheduleLoopRebuild();
   }
 
-  void setSoundType(SoundType t)      => _soundType   = t;
-  void setBeatVolumes(List<double>? v) => _beatVolumes = v;
+  void setSoundType(SoundType t) {
+    _soundType = t;
+    _scheduleLoopRebuild();
+  }
+
+  void setBeatVolumes(List<double>? v) {
+    _beatVolumes = v;
+    _scheduleLoopRebuild();
+  }
+
+  @visibleForTesting
+  int get debugBpm => _bpm;
+  @visibleForTesting
+  int get debugFactor => _factor;
 
   void dispose() {
     _disposed  = true;
     _isPlaying = false;
-    _controlPort?.send([_cmdStop]);
-    _receivePort?.close();
-    _isolate?.kill(priority: Isolate.immediate);
+    _loopRebuildDebounce?.cancel();
+    _routeChangeDebounce?.cancel();
+    _outputWatchdog?.cancel();
+    _startSupervisor?.cancel();
+    _beatPoller?.cancel();
     if (!_beatCtrl.isClosed) _beatCtrl.close();
-    for (final s in [
-      _clickAccent, _clickNormal,
-      _rimAccent,   _rimNormal,
-      _snareSample,
-    ]) {
-      s?.let((src) => SoLoud.instance.disposeSource(src).ignore());
-    }
+    unawaited(_stopLoop());
   }
 
   // ── Sound synthesis ─────────────────────────────────────────────────────────
@@ -327,6 +548,45 @@ class MetronomeEngine {
   /// (§1.3) so the measured loopback matches the sound used in practice.
   static Uint8List calibrationClickWav() =>
       _buildClickWav(frequency: 1200, amplitude: 0.95);
+
+  /// Raw float samples of one stroke sound — shared by the per-tick sources
+  /// and the loop renderer so both playback paths sound identical.
+  static List<double> synthSamples(
+    SoundType type, {
+    required bool accent,
+    int sampleRate = 44100,
+  }) {
+    final amplitude = accent ? 0.95 : 0.55;
+    switch (type) {
+      case SoundType.click:
+        final frequency = accent ? 1200.0 : 800.0;
+        final n = (sampleRate * 0.030).round();
+        return [
+          for (var i = 0; i < n; i++)
+            amplitude *
+                math.exp(-140.0 * (i / sampleRate)) *
+                math.sin(2 * math.pi * frequency * (i / sampleRate)),
+        ];
+      case SoundType.rim:
+        final n = (sampleRate * 0.10).round();
+        return [
+          for (var i = 0; i < n; i++)
+            _rimSample(i / sampleRate, amplitude),
+        ];
+      case SoundType.snare:
+        // The snare is a real recorded sample (assets/audio/snare.mp3); its
+        // PCM is decoded once at init via readSamplesFromMem and kept in
+        // [_snarePcm] for the loop renderer.
+        throw ArgumentError('snare is sample-based; use the decoded PCM');
+    }
+  }
+
+  static double _rimSample(double t, double amplitude) {
+    final shell = math.sin(2 * math.pi * 280 * t) * math.exp(-55.0 * t) * 0.45;
+    final rim = math.sin(2 * math.pi * 680 * t) * math.exp(-130.0 * t) * 0.60;
+    final snap = math.sin(2 * math.pi * 2100 * t) * math.exp(-600.0 * t) * 0.35;
+    return amplitude * (shell + rim + snap);
+  }
 
   static Uint8List _buildClickWav({
     required double frequency,
@@ -338,18 +598,6 @@ class MetronomeEngine {
     return _buildWav(n, (i) {
       final t = i / sr;
       return amplitude * math.exp(-140.0 * t) * math.sin(2 * math.pi * frequency * t);
-    });
-  }
-
-  static Uint8List _buildRimWav({double amplitude = 0.8}) {
-    const sr = 44100;
-    final n  = (sr * 0.10).round();
-    return _buildWav(n, (i) {
-      final t     = i / sr;
-      final shell = math.sin(2 * math.pi * 280  * t) * math.exp( -55.0 * t) * 0.45;
-      final rim   = math.sin(2 * math.pi * 680  * t) * math.exp(-130.0 * t) * 0.60;
-      final snap  = math.sin(2 * math.pi * 2100 * t) * math.exp(-600.0 * t) * 0.35;
-      return amplitude * (shell + rim + snap);
     });
   }
 
@@ -375,11 +623,5 @@ class MetronomeEngine {
       bd.setInt16(44 + i * 2, s16, Endian.little);
     }
     return bd.buffer.asUint8List();
-  }
-}
-
-extension _NullableExt<T> on T? {
-  void let(void Function(T) fn) {
-    if (this != null) fn(this as T);
   }
 }
