@@ -2,7 +2,8 @@
 
 # Drum-Coach: Ergänzung zum Standort-Bericht
 
-**Datum:** 05.09.2026 · **Stand:** nach Teil 1 der Konzept-Session (Fassung 2)
+**Datum:** 05.09.2026, Befund G ergänzt am 14.09.2026 · **Stand:** nach Teil 1 der
+Konzept-Session (Fassung 3)
 **Bezug:** `BERICHT_NEUKONZEPT.md` und `BRIEF_SONG_UEBUNGEN.md` — dieses Dokument
 ergänzt und korrigiert beide, ersetzt sie nicht.
 
@@ -12,7 +13,8 @@ aufgetaucht, die dort nicht vorkommen — vor allem eine Positionierung, die den
 Unterschied zum Wettbewerb erklärt, und ein Messproblem, das die Grundlage der
 ganzen Idee betrifft.
 
-**Noch offen:** Assessment-Entwurf, Content-Strategie, UI-Leitplanken (Abschnitt 9).
+**Noch offen:** Assessment-Entwurf, Content-Strategie, UI-Leitplanken,
+Repertoire-Mechanik aus Befund G (Abschnitt 9).
 
 ---
 
@@ -187,6 +189,71 @@ man gegen einen nachhinkenden Klick an — die App misst dann eine Verzerrung, d
 sie selbst erzeugt hat. Nötig: niedriglatente Ausgabe plus einmaliger
 Kalibrierungsschritt. Gilt auf Android genauso, dort teils schlimmer.
 
+### G. Der Duolingo-Befund: Wiedererkennen statt Abrufen
+Beobachtung des Auftraggebers am Set (13.09.2026): *„Kenne die Vokabeln, kann
+aber am Set nichts alleine spielen."* Nachgefragt, welche Ursache überwiegt:
+**kein Repertoire, das sich abrufen ließe**, und **mit Noten geht es, ohne Noten
+nichts**. Beides ist dieselbe Ursache. Die App hat nie ohne Vorlage spielen
+lassen, also ist nie etwas ins Gedächtnis gewandert. Duolingo scheitert an
+derselben Stelle: Wörter wiedererkennen, vorgegebene Sätze übersetzen, nie
+selbst etwas sagen.
+
+Das Konzept bis Fassung 2 bleibt in diesem Muster. Jede Einheit wird mit Noten,
+Klick und Cursor nachgespielt; auch das Set-Gate (Abschnitt 8) heißt „Stelle X
+aus Song Y nachspielen". Das ist Übersetzen, nicht Sprechen.
+
+| Stufe | Sprache | Schlagzeug | Stand |
+|---|---|---|---|
+| Vokabeln | Wörter erkennen | Rudiments, Handsätze | App hat es |
+| Sätze | vorgegebene Sätze übersetzen | Grooves und Fills als Einheiten mit Kick und Hi-Hat | Konzept plant es (Song-Ausschnitte, Mehrspur, MIDI) |
+| Sprechen | ohne Vorlage etwas sagen | ohne Noten Groove halten, Fill setzen, wieder einsteigen, Form zählen, variieren | fehlte bis Fassung 2 vollständig |
+
+**Folge für das Versprechen (Abschnitt 7):** „Das Pad baut die Hände, das Set
+beweist es" läuft ins Leere, wenn jedes Gate mit Noten vor der Nase bestanden
+wird. Man kann alle Gates bestehen und trotzdem am Set sitzen und nichts spielen.
+
+**Mechanik: die Vorlage in Stufen ausblenden.** Jede Einheit — Rudiment, Groove
+oder Fill — hat vier Abruf-Stufen:
+
+| Abruf-Stufe | Vorlage | Bedeutung |
+|---|---|---|
+| 1 | Noten + Cursor + Klick | Lesen |
+| 2 | Noten ohne Cursor + Klick | Lesen ohne Führung |
+| 3 | nur Klick, Noten ausgeblendet (auf Tipp kurz einblendbar) | **Abruf — ab hier „im Repertoire"** |
+| 4 | zu Musik, ohne Klick | Anwendung |
+
+Die Messung dafür existiert bereits: Die App kennt das erwartete Muster auch bei
+ausgeblendeten Noten; der Sequenzabgleich aus Etappe 1 (Phase 1.2) sagt, ob es
+gespielt wurde. Ein Abruf-Versuch, der zu weit vom Soll abweicht, ist kein
+Messfehler, sondern das Ergebnis: sitzt nicht. Damit wird Repertoire eine
+**gemessene** Fähigkeit statt einer gefühlten — am Pad wie am Set. Die Stufe
+einer Einheit verfällt mit der Zeit; die vorhandene Spaced Repetition bekommt
+dafür eine zweite Achse: nicht nur „wann zuletzt geübt", sondern „wann zuletzt
+ohne Noten gespielt". Die Startseiten-Antwort aus Abschnitt 1 kann dann lauten:
+*„Groove 3 seit neun Tagen nicht ohne Noten gespielt — heute Abruf-Check."*
+
+Am Pad betrifft das die Hände (Handsätze, Fill-Stickings, das Hi-Hat/Snare-
+Muster), am Set die ganze Einheit mit Füßen. Dieselbe Einheit kann am Pad auf
+Stufe 3 stehen und am Set auf Stufe 1 — das ist die inhaltliche Trennung aus
+Befund D, jetzt mit Maßstab.
+
+**Zwei Regeln, die daraus folgen:**
+1. **Gates verlangen Abruf-Stufe 3.** Ein Gate, das mit Noten bestanden wird,
+   beweist Lesen. (Ergänzt Abschnitt 4 und 7.)
+2. **Content: Grundwortschatz statt Permutationen.** Repertoire braucht wenige,
+   wiederkehrende Einheiten — Größenordnung acht Grooves und acht Fills, die in
+   Songs vorkommen, die der Nutzer spielen will (Quelle: Song-Zentrale,
+   Abschnitt 8). Die 86 generierten Übungen taugen für Stufe 1; als Repertoire
+   sind sie zu viele und zu ähnlich. (Vorentscheidung für die Content-Strategie,
+   Abschnitt 9.)
+
+**Was daraus später wird, aber nicht Teil dieses Befunds ist:** Spielaufgaben
+ohne Noten („acht Takte Groove X, dann ein Fill, dann weiter" — die App prüft
+nur die Form) sind die eigentliche Stufe „Sprechen". Sie setzen Repertoire voraus
+und kommen deshalb erst nach dieser Mechanik. Play-Along zu Songs ohne
+Schlagzeugspur ist wieder eine Vorlage, nur eine musikalische; es löst den Befund
+nicht, bleibt aber der Träger für Abruf-Stufe 4.
+
 ---
 
 ## 6. Das Mikrofon-Problem (vier getrennte Probleme)
@@ -282,15 +349,22 @@ einer Unbekannten eine kalibrierte Größe, passt ins eingebettete Assessment.
 | Hand-Balance L/R | Pad | Timing + Lautstärke pro Hand | Mikrofon / MIDI | **nur Analyse** |
 | **Hand-Fuß-Koordination** | **nur Set** | **Versatz Fuß zu Hand** | **nur MIDI** | — |
 | Vokabular | beide | per Gate geprüft | — | — |
+| **Repertoire / Abruf** | **beide** | **Anzahl Einheiten auf Abruf-Stufe 3 und 4 (Befund G)** | Mikrofon / MIDI | beide |
 
 Zeile 6 ist der Grund, warum die App bisher am Set-Ziel vorbeimisst: mit dem
 Mikrofon prinzipiell nicht erfassbar, mit MIDI trivial.
+
+Zeile 7 und 8 sind verschieden: Vokabular sagt, was einmal bestanden wurde;
+Repertoire sagt, was heute ohne Noten abrufbar ist. Zeile 8 verfällt, Zeile 7
+nicht.
 
 **Versprechen (Vorschlag, Antwort auf Bericht-Frage 2):**
 
 > „Das Pad baut die Hände, das Set beweist es. Von deinem gemessenen Stand zu
 > einem konkreten Groove in deinem Zieltempo — in bestandenen Prüfungen, nicht in
 > Kalenderwochen."
+
+Seit Befund G gilt für „bestanden": ohne Noten, also Abruf-Stufe 3.
 
 ---
 
@@ -339,6 +413,12 @@ Laptop am Modul. Das Handy bleibt Abspieler und Pad-Trainer.
 - **Content-Strategie** — Bericht-Fragen 7/8, jetzt mit Song-Import als drittem
   Faktor. Insbesondere: Was passiert mit den 86 generierten Übungen?
 - **UI-Leitplanken** — Bericht-Fragen 9/10; Drumeo-Screenshots fehlen noch.
+- **Repertoire-Mechanik (Befund G)** — zwei Fragen: (1) Wie kommt eine Einheit
+  von Stufe 2 nach 3, ohne dass der Nutzer nur den Ausblende-Knopf drückt?
+  Vorschlag: Die App schlägt den Abruf-Check vor, wenn Stufe 2 mehrfach sauber
+  lief — analog zum Umschaltmoment in 6.1. (2) Welche Einheiten bilden den
+  Grundwortschatz, und woher kommen sie: Standardwerke, die Songs des Nutzers,
+  oder gemischt?
 
 ### Technische Fragen
 1. **Hand-Zuordnung im Bestandscode** — durchgezählt oder abgeglichen? (Abschnitt 6.1)
