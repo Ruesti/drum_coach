@@ -23,14 +23,15 @@ abgenommen und gemergt (PR #18).**
    „gemessen geschafft" (sauber durchgespielt, kein Einbruch), nicht
    „Video abgehakt". Genau das kann kein Wettbewerber (Befund G).
 
-## §2 Phase K1 — Sprachpass (klein, sofort)
+## §2 Phase K1 — Sprachpass (klein, sofort) — **FREIGEGEBEN 14.09., Richtung: ENGLISCH**
 
-Alle Nutzertexte konsequent Deutsch: „Session complete" → „Übung
-beendet", „Mic Analysis" → „Messung", „How did it feel?" → „Wie lief
-es?", „Good afternoon" → deutsche Begrüßung, Rating-Stufen
-(Struggled/OK/Solid → z. B. Schwer getan / Ging so / Saß). Keine
-Funktionsänderung. **Abnahme:** ein Durchklick durch alle Screens ohne
-englischen Nutzertext.
+Entscheidung Auftraggeber (Rückfrage 3): Die App geht **konsequent auf
+Englisch** — kein Sprachmix mehr; die deutschen Texte aus Etappe 1
+(Ansagen, Kalibrier-Screen, Einstellungen, Export) werden ins Englische
+überführt. Das entspricht der ursprünglichen Code-Konvention („all
+strings in English") und hält die App international anschlussfähig.
+Keine Funktionsänderung. **Abnahme:** ein Durchklick durch alle Screens
+ohne deutschen Nutzertext.
 
 ## §3 Phase K2 — Design-Pass „leicht und klar"
 
@@ -44,8 +45,14 @@ englischen Nutzertext.
 - **Feedback-Blatt:** Urteils-Banner (bereits umgesetzt) bleibt oben;
   darunter drei Kernwerte statt Zahlenfriedhof; alles Weitere hinter
   „Messdetails".
-- **Abnahme:** Screenshots aller Kern-Screens; Auftraggeber-Urteil
-  „leicht/luftig/klar" statt Checkliste.
+- **Vorgehen (Entscheidung Auftraggeber, Rückfrage 2): Entwürfe zuerst.**
+  Vor der Umsetzung bekommt der Auftraggeber Mockups der Kern-Screens
+  zur Sichtung. **Illustrationen aus der eigenen ComfyUI-Pipeline**
+  (Hausstil) lockern die App auf — Kandidaten: Rubrik-Titelbilder,
+  leere Zustände, Pfad-Stufen-Illustrationen.
+- **Abnahme:** Erst Mockup-Freigabe, dann Umsetzung mit
+  Screenshot-Abnahme; Auftraggeber-Urteil „leicht/luftig/klar" statt
+  Checkliste.
 
 ## §4 Phase K3 — Der Pfad (geführtes Lernen)
 
@@ -84,8 +91,8 @@ englischen Nutzertext.
 
 Die geplante Etappe-1-Phase 4 („variable Tagesdosis") geht inhaltlich im
 „Heute"-Modell von K2/K3 auf (Pfad-Schritt + freie Wahl statt starrer
-20-Minuten-Routine). **Vorschlag: Phase 4 alt entfällt als eigener
-Block.** → Entscheidung Auftraggeber.
+20-Minuten-Routine). **Beschlossen 14.09.: Phase 4 alt entfällt als
+eigener Block.**
 
 ## §7 Arbeitsweise
 
