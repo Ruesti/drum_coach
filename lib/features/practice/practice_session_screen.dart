@@ -17,6 +17,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../data/local/models/session_log.dart';
 import '../../data/local/session_log_service.dart';
 import '../coaching/models/session_analysis.dart';
+import 'analysis_announcement.dart';
 import '../coaching/services/recording_setup.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
@@ -1061,15 +1062,26 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               (widget.analysis?.unassigned != null ||
                   widget.analysis?.signalTooWeak == true)) ...[
             const SizedBox(height: 16),
+            // The coach verdict as an unmissable banner ABOVE the numbers:
+            // as faint small print it was overlooked outright (14.09.).
+            if (analysisAnnouncement(widget.analysis!,
+                    analysisMode: widget.analysisMode)
+                case final Announcement a) ...[
+              _VerdictBanner(announcement: a),
+              const SizedBox(height: 10),
+            ],
             _AnalysisSummary(
                 analysis: widget.analysis!,
                 analysisMode: widget.analysisMode),
           ],
-          CoachFeedbackCard(
-            feedback: _feedback,
-            isLoading: _loading,
-            hasAnalysis: hasMicData,
-          ),
+          // Without an API key the coach card only ever shows an error for
+          // an expected condition — and shouts over the actual verdict.
+          if (SettingsService.claudeApiKey.isNotEmpty)
+            CoachFeedbackCard(
+              feedback: _feedback,
+              isLoading: _loading,
+              hasAnalysis: hasMicData,
+            ),
           const SizedBox(height: 20),
           if (widget.sessionLog != null) ...[
             SizedBox(
@@ -1177,29 +1189,14 @@ class _AnalysisSummary extends StatelessWidget {
                 value:
                     '${(d.rightHandLevel * 100).round()}% / ${(d.leftHandLevel * 100).round()}%',
               ),
-          ] else ...[
+          ] else if (!analysisMode && !analysis.signalTooWeak) ...[
+            // Learn mode keeps its calm inline hint — a permanent mode, not
+            // a verdict. All verdicts render as the banner above the card.
             const SizedBox(height: 6),
-            Text(
-              // A too-weak recording gets no verdict in either mode — the
-              // mic mostly heard click bleed, not strokes (13.09.).
-              analysis.signalTooWeak
-                  ? 'Aufnahme zu leise für eine Analyse — leg das Handy '
-                      'näher ans Pad.'
-                  : analysisMode
-                      // Brief Phase 3 wording, split by cause: a located
-                      // lapse (13.09.) beats the global reasons — the player
-                      // should hear WHERE they fell off, not just that they
-                      // did.
-                      ? (_lapseText(analysis.alignment) ??
-                          (analysis.alignment?.jitterLimitExceeded == true
-                              ? 'Zu unruhig für eine Hand-Analyse — das '
-                                  'sitzt noch nicht.'
-                              : 'Zu viele Aussetzer für eine Hand-Analyse — '
-                                  'das sitzt noch nicht.'))
-                      : 'Lernmodus — Timing und Gleichmäßigkeit ohne '
-                          'Hand-Analyse. Fehler sind hier normal.',
-              style:
-                  const TextStyle(color: AppColors.textFaint, fontSize: 12),
+            const Text(
+              'Lernmodus — Timing und Gleichmäßigkeit ohne Hand-Analyse. '
+              'Fehler sind hier normal.',
+              style: TextStyle(color: AppColors.textFaint, fontSize: 12),
             ),
           ],
           // Raw numbers for the §1.1/§1.3 device checks (peak levels must
@@ -1257,21 +1254,48 @@ class _Row extends StatelessWidget {
   }
 }
 
-/// Announcement for located lapses (P3, 13.09.): names the spot where the
-/// player fell off instead of a global verdict. Null when there are none.
-String? _lapseText(AlignmentSummary? a) {
-  if (a == null || a.lapses.isEmpty) return null;
-  String mmss(double ms) {
-    final s = (ms / 1000).round();
-    return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
-  }
+/// The coach verdict as a banner nobody can miss — the faint inline line
+/// was overlooked outright (14.09.).
+class _VerdictBanner extends StatelessWidget {
+  final Announcement announcement;
+  const _VerdictBanner({required this.announcement});
 
-  final first = a.lapses.first;
-  final durS = (first.durationMs / 1000).round().clamp(1, 999);
-  if (a.lapses.length == 1) {
-    return 'Bei ${mmss(first.startMs)} für ~$durS s rausgekommen — '
-        'das sitzt noch nicht.';
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        announcement.positive ? AppColors.solidStreak : AppColors.accent;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: color, width: 1.2),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            announcement.positive
+                ? Icons.check_circle_outline
+                : Icons.report_gmailerrorred_outlined,
+            size: 20,
+            color: color,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              announcement.text,
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
-  return '${a.lapses.length} Einbrüche (erster bei ${mmss(first.startMs)}) — '
-      'das sitzt noch nicht.';
 }
