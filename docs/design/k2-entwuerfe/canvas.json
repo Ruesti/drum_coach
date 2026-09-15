@@ -60,35 +60,35 @@
     {
       "id": "k2-heute",
       "x": 1460,
-      "y": 290,
+      "y": 340,
       "w": 360,
       "text": "Today (statt Dashboard)\n\nZwei Türen zuerst: „Continue the path“ = nächster Schritt mit EINEM Knopf; „Practice freely“ = Bibliothek. Darunter kompakt Streak und Tagesminuten. Der alte Kartenstapel (Programm/Collection/Technique/Pad/Routine/Last session) entfällt.\n\nVorschlag Navigation: 3 Tabs Today · Library · Progress (statt Dashboard/Routine/Lessons/Stats)."
     },
     {
       "id": "k2-ueben",
       "x": 1460,
-      "y": 600,
+      "y": 700,
       "w": 360,
       "text": "Practice\n\nNotenblatt und Zählwerk (1 2 3 4, aktiver Schlag orange) sind das großflächige Herz. Kopfzeile entschlackt: Name, Stufe, ein Modus-Chip mit Mikro.\nSteuerung kompakt unten: Leiter-Zeile, BPM mit ±, ein Stop-Knopf mit Restzeit; Sound, Dauer, Feinschritte hinter „⋯“.\nGezeigt: Zustand „läuft“, Takt 2, Schlag 2."
     },
     {
       "id": "k2-ergebnis",
       "x": 1460,
-      "y": 900,
+      "y": 1020,
       "w": 360,
       "text": "Result\n\nUrteils-Banner bleibt oben. Darunter drei Kernwerte: Hits (Treffer von erwartet), Timing (Median zum Klick + Streuung), Evenness (Gleichmäßigkeit, mit Hand-Werten). Selbst-Rating direkt im selben Blatt statt als eigenes Sheet davor. Alles Weitere hinter „Measurement details“."
     },
     {
       "id": "k2-illus",
       "x": 1460,
-      "y": 1180,
+      "y": 1300,
       "w": 360,
       "text": "Illustrationen\n\nGestrichelte Flächen = Platzhalter für Bilder aus der ComfyUI-Pipeline (Hausstil): Pfad-Stufen, Rubrik-Titelbilder, leere Zustände. Stil noch offen."
     },
     {
       "id": "k2-fragen",
       "x": 1460,
-      "y": 1400,
+      "y": 1500,
       "w": 360,
       "text": "Offen für dich\n\n1. Richtung A (dunkel) oder B (hell)?\n2. Rating ins Ergebnis-Blatt zusammenlegen – ok?\n3. Drei Tabs Today · Library · Progress – ok?\n4. Kernwerte Hits / Timing / Evenness – die richtigen drei?\n5. Zählwerk 1 2 3 4 vs. pulsierender Kreis – was liest sich aus 60 cm besser?"
     },

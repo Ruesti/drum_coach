@@ -7,7 +7,7 @@ OUT = pathlib.Path(__file__).parent
 
 DARK = dict(
     bg="#101010", sheet="#161616", scrim="#070707",
-    fg="#FFFFFF", fg2="rgba(255,255,255,.72)", fg3="rgba(255,255,255,.46)", hair="rgba(255,255,255,.10)",
+    fg="#FFFFFF", fg2="rgba(255,255,255,.72)", fg3="rgba(255,255,255,.56)", hair="rgba(255,255,255,.10)", line="rgba(255,255,255,.22)",
     accent="#FF6A2B", accentFg="#FFFFFF", accentText="#FF8A5C", accentSoft="rgba(255,106,43,.14)", accentLine="rgba(255,106,43,.45)",
     good="#57C97A", goodSoft="rgba(87,201,122,.14)", goodLine="rgba(87,201,122,.40)",
     paper="#FAF8F3", ink="#17181A", inkSoft="rgba(23,24,26,.55)", staff="rgba(23,24,26,.32)", paperAccent="#C0451A", cursor="rgba(184,119,0,.20)", cursorLine="#B87700",
@@ -16,7 +16,7 @@ DARK = dict(
 )
 LIGHT = dict(
     bg="#FAF8F3", sheet="#FFFFFF", scrim="#DAD6CE",
-    fg="#17181A", fg2="rgba(23,24,26,.74)", fg3="rgba(23,24,26,.50)", hair="rgba(23,24,26,.10)",
+    fg="#17181A", fg2="rgba(23,24,26,.74)", fg3="rgba(23,24,26,.62)", hair="rgba(23,24,26,.10)", line="rgba(23,24,26,.22)",
     accent="#FF6A2B", accentFg="#FFFFFF", accentText="#C0451A", accentSoft="rgba(255,106,43,.12)", accentLine="rgba(255,106,43,.50)",
     good="#2E9E55", goodSoft="rgba(46,158,85,.12)", goodLine="rgba(46,158,85,.40)",
     paper="#FFFFFF", ink="#17181A", inkSoft="rgba(23,24,26,.55)", staff="rgba(23,24,26,.30)", paperAccent="#C0451A", cursor="rgba(184,119,0,.18)", cursorLine="#B87700",
@@ -88,10 +88,10 @@ def nav(p, active):
     return (f'<div style="display:flex;flex-direction:row;align-items:stretch;border-top:1px solid {p["hair"]};'
             f'padding:6px 16px 18px 16px;background:{p["bg"]}">' + "".join(cells) + '</div>')
 
-def phone(p, inner, bg=None):
+def phone(p, inner, bg=None, extra=""):
     bg = bg or p["bg"]
     return (f'<div style="width:390px;height:844px;background:{bg};color:{p["fg"]};font-family:{SG};'
-            f'display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box">{inner}</div>')
+            f'display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;{extra}">{inner}</div>')
 
 def btn_primary(p, label, extra="", height=56):
     return (f'<div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;'
@@ -100,7 +100,7 @@ def btn_primary(p, label, extra="", height=56):
 
 def btn_ghost(p, label, height=48):
     return (f'<div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;'
-            f'height:{height}px;border-radius:14px;border:1px solid {p["hair"]};color:{p["fg"]};'
+            f'height:{height}px;border-radius:14px;border:1px solid {p["line"]};color:{p["fg"]};'
             f'font-family:{SG};font-size:15px;font-weight:600">{label}{icon("arrow", 18)}</div>')
 
 def illo(p, label, height=150):
@@ -148,45 +148,46 @@ def today(p):
     return phone(p, body + nav(p, "today"))
 
 # ---------- Notation ----------
+def n(v):
+    return ("%.2f" % v).rstrip("0").rstrip(".")
+
 def staff_svg(p, active=21, width=326):
     stick = ["R","L","R","R","L","R","L","L"] * 4     # 2 Takte Single Paradiddle in 16teln
-    out = [f'<svg width="{width}" height="212" viewBox="0 0 {width} 212" style="display:block">']
-    s = 17.0; x0 = 46
+    H = 262
+    out = [f'<svg width="{width}" height="{H}" viewBox="0 0 {width} {H}" style="display:block;width:100%;height:auto">']
+    s = 17.0; x0 = 50; LS = 10
     for line in range(2):
-        base = 34 + line * 100
-        ymid = base + 16
+        base = 44 + line * 128
+        ymid = base + 2 * LS
         for i in range(5):
-            out.append(f'<line x1="0" y1="{base+i*8}" x2="{width}" y2="{base+i*8}" stroke="{p["staff"]}" stroke-width="1"></line>')
-        # Schlagzeugschlüssel
-        out.append(f'<rect x="8" y="{ymid-8}" width="3" height="16" fill="{p["ink"]}"></rect><rect x="14" y="{ymid-8}" width="3" height="16" fill="{p["ink"]}"></rect>')
+            out.append(f'<line x1="0" y1="{base+i*LS}" x2="{width}" y2="{base+i*LS}" stroke="{p["staff"]}" stroke-width="1"></line>')
+        out.append(f'<rect x="8" y="{ymid-10}" width="3.5" height="20" fill="{p["ink"]}"></rect><rect x="15" y="{ymid-10}" width="3.5" height="20" fill="{p["ink"]}"></rect>')
         if line == 0:
-            out.append(f'<text x="28" y="{base+14}" font-family="{MONO}" font-size="15" font-weight="600" fill="{p["ink"]}">4</text>'
-                       f'<text x="28" y="{base+30}" font-family="{MONO}" font-size="15" font-weight="600" fill="{p["ink"]}">4</text>')
+            out.append(f'<text x="28" y="{base+18}" font-family="{MONO}" font-size="19" font-weight="600" fill="{p["ink"]}">4</text>'
+                       f'<text x="28" y="{base+39}" font-family="{MONO}" font-size="19" font-weight="600" fill="{p["ink"]}">4</text>')
         for k in range(16):
             idx = line * 16 + k
             x = x0 + k * s
             act = (idx == active)
             col = p["paperAccent"] if act else p["ink"]
             if act:
-                out.append(f'<rect x="{x-7.5}" y="{base-14}" width="15" height="66" rx="3" fill="{p["cursor"]}"></rect>'
-                           f'<line x1="{x}" y1="{base-14}" x2="{x}" y2="{base+52}" stroke="{p["cursorLine"]}" stroke-width="1.2" opacity=".7"></line>')
-            out.append(f'<ellipse cx="{x}" cy="{ymid}" rx="4.4" ry="3.1" transform="rotate(-20 {x} {ymid})" fill="{col}"></ellipse>')
-            out.append(f'<line x1="{x+3.9}" y1="{ymid-1}" x2="{x+3.9}" y2="{ymid-27}" stroke="{col}" stroke-width="1.3"></line>')
+                out.append(f'<rect x="{n(x-8.5)}" y="{base-22}" width="17" height="92" rx="3" fill="{p["cursor"]}"></rect>'
+                           f'<line x1="{n(x)}" y1="{base-22}" x2="{n(x)}" y2="{base+70}" stroke="{p["cursorLine"]}" stroke-width="1.3" opacity=".7"></line>')
+            out.append(f'<ellipse cx="{n(x)}" cy="{ymid}" rx="5.4" ry="3.8" transform="rotate(-20 {n(x)} {ymid})" fill="{col}"></ellipse>')
+            out.append(f'<line x1="{n(x+4.8)}" y1="{ymid-1.5}" x2="{n(x+4.8)}" y2="{ymid-35}" stroke="{col}" stroke-width="1.5"></line>')
             if k % 4 == 0:  # Akzent auf jedem Paradiddle-Anfang
-                out.append(f'<path d="M{x-4} {ymid-37} l8 3 l-8 3" fill="none" stroke="{col}" stroke-width="1.4" stroke-linejoin="round"></path>')
-            out.append(f'<text x="{x}" y="{base+50}" text-anchor="middle" font-family="{MONO}" font-size="10.5" font-weight="500" fill="{p["paperAccent"] if act else p["inkSoft"]}">{stick[idx]}</text>')
-        # Balken (Gruppen zu 4)
-        for g in range(4):
-            xa = x0 + g*4*s + 3.9; xb = x0 + (g*4+3)*s + 3.9
-            for yb in (ymid-28, ymid-23):
-                out.append(f'<rect x="{xa-0.65}" y="{yb}" width="{xb-xa+1.3}" height="3" fill="{p["ink"]}"></rect>')
-        # Taktstrich
+                out.append(f'<path d="M{n(x-5)} {ymid-47} l10 4 l-10 4" fill="none" stroke="{col}" stroke-width="1.7" stroke-linejoin="round"></path>')
+            out.append(f'<text x="{n(x)}" y="{base+64}" text-anchor="middle" font-family="{MONO}" font-size="12.5" font-weight="500" fill="{p["paperAccent"] if act else p["inkSoft"]}">{stick[idx]}</text>')
+        for g in range(4):  # Balken, Gruppen zu 4
+            xa = x0 + g*4*s + 4.8; xb = x0 + (g*4+3)*s + 4.8
+            for yb in (ymid-36, ymid-30):
+                out.append(f'<rect x="{n(xa-0.75)}" y="{yb}" width="{n(xb-xa+1.5)}" height="3.5" fill="{p["ink"]}"></rect>')
         xe = x0 + 16*s - 3
         if line == 0:
-            out.append(f'<line x1="{xe}" y1="{base}" x2="{xe}" y2="{base+32}" stroke="{p["ink"]}" stroke-width="1.2"></line>')
+            out.append(f'<line x1="{n(xe)}" y1="{base}" x2="{n(xe)}" y2="{base+4*LS}" stroke="{p["ink"]}" stroke-width="1.3"></line>')
         else:
-            out.append(f'<line x1="{xe-4}" y1="{base}" x2="{xe-4}" y2="{base+32}" stroke="{p["ink"]}" stroke-width="1.2"></line>'
-                       f'<rect x="{xe-1}" y="{base}" width="3" height="32" fill="{p["ink"]}"></rect>')
+            out.append(f'<line x1="{n(xe-5)}" y1="{base}" x2="{n(xe-5)}" y2="{base+4*LS}" stroke="{p["ink"]}" stroke-width="1.3"></line>'
+                       f'<rect x="{n(xe-1.5)}" y="{base}" width="3.5" height="{4*LS}" fill="{p["ink"]}"></rect>')
     out.append('</svg>')
     return "".join(out)
 
@@ -194,11 +195,11 @@ def staff_svg(p, active=21, width=326):
 def practice(p):
     def stepbtn(name):
         return (f'<div style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;'
-                f'border-radius:999px;border:1px solid {p["hair"]};background:{p["btn2"]};color:{p["fg"]}">{icon(name, 20)}</div>')
+                f'border-radius:999px;border:1px solid {p["line"]};background:{p["btn2"]};color:{p["fg"]}">{icon(name, 20)}</div>')
     def ladder(v, on):
         st = (f'background:{p["accentSoft"]};border:1px solid {p["accentLine"]};color:{p["accentText"]}' if on
-              else f'border:1px solid {p["hair"]};color:{p["fg3"]}')
-        return (f'<div style="display:flex;align-items:center;justify-content:center;height:30px;padding:0 12px;'
+              else f'border:1px solid {p["line"]};color:{p["fg3"]}')
+        return (f'<div style="display:flex;align-items:center;justify-content:center;height:40px;padding:0 14px;'
                 f'border-radius:999px;font-family:{MONO};font-size:12px;font-weight:600;{st}">{v}</div>')
     counter = "".join(
         f'<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-grow:1">'
@@ -214,8 +215,8 @@ def practice(p):
         f'<div style="font-family:{SG};font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Single Paradiddle</div>'
         f'<div style="font-family:{SG};font-size:13px;color:{p["fg3"]}">Stage 2 · Step 3 of 5</div>'
         f'</div>'
-        f'<div style="display:flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 8px;border-radius:999px;'
-        f'border:1px solid {p["hair"]};color:{p["fg2"]};font-family:{MONO};font-size:11px;font-weight:600;letter-spacing:0.06em">'
+        f'<div style="display:flex;align-items:center;gap:6px;height:44px;padding:0 12px 0 10px;border-radius:999px;'
+        f'border:1px solid {p["line"]};color:{p["fg2"]};font-family:{MONO};font-size:11px;font-weight:600;letter-spacing:0.06em">'
         f'{icon("mic", 16)}ANALYSIS</div>'
         f'</div>'
         # Notenblatt
@@ -244,7 +245,7 @@ def practice(p):
         f'border-radius:14px;background:{p["accent"]};color:{p["accentFg"]};font-family:{SG};font-size:17px;font-weight:600">'
         f'{icon("stop", 22)}Stop<span style="font-family:{MONO};font-weight:500;opacity:.85">7:32</span></div>'
         f'<div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;'
-        f'border:1px solid {p["hair"]};color:{p["fg2"]}">{icon("more", 22)}</div>'
+        f'border:1px solid {p["line"]};color:{p["fg2"]}">{icon("more", 22)}</div>'
         f'</div>'
         f'</div>'
     )
@@ -259,15 +260,14 @@ def result(p):
                 f'<div style="font-family:{SG};font-size:12px;color:{p["fg3"]}">{sub}</div></div>')
     def chip(lab, sub, on):
         st = (f'background:{p["accentSoft"]};border:1px solid {p["accentLine"]};color:{p["fg"]}' if on
-              else f'border:1px solid {p["hair"]};color:{p["fg2"]}')
+              else f'border:1px solid {p["line"]};color:{p["fg2"]}')
         return (f'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;'
                 f'flex-grow:1;flex-basis:0;height:56px;border-radius:14px;{st}">'
                 f'<div style="font-family:{SG};font-size:15px;font-weight:600">{lab}</div>'
-                f'<div style="font-family:{MONO};font-size:11px;color:{p["fg3"]}">{sub}</div></div>')
+                f'<div style="font-family:{MONO};font-size:12px;color:{p["fg3"]}">{sub}</div></div>')
     sheet = (
-        f'<div style="height:64px;flex-shrink:0"></div>'
-        f'<div style="display:flex;flex-direction:column;flex-grow:1;background:{p["sheet"]};border-radius:20px 20px 0 0;'
-        f'padding:10px 20px 24px 20px;gap:22px;box-sizing:border-box">'
+        f'<div style="display:flex;flex-direction:column;background:{p["sheet"]};border-radius:20px 20px 0 0;'
+        f'padding:10px 20px 24px 20px;gap:20px;box-sizing:border-box">'
         f'<div style="width:36px;height:4px;border-radius:2px;background:{p["fg3"]};align-self:center"></div>'
         f'<div style="display:flex;flex-direction:column;gap:6px">'
         f'{eyebrow(p, "Session complete")}'
@@ -283,8 +283,8 @@ def result(p):
         # Drei Kernwerte
         f'<div style="display:flex;flex-direction:row;gap:16px;padding:4px 0 18px 0;border-bottom:1px solid {p["hair"]}">'
         f'{kv("94<span style=\'font-size:18px;color:" + p["fg3"] + "\'>%</span>", "Hits", "30 of 32")}'
-        f'{kv("+3<span style=\'font-size:18px;color:" + p["fg3"] + "\'>ms</span>", "Timing", "±11 ms spread")}'
-        f'{kv("±9<span style=\'font-size:18px;color:" + p["fg3"] + "\'>ms</span>", "Evenness", "R +2 · L +5")}'
+        f'{kv("+3<span style=\'font-size:18px;color:" + p["fg3"] + "\'> ms</span>", "Timing", "±11 ms spread")}'
+        f'{kv("±9<span style=\'font-size:18px;color:" + p["fg3"] + "\'> ms</span>", "Evenness", "R +2 ms · L +5 ms")}'
         f'</div>'
         # Selbst-Rating
         f'<div style="display:flex;flex-direction:column;gap:10px">'
@@ -297,12 +297,11 @@ def result(p):
         f'<div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between;min-height:48px;'
         f'border-top:1px solid {p["hair"]};border-bottom:1px solid {p["hair"]};color:{p["fg2"]}">'
         f'<div style="font-family:{SG};font-size:15px;font-weight:600">Measurement details</div>{icon("chev", 20)}</div>'
-        f'<div style="flex-grow:1"></div>'
         f'{btn_primary(p, "Done")}'
-        f'<div style="text-align:center;font-family:{SG};font-size:14px;font-weight:600;color:{p["fg3"]};min-height:24px">Export session (JSONL)</div>'
+        f'<div style="display:flex;align-items:center;justify-content:center;min-height:44px;font-family:{SG};font-size:14px;font-weight:600;color:{p["fg3"]}">Export session (JSONL)</div>'
         f'</div>'
     )
-    return phone(p, sheet, bg=p["scrim"])
+    return phone(p, sheet, bg=p["scrim"], extra="justify-content:flex-end")
 
 def write(name, p, html):
     head = HEAD.replace("__ACCENTTEXT__", p["accentText"]).replace("__ACCENT__", p["accent"])
@@ -332,24 +331,24 @@ canvas = {
          "Unten Richtung B: hell, Papier-Ton #FAF8F3 als Grundfläche der ganzen App.\n\n"
          "Gleiche Struktur in beiden Richtungen – hier geht es nur um Palette und Anmutung.\n"
          "UI-Sprache Englisch (K1-Entscheidung). Zahlen sind Beispielwerte."},
-        {"id": "k2-heute", "x": 1460, "y": 290, "w": 360, "text":
+        {"id": "k2-heute", "x": 1460, "y": 340, "w": 360, "text":
          "Today (statt Dashboard)\n\n"
          "Zwei Türen zuerst: „Continue the path“ = nächster Schritt mit EINEM Knopf; „Practice freely“ = Bibliothek. "
          "Darunter kompakt Streak und Tagesminuten. Der alte Kartenstapel (Programm/Collection/Technique/Pad/Routine/Last session) entfällt.\n\n"
          "Vorschlag Navigation: 3 Tabs Today · Library · Progress (statt Dashboard/Routine/Lessons/Stats)."},
-        {"id": "k2-ueben", "x": 1460, "y": 600, "w": 360, "text":
+        {"id": "k2-ueben", "x": 1460, "y": 700, "w": 360, "text":
          "Practice\n\n"
          "Notenblatt und Zählwerk (1 2 3 4, aktiver Schlag orange) sind das großflächige Herz. Kopfzeile entschlackt: Name, Stufe, ein Modus-Chip mit Mikro.\n"
          "Steuerung kompakt unten: Leiter-Zeile, BPM mit ±, ein Stop-Knopf mit Restzeit; Sound, Dauer, Feinschritte hinter „⋯“.\n"
          "Gezeigt: Zustand „läuft“, Takt 2, Schlag 2."},
-        {"id": "k2-ergebnis", "x": 1460, "y": 900, "w": 360, "text":
+        {"id": "k2-ergebnis", "x": 1460, "y": 1020, "w": 360, "text":
          "Result\n\n"
          "Urteils-Banner bleibt oben. Darunter drei Kernwerte: Hits (Treffer von erwartet), Timing (Median zum Klick + Streuung), Evenness (Gleichmäßigkeit, mit Hand-Werten). "
          "Selbst-Rating direkt im selben Blatt statt als eigenes Sheet davor. Alles Weitere hinter „Measurement details“."},
-        {"id": "k2-illus", "x": 1460, "y": 1180, "w": 360, "text":
+        {"id": "k2-illus", "x": 1460, "y": 1300, "w": 360, "text":
          "Illustrationen\n\n"
          "Gestrichelte Flächen = Platzhalter für Bilder aus der ComfyUI-Pipeline (Hausstil): Pfad-Stufen, Rubrik-Titelbilder, leere Zustände. Stil noch offen."},
-        {"id": "k2-fragen", "x": 1460, "y": 1400, "w": 360, "text":
+        {"id": "k2-fragen", "x": 1460, "y": 1500, "w": 360, "text":
          "Offen für dich\n\n"
          "1. Richtung A (dunkel) oder B (hell)?\n"
          "2. Rating ins Ergebnis-Blatt zusammenlegen – ok?\n"
