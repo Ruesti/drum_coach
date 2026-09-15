@@ -109,3 +109,29 @@ Umdeutung. Reihenfolge K1 → K2 → K3 → K4; K1 ist klein und kann sofort.
 3. Rating-Wortwahl Deutsch: „Schwer getan / Ging so / Saß" — okay oder
    andere Worte?
 4. Phase 4 alt streichen (siehe §6) — ja/nein?
+
+## §9 Entscheidungen 15.09. (Rückfragen zu den K2-Entwürfen und zu Befund G)
+
+Gestellt und beantwortet in der Session 15.09.; Entwürfe in
+`docs/design/ENTWURF_K2_LEICHT_UND_KLAR.md` (PR #22).
+
+1. **Richtung: Mischung.** Today, Library und Result hell (Papier-Ton
+   `#FAF8F3` als Grundfläche), nur der Übungs-Screen bleibt dunkel.
+2. **Selbst-Rating: ein Blatt, Rating oben** — direkt unter dem
+   Urteils-Banner, vor den Kernwerten (kein eigenes Fenster mehr davor).
+3. **Navigation: drei Tabs** Today · Library · Progress (statt Dashboard /
+   Routine / Lessons / Stats). Die Routine geht im Pfad-Schritt auf Today auf.
+4. **Zählwerk: Zahlen 1 2 3 4**, aktiver Schlag in Orange.
+5. **Kernwerte in Klartext** statt Zahlen: „You rush a little", „You miss
+   2 notes", „Your hands are even" — die Messzahl klein darunter.
+6. **Befund G, Stufe 2 → 3: die App schlägt den Abruf-Check vor**, wenn
+   Stufe 2 mehrfach sauber lief (analog zum Umschaltmoment in Ergänzung
+   6.1); der Nutzer kann ablehnen.
+7. **Befund G, Grundwortschatz: gemischt** — Standardwerke (PAS-Rudiments,
+   Stick Control) als Basis plus Grooves und Fills aus den Zielsongs des
+   Auftraggebers.
+
+Damit sind die beiden offenen Fragen zur Repertoire-Mechanik aus
+`docs/concept/BERICHT_NEUKONZEPT_ERGAENZUNG.md` §9 entschieden. Rückfrage 3
+aus §8 (deutsche Rating-Wortwahl) ist durch die Englisch-Entscheidung (§2)
+gegenstandslos.
