@@ -79,7 +79,7 @@ Future<int?> editBpmDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: AppColors.surface,
-      title: const Text('BPM eingeben'),
+      title: const Text('Enter BPM'),
       content: TextField(
         controller: controller,
         keyboardType: TextInputType.number,
@@ -91,7 +91,7 @@ Future<int?> editBpmDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Abbrechen'),
+          child: const Text('Cancel'),
         ),
         TextButton(
           onPressed: () => Navigator.pop(ctx, int.tryParse(controller.text)),
