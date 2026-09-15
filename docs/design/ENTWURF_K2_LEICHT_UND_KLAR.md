@@ -56,6 +56,9 @@ Alles Weitere hinter „Measurement details".
 6. Illustrationen nur als gestrichelte Platzhalter (ComfyUI-Hausstil noch
    offen; GPU-Box war aus).
 7. Alle Zahlen sind Beispielwerte.
+8. Weiße Schrift auf Orange (Start, Stop, Done) hat nur etwa 3:1 Kontrast.
+   Das ist die bisherige Haus-Konvention; die Alternative wäre dunkle
+   Schrift auf Orange. Sag Bescheid, wenn dir das wichtig ist.
 
 ## Deine Entscheidungen
 
@@ -71,6 +74,13 @@ Alles Weitere hinter „Measurement details".
 Nach deiner Wahl baue ich K2 in dieser Reihenfolge um: Today, Practice,
 Result. Abnahme wie im Brief: Screenshots vom Gerät, dein Urteil
 „leicht / luftig / klar".
+
+## Nachbesserung nach eigener Sichtung (15.09.)
+
+Notation im Übungs-Screen vergrößert (füllte das Blatt nur halb), das
+Ergebnis-Blatt wächst jetzt von unten statt ein Loch in der Mitte zu lassen,
+Zweittext-Kontrast angehoben, alle Tipp-Ziele mindestens 44 px, Rahmen von
+Knöpfen und Chips sichtbarer, Einheiten einheitlich (zum Beispiel „+3 ms“).
 
 ## Dateien
 
