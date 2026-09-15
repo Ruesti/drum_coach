@@ -135,7 +135,7 @@ def today(p):
         f'<div style="display:flex;flex-direction:column;gap:10px;padding-top:4px;border-top:1px solid {p["hair"]}">'
         f'<div style="display:flex;flex-direction:column;gap:4px;padding-top:14px">'
         f'{eyebrow(p, "Practice freely")}'
-        f'<div style="font-family:{SG};font-size:15px;color:{p["fg2"]};line-height:1.45;text-wrap:pretty">Essential rudiments, grooves on the pad, technique studies.</div>'
+        f'<div style="font-family:{SG};font-size:15px;color:{p["fg2"]};line-height:1.45;text-wrap:pretty">Essential rudiments, fill stickings, short pieces.</div>'
         f'</div>'
         f'{btn_ghost(p, "Open library")}'
         f'</div>'
