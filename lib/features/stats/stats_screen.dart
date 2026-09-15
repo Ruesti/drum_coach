@@ -168,7 +168,7 @@ class _TodayBadge extends StatelessWidget {
         Icon(done ? Icons.check_circle : Icons.radio_button_unchecked,
             color: color, size: 24),
         const SizedBox(height: 4),
-        Text('Heute', style: TextStyle(color: color, fontSize: 11)),
+        Text('Today', style: TextStyle(color: color, fontSize: 11)),
         Text('${status.minutes}/${status.goalMinutes}m',
             style: const TextStyle(color: AppColors.textFaint, fontSize: 10)),
       ],

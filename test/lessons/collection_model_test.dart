@@ -16,7 +16,7 @@ void main() {
         collection: ExerciseCollection.rudimentEtudes,
         collectionGroup: 'Single Paradiddle');
     expect(r.collection, ExerciseCollection.rudimentEtudes);
-    expect(r.collection!.label, 'Rudiment-Étüden');
+    expect(r.collection!.label, 'Rudiment Etudes');
     expect(r.collectionGroup, 'Single Paradiddle');
   });
 }

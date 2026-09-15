@@ -70,9 +70,9 @@ List<StrokeBeat> _lGroupBusy() => [
 final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_double_paradiddle_1',
-    name: 'Double Paradiddle · Étude 1',
+    name: 'Double Paradiddle · Etude 1',
     description:
-        'Reine Double Paradiddles im Triolen-Feel, Akzent auf dem ersten Schlag jeder Gruppe.',
+        'Pure double paradiddles in a triplet feel, accent on the first stroke of each group.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.beginner,
@@ -90,9 +90,9 @@ final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_double_paradiddle_2',
-    name: 'Double Paradiddle · Étude 2',
+    name: 'Double Paradiddle · Etude 2',
     description:
-        'Wie Étude 1, aber der Nachschlag (RR/LL) wird geghostet – mehr Dynamik zwischen laut und leise.',
+        'Like Etude 1, but the trailing double (RR/LL) is ghosted – more dynamic range between loud and soft.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.beginner,
@@ -110,9 +110,9 @@ final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_double_paradiddle_3',
-    name: 'Double Paradiddle · Étude 3',
+    name: 'Double Paradiddle · Etude 3',
     description:
-        'Phrasiert: eine Gruppe schließt auf einer Viertelnote statt der Triolen-Sechsergruppe – schafft Raum im Lauf.',
+        'Phrased: one group closes on a quarter note instead of the six-note triplet group – creates space in the run.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.intermediate,
@@ -130,9 +130,9 @@ final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_double_paradiddle_4',
-    name: 'Double Paradiddle · Étude 4',
+    name: 'Double Paradiddle · Etude 4',
     description:
-        'Vier Takte im Wechsel: Double-Paradiddle-Takt (6er-Feel) gegen einen geraden Achtel-Akzent-Takt (2er-Feel).',
+        'Four alternating bars: a double paradiddle bar (feel of six) against a straight eighth-note accent bar (feel of two).',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.advanced,
@@ -156,9 +156,9 @@ final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_double_paradiddle_5',
-    name: 'Double Paradiddle · Étude 5',
+    name: 'Double Paradiddle · Etude 5',
     description:
-        'Herausforderung: wandernder Akzent über alle sechs Positionen der Gruppe, letzter Takt dichter mit Ghost-Notes und Flam-Schluss.',
+        'Challenge: a moving accent across all six positions of the group; the last bar gets denser with ghost notes and a flam ending.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.professional,

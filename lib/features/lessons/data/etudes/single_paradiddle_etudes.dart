@@ -89,8 +89,8 @@ List<StrokeBeat> _fillFlourish() => [
 final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_single_paradiddle_1',
-    name: 'Single Paradiddle · Étude 1',
-    description: 'Reine Paradiddles, Akzent auf der ersten Note jeder Gruppe.',
+    name: 'Single Paradiddle · Etude 1',
+    description: 'Pure paradiddles, accent on the first note of each group.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.beginner,
@@ -109,9 +109,9 @@ final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_single_paradiddle_2',
-    name: 'Single Paradiddle · Étude 2',
+    name: 'Single Paradiddle · Etude 2',
     description:
-        'Akzent auf der Führungsnote, Doppelschlag (RR/LL) als Ghost Notes für dynamischen Kontrast.',
+        'Accent on the lead note, the double stroke (RR/LL) played as ghost notes for dynamic contrast.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.beginner,
@@ -134,9 +134,9 @@ final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_single_paradiddle_3',
-    name: 'Single Paradiddle · Étude 3',
+    name: 'Single Paradiddle · Etude 3',
     description:
-        'Phrasierte Paradiddles: drei Gruppen plus Achtel-Atmer für eine musikalische Phrase.',
+        'Phrased paradiddles: three groups plus an eighth-note breather for a musical phrase.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.intermediate,
@@ -153,9 +153,9 @@ final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_single_paradiddle_4',
-    name: 'Single Paradiddle · Étude 4',
+    name: 'Single Paradiddle · Etude 4',
     description:
-        'Paradiddles im Wechsel: 16tel-Bar, Achteltriolen-Bar, 16tel-Bar, Achteltriolen-Bar.',
+        'Alternating paradiddles: a 16th-note bar, an eighth-triplet bar, a 16th-note bar, an eighth-triplet bar.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.advanced,
@@ -174,9 +174,9 @@ final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_single_paradiddle_5',
-    name: 'Single Paradiddle · Étude 5',
+    name: 'Single Paradiddle · Etude 5',
     description:
-        'Wandernder Akzent über alle vier Noten der Gruppe (inklusive Doppelschlag, inward/outward), Fill-artiger Schlussschlag.',
+        'A moving accent across all four notes of the group (double stroke included, inward/outward), with a fill-like closing hit.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.professional,

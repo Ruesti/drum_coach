@@ -119,7 +119,7 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('Tempo-Leiter'), findsOneWidget);
+    expect(find.text('Tempo ladder'), findsOneWidget);
     for (final bpm in ['76', '80', '84']) {
       expect(find.text(bpm), findsOneWidget);
     }
@@ -147,7 +147,7 @@ void main() {
     await tester.pump();
     // Elapsed timer restored (03:20 count-up) + hint shown.
     expect(find.text('03:20'), findsOneWidget);
-    expect(find.textContaining('fortgesetzt'), findsOneWidget);
+    expect(find.textContaining('Resumed'), findsOneWidget);
   });
 
   testWidgets('abgelaufener Snapshot wird ignoriert', (tester) async {

@@ -51,13 +51,13 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Programm einrichten')),
+      appBar: AppBar(title: const Text('Set up program')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           const _SectionTitle(
-            title: 'Dauer',
-            subtitle: 'Wie viele Wochen soll dein Programm laufen?',
+            title: 'Duration',
+            subtitle: 'How many weeks should your program run?',
           ),
           const SizedBox(height: 10),
           Row(
@@ -67,7 +67,7 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
             children: [
               Text('$_durationWeeks', style: AppTypography.display),
               const SizedBox(width: AppSpacing.sm),
-              Text('Wochen',
+              Text('weeks',
                   style: AppTypography.label.copyWith(color: AppColors.textMuted)),
             ],
           ),
@@ -76,7 +76,7 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
             min: _minWeeks.toDouble(),
             max: _maxWeeks.toDouble(),
             divisions: _maxWeeks - _minWeeks,
-            label: '$_durationWeeks Wochen',
+            label: '$_durationWeeks weeks',
             onChanged: (v) => setState(() => _durationWeeks = v.round()),
           ),
           Padding(
@@ -93,8 +93,8 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
           ),
           const SizedBox(height: 24),
           const _SectionTitle(
-            title: 'Startniveau',
-            subtitle: 'Wo steigst du ein?',
+            title: 'Start level',
+            subtitle: 'Where do you jump in?',
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -111,8 +111,8 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
           ),
           const SizedBox(height: 24),
           const _SectionTitle(
-            title: 'Übungspool',
-            subtitle: 'Woraus soll dein Programm schöpfen?',
+            title: 'Exercise pool',
+            subtitle: 'What should your program draw from?',
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -131,7 +131,7 @@ class _ProgramSetupScreenState extends ConsumerState<ProgramSetupScreen> {
           ElevatedButton.icon(
             onPressed: _start,
             icon: const Icon(Icons.play_arrow),
-            label: const Text('Programm starten'),
+            label: const Text('Start program'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
               foregroundColor: AppColors.textPrimary,

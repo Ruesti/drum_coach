@@ -28,19 +28,19 @@ class ProgramScreen extends ConsumerWidget {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text('Programm zurücksetzen?'),
+          title: const Text('Reset program?'),
           content: const Text(
-              'Der aktuelle Fortschritt und die Einstellungen (Dauer, '
-              'Startniveau, Übungspool) gehen verloren. Du kannst danach '
-              'ein neues Programm mit individueller Dauer einrichten.'),
+              'Your current progress and settings (duration, start level, '
+              'exercise pool) will be lost. Afterwards you can set up a '
+              'new program with a custom duration.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Abbrechen'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Zurücksetzen'),
+              child: const Text('Reset'),
             ),
           ],
         ),
@@ -57,7 +57,7 @@ class ProgramScreen extends ConsumerWidget {
           if (configured)
             IconButton(
               icon: const Icon(Icons.replay),
-              tooltip: 'Programm zurücksetzen',
+              tooltip: 'Reset program',
               onPressed: resetProgram,
             ),
         ],
@@ -67,7 +67,7 @@ class ProgramScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: ErrorStateWidget(
-            message: 'Fehler: $e',
+            message: 'Error: $e',
             onRetry: () => ref.invalidate(currentProgramDayProvider),
           ),
         ),
@@ -121,7 +121,7 @@ class _NotStarted extends StatelessWidget {
         ElevatedButton.icon(
           onPressed: onSetup,
           icon: const Icon(Icons.settings),
-          label: const Text('Programm einrichten'),
+          label: const Text('Set up program'),
         ),
       ],
     );
@@ -143,7 +143,7 @@ class _PhaseOverviewCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 2),
-          Text('Woche ${phase.weekStart}–${phase.weekEnd} · ab ${phase.startBpm} BPM',
+          Text('Week ${phase.weekStart}–${phase.weekEnd} · from ${phase.startBpm} BPM',
               style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
           const SizedBox(height: 8),
           Text(phase.focus,
@@ -161,7 +161,7 @@ class _Finished extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final weeksLabel = weeks != null ? '$weeks Wochen' : 'Das Programm';
+    final weeksLabel = weeks != null ? '$weeks weeks' : 'The program';
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -170,17 +170,17 @@ class _Finished extends StatelessWidget {
           children: [
             const Text('🏁', style: TextStyle(fontSize: 56)),
             const SizedBox(height: 16),
-            const Text('Programm abgeschlossen',
+            const Text('Program complete',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('$weeksLabel durch. Neue saubere Bestwerte in der Hand.',
+            Text('$weeksLabel done. New clean personal bests in your hands.',
                 style: const TextStyle(color: AppColors.textMuted),
                 textAlign: TextAlign.center),
             const SizedBox(height: 24),
             OutlinedButton.icon(
               onPressed: onReset,
               icon: const Icon(Icons.replay),
-              label: const Text('Neu starten'),
+              label: const Text('Start over'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textSecondary,
                 side: const BorderSide(color: AppColors.textFaint),
@@ -236,13 +236,13 @@ class _DayDoneBanner extends StatelessWidget {
         SettingsService.programConfig?.totalDays ?? programTotalDays;
     final String tomorrow;
     if (day.dayNumber >= totalDays) {
-      tomorrow = 'Das war der letzte Tag — Programm geschafft!';
+      tomorrow = 'That was the last day — program complete!';
     } else {
       tomorrow = switch (dayTypeForDayNumber(day.dayNumber + 1)) {
         DayType.practice =>
-          'Morgen wartet Tag ${day.dayNumber + 1} mit frischen Übungen.',
-        DayType.light => 'Morgen: lockerer Tag mit kurzem Technik-Review.',
-        DayType.rest => 'Morgen: Ruhetag — Erholung ist Teil des Plans.',
+          'Day ${day.dayNumber + 1} with fresh exercises awaits tomorrow.',
+        DayType.light => 'Tomorrow: easy day with a short technique review.',
+        DayType.rest => 'Tomorrow: rest day — recovery is part of the plan.',
       };
     }
     return Container(
@@ -260,7 +260,7 @@ class _DayDoneBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Tag ${day.dayNumber} geschafft!',
+                Text('Day ${day.dayNumber} done!',
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 15)),
                 const SizedBox(height: 2),
@@ -301,12 +301,12 @@ class _DayHeader extends ConsumerWidget {
           dayNumber: day.dayNumber,
         );
         final statusLabel = switch (pacing.status) {
-          PacingStatus.ahead => 'voraus',
-          PacingStatus.onTrack => 'im Plan',
-          PacingStatus.behind => 'hinterher',
+          PacingStatus.ahead => 'ahead',
+          PacingStatus.onTrack => 'on track',
+          PacingStatus.behind => 'behind',
         };
-        pacingLabel = 'Woche ${pacing.nominalWeek}/${config.durationWeeks} · '
-            'Stufe: ${stages[stageIndex].label} · $statusLabel';
+        pacingLabel = 'Week ${pacing.nominalWeek}/${config.durationWeeks} · '
+            'Stage: ${stages[stageIndex].label} · $statusLabel';
       }
     }
 
@@ -321,7 +321,7 @@ class _DayHeader extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Tag ${day.dayNumber}/$totalDays · ~${day.estimatedMinutes} min',
+            'Day ${day.dayNumber}/$totalDays · ~${day.estimatedMinutes} min',
             style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
           ),
           if (pacingLabel != null) ...[
@@ -375,14 +375,14 @@ class _RestDay extends StatelessWidget {
         children: [
           Text('😴', style: TextStyle(fontSize: 56)),
           SizedBox(height: 16),
-          Text('Ruhetag',
+          Text('Rest day',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 24),
             child: Text(
-              'Frei. Kein Block heute — der Ruhetag zählt nicht gegen deinen '
-              'Streak. Erholung ist Teil des Plans.',
+              "Day off. No blocks today — the rest day doesn't count against "
+              'your streak. Recovery is part of the plan.',
               style: TextStyle(color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
@@ -466,7 +466,7 @@ class _BlockCard extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                 ),
-                child: Text(done ? 'Nochmal' : 'Start'),
+                child: Text(done ? 'Again' : 'Start'),
               ),
             ],
           ),
@@ -480,7 +480,7 @@ class _BlockCard extends ConsumerWidget {
               child: TextButton.icon(
                 onPressed: () => _askCleanPass(context, ref),
                 icon: const Icon(Icons.check_circle_outline, size: 18),
-                label: const Text('Sauber & locker durchgelaufen?'),
+                label: const Text('Ran clean & relaxed?'),
                 style: TextButton.styleFrom(
                     foregroundColor: AppColors.accent,
                     padding: EdgeInsets.zero),
@@ -497,21 +497,21 @@ class _BlockCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Sauber & locker?'),
+        title: const Text('Clean & relaxed?'),
         content: Text(
-          'Lief die Tempo-Leiter gleichmäßig und locker durch? '
-          'Ja hebt dein sauberes Tempo um +4 BPM auf '
+          'Did the tempo ladder run evenly and relaxed? '
+          'Yes raises your clean tempo by +4 BPM to '
           '${(block.startBpm ?? 0) + 4}.',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Nein'),
+            child: const Text('No'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Ja'),
+            child: const Text('Yes'),
           ),
         ],
       ),
@@ -531,7 +531,7 @@ class _BlockCard extends ConsumerWidget {
         await ref.read(programControllerProvider.notifier).advanceStageIfReady();
     if (advanced) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Level up! Neue Stufe erreicht.')),
+        const SnackBar(content: Text('Level up! New stage reached.')),
       );
     }
   }
@@ -539,18 +539,18 @@ class _BlockCard extends ConsumerWidget {
 
 (String, Color) _blockBadgeInfo(BlockType type) => switch (type) {
       BlockType.warmup => ('Warmup', AppColors.solidStreak),
-      BlockType.technique => ('Technik', AppColors.info),
-      BlockType.tempoLadder => ('Tempo-Leiter', AppColors.accent),
-      BlockType.endurance => ('Ausdauer', AppColors.ok),
+      BlockType.technique => ('Technique', AppColors.info),
+      BlockType.tempoLadder => ('Tempo ladder', AppColors.accent),
+      BlockType.endurance => ('Endurance', AppColors.ok),
     };
 
 String _variantLabel(Variant v) => switch (v) {
-      Variant.even => 'gleichmäßig',
-      Variant.pp => 'pp (leise)',
-      Variant.ff => 'ff (laut)',
+      Variant.even => 'even',
+      Variant.pp => 'pp (soft)',
+      Variant.ff => 'ff (loud)',
       Variant.crescendo => 'Crescendo',
-      Variant.fingers => 'Finger',
+      Variant.fingers => 'Fingers',
       Variant.rebound => 'Rebound',
-      Variant.accentTap => 'Akzent/Tap',
-      Variant.endurance => 'Ausdauer',
+      Variant.accentTap => 'Accent/tap',
+      Variant.endurance => 'Endurance',
     };

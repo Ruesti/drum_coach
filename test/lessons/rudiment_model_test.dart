@@ -86,11 +86,11 @@ void main() {
 
   group('NoteGrid.label', () {
     test('labels every subdivision value', () {
-      expect(NoteGrid.eighth.label, '8tel');
-      expect(NoteGrid.triplet.label, 'Triolen');
-      expect(NoteGrid.sixteenth.label, '16tel');
-      expect(NoteGrid.sixteenthTriplet.label, '16tel-Triolen');
-      expect(NoteGrid.thirtySecond.label, '32tel');
+      expect(NoteGrid.eighth.label, '8ths');
+      expect(NoteGrid.triplet.label, 'Triplets');
+      expect(NoteGrid.sixteenth.label, '16ths');
+      expect(NoteGrid.sixteenthTriplet.label, '16th triplets');
+      expect(NoteGrid.thirtySecond.label, '32nds');
     });
 
     test('extends cellsPerQuarter for the two new brief-required values', () {
