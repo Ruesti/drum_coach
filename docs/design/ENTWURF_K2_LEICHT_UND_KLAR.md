@@ -1,7 +1,7 @@
 # K2 Entwürfe: „leicht, luftig, modern, klar" (15.09.2026)
 
-**Status:** Entwurf zur Sichtung. Kein Arbeitsauftrag, bis du eine Richtung
-freigibst (Brief Neukonzept §3: „Entwürfe zuerst").
+**Status:** Richtung am 15.09. entschieden (siehe „Deine Entscheidungen"),
+Umsetzung K2 kann starten (Brief Neukonzept §3 und §9).
 **Bezug:** `docs/BRIEF_NEUKONZEPT_OPTIK_INHALTE.md` (PR #20), K1 Sprachpass (PR #21).
 
 ## Die Leinwand
@@ -60,19 +60,29 @@ Alles Weitere hinter „Measurement details".
    Das ist die bisherige Haus-Konvention; die Alternative wäre dunkle
    Schrift auf Orange. Sag Bescheid, wenn dir das wichtig ist.
 
-## Deine Entscheidungen
+## Deine Entscheidungen (15.09.)
 
-1. Richtung A (dunkel) oder B (hell)?
-2. Rating ins Ergebnis-Blatt zusammenlegen: ja / nein?
-3. Drei Tabs Today · Library · Progress: ja / nein?
-4. Kernwerte Hits / Timing / Evenness: die richtigen drei?
-5. Zählwerk „1 2 3 4" oder pulsierender Kreis: was liest sich aus 60 cm
-   besser?
+1. **Richtung: Mischung.** Today, Library und Result hell (Papier-Ton
+   #FAF8F3), nur der Übungs-Screen bleibt dunkel. Auf der Leinwand ist
+   Seite 1 jetzt genau diese Kombination, Seite 2 zeigt die nicht gewählten
+   Varianten.
+2. **Rating: ein Blatt, Rating oben** — direkt unter dem Urteils-Banner,
+   vor den Kernwerten.
+3. **Navigation: drei Tabs** Today · Library · Progress.
+4. **Zählwerk: Zahlen 1 2 3 4.**
+5. **Kernwerte in Klartext** statt Zahlen: „You miss 2 notes", „You rush a
+   little", „Your hands are even" — die Messzahl klein darunter. Der genaue
+   Wortlaut (rush / drag / miss / even) wird beim Bauen festgelegt.
+6. Befund G, Stufe 2 → 3: **die App schlägt den Abruf-Check vor**, wenn
+   Stufe 2 mehrfach sauber lief; du kannst ablehnen.
+7. Befund G, Grundwortschatz: **gemischt** — Standardwerke als Basis plus
+   Grooves und Fills aus deinen Zielsongs.
+
+Alle sieben stehen auch im Brief als §9.
 
 ## Wie es weitergeht
 
-Nach deiner Wahl baue ich K2 in dieser Reihenfolge um: Today, Practice,
-Result. Abnahme wie im Brief: Screenshots vom Gerät, dein Urteil
+K2 wird in dieser Reihenfolge gebaut: Today, Practice, Result. Abnahme wie im Brief: Screenshots vom Gerät, dein Urteil
 „leicht / luftig / klar".
 
 ## Nachbesserung nach eigener Sichtung (15.09.)

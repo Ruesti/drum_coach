@@ -253,6 +253,10 @@ def practice(p):
 
 # ---------- Ergebnis ----------
 def result(p):
+    def row(head, sub):
+        return (f'<div style="display:flex;flex-direction:column;gap:3px">'
+                f'<div style="font-family:{SG};font-size:17px;font-weight:600;line-height:1.3">{head}</div>'
+                f'<div style="font-family:{MONO};font-size:12px;color:{p["fg3"]}">{sub}</div></div>')
     def kv(num, lab, sub):
         return (f'<div style="display:flex;flex-direction:column;gap:4px;flex-grow:1;flex-basis:0">'
                 f'<div style="font-family:{MONO};font-size:30px;font-weight:600;line-height:1.05;letter-spacing:-0.01em">{num}</div>'
@@ -280,18 +284,18 @@ def result(p):
         f'{icon("check", 24, 2.2)}'
         f'<div style="font-family:{SG};font-size:17px;font-weight:600;line-height:1.3;color:{p["fg"]}">Clean run — hand analysis below.</div>'
         f'</div>'
-        # Drei Kernwerte
-        f'<div style="display:flex;flex-direction:row;gap:16px;padding:4px 0 18px 0;border-bottom:1px solid {p["hair"]}">'
-        f'{kv("94<span style=\'font-size:18px;color:" + p["fg3"] + "\'>%</span>", "Hits", "30 of 32")}'
-        f'{kv("+3<span style=\'font-size:18px;color:" + p["fg3"] + "\'> ms</span>", "Timing", "±11 ms spread")}'
-        f'{kv("±9<span style=\'font-size:18px;color:" + p["fg3"] + "\'> ms</span>", "Evenness", "R +2 ms · L +5 ms")}'
-        f'</div>'
         # Selbst-Rating
         f'<div style="display:flex;flex-direction:column;gap:10px">'
         f'{eyebrow(p, "How did it feel?")}'
         f'<div style="display:flex;flex-direction:row;gap:8px">'
         f'{chip("Struggled", "same BPM", False)}{chip("OK", "+2 BPM", False)}{chip("Solid", "+5 BPM", True)}'
         f'</div>'
+        f'</div>'
+        # Drei Kernwerte in Klartext (Entscheidung 15.09.), Messzahl klein darunter
+        f'<div style="display:flex;flex-direction:column;gap:14px;padding:18px 0 18px 0;border-top:1px solid {p["hair"]}">'
+        f'{row("You miss 2 notes", "30 of 32 hit · 94 %")}'
+        f'{row("You rush a little", "3 ms ahead of the click · ±11 ms spread")}'
+        f'{row("Your hands are even", "±9 ms · right +2 ms · left +5 ms")}'
         f'</div>'
         # Messdetails
         f'<div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between;min-height:48px;'
@@ -307,58 +311,49 @@ def write(name, p, html):
     head = HEAD.replace("__ACCENTTEXT__", p["accentText"]).replace("__ACCENT__", p["accent"])
     (OUT / f"{name}.dc.html").write_text(head + html + "\n" + FOOT, encoding="utf-8")
 
-write("Main", DARK, today(DARK))
-write("Practice", DARK, practice(DARK))
-write("Result", DARK, result(DARK))
-write("TodayLight", LIGHT, today(LIGHT))
+write("Main", LIGHT, today(LIGHT))          # gewählt: Today hell
+write("Practice", DARK, practice(DARK))     # gewählt: Üben dunkel
+write("Result", LIGHT, result(LIGHT))       # gewählt: Ergebnis hell, Rating oben
+write("TodayDark", DARK, today(DARK))       # Alternative
 write("PracticeLight", LIGHT, practice(LIGHT))
-write("ResultLight", LIGHT, result(LIGHT))
+write("ResultDark", DARK, result(DARK))
 
 W, H = 390, 844
 canvas = {
+    "pages": [{"id": "page-1", "name": "Entwurf (gewählt 15.09.)"}, {"id": "page-2", "name": "Alternativen"}],
     "artboards": [
-        {"file": "Main.dc.html",          "x": 0,    "y": 0,    "w": W, "h": H, "title": "Today · A dunkel"},
-        {"file": "Practice.dc.html",      "x": 480,  "y": 0,    "w": W, "h": H, "title": "Practice · A dunkel"},
-        {"file": "Result.dc.html",        "x": 960,  "y": 0,    "w": W, "h": H, "title": "Result · A dunkel"},
-        {"file": "TodayLight.dc.html",    "x": 0,    "y": 1010, "w": W, "h": H, "title": "Today · B hell"},
-        {"file": "PracticeLight.dc.html", "x": 480,  "y": 1010, "w": W, "h": H, "title": "Practice · B hell"},
-        {"file": "ResultLight.dc.html",   "x": 960,  "y": 1010, "w": W, "h": H, "title": "Result · B hell"},
+        {"file": "Main.dc.html",          "x": 0,   "y": 0, "w": W, "h": H, "title": "Today · hell", "page": "page-1"},
+        {"file": "Practice.dc.html",      "x": 480, "y": 0, "w": W, "h": H, "title": "Practice · dunkel", "page": "page-1"},
+        {"file": "Result.dc.html",        "x": 960, "y": 0, "w": W, "h": H, "title": "Result · hell, Rating oben", "page": "page-1"},
+        {"file": "TodayDark.dc.html",     "x": 0,   "y": 0, "w": W, "h": H, "title": "Today · dunkel (nicht gewählt)", "page": "page-2"},
+        {"file": "PracticeLight.dc.html", "x": 480, "y": 0, "w": W, "h": H, "title": "Practice · hell (nicht gewählt)", "page": "page-2"},
+        {"file": "ResultDark.dc.html",    "x": 960, "y": 0, "w": W, "h": H, "title": "Result · dunkel (nicht gewählt)", "page": "page-2"},
     ],
     "annotations": [
-        {"id": "k2-brief", "x": 1460, "y": 0, "w": 360, "text":
+        {"id": "k2-brief", "x": 1460, "y": 0, "w": 360, "page": "page-1", "text":
          "K2 · Design-Pass „leicht, luftig, modern, klar“ (Brief §3)\n\n"
-         "Oben Richtung A: dunkel, Hausfarben (Orange #FF6A2B, Space Grotesk + IBM Plex Mono), Notenpapier bleibt hell.\n"
-         "Unten Richtung B: hell, Papier-Ton #FAF8F3 als Grundfläche der ganzen App.\n\n"
-         "Gleiche Struktur in beiden Richtungen – hier geht es nur um Palette und Anmutung.\n"
-         "UI-Sprache Englisch (K1-Entscheidung). Zahlen sind Beispielwerte."},
-        {"id": "k2-heute", "x": 1460, "y": 340, "w": 360, "text":
+         "Entscheidungen 15.09.: Mischung – Today, Library und Result hell (Papier-Ton #FAF8F3), nur der Übungs-Screen dunkel. "
+         "Rating oben im Ergebnis-Blatt. Drei Tabs Today · Library · Progress. Zählwerk als Zahlen 1 2 3 4.\n\n"
+         "Hausfarben und Schriften bleiben (Orange #FF6A2B, Space Grotesk + IBM Plex Mono). UI-Sprache Englisch (K1). Zahlen sind Beispielwerte."},
+        {"id": "k2-heute", "x": 1460, "y": 300, "w": 360, "page": "page-1", "text":
          "Today (statt Dashboard)\n\n"
          "Zwei Türen zuerst: „Continue the path“ = nächster Schritt mit EINEM Knopf; „Practice freely“ = Bibliothek. "
-         "Darunter kompakt Streak und Tagesminuten. Der alte Kartenstapel (Programm/Collection/Technique/Pad/Routine/Last session) entfällt.\n\n"
-         "Vorschlag Navigation: 3 Tabs Today · Library · Progress (statt Dashboard/Routine/Lessons/Stats)."},
-        {"id": "k2-ueben", "x": 1460, "y": 700, "w": 360, "text":
-         "Practice\n\n"
-         "Notenblatt und Zählwerk (1 2 3 4, aktiver Schlag orange) sind das großflächige Herz. Kopfzeile entschlackt: Name, Stufe, ein Modus-Chip mit Mikro.\n"
-         "Steuerung kompakt unten: Leiter-Zeile, BPM mit ±, ein Stop-Knopf mit Restzeit; Sound, Dauer, Feinschritte hinter „⋯“.\n"
-         "Gezeigt: Zustand „läuft“, Takt 2, Schlag 2."},
-        {"id": "k2-ergebnis", "x": 1460, "y": 1020, "w": 360, "text":
-         "Result\n\n"
-         "Urteils-Banner bleibt oben. Darunter drei Kernwerte: Hits (Treffer von erwartet), Timing (Median zum Klick + Streuung), Evenness (Gleichmäßigkeit, mit Hand-Werten). "
-         "Selbst-Rating direkt im selben Blatt statt als eigenes Sheet davor. Alles Weitere hinter „Measurement details“."},
-        {"id": "k2-illus", "x": 1460, "y": 1300, "w": 360, "text":
+         "Darunter kompakt Streak und Tagesminuten. Der alte Kartenstapel entfällt."},
+        {"id": "k2-ueben", "x": 1460, "y": 560, "w": 360, "page": "page-1", "text":
+         "Practice (bleibt dunkel)\n\n"
+         "Notenblatt und Zählwerk (1 2 3 4, aktiver Schlag orange) sind das großflächige Herz. Kopfzeile: Name, Stufe, ein Modus-Chip mit Mikro. "
+         "Unten kompakt: Leiter, BPM mit ±, ein Stop-Knopf mit Restzeit; Sound, Dauer, Feinschritte hinter „⋯“."},
+        {"id": "k2-ergebnis", "x": 1460, "y": 860, "w": 360, "page": "page-1", "text":
+         "Result\n\nUrteils-Banner oben, direkt darunter das Selbst-Rating (Entscheidung: Rating oben), dann drei Kernwerte in Klartext (Entscheidung 15.09.): „You miss 2 notes“, „You rush a little“, „Your hands are even“ – die Messzahl klein darunter. Alles Weitere hinter „Measurement details“."},
+        {"id": "k2-illus", "x": 1460, "y": 1120, "w": 360, "page": "page-1", "text":
          "Illustrationen\n\n"
          "Gestrichelte Flächen = Platzhalter für Bilder aus der ComfyUI-Pipeline (Hausstil): Pfad-Stufen, Rubrik-Titelbilder, leere Zustände. Stil noch offen."},
-        {"id": "k2-fragen", "x": 1460, "y": 1500, "w": 360, "text":
-         "Offen für dich\n\n"
-         "1. Richtung A (dunkel) oder B (hell)?\n"
-         "2. Rating ins Ergebnis-Blatt zusammenlegen – ok?\n"
-         "3. Drei Tabs Today · Library · Progress – ok?\n"
-         "4. Kernwerte Hits / Timing / Evenness – die richtigen drei?\n"
-         "5. Zählwerk 1 2 3 4 vs. pulsierender Kreis – was liest sich aus 60 cm besser?"},
-        {"id": "k2-row-a", "x": 0, "y": -120, "w": 300, "text": "Richtung A · dunkel"},
-        {"id": "k2-row-b", "x": 0, "y": 900, "w": 300, "text": "Richtung B · hell"},
+        {"id": "k2-fragen", "x": 1460, "y": 1340, "w": 360, "page": "page-1", "text":
+         "Noch offen\n\nIllustrationsstil (ComfyUI) – kommt mit K3/K4.\nWortlaut der Klartext-Urteile (rush / drag / miss / even) wird beim Bauen festgelegt."},
+        {"id": "k2-alt", "x": 1460, "y": 0, "w": 360, "page": "page-2", "text":
+         "Nicht gewählte Varianten vom 15.09.: Today dunkel, Practice hell, Result dunkel. Zum Vergleich aufbewahrt."},
     ],
-    "launch": {"view": "canvas"},
+    "launch": {"view": "canvas", "page": "page-1"},
 }
 (OUT / "canvas.json").write_text(json.dumps(canvas, ensure_ascii=False, indent=2), encoding="utf-8")
 print("ok:", sorted(f.name for f in OUT.glob("*.dc.html")), "+ canvas.json")

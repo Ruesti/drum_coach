@@ -1,4 +1,14 @@
 {
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Entwurf (gewählt 15.09.)"
+    },
+    {
+      "id": "page-2",
+      "name": "Alternativen"
+    }
+  ],
   "artboards": [
     {
       "file": "Main.dc.html",
@@ -6,7 +16,8 @@
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "Today · A dunkel"
+      "title": "Today · hell",
+      "page": "page-1"
     },
     {
       "file": "Practice.dc.html",
@@ -14,7 +25,8 @@
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "Practice · A dunkel"
+      "title": "Practice · dunkel",
+      "page": "page-1"
     },
     {
       "file": "Result.dc.html",
@@ -22,31 +34,35 @@
       "y": 0,
       "w": 390,
       "h": 844,
-      "title": "Result · A dunkel"
+      "title": "Result · hell, Rating oben",
+      "page": "page-1"
     },
     {
-      "file": "TodayLight.dc.html",
+      "file": "TodayDark.dc.html",
       "x": 0,
-      "y": 1010,
+      "y": 0,
       "w": 390,
       "h": 844,
-      "title": "Today · B hell"
+      "title": "Today · dunkel (nicht gewählt)",
+      "page": "page-2"
     },
     {
       "file": "PracticeLight.dc.html",
       "x": 480,
-      "y": 1010,
+      "y": 0,
       "w": 390,
       "h": 844,
-      "title": "Practice · B hell"
+      "title": "Practice · hell (nicht gewählt)",
+      "page": "page-2"
     },
     {
-      "file": "ResultLight.dc.html",
+      "file": "ResultDark.dc.html",
       "x": 960,
-      "y": 1010,
+      "y": 0,
       "w": 390,
       "h": 844,
-      "title": "Result · B hell"
+      "title": "Result · dunkel (nicht gewählt)",
+      "page": "page-2"
     }
   ],
   "annotations": [
@@ -55,59 +71,60 @@
       "x": 1460,
       "y": 0,
       "w": 360,
-      "text": "K2 · Design-Pass „leicht, luftig, modern, klar“ (Brief §3)\n\nOben Richtung A: dunkel, Hausfarben (Orange #FF6A2B, Space Grotesk + IBM Plex Mono), Notenpapier bleibt hell.\nUnten Richtung B: hell, Papier-Ton #FAF8F3 als Grundfläche der ganzen App.\n\nGleiche Struktur in beiden Richtungen – hier geht es nur um Palette und Anmutung.\nUI-Sprache Englisch (K1-Entscheidung). Zahlen sind Beispielwerte."
+      "page": "page-1",
+      "text": "K2 · Design-Pass „leicht, luftig, modern, klar“ (Brief §3)\n\nEntscheidungen 15.09.: Mischung – Today, Library und Result hell (Papier-Ton #FAF8F3), nur der Übungs-Screen dunkel. Rating oben im Ergebnis-Blatt. Drei Tabs Today · Library · Progress. Zählwerk als Zahlen 1 2 3 4.\n\nHausfarben und Schriften bleiben (Orange #FF6A2B, Space Grotesk + IBM Plex Mono). UI-Sprache Englisch (K1). Zahlen sind Beispielwerte."
     },
     {
       "id": "k2-heute",
       "x": 1460,
-      "y": 340,
+      "y": 300,
       "w": 360,
-      "text": "Today (statt Dashboard)\n\nZwei Türen zuerst: „Continue the path“ = nächster Schritt mit EINEM Knopf; „Practice freely“ = Bibliothek. Darunter kompakt Streak und Tagesminuten. Der alte Kartenstapel (Programm/Collection/Technique/Pad/Routine/Last session) entfällt.\n\nVorschlag Navigation: 3 Tabs Today · Library · Progress (statt Dashboard/Routine/Lessons/Stats)."
+      "page": "page-1",
+      "text": "Today (statt Dashboard)\n\nZwei Türen zuerst: „Continue the path“ = nächster Schritt mit EINEM Knopf; „Practice freely“ = Bibliothek. Darunter kompakt Streak und Tagesminuten. Der alte Kartenstapel entfällt."
     },
     {
       "id": "k2-ueben",
       "x": 1460,
-      "y": 700,
+      "y": 560,
       "w": 360,
-      "text": "Practice\n\nNotenblatt und Zählwerk (1 2 3 4, aktiver Schlag orange) sind das großflächige Herz. Kopfzeile entschlackt: Name, Stufe, ein Modus-Chip mit Mikro.\nSteuerung kompakt unten: Leiter-Zeile, BPM mit ±, ein Stop-Knopf mit Restzeit; Sound, Dauer, Feinschritte hinter „⋯“.\nGezeigt: Zustand „läuft“, Takt 2, Schlag 2."
+      "page": "page-1",
+      "text": "Practice (bleibt dunkel)\n\nNotenblatt und Zählwerk (1 2 3 4, aktiver Schlag orange) sind das großflächige Herz. Kopfzeile: Name, Stufe, ein Modus-Chip mit Mikro. Unten kompakt: Leiter, BPM mit ±, ein Stop-Knopf mit Restzeit; Sound, Dauer, Feinschritte hinter „⋯“."
     },
     {
       "id": "k2-ergebnis",
       "x": 1460,
-      "y": 1020,
+      "y": 860,
       "w": 360,
-      "text": "Result\n\nUrteils-Banner bleibt oben. Darunter drei Kernwerte: Hits (Treffer von erwartet), Timing (Median zum Klick + Streuung), Evenness (Gleichmäßigkeit, mit Hand-Werten). Selbst-Rating direkt im selben Blatt statt als eigenes Sheet davor. Alles Weitere hinter „Measurement details“."
+      "page": "page-1",
+      "text": "Result\n\nUrteils-Banner oben, direkt darunter das Selbst-Rating (Entscheidung: Rating oben), dann drei Kernwerte in Klartext (Entscheidung 15.09.): „You miss 2 notes“, „You rush a little“, „Your hands are even“ – die Messzahl klein darunter. Alles Weitere hinter „Measurement details“."
     },
     {
       "id": "k2-illus",
       "x": 1460,
-      "y": 1300,
+      "y": 1120,
       "w": 360,
+      "page": "page-1",
       "text": "Illustrationen\n\nGestrichelte Flächen = Platzhalter für Bilder aus der ComfyUI-Pipeline (Hausstil): Pfad-Stufen, Rubrik-Titelbilder, leere Zustände. Stil noch offen."
     },
     {
       "id": "k2-fragen",
       "x": 1460,
-      "y": 1500,
+      "y": 1340,
       "w": 360,
-      "text": "Offen für dich\n\n1. Richtung A (dunkel) oder B (hell)?\n2. Rating ins Ergebnis-Blatt zusammenlegen – ok?\n3. Drei Tabs Today · Library · Progress – ok?\n4. Kernwerte Hits / Timing / Evenness – die richtigen drei?\n5. Zählwerk 1 2 3 4 vs. pulsierender Kreis – was liest sich aus 60 cm besser?"
+      "page": "page-1",
+      "text": "Noch offen\n\nIllustrationsstil (ComfyUI) – kommt mit K3/K4.\nWortlaut der Klartext-Urteile (rush / drag / miss / even) wird beim Bauen festgelegt."
     },
     {
-      "id": "k2-row-a",
-      "x": 0,
-      "y": -120,
-      "w": 300,
-      "text": "Richtung A · dunkel"
-    },
-    {
-      "id": "k2-row-b",
-      "x": 0,
-      "y": 900,
-      "w": 300,
-      "text": "Richtung B · hell"
+      "id": "k2-alt",
+      "x": 1460,
+      "y": 0,
+      "w": 360,
+      "page": "page-2",
+      "text": "Nicht gewählte Varianten vom 15.09.: Today dunkel, Practice hell, Result dunkel. Zum Vergleich aufbewahrt."
     }
   ],
   "launch": {
-    "view": "canvas"
+    "view": "canvas",
+    "page": "page-1"
   }
 }
