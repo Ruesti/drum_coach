@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'practice_route.dart';
 import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
 import '../../shared/widgets/app_badge.dart';
@@ -447,16 +448,7 @@ class _BlockCard extends ConsumerWidget {
                 ),
               ),
               ElevatedButton(
-                onPressed: () {
-                  final params = [
-                    if (block.startBpm != null) 'bpm=${block.startBpm}',
-                    if (block.durationMinutes > 0)
-                      'min=${block.durationMinutes}',
-                    if (block.type == BlockType.tempoLadder) 'ladder=1',
-                  ].join('&');
-                  final q = params.isEmpty ? '' : '?$params';
-                  context.push('/practice/${block.exerciseKey}$q');
-                },
+                onPressed: () => context.push(practiceRouteFor(block)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: done ? AppColors.raised : AppColors.accent,
                   foregroundColor:
