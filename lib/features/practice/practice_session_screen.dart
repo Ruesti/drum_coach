@@ -510,7 +510,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             IconButton(
               icon: const Icon(Icons.info_outline),
               tooltip: 'Show explanation',
-              // A plain Navigator push, not context.push('/lessons/...') — this
+              // A plain Navigator push, not context.push('/library/...') — this
               // screen lives on the top-level /practice route (outside the
               // bottom-nav shell, see router.dart), and pushing a shell-branch
               // route from there previously caused a duplicate-page-key crash.

@@ -39,7 +39,7 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
     final presentSubdivisions = all.map((r) => r.gridUnit).toSet();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Lessons')),
+      appBar: AppBar(title: const Text('Library')),
       body: Column(
         children: [
           _FilterAxisRow<Skill>(
@@ -185,7 +185,7 @@ class _RudimentTile extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.info_outline, color: AppColors.textFaint),
             tooltip: 'Show explanation',
-            onPressed: () => context.push('/lessons/${rudiment.id}'),
+            onPressed: () => context.push('/library/${rudiment.id}'),
           ),
         ],
       ),
