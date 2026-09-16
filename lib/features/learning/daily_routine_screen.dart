@@ -31,7 +31,7 @@ class DailyRoutineScreen extends ConsumerWidget {
         ),
         data: (items) {
           if (items.isEmpty) {
-            return _EmptyRoutine(onFreePractice: () => context.push('/lessons'));
+            return _EmptyRoutine(onFreePractice: () => context.push('/library'));
           }
           final totalMin =
               items.fold(0, (sum, i) => sum + i.suggestedDurationMinutes);

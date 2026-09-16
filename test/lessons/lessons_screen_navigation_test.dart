@@ -7,10 +7,10 @@ import 'package:go_router/go_router.dart';
 
 void main() {
   GoRouter buildRouter() => GoRouter(
-        initialLocation: '/lessons',
+        initialLocation: '/library',
         routes: [
           GoRoute(
-            path: '/lessons',
+            path: '/library',
             builder: (_, __) => const LessonsScreen(),
             routes: [
               GoRoute(

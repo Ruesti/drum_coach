@@ -83,10 +83,11 @@ class _BeatIndicatorState extends State<BeatIndicator>
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final baseColor = widget.isAccent
-        ? AppColors.accent
-        : AppColors.textPrimary.withValues(alpha: 0.7);
-    final idleColor = AppColors.textPrimary.withValues(alpha: 0.15);
+        ? palette.accent
+        : palette.textPrimary.withValues(alpha: 0.7);
+    final idleColor = palette.textPrimary.withValues(alpha: 0.15);
 
     Widget circle = AnimatedBuilder(
       animation: _controller,
@@ -116,7 +117,8 @@ class _BeatIndicatorState extends State<BeatIndicator>
                 (widget.beatNumber != null
                     ? Text(
                         widget.isPlaying ? '${widget.beatNumber}' : '—',
-                        style: AppTypography.display,
+                        style: AppTypography.display
+                            .copyWith(color: palette.textPrimary),
                       )
                     : null),
           ),

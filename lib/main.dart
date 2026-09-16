@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'app/router.dart';
 import 'app/theme.dart';
@@ -10,6 +11,8 @@ import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Fonts ship as assets (assets/google_fonts/); never fetch at runtime.
+  GoogleFonts.config.allowRuntimeFetching = false;
   await Future.wait([
     // Default buffer size on purpose: raising it to 8192 slowed playback by
     // ~24% on-device (flutter_soloud/miniaudio side effect) — do NOT try to

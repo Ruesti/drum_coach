@@ -32,7 +32,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     _selectedRudimentId ??= rudiments.firstOrNull?.id;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Stats')),
+      appBar: AppBar(title: const Text('Progress')),
       body: sessionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
