@@ -43,6 +43,9 @@ flutter:
   assets:
     - assets/audio/
     - assets/fonts/OFL.txt
+    # Space Grotesk + IBM Plex Mono bundled (OFL) so google_fonts never
+    # fetches at runtime and tests run offline; see assets/google_fonts/OFL_*.txt.
+    - assets/google_fonts/
   fonts:
     - family: Bravura
       fonts:
