@@ -18,11 +18,12 @@ class CoachFeedbackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.coach,
+        color: palette.coach,
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
@@ -59,20 +60,22 @@ class CoachFeedbackCard extends StatelessWidget {
           else if (feedback != null)
             Text(
               feedback!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: palette.textSecondary,
                 height: 1.5,
               ),
             )
           else if (!hasAnalysis)
-            const Text(
+            Text(
               'No microphone data captured. Enable the mic during your next session for personalised coaching.',
-              style: TextStyle(fontSize: 12, color: AppColors.textMuted, height: 1.4),
+              style: TextStyle(
+                  fontSize: 12, color: palette.textMuted, height: 1.4),
             )
           else
             const ErrorStateWidget(
-              message: 'Could not reach the coaching service. Check your API key in Settings.',
+              message:
+                  'Could not reach the coaching service. Check your API key in Settings.',
               compact: true,
             ),
         ],

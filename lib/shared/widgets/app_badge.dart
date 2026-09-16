@@ -16,7 +16,8 @@ class AppBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(AppRadius.badge),
@@ -45,22 +46,25 @@ class AppSelectableChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
         decoration: BoxDecoration(
-          color: selected ? AppColors.accent.withValues(alpha: 0.3) : AppColors.raised,
+          color:
+              selected ? palette.accent.withValues(alpha: 0.3) : palette.raised,
           borderRadius: BorderRadius.circular(AppRadius.chip),
           border: Border.all(
-            color: selected ? AppColors.accent : Colors.transparent,
+            color: selected ? palette.accent : Colors.transparent,
           ),
         ),
         child: Text(
           label,
           style: AppTypography.label.copyWith(
-            color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+            color: selected ? palette.textPrimary : palette.textSecondary,
           ),
         ),
       ),
