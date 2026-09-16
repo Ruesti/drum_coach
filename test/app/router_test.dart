@@ -1,12 +1,26 @@
 import 'package:drum_coach/app/router.dart';
 import 'package:drum_coach/app/theme.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
+import 'package:drum_coach/features/stats/stats_provider.dart';
+import 'package:drum_coach/features/today/next_step.dart';
+import 'package:drum_coach/features/today/next_step_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Widget _app() => ProviderScope(
+      overrides: [
+        nextStepProvider.overrideWith((ref) async => const PathStep(
+              kind: PathStepKind.setup,
+              title: 'Set up your path',
+              detail: 'Pick duration and level.',
+              route: '/program/setup',
+            )),
+        streakDaysProvider.overrideWith((ref) async => 0),
+        todayStatusProvider.overrideWith(
+            (ref) async => const TodayStatus(minutes: 0, goalMinutes: 20)),
+      ],
       child: MaterialApp.router(routerConfig: router, theme: drumCoachTheme),
     );
 
