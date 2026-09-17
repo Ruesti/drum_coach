@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,50 +27,56 @@ class TodayScreen extends ConsumerWidget {
             ? 'Good afternoon.'
             : 'Good evening.';
 
-    return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenPadding,
-            AppSpacing.lg,
-            AppSpacing.screenPadding,
-            AppSpacing.xl,
-          ),
-          children: [
-            Row(
-              children: [
-                const _Eyebrow('Today'),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.settings_outlined),
-                  color: AppColors.textMuted,
-                  tooltip: 'Settings',
-                  onPressed: () => context.push('/settings'),
-                ),
-              ],
+    // No AppBar here, so set the system icons ourselves — otherwise they
+    // stay light after returning from the dark practice screen.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark
+          .copyWith(statusBarColor: Colors.transparent),
+      child: Scaffold(
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.screenPadding,
+              AppSpacing.lg,
+              AppSpacing.screenPadding,
+              AppSpacing.xl,
             ),
-            Text(greeting, style: AppTypography.display),
-            const SizedBox(height: AppSpacing.xl),
-            step.when(
-              data: (s) => _PathDoor(step: s),
-              loading: () => const SizedBox(height: 140),
-              error: (e, _) => ErrorStateWidget(
-                message: 'Could not load your next step.',
-                onRetry: () => ref.invalidate(nextStepProvider),
+            children: [
+              Row(
+                children: [
+                  const _Eyebrow('Today'),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.settings_outlined),
+                    color: AppColors.textMuted,
+                    tooltip: 'Settings',
+                    onPressed: () => context.push('/settings'),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            const Divider(),
-            const SizedBox(height: AppSpacing.lg),
-            const _FreeDoor(),
-            const SizedBox(height: AppSpacing.xl),
-            const Divider(),
-            const SizedBox(height: AppSpacing.lg),
-            _StatsRow(
-              streak: streak.valueOrNull ?? 0,
-              today: today.valueOrNull,
-            ),
-          ],
+              Text(greeting, style: AppTypography.display),
+              const SizedBox(height: AppSpacing.xl),
+              step.when(
+                data: (s) => _PathDoor(step: s),
+                loading: () => const SizedBox(height: 140),
+                error: (e, _) => ErrorStateWidget(
+                  message: 'Could not load your next step.',
+                  onRetry: () => ref.invalidate(nextStepProvider),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              const Divider(),
+              const SizedBox(height: AppSpacing.lg),
+              const _FreeDoor(),
+              const SizedBox(height: AppSpacing.xl),
+              const Divider(),
+              const SizedBox(height: AppSpacing.lg),
+              _StatsRow(
+                streak: streak.valueOrNull ?? 0,
+                today: today.valueOrNull,
+              ),
+            ],
+          ),
         ),
       ),
     );

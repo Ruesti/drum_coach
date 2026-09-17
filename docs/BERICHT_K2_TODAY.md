@@ -34,9 +34,23 @@
 „experimental"-Warnungen aus Isar/SoLoud). Testläufe auf der GPU-Box, weil
 der NUC nachts nicht genug freien Speicher zum Kompilieren hatte.
 
-## Gerätetest
+## Gerätetest (17.09., S23 Ultra, Release-Build)
 
-Offen. Voraussetzung: S23 per USB am Laptop. Prüfen: Today mit und ohne
-Programm, Library, Progress, Übungs-Screen dunkel mit hellem Notenblatt,
-Ergebnis-Blatt lesbar; keine dunkle Schrift auf dunklem Grund und umgekehrt.
-Abnahme durch den Auftraggeber: Urteil „leicht / luftig / klar".
+Installiert über den Laptop, Screenshots per adb: Today, Library, Progress,
+Übungs-Screen. Befund:
+
+- **Today** wie im Entwurf: heller Papier-Look, „Continue the path" mit
+  „Single Stroke Roll · Day 16 · Step 1 of 3" und „Start · 3 min",
+  „Practice freely", Streak und Minuten. Zurück aus dem Übungs-Screen landet
+  sauber auf Today.
+- **Library / Progress** hell und lesbar: Filter-Chips, Schwierigkeits-Badges,
+  Heatmap, Balken, BPM-Kurve funktionieren auf hellem Grund.
+- **Übungs-Screen** dunkel mit hellem Notenblatt, Steuerung dunkel — noch im
+  alten Aufbau (K2 Schritt 2).
+- **Ein Fehler gefunden und behoben:** Nach dem dunklen Übungs-Screen blieben
+  die Symbole der Android-Statusleiste weiß und waren auf Today kaum lesbar
+  (Today hat keine AppBar, die den Stil zurücksetzt). Today setzt den
+  Overlay-Stil jetzt selbst; Test dazu.
+
+Abnahme durch den Auftraggeber: Urteil „leicht / luftig / klar" am Gerät,
+dazu der K1-Durchklick (kein deutscher Nutzertext).

@@ -4,6 +4,7 @@ import 'package:drum_coach/features/today/next_step.dart';
 import 'package:drum_coach/features/today/next_step_provider.dart';
 import 'package:drum_coach/features/today/today_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -109,5 +110,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Rest day'), findsOneWidget);
     expect(find.byType(ElevatedButton), findsNothing);
+  });
+
+  testWidgets('status bar icons are dark on the light Today screen',
+      (tester) async {
+    // Coming back from the dark practice screen left the system icons
+    // light; Today has no AppBar, so it must set the overlay style itself.
+    await tester.pumpWidget(_app(step: _exercise));
+    await tester.pumpAndSettle();
+    final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+        find.byType(AnnotatedRegion<SystemUiOverlayStyle>));
+    expect(region.value.statusBarIconBrightness, Brightness.dark);
   });
 }
