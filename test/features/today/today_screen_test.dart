@@ -138,7 +138,7 @@ void main() {
     expect(region.value.statusBarIconBrightness, Brightness.dark);
   });
 
-  String? _assetOf(WidgetTester tester) {
+  String? assetOf(WidgetTester tester) {
     final images = tester.widgetList<Image>(find.byType(Image));
     for (final img in images) {
       final provider = img.image;
@@ -159,7 +159,7 @@ void main() {
     );
     await tester.pumpWidget(_app(step: step));
     await tester.pumpAndSettle();
-    expect(_assetOf(tester), 'assets/illustrations/today/phase3.jpg');
+    expect(assetOf(tester), 'assets/illustrations/today/phase3.jpg');
   });
 
   testWidgets('rest day, done and setup have their own pictures',
@@ -167,16 +167,16 @@ void main() {
     const rest = PathStep(kind: PathStepKind.restDay, title: 'Rest day', detail: '', phase: 2);
     await tester.pumpWidget(_app(step: rest));
     await tester.pumpAndSettle();
-    expect(_assetOf(tester), 'assets/illustrations/today/rest.jpg');
+    expect(assetOf(tester), 'assets/illustrations/today/rest.jpg');
 
     const done = PathStep(kind: PathStepKind.dayDone, title: 'Day 9 done', detail: '', route: '/program');
     await tester.pumpWidget(_app(step: done));
     await tester.pumpAndSettle();
-    expect(_assetOf(tester), 'assets/illustrations/today/done.jpg');
+    expect(assetOf(tester), 'assets/illustrations/today/done.jpg');
 
     const setup = PathStep(kind: PathStepKind.setup, title: 'Set up your path', detail: '', route: '/program/setup');
     await tester.pumpWidget(_app(step: setup));
     await tester.pumpAndSettle();
-    expect(_assetOf(tester), 'assets/illustrations/today/setup.jpg');
+    expect(assetOf(tester), 'assets/illustrations/today/setup.jpg');
   });
 }
