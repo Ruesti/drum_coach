@@ -31,6 +31,7 @@ Widget _app({
         builder: (_, __) => const Scaffold(body: Text('SETTINGS STUB'))),
   ]);
   return ProviderScope(
+    key: UniqueKey(), // fresh container per pump — overrides can't change in place
     overrides: [
       nextStepProvider.overrideWith((ref) async => step),
       streakDaysProvider.overrideWith((ref) async => streak),
@@ -49,6 +50,20 @@ const _exercise = PathStep(
 );
 
 void main() {
+  setUp(() {
+    // Phone-sized surface: the illustration must not push the lower doors
+    // out of the lazily built list.
+    final binding = TestWidgetsFlutterBinding.ensureInitialized();
+    binding.platformDispatcher.views.first.physicalSize = const Size(1080, 2340);
+    binding.platformDispatcher.views.first.devicePixelRatio = 3.0;
+  });
+
+  tearDown(() {
+    final view = TestWidgetsFlutterBinding.ensureInitialized().platformDispatcher.views.first;
+    view.resetPhysicalSize();
+    view.resetDevicePixelRatio();
+  });
+
   testWidgets('shows the two doors and compact stats', (tester) async {
     await tester.pumpWidget(_app(step: _exercise));
     await tester.pumpAndSettle();
@@ -121,5 +136,47 @@ void main() {
     final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
         find.byType(AnnotatedRegion<SystemUiOverlayStyle>));
     expect(region.value.statusBarIconBrightness, Brightness.dark);
+  });
+
+  String? _assetOf(WidgetTester tester) {
+    final images = tester.widgetList<Image>(find.byType(Image));
+    for (final img in images) {
+      final provider = img.image;
+      if (provider is AssetImage) return provider.assetName;
+    }
+    return null;
+  }
+
+  testWidgets('shows the illustration of the current program phase',
+      (tester) async {
+    const step = PathStep(
+      kind: PathStepKind.exercise,
+      title: 'Single Paradiddle',
+      detail: 'Day 9 · Step 2 of 3 · 84 BPM',
+      minutes: 8,
+      route: '/practice/single_paradiddle?bpm=84&min=8',
+      phase: 3,
+    );
+    await tester.pumpWidget(_app(step: step));
+    await tester.pumpAndSettle();
+    expect(_assetOf(tester), 'assets/illustrations/today/phase3.jpg');
+  });
+
+  testWidgets('rest day, done and setup have their own pictures',
+      (tester) async {
+    const rest = PathStep(kind: PathStepKind.restDay, title: 'Rest day', detail: '', phase: 2);
+    await tester.pumpWidget(_app(step: rest));
+    await tester.pumpAndSettle();
+    expect(_assetOf(tester), 'assets/illustrations/today/rest.jpg');
+
+    const done = PathStep(kind: PathStepKind.dayDone, title: 'Day 9 done', detail: '', route: '/program');
+    await tester.pumpWidget(_app(step: done));
+    await tester.pumpAndSettle();
+    expect(_assetOf(tester), 'assets/illustrations/today/done.jpg');
+
+    const setup = PathStep(kind: PathStepKind.setup, title: 'Set up your path', detail: '', route: '/program/setup');
+    await tester.pumpWidget(_app(step: setup));
+    await tester.pumpAndSettle();
+    expect(_assetOf(tester), 'assets/illustrations/today/setup.jpg');
   });
 }

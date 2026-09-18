@@ -57,7 +57,14 @@ class TodayScreen extends ConsumerWidget {
               Text(greeting, style: AppTypography.display),
               const SizedBox(height: AppSpacing.xl),
               step.when(
-                data: (s) => _PathDoor(step: s),
+                data: (s) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _PathIllustration(step: s),
+                    const SizedBox(height: AppSpacing.lg),
+                    _PathDoor(step: s),
+                  ],
+                ),
                 loading: () => const SizedBox(height: 140),
                 error: (e, _) => ErrorStateWidget(
                   message: 'Could not load your next step.',
@@ -93,6 +100,39 @@ class _Eyebrow extends StatelessWidget {
         text.toUpperCase(),
         style: AppTypography.label.copyWith(color: color, letterSpacing: 1.0),
       );
+}
+
+/// Which picture goes with the step — one per program phase, plus the three
+/// non-exercise states. Files live in assets/illustrations/today/.
+String illustrationFor(PathStep step) => switch (step.kind) {
+      PathStepKind.exercise =>
+        'assets/illustrations/today/phase${(step.phase ?? 3).clamp(1, 4)}.jpg',
+      PathStepKind.restDay => 'assets/illustrations/today/rest.jpg',
+      PathStepKind.dayDone ||
+      PathStepKind.programComplete =>
+        'assets/illustrations/today/done.jpg',
+      PathStepKind.setup => 'assets/illustrations/today/setup.jpg',
+    };
+
+class _PathIllustration extends StatelessWidget {
+  const _PathIllustration({required this.step});
+  final PathStep step;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: AspectRatio(
+        aspectRatio: 2.4,
+        child: Image.asset(
+          illustrationFor(step),
+          fit: BoxFit.cover,
+          // A missing file must never break the start screen.
+          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        ),
+      ),
+    );
+  }
 }
 
 class _PathDoor extends StatelessWidget {

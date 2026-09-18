@@ -59,6 +59,7 @@ void main() {
     expect(step.detail, 'Day 9 · Step 2 of 3 · 84 BPM');
     expect(step.minutes, 8);
     expect(step.route, '/practice/single_paradiddle?bpm=84&min=8');
+    expect(step.phase, 1);
   });
 
   test('all blocks done → day done', () {
@@ -81,6 +82,7 @@ void main() {
         nameOf: _name);
     expect(step.kind, PathStepKind.restDay);
     expect(step.route, isNull);
+    expect(step.phase, 1);
   });
 
   test('program configured but no day → program complete', () {
@@ -110,6 +112,7 @@ void main() {
     expect(withRoutine.route, '/routine/single_paradiddle?bpm=90');
     expect(withRoutine.detail, 'Review · 90 BPM');
     expect(withRoutine.minutes, 6);
+    expect(withRoutine.phase, isNull);
     final empty = computeNextStep(
         hasProgram: false,
         day: null,

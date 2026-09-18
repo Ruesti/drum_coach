@@ -12,12 +12,17 @@ class PathStep {
   final int minutes;
   final String? route;
 
+  /// Program phase 1–4 the step belongs to; null without a program.
+  /// Picks the illustration on Today.
+  final int? phase;
+
   const PathStep({
     required this.kind,
     required this.title,
     required this.detail,
     this.minutes = 0,
     this.route,
+    this.phase,
   });
 }
 
@@ -66,6 +71,7 @@ PathStep computeNextStep({
       kind: PathStepKind.restDay,
       title: 'Rest day',
       detail: 'Day ${day.dayNumber} · nothing to play, the streak keeps.',
+      phase: day.phase.index,
     );
   }
   int? index;
@@ -81,6 +87,7 @@ PathStep computeNextStep({
       title: 'Day ${day.dayNumber} done',
       detail: 'Come back tomorrow — or practice freely.',
       route: '/program',
+      phase: day.phase.index,
     );
   }
   final block = day.blocks[index];
@@ -88,8 +95,10 @@ PathStep computeNextStep({
   return PathStep(
     kind: PathStepKind.exercise,
     title: nameOf(block.exerciseKey),
-    detail: 'Day ${day.dayNumber} · Step ${index + 1} of ${day.blocks.length}$bpm',
+    detail:
+        'Day ${day.dayNumber} · Step ${index + 1} of ${day.blocks.length}$bpm',
     minutes: block.durationMinutes,
     route: practiceRouteFor(block),
+    phase: day.phase.index,
   );
 }
