@@ -123,7 +123,9 @@ class _PathIllustration extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.card),
       child: AspectRatio(
-        aspectRatio: 2.4,
+        // 16:9 since 23.09.: the tight action shots need the height; the old
+        // 2.4:1 strip cut off hair and sticks.
+        aspectRatio: 16 / 9,
         child: Image.asset(
           illustrationFor(step),
           fit: BoxFit.cover,

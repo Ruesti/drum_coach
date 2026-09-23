@@ -160,6 +160,12 @@ void main() {
     await tester.pumpWidget(_app(step: step));
     await tester.pumpAndSettle();
     expect(assetOf(tester), 'assets/illustrations/today/phase3.jpg');
+    // Decided 23.09.: the banner is 16:9, not the old 2.4:1 strip — tight
+    // action shots need the height.
+    final ratio = tester.widget<AspectRatio>(
+      find.ancestor(of: find.byType(Image), matching: find.byType(AspectRatio)).first,
+    );
+    expect(ratio.aspectRatio, closeTo(16 / 9, 0.001));
   });
 
   testWidgets('rest day, done and setup have their own pictures',
