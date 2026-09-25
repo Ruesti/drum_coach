@@ -48,8 +48,9 @@ class _BpmStepButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Material(
-      color: AppColors.raised,
+      color: palette.raised,
       borderRadius: BorderRadius.circular(AppRadius.chip),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.chip),
@@ -58,7 +59,7 @@ class _BpmStepButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Text(
             label,
-            style: AppTypography.label.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.label.copyWith(color: palette.textPrimary),
           ),
         ),
       ),
@@ -78,14 +79,15 @@ Future<int?> editBpmDialog(
   final result = await showDialog<int>(
     context: context,
     builder: (ctx) => AlertDialog(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppPalette.of(ctx).surface,
       title: const Text('Enter BPM'),
       content: TextField(
         controller: controller,
         keyboardType: TextInputType.number,
         autofocus: true,
         textAlign: TextAlign.center,
-        style: AppTypography.display,
+        style: AppTypography.display
+            .copyWith(color: AppPalette.of(ctx).textPrimary),
         onSubmitted: (v) => Navigator.pop(ctx, int.tryParse(v)),
       ),
       actions: [

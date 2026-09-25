@@ -52,8 +52,10 @@ lib/
 │   │   ├── routine_provider.dart         # generates today's plan
 │   │   ├── spaced_repetition_service.dart
 │   │   └── bpm_progression_service.dart
-│   └── dashboard/
-│       └── dashboard_screen.dart
+│   └── today/                        # start screen (K2): path step + library door
+│       ├── today_screen.dart
+│       ├── next_step.dart            # pure: first open program block / routine item
+│       └── next_step_provider.dart
 ├── shared/
 │   ├── widgets/             # Reusable UI components
 │   └── extensions/
@@ -202,16 +204,25 @@ class DailyRoutineItem {
 }
 ```
 
-### Navigation additions
+### Navigation (K2, 2026-09)
 ```
-/routine              → DailyRoutineScreen   (today's plan)
+Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
+/routine              → DailyRoutineScreen   (top-level, no tab anymore)
 /routine/:rudimentId  → PracticeSessionScreen (from routine context)
+/lessons, /lessons/:id, /stats → redirect to /library, /library/:id, /progress
 ```
 
-### Dashboard shows
-- Today's routine summary (X rudiments, ~Y min)
-- How many are reviews vs progression vs new
-- Tap to go to `/routine`
+### Today shows
+- "Continue the path": the next step — first open block of today's program
+  day, or the first routine item without a program — with one Start button
+- "Practice freely": one button into the Library
+- Streak and minutes today, compact
+
+### Theme (K2)
+- App is light ("paper", `AppColors`); only `PracticeSessionScreen` is dark
+  (`PracticeColors`, wrapped in `drumCoachPracticeTheme`). Shared widgets
+  read `AppPalette.of(context)`. Fonts are bundled under `assets/google_fonts/`
+  — never rely on runtime fetching (tests would break).
 
 ## Sticking Pattern Widget
 

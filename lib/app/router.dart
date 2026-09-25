@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/local/settings_service.dart';
-import '../features/dashboard/dashboard_screen.dart';
 import '../features/learning/daily_routine_screen.dart';
 import '../features/lessons/collection_screen.dart';
 import '../features/lessons/lesson_detail_screen.dart';
@@ -19,6 +18,7 @@ import '../features/coaching/exercise_generator_screen.dart';
 import '../features/settings/latency_calibration_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
+import '../features/today/today_screen.dart';
 
 // /program, /metronome, /settings, /coaching/exercise-generator etc. are
 // top-level GoRoutes declared as siblings of the StatefulShellRoute, meant
@@ -54,28 +54,12 @@ final router = GoRouter(
         StatefulShellBranch(routes: [
           GoRoute(
             path: '/',
-            builder: (_, __) => const DashboardScreen(),
+            builder: (_, __) => const TodayScreen(),
           ),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
-            path: '/routine',
-            builder: (_, __) => const DailyRoutineScreen(),
-            routes: [
-              GoRoute(
-                path: ':rudimentId',
-                builder: (_, state) => PracticeSessionScreen(
-                  rudimentId: state.pathParameters['rudimentId']!,
-                  isFromRoutine: true,
-                  targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
-                ),
-              ),
-            ],
-          ),
-        ]),
-        StatefulShellBranch(routes: [
-          GoRoute(
-            path: '/lessons',
+            path: '/library',
             builder: (_, __) => const LessonsScreen(),
             routes: [
               GoRoute(
@@ -89,12 +73,37 @@ final router = GoRouter(
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
-            path: '/stats',
+            path: '/progress',
             builder: (_, __) => const StatsScreen(),
           ),
         ]),
       ],
     ),
+    // The daily routine lost its tab (K2: the path step on Today covers it)
+    // but stays reachable as a full-screen route, deep links included.
+    GoRoute(
+      path: '/routine',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, __) => const DailyRoutineScreen(),
+      routes: [
+        GoRoute(
+          path: ':rudimentId',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (_, state) => PracticeSessionScreen(
+            rudimentId: state.pathParameters['rudimentId']!,
+            isFromRoutine: true,
+            targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
+          ),
+        ),
+      ],
+    ),
+    // Old tab paths keep working (bookmarks, notifications, habit).
+    GoRoute(path: '/lessons', redirect: (_, __) => '/library'),
+    GoRoute(
+      path: '/lessons/:id',
+      redirect: (_, state) => '/library/${state.pathParameters['id']}',
+    ),
+    GoRoute(path: '/stats', redirect: (_, __) => '/progress'),
     GoRoute(
       path: '/program',
       parentNavigatorKey: _rootNavigatorKey,
@@ -167,7 +176,7 @@ class _ScaffoldWithNavBar extends ConsumerWidget {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) {
-          // Returning to the Dashboard ends the current training session —
+          // Returning to Today ends the current training session —
           // reset the cross-exercise session timer so the next one starts
           // from zero instead of carrying over.
           if (index == 0 && navigationShell.currentIndex != 0) {
@@ -180,24 +189,19 @@ class _ScaffoldWithNavBar extends ConsumerWidget {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.today_outlined),
             activeIcon: Icon(Icons.today),
-            label: 'Routine',
+            label: 'Today',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.library_books_outlined),
-            activeIcon: Icon(Icons.library_books),
-            label: 'Lessons',
+            icon: Icon(Icons.grid_view_outlined),
+            activeIcon: Icon(Icons.grid_view),
+            label: 'Library',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart_outlined),
             activeIcon: Icon(Icons.bar_chart),
-            label: 'Stats',
+            label: 'Progress',
           ),
         ],
       ),

@@ -21,32 +21,33 @@ class AppCard extends StatelessWidget {
   final VoidCallback? onTap;
   final EdgeInsetsGeometry padding;
 
-  Color get _background {
+  Color _background(AppPalette p) {
     switch (variant) {
       case AppCardVariant.standard:
-        return AppColors.surface;
+        return p.surface;
       case AppCardVariant.raised:
-        return AppColors.raised;
+        return p.raised;
       case AppCardVariant.error:
-        return AppColors.struggled.withValues(alpha: 0.12);
+        return p.struggled.withValues(alpha: 0.12);
     }
   }
 
-  BoxBorder? get _border {
+  BoxBorder? _border(AppPalette p) {
     if (variant == AppCardVariant.error) {
-      return Border.all(color: AppColors.struggled.withValues(alpha: 0.4));
+      return Border.all(color: p.struggled.withValues(alpha: 0.4));
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final content = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: _background,
+        color: _background(palette),
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: _border,
+        border: _border(palette),
       ),
       child: child,
     );

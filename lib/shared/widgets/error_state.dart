@@ -18,27 +18,29 @@ class ErrorStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: compact ? AppSpacing.md : AppSpacing.xl),
+      padding: EdgeInsets.symmetric(
+          vertical: compact ? AppSpacing.md : AppSpacing.xl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             Icons.error_outline,
-            color: AppColors.struggled,
+            color: palette.struggled,
             size: compact ? 20 : 32,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.body.copyWith(color: palette.textSecondary),
           ),
           if (onRetry != null) ...[
             const SizedBox(height: AppSpacing.sm),
             TextButton(
               onPressed: onRetry,
-              style: TextButton.styleFrom(foregroundColor: AppColors.accent),
+              style: TextButton.styleFrom(foregroundColor: palette.accent),
               child: const Text('Try again'),
             ),
           ],

@@ -15,7 +15,7 @@ String _$sessionTimerNotifierHash() =>
 /// behavior — [resume]/[pause] are called in lockstep with the metronome's
 /// isPlaying transitions, so this only counts while an exercise is actually
 /// being played, not time spent paused or browsing between exercises.
-/// [reset] is called when the user returns to the Dashboard.
+/// [reset] is called when the user returns to Today.
 ///
 /// Copied from [SessionTimerNotifier].
 @ProviderFor(SessionTimerNotifier)
