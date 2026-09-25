@@ -150,7 +150,7 @@ class _PracticeSessionScreenState
         _sessionTimerNotifier.restore(snap.sessionSeconds);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
-              'Unterbrochene Session fortgesetzt (${_formatDuration(snap.elapsedSeconds)})'),
+              'Resumed interrupted session (${_formatDuration(snap.elapsedSeconds)})'),
         ));
       }
     });
@@ -400,34 +400,34 @@ class _PracticeSessionScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Sauber & locker?'),
+        title: const Text('Clean & relaxed?'),
         content: Text(
-          'Lief die Tempo-Leiter bis ${gate + 4} BPM gleichmäßig und locker '
-          'durch? Ja macht ${gate + 4} BPM zu deinem neuen sauberen Tempo.',
+          'Did the tempo ladder run evenly and relaxed all the way to '
+          '${gate + 4} BPM? Yes makes ${gate + 4} BPM your new clean tempo.',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Nein'),
+            child: const Text('No'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Ja'),
+            child: const Text('Yes'),
           ),
         ],
       ),
     );
     if (ok == null) return null;
-    if (!ok) return 'Sauberes Tempo bleibt bei $gate BPM — morgen wieder.';
+    if (!ok) return 'Clean tempo stays at $gate BPM — try again tomorrow.';
     await ref
         .read(cleanTempoNotifierProvider.notifier)
         .recordCleanPass(widget.rudimentId, gate);
     final advanced =
         await ref.read(programControllerProvider.notifier).advanceStageIfReady();
     return advanced
-        ? 'Sauberes Tempo jetzt ${gate + 4} BPM · Level up: neue Stufe!'
-        : 'Sauberes Tempo jetzt ${gate + 4} BPM.';
+        ? 'Clean tempo now ${gate + 4} BPM · Level up: new stage!'
+        : 'Clean tempo now ${gate + 4} BPM.';
   }
 
   @override
@@ -497,7 +497,7 @@ class _PracticeSessionScreenState
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
-            tooltip: 'Erklärung anzeigen',
+            tooltip: 'Show explanation',
             // A plain Navigator push, not context.push('/lessons/...') — this
             // screen lives on the top-level /practice route (outside the
             // bottom-nav shell, see router.dart), and pushing a shell-branch
@@ -515,8 +515,8 @@ class _PracticeSessionScreenState
                     _analysisMode ? AppColors.accent : AppColors.textFaint,
               ),
               tooltip: _analysisMode
-                  ? 'Analysemodus (Hand-Werte) — tippen für Lernmodus'
-                  : 'Lernmodus — tippen für Hand-Analyse',
+                  ? 'Analysis mode (per-hand values) — tap for Learn mode'
+                  : 'Learn mode — tap for hand analysis',
               onPressed: () {
                 setState(() => _analysisMode = !_analysisMode);
                 SettingsService.setAnalysisModeFor(
@@ -660,7 +660,7 @@ class _LadderStepRow extends StatelessWidget {
       runSpacing: 6,
       children: [
         const Icon(Icons.stairs_outlined, size: 16, color: AppColors.accent),
-        const Text('Tempo-Leiter',
+        const Text('Tempo ladder',
             style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
         for (var i = 0; i < bpms.length; i++)
           AppSelectableChip(
@@ -1088,7 +1088,7 @@ class _FeedbackSheetState extends State<_FeedbackSheet> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.ios_share, size: 18),
-                label: const Text('Session exportieren (JSONL)'),
+                label: const Text('Export session (JSONL)'),
                 onPressed: () async {
                   final file =
                       await SessionLogService.exportSession(widget.sessionLog!);
@@ -1194,8 +1194,8 @@ class _AnalysisSummary extends StatelessWidget {
             // a verdict. All verdicts render as the banner above the card.
             const SizedBox(height: 6),
             const Text(
-              'Lernmodus — Timing und Gleichmäßigkeit ohne Hand-Analyse. '
-              'Fehler sind hier normal.',
+              'Learn mode — timing and evenness without hand analysis. '
+              'Mistakes are normal here.',
               style: TextStyle(color: AppColors.textFaint, fontSize: 12),
             ),
           ],
@@ -1205,15 +1205,15 @@ class _AnalysisSummary extends StatelessWidget {
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               tilePadding: EdgeInsets.zero,
-              title: const Text('Messdetails',
+              title: const Text('Measurement details',
                   style: TextStyle(color: AppColors.textFaint, fontSize: 12)),
               children: [
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Pegel (×100): ${analysis.peakLevels.map((p) => (p * 100).round()).join(' ')}\n'
-                    'Abweichung (ms): ${analysis.deviationsMs.map((d) => d.round()).join(' ')}\n'
-                    'Aufnahme: ${analysis.recordingSetup ?? 'unbekannt'}',
+                    'Levels (×100): ${analysis.peakLevels.map((p) => (p * 100).round()).join(' ')}\n'
+                    'Deviation (ms): ${analysis.deviationsMs.map((d) => d.round()).join(' ')}\n'
+                    'Recording: ${analysis.recordingSetup ?? 'unknown'}',
                     style: const TextStyle(
                         color: AppColors.textFaint,
                         fontSize: 11,

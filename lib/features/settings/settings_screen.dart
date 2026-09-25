@@ -82,7 +82,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Link konnte nicht geöffnet werden')),
+          const SnackBar(content: Text('Could not open link')),
         );
       }
     }
@@ -98,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Einstellungen')),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -109,26 +109,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 28),
 
           // ── Übungsziel ────────────────────────────────────────────────
-          _SectionLabel('ÜBUNGSZIEL PRO TAG'),
+          _SectionLabel('DAILY PRACTICE GOAL'),
           const SizedBox(height: 10),
           _TargetRow(value: _targetMin, onChanged: _setTarget),
           const SizedBox(height: 28),
 
           // ── Gerät ─────────────────────────────────────────────────────
-          _SectionLabel('GERÄT'),
+          _SectionLabel('DEVICE'),
           const SizedBox(height: 10),
           _SettingsTile(
             icon: Icons.vibration,
-            title: 'Haptisches Feedback',
-            subtitle: 'Vibration auf Akzentschlägen',
+            title: 'Haptic feedback',
+            subtitle: 'Vibration on accent strokes',
             value: _haptics,
             onChanged: _setHaptics,
           ),
           const SizedBox(height: 8),
           _SettingsTile(
             icon: Icons.notifications_outlined,
-            title: 'Tägliche Erinnerung',
-            subtitle: 'Erinnert dich täglich ans Üben',
+            title: 'Daily reminder',
+            subtitle: 'Reminds you to practice every day',
             value: _reminders,
             onChanged: _setReminders,
           ),
@@ -139,8 +139,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 10),
           _SettingsTile(
             icon: Icons.mic_outlined,
-            title: 'Mikrofon-Analyse',
-            subtitle: 'Misst Timing & Dynamik während der Session',
+            title: 'Microphone analysis',
+            subtitle: 'Measures timing & dynamics during the session',
             value: _micEnabled,
             onChanged: _setMicEnabled,
           ),
@@ -151,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (!context.mounted) return;
               if (file == null) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Heute noch keine Session-Logs.')));
+                    content: Text('No session logs today yet.')));
                 return;
               }
               await SharePlus.instance
@@ -165,11 +165,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Session-Logs von heute exportieren',
+                      Text("Export today's session logs",
                           style: TextStyle(
                               fontSize: 14, fontWeight: FontWeight.w600)),
                       Text(
-                        'Roh-Daten als JSONL über den Teilen-Dialog',
+                        'Raw data as JSONL via the share dialog',
                         style: TextStyle(
                             color: AppColors.textMuted, fontSize: 11),
                       ),
@@ -192,13 +192,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Latenz-Kalibrierung',
+                      const Text('Latency calibration',
                           style: TextStyle(
                               fontSize: 14, fontWeight: FontWeight.w600)),
                       Text(
                         SettingsService.latencyOffsetMs != null
-                            ? 'Gespeichert: ${SettingsService.latencyOffsetMs!.round()} ms'
-                            : 'Noch nicht kalibriert',
+                            ? 'Saved: ${SettingsService.latencyOffsetMs!.round()} ms'
+                            : 'Not calibrated yet',
                         style: const TextStyle(
                             color: AppColors.textMuted, fontSize: 11),
                       ),
@@ -286,9 +286,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _resetOnboarding,
             child: ListTile(
               leading: const Icon(Icons.replay, color: AppColors.textMuted),
-              title: const Text('Onboarding erneut zeigen',
+              title: const Text('Show onboarding again',
                   style: TextStyle(fontSize: 14)),
-              subtitle: const Text('Startet die Einführung von vorne',
+              subtitle: const Text('Restarts the intro from the beginning',
                   style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
               trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ),
@@ -353,7 +353,7 @@ class _DonationCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     const Text(
-                      'Gefällt dir die App? Spendiere ein Bier!',
+                      'Enjoying the app? Buy me a beer!',
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,

@@ -64,7 +64,7 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
     if (!mounted) return;
     setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Latenz gespeichert: ${_median.round()} ms')),
+      SnackBar(content: Text('Latency saved: ${_median.round()} ms')),
     );
   }
 
@@ -74,17 +74,17 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
     final storedAt = SettingsService.latencyCalibratedAt;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Latenz-Kalibrierung')),
+      appBar: AppBar(title: const Text('Latency calibration')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           const AppCard(
             child: Text(
-              'Misst den Zeitversatz zwischen geplantem Klick und Aufnahme '
-              '(Ausgabe- plus Eingabelatenz). Kopfhörer abziehen, '
-              'Lautstärke hoch, ruhige Umgebung — dann Messen '
-              '(je Lauf 20 Klicks, ~10 Sekunden). Für einen belastbaren '
-              'Wert dreimal messen; die Spannweite sollte unter 5 ms liegen.',
+              'Measures the time offset between the scheduled click and the '
+              'recording (output plus input latency). Unplug headphones, '
+              'turn the volume up, find a quiet room — then tap Measure '
+              '(20 clicks per run, ~10 seconds). For a reliable value, '
+              'measure three times; the spread should stay under 5 ms.',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           ),
@@ -98,7 +98,7 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Gespeichert: ${stored.round()} ms'
+                      'Saved: ${stored.round()} ms'
                       '${storedAt != null ? ' · ${storedAt.day}.${storedAt.month}.${storedAt.year}' : ''}',
                       style: const TextStyle(
                           color: AppColors.textSecondary, fontSize: 13),
@@ -117,13 +117,13 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
                   children: [
                     Row(
                       children: [
-                        Text('Messung ${i + 1}',
+                        Text('Measurement ${i + 1}',
                             style: const TextStyle(
                                 color: AppColors.textMuted, fontSize: 13)),
                         const Spacer(),
                         Text(
                           '${_runs[i].offsetMs.toStringAsFixed(1)} ms · '
-                          '${_runs[i].matchedClicks}/${_runs[i].totalClicks} Klicks',
+                          '${_runs[i].matchedClicks}/${_runs[i].totalClicks} clicks',
                           style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 13,
@@ -135,8 +135,8 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          'Blöcke: ${_runs[i].blockOffsets(3).map((b) => b.toStringAsFixed(1)).join(' / ')} '
-                          '· Δ ${_runs[i].blockSpreadMs(3)!.toStringAsFixed(1)} ms in dieser Aufnahme',
+                          'Blocks: ${_runs[i].blockOffsets(3).map((b) => b.toStringAsFixed(1)).join(' / ')} '
+                          '· Δ ${_runs[i].blockSpreadMs(3)!.toStringAsFixed(1)} ms within this recording',
                           style: TextStyle(
                               color: _runs[i].blockSpreadMs(3)! < 5
                                   ? AppColors.solidStreak
@@ -156,7 +156,7 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
                 children: [
                   Text(
                     'Median: ${_median.toStringAsFixed(1)} ms · '
-                    'Spannweite: ${_spread.toStringAsFixed(1)} ms',
+                    'Spread: ${_spread.toStringAsFixed(1)} ms',
                     style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
@@ -166,10 +166,10 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         _spread < 5
-                            ? 'Reproduzierbar (Spannweite < 5 ms) — Wert kann '
-                                'gespeichert werden.'
-                            : 'Spannweite ≥ 5 ms — Umgebung beruhigen und '
-                                'erneut messen.',
+                            ? 'Reproducible (spread < 5 ms) — the value can '
+                                'be saved.'
+                            : 'Spread ≥ 5 ms — quiet the surroundings and '
+                                'measure again.',
                         style: TextStyle(
                             color: _spread < 5
                                 ? AppColors.solidStreak
@@ -185,9 +185,9 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
             const SizedBox(height: 6),
             const AppCard(
               child: Text(
-                'Messung fehlgeschlagen — zu wenige Klicks in der Aufnahme '
-                'gefunden. Lautstärke prüfen, Mikrofon freihalten, erneut '
-                'versuchen.',
+                'Measurement failed — too few clicks found in the recording. '
+                'Check the volume, keep the microphone clear, and try '
+                'again.',
                 style: TextStyle(color: AppColors.struggled, fontSize: 13),
               ),
             ),
@@ -202,14 +202,14 @@ class _LatencyCalibrationScreenState extends State<LatencyCalibrationScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.graphic_eq),
-            label: Text(_running ? 'Misst…' : 'Messen'),
+            label: Text(_running ? 'Measuring…' : 'Measure'),
           ),
           const SizedBox(height: 8),
           OutlinedButton(
             onPressed: _runs.isEmpty || _running ? null : _save,
             child: Text(_runs.isEmpty
-                ? 'Wert speichern'
-                : 'Wert speichern (${_median.round()} ms)'),
+                ? 'Save value'
+                : 'Save value (${_median.round()} ms)'),
           ),
         ],
       ),

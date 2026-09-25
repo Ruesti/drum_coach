@@ -56,11 +56,11 @@ class DashboardScreen extends ConsumerWidget {
             onTap: () => context.push('/program'),
             child: _DashRow(
               icon: Icons.fitness_center,
-              title: 'Trainingsprogramm',
+              title: 'Training program',
               subtitle: SettingsService.programConfig == null
-                  ? 'Adaptiv · noch nicht eingerichtet'
+                  ? 'Adaptive · not set up yet'
                   : '${ref.watch(trainingProgramProvider).name} · '
-                      '${ref.watch(trainingProgramProvider).totalWeeks} Wochen',
+                      '${ref.watch(trainingProgramProvider).totalWeeks} weeks',
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -70,8 +70,8 @@ class DashboardScreen extends ConsumerWidget {
             onTap: () => context.push('/collection/rudimentEtudes'),
             child: const _DashRow(
               icon: Icons.library_music_outlined,
-              title: 'Übungs-Sammlung',
-              subtitle: 'Rudiment-Étüden & Technik-Studien',
+              title: 'Exercise collection',
+              subtitle: 'Rudiment etudes & technique studies',
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -81,8 +81,8 @@ class DashboardScreen extends ConsumerWidget {
             onTap: () => context.push('/collection/techniqueStudies'),
             child: const _DashRow(
               icon: Icons.school_outlined,
-              title: 'Technik-Studien',
-              subtitle: 'Gezielte Technik-Übungen',
+              title: 'Technique studies',
+              subtitle: 'Targeted technique exercises',
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -92,8 +92,8 @@ class DashboardScreen extends ConsumerWidget {
             onTap: () => context.push('/collection/padWorkouts'),
             child: const _DashRow(
               icon: Icons.dashboard_customize_outlined,
-              title: 'Pad-Workouts',
-              subtitle: 'Sticking-Patterns, Warm-Up, Akzent-Workout & mehr',
+              title: 'Pad workouts',
+              subtitle: 'Sticking patterns, warm-up, accent workout & more',
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -102,7 +102,7 @@ class DashboardScreen extends ConsumerWidget {
           routineAsync.when(
             loading: () => const _LoadingCard(),
             error: (_, __) => ErrorStateWidget(
-              message: 'Tagesroutine konnte nicht geladen werden.',
+              message: "Couldn't load today's routine.",
               compact: true,
               onRetry: () => ref.invalidate(dailyRoutineProvider),
             ),
@@ -120,7 +120,7 @@ class DashboardScreen extends ConsumerWidget {
           sessionsAsync.when(
             loading: () => const SizedBox.shrink(),
             error: (_, __) => ErrorStateWidget(
-              message: 'Letzte Sessions konnten nicht geladen werden.',
+              message: "Couldn't load recent sessions.",
               compact: true,
               onRetry: () => ref.invalidate(allSessionsProvider),
             ),
@@ -243,8 +243,8 @@ class _GreetingCard extends StatelessWidget {
               Flexible(
                 child: Text(
                   today.goalMet
-                      ? 'Tagesziel erreicht'
-                      : 'Heute ${today.minutes}/${today.goalMinutes} min',
+                      ? 'Daily goal reached'
+                      : 'Today ${today.minutes}/${today.goalMinutes} min',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(color: AppColors.textMuted, fontSize: 12),

@@ -34,7 +34,7 @@ void main() {
       );
       expect(a, isNotNull);
       expect(a!.positive, isFalse);
-      expect(a.text, contains('zu leise'));
+      expect(a.text, contains('too quiet'));
     }
   });
 
@@ -52,7 +52,7 @@ void main() {
       ),
       analysisMode: true,
     );
-    expect(a!.text, '2 Einbrüche (erster bei 0:14) — das sitzt noch nicht.');
+    expect(a!.text, '2 breakdowns (first at 0:14) — not solid yet.');
     expect(a.positive, isFalse);
   });
 
@@ -67,7 +67,7 @@ void main() {
       analysisMode: true,
     );
     expect(a!.positive, isTrue);
-    expect(a.text, contains('Sauber'));
+    expect(a.text, contains('Clean run'));
   });
 
   test('learn mode without problems shows no banner', () {
@@ -95,7 +95,7 @@ void main() {
           alignment: summary(), detectedHits: 90, expectedHits: 100),
       analysisMode: true,
     );
-    expect(jitter!.text, contains('unruhig'));
-    expect(omissions!.text, contains('Aussetzer'));
+    expect(jitter!.text, contains('unsteady'));
+    expect(omissions!.text, contains('dropped notes'));
   });
 }

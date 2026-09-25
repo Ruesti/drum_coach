@@ -53,7 +53,7 @@ class _EmptyCollectionState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        'Keine Übungen in dieser Sammlung.',
+        'No exercises in this collection.',
         style: AppTypography.body.copyWith(color: AppColors.textMuted),
       ),
     );

@@ -39,7 +39,7 @@ class ErrorStateWidget extends StatelessWidget {
             TextButton(
               onPressed: onRetry,
               style: TextButton.styleFrom(foregroundColor: AppColors.accent),
-              child: const Text('Erneut versuchen'),
+              child: const Text('Try again'),
             ),
           ],
         ],

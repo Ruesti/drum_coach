@@ -86,12 +86,12 @@ List<StrokeBeat> _enduranceBeat() => sixteenths([R, L, R, L], accents: {0});
 final List<Rudiment> techniqueStudies = <Rudiment>[
   Rudiment(
     id: 'etude_study_1',
-    name: 'Akzent-Studie · Wandernde Akzente',
+    name: 'Accent Study · Moving Accents',
     description:
-        'Durchgehende 16tel-Einzelschläge; der Akzent wandert von Zählzeit zu '
-        'Zählzeit eine 16tel weiter nach hinten.',
+        'Continuous 16th-note single strokes; the accent shifts one 16th '
+        'later from beat to beat.',
     collection: ExerciseCollection.techniqueStudies,
-    collectionGroup: 'Akzent-Studien',
+    collectionGroup: 'Accent Studies',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
     targetBpm: 110,
@@ -113,13 +113,13 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_study_2',
-    name: 'Akzent-Studie · Accent & Ghost',
+    name: 'Accent Study · Accent & Ghost',
     description:
-        '16tel-Einzelschläge mit betonten Zählzeiten und geghosteten '
-        'Zwischennoten — trainiert den dynamischen Abstand zwischen Accent '
-        'und Ghost Note.',
+        '16th-note single strokes with accented beats and ghosted '
+        'in-between notes — trains the dynamic gap between accent '
+        'and ghost note.',
     collection: ExerciseCollection.techniqueStudies,
-    collectionGroup: 'Akzent-Studien',
+    collectionGroup: 'Accent Studies',
     difficulty: Difficulty.advanced,
     minBpm: 80,
     targetBpm: 120,
@@ -140,12 +140,12 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_study_3',
-    name: 'Kombi-Studie · Paradiddle + Single Four',
+    name: 'Combo Study · Paradiddle + Single Four',
     description:
-        'Kurze Phrase aus Single-Paradiddle-Takt und Single-Stroke-Four-Takt '
-        'im Wechsel — verbindet zwei Sticking-Konzepte.',
+        'A short phrase alternating a single paradiddle bar with a '
+        'single-stroke-four bar — connects two sticking concepts.',
     collection: ExerciseCollection.techniqueStudies,
-    collectionGroup: 'Kombinations-Studien',
+    collectionGroup: 'Combination Studies',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
     targetBpm: 110,
@@ -161,12 +161,12 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_study_4',
-    name: 'Kombi-Studie · Flam + Drag + Roll',
+    name: 'Combo Study · Flam + Drag + Roll',
     description:
-        'Flam-Figur, Drag-Figur und Doppelschlag-Roll werden nacheinander '
-        'vorgestellt und im letzten Takt zu einer fließenden Phrase verbunden.',
+        'A flam figure, a drag figure, and a double stroke roll are introduced '
+        'one after another, then joined into a flowing phrase in the last bar.',
     collection: ExerciseCollection.techniqueStudies,
-    collectionGroup: 'Kombinations-Studien',
+    collectionGroup: 'Combination Studies',
     difficulty: Difficulty.advanced,
     minBpm: 80,
     targetBpm: 120,
@@ -198,12 +198,12 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_study_5',
-    name: 'Roll-Studie · Crescendo-Doubles',
+    name: 'Roll Study · Crescendo Doubles',
     description:
-        'Durchgehende Doppelschläge (RRLL), die sich über vier Takte von '
-        'Ghost Notes über normale Lautstärke bis zu Akzenten steigern.',
+        'Continuous double strokes (RRLL) building over four bars from '
+        'ghost notes through normal volume up to accents.',
     collection: ExerciseCollection.techniqueStudies,
-    collectionGroup: 'Roll- & Endurance-Studien',
+    collectionGroup: 'Roll & Endurance Studies',
     difficulty: Difficulty.intermediate,
     minBpm: 60,
     targetBpm: 100,
@@ -234,12 +234,12 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_study_6',
-    name: 'Endurance-Studie · Dauerlauf',
+    name: 'Endurance Study · Marathon',
     description:
-        'Vier Takte durchgehende 16tel-Einzelschläge mit Akzent auf jeder '
-        'Zählzeit — reine Ausdauerarbeit bis ins Zieltempo.',
+        'Four bars of continuous 16th-note single strokes with an accent on '
+        'every beat — pure endurance work up to the target tempo.',
     collection: ExerciseCollection.techniqueStudies,
-    collectionGroup: 'Roll- & Endurance-Studien',
+    collectionGroup: 'Roll & Endurance Studies',
     difficulty: Difficulty.advanced,
     minBpm: 90,
     targetBpm: 150,

@@ -6,8 +6,8 @@ import '../etude_dsl.dart';
 final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_double_stroke_roll_1',
-    name: 'Double Stroke Roll · Étude 1',
-    description: 'Saubere Doppelschläge im 16tel-Raster, ganz ohne Akzente.',
+    name: 'Double Stroke Roll · Etude 1',
+    description: 'Clean double strokes on a 16th-note grid, with no accents at all.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.beginner,
@@ -31,8 +31,8 @@ final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_double_stroke_roll_2',
-    name: 'Double Stroke Roll · Étude 2',
-    description: 'Doppelschläge mit betonter erster Note auf den Zählzeiten 1 und 3.',
+    name: 'Double Stroke Roll · Etude 2',
+    description: 'Double strokes with the first note accented on beats 1 and 3.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.beginner,
@@ -56,8 +56,8 @@ final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_double_stroke_roll_3',
-    name: 'Double Stroke Roll · Étude 3',
-    description: 'Doppelschläge mit kurzen Atempausen für mehr Phrasierung.',
+    name: 'Double Stroke Roll · Etude 3',
+    description: 'Double strokes with short breathing rests for extra phrasing.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.intermediate,
@@ -85,8 +85,8 @@ final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_double_stroke_roll_4',
-    name: 'Double Stroke Roll · Étude 4',
-    description: 'Wechsel zwischen dichten 16tel- und offeneren 8tel-Doppelschlägen.',
+    name: 'Double Stroke Roll · Etude 4',
+    description: 'Alternate between dense 16th-note and more open 8th-note doubles.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.advanced,
@@ -116,9 +116,9 @@ final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_double_stroke_roll_5',
-    name: 'Double Stroke Roll · Étude 5',
+    name: 'Double Stroke Roll · Etude 5',
     description:
-        'Akzentuierte Doppelschläge im hohen Tempo — jede 2-Takt-Phrase endet mit einem betonten Einzelschlag.',
+        'Accented double strokes at high tempo — every 2-bar phrase ends on an accented single stroke.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.professional,

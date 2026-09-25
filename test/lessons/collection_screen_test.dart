@@ -24,7 +24,7 @@ void main() {
 
     expect(find.text('Single Paradiddle'), findsOneWidget);
     expect(find.byType(ListTile), findsWidgets);
-    expect(find.text('Rudiment-Étüden'), findsOneWidget);
+    expect(find.text('Rudiment Etudes'), findsOneWidget);
   });
 
   testWidgets('groups the technique-studies collection', (tester) async {
@@ -41,7 +41,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Akzent-Studien'), findsOneWidget);
+    expect(find.text('Accent Studies'), findsOneWidget);
     expect(find.byType(ListTile), findsWidgets);
   });
 }

@@ -26,11 +26,11 @@ List<Hand> _paradiddleCycle(bool leadRight) => leadRight
 final List<Rudiment> warmupEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_pad_warmup_einspielen',
-    name: 'Warm-Up · Einspielübung',
+    name: 'Warm-Up · Play-In',
     description:
-        '6 aufeinander aufbauende Zeilen (je 1 Takt Viertel + 1 Takt Achtel) '
-        'zu einer durchgehenden Einspielübung verbunden: Einzelhand, '
-        'alternierend, dann bis zu 16tel gesteigert.',
+        'Six progressive lines (1 bar of quarters + 1 bar of eighths each) '
+        'joined into one continuous play-in exercise: single hand, '
+        'alternating, then built up to 16ths.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.beginner,
@@ -62,10 +62,10 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_warmup_handsaetze',
-    name: 'Warm-Up · Handsatz-Aufwärmen',
+    name: 'Warm-Up · Sticking Warm-Up',
     description:
-        '3 Handsatz-Blöcke (je 3 Takte 16tel) zu einer Aufwärm-Übung '
-        'verbunden — von 2er- über 3er- bis 4er-Gruppen.',
+        'Three sticking blocks (3 bars of 16ths each) joined into one '
+        'warm-up — from groups of 2 through 3 up to 4.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.intermediate,
@@ -91,12 +91,12 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_warmup_dynamik',
-    name: 'Warm-Up · Dynamik-Aufbau',
+    name: 'Warm-Up · Dynamics Builder',
     description:
-        'Eine einzige Idee — durchgehende alternierende 16tel-Einzelschläge — '
-        'wird nur in der Lautstärke gesteigert: 3 Takte Ghost-Notes (pp), '
-        '3 Takte normal (mf), 3 Takte Akzent (f); der letzte Takt stellt '
-        'Ghost und Akzent innerhalb einer Zeile direkt gegenüber.',
+        'One single idea — continuous alternating 16th-note singles — '
+        'grows only in volume: 3 bars of ghost notes (pp), '
+        '3 bars normal (mf), 3 bars accented (f); the last bar puts '
+        'ghost and accent side by side within one line.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.intermediate,
@@ -127,11 +127,11 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_warmup_paradiddle',
-    name: 'Warm-Up · Paradiddle-Steigerung',
+    name: 'Warm-Up · Paradiddle Build-Up',
     description:
-        'Ein einzelner Paradiddle-Zyklus (RLRR LRLL) wird 4 Takte lang in '
-        'Achteln eingespielt, dann 4 Takte lang in 16teln verdichtet — '
-        'gleiche Idee, doppeltes Tempo.',
+        'A single paradiddle cycle (RLRR LRLL) is played in eighths for '
+        '4 bars, then densified into 16ths for 4 bars — '
+        'same idea, double the speed.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.intermediate,
@@ -155,12 +155,12 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_warmup_handdominanz',
-    name: 'Warm-Up · Handdominanz',
+    name: 'Warm-Up · Hand Dominance',
     description:
-        'Rechts-dominante Gruppe (RRRL) zunächst in Achteln, dann in 16teln '
-        'gesteigert; dieselbe Idee gespiegelt auf Links (LLLR) zur Kontrolle '
-        'der jeweils schwächeren Hand; zum Schluss ein Takt, der beide '
-        'Richtungen zusammenführt.',
+        'A right-dominant group (RRRL) first in eighths, then stepped up '
+        'to 16ths; the same idea mirrored to the left (LLLR) to build '
+        'control of the weaker hand; finally one bar that brings both '
+        'directions together.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.beginner,
@@ -188,12 +188,12 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_warmup_kombi',
-    name: 'Warm-Up · Kombination',
+    name: 'Warm-Up · Combination',
     description:
-        'Verbindet die beiden anderen Warm-Up-Ideen dieser Sammlung zu einer '
-        'kurzen Übung: die Gruppengröße wächst Takt für Takt von 1 '
-        '(alternierende Einzelschläge) über 2er- und 3er- bis zur '
-        '4er-Gruppe, jeweils einmal mit Rechts- und einmal mit Linksstart.',
+        'Combines the other warm-up ideas of this collection into one '
+        'short exercise: the group size grows bar by bar from 1 '
+        '(alternating singles) through groups of 2 and 3 up to '
+        'groups of 4, each led once by the right and once by the left.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.intermediate,

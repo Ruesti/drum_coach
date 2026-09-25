@@ -14,11 +14,11 @@ void main() {
 
     expect(find.text('Single Stroke Roll'), findsOneWidget);
 
-    await tester.tap(find.text('Ausdauer'));
+    await tester.tap(find.text('Endurance'));
     await tester.pumpAndSettle();
 
     expect(find.text('Single Stroke Roll'), findsNothing);
-    expect(find.text('Sechzehntel-Dauerlauf'), findsOneWidget);
+    expect(find.text('Sixteenth-Note Marathon'), findsOneWidget);
   });
 
   testWidgets('deselecting the chip restores the full list', (tester) async {
@@ -29,9 +29,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Ausdauer'));
+    await tester.tap(find.text('Endurance'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Ausdauer'));
+    await tester.tap(find.text('Endurance'));
     await tester.pumpAndSettle();
 
     expect(find.text('Single Stroke Roll'), findsOneWidget);

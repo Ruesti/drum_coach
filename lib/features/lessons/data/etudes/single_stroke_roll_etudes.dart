@@ -7,8 +7,8 @@ import '../etude_dsl.dart';
 final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_single_stroke_roll_1',
-    name: 'Single Stroke Roll · Étude 1',
-    description: 'Reine 16tel-Einzelschläge mit Akzent auf jedem Schlag.',
+    name: 'Single Stroke Roll · Etude 1',
+    description: 'Pure 16th-note single strokes with an accent on every stroke.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.beginner,
@@ -25,8 +25,8 @@ final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_single_stroke_roll_2',
-    name: 'Single Stroke Roll · Étude 2',
-    description: '16tel-Einzelschläge mit Akzenten auf Zählzeit 1 und 3.',
+    name: 'Single Stroke Roll · Etude 2',
+    description: '16th-note single strokes with accents on beats 1 and 3.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.beginner,
@@ -44,8 +44,8 @@ final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_single_stroke_roll_3',
-    name: 'Single Stroke Roll · Étude 3',
-    description: 'Phrasierte 16tel mit Pausen – ein musikalisches Motiv.',
+    name: 'Single Stroke Roll · Etude 3',
+    description: 'Phrased 16ths with rests – a musical motif.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.intermediate,
@@ -79,8 +79,8 @@ final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_single_stroke_roll_4',
-    name: 'Single Stroke Roll · Étude 4',
-    description: 'Von geraden 16teln zu 16tel-Sextolen – schnelleres Gefühl.',
+    name: 'Single Stroke Roll · Etude 4',
+    description: 'From straight 16ths into 16th-note sextuplets – a faster feel.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.advanced,
@@ -100,8 +100,8 @@ final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_single_stroke_roll_5',
-    name: 'Single Stroke Roll · Étude 5',
-    description: 'Wandernder Akzent über durchgehende 16tel – Höchsttempo.',
+    name: 'Single Stroke Roll · Etude 5',
+    description: 'A moving accent over continuous 16ths – top speed.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.professional,

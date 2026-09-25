@@ -6,11 +6,11 @@ enum ProgramPool { basicStrokes, rudimentEtudes, techniqueStudies, padWorkouts, 
 
 extension ProgramPoolLabel on ProgramPool {
   String get label => switch (this) {
-        ProgramPool.basicStrokes => 'Klassische Schlagübungen',
-        ProgramPool.rudimentEtudes => 'Rudiment-Étüden',
-        ProgramPool.techniqueStudies => 'Technik-Studien',
-        ProgramPool.padWorkouts => 'Pad-Workouts',
-        ProgramPool.mixed => 'Gemischt',
+        ProgramPool.basicStrokes => 'Classic stroke exercises',
+        ProgramPool.rudimentEtudes => 'Rudiment Etudes',
+        ProgramPool.techniqueStudies => 'Technique Studies',
+        ProgramPool.padWorkouts => 'Pad Workouts',
+        ProgramPool.mixed => 'Mixed',
       };
 }
 

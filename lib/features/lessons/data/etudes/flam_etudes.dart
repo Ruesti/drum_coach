@@ -47,8 +47,8 @@ List<StrokeBeat> _busyFlamBar(Hand lead) {
 final List<Rudiment> flamEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_flam_1',
-    name: 'Flam · Étude 1',
-    description: 'Viertel-Flams im gleichmäßigen Wechsel der Führungshand.',
+    name: 'Flam · Etude 1',
+    description: 'Quarter-note flams with the lead hand alternating evenly.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam',
     difficulty: Difficulty.beginner,
@@ -64,9 +64,9 @@ final List<Rudiment> flamEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_flam_2',
-    name: 'Flam · Étude 2',
+    name: 'Flam · Etude 2',
     description:
-        'Flam auf jeder Zählzeit, gefolgt von einem Tap-Achtel – Wechsel der Führungshand.',
+        'A flam on every beat, followed by an eighth-note tap – alternating lead hand.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam',
     difficulty: Difficulty.beginner,
@@ -85,9 +85,9 @@ final List<Rudiment> flamEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_flam_3',
-    name: 'Flam · Étude 3',
+    name: 'Flam · Etude 3',
     description:
-        'Flam-Tap-Gefühl: Flam und Tap auf derselben Hand, im Wechsel zwischen rechts und links.',
+        'Flam tap feel: flam and tap on the same hand, alternating between right and left.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam',
     difficulty: Difficulty.intermediate,
@@ -107,8 +107,8 @@ final List<Rudiment> flamEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_flam_4',
-    name: 'Flam · Étude 4',
-    description: 'Flams eingebettet in eine 16tel-Phrase mit Pausen für mehr Raum.',
+    name: 'Flam · Etude 4',
+    description: 'Flams embedded in a 16th-note phrase with rests for extra space.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam',
     difficulty: Difficulty.advanced,
@@ -127,8 +127,8 @@ final List<Rudiment> flamEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_flam_5',
-    name: 'Flam · Étude 5',
-    description: 'Anspruchsvolle Flam-Akzente in dichter 16tel-Rhythmik im höchsten Tempo.',
+    name: 'Flam · Etude 5',
+    description: 'Demanding flam accents in dense 16th-note rhythms at top speed.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Flam',
     difficulty: Difficulty.professional,

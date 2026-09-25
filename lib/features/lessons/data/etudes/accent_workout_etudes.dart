@@ -94,11 +94,11 @@ List<StrokeBeat> _boomBapBar(Hand start, {Set<int> accents = const {0, 11}}) {
 final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_pad_groove_funk',
-    name: 'Funk-Pocket',
+    name: 'Funk Pocket',
     description:
-        'Der klassische Funk-Ghost-Groove: leise Ghost-Notes mit scharfen '
-        'Akzenten auf dem "&" von 2 und dem "a" von 4 — die Pocket, die '
-        'unter jedem Funk-Beat sitzt.',
+        'The classic funk ghost note groove: quiet ghost notes with sharp '
+        'accents on the "&" of 2 and the "a" of 4 — the pocket that sits '
+        'under every funk beat.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.intermediate,
@@ -120,11 +120,11 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_groove_clave',
-    name: 'Latin-Clave',
+    name: 'Latin Clave',
     description:
-        'Der Son-Clave-Rhythmus (3-2) — das rhythmische Rückgrat lateinamerikanischer '
-        'Musik, hier auf Hand-zu-Hand-Wechsel übertragen: fünf klare Schläge, '
-        'viel Stille dazwischen.',
+        'The son clave rhythm (3-2) — the rhythmic backbone of Latin '
+        'music, transferred here to hand-to-hand alternation: five clear hits '
+        'with plenty of silence in between.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.intermediate,
@@ -143,10 +143,10 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_groove_rock',
-    name: 'Halftime-Rock',
+    name: 'Halftime Rock',
     description:
-        'Durchgehende Achtel mit hart gecrackter Backbeat (Zählzeit 2+4) — '
-        'derselbe Drive wie eine Rock-Snare, nur auf einer Stimme.',
+        'Continuous eighths with a hard-cracked backbeat (beats 2+4) — '
+        'the same drive as a rock snare, just on one voice.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.beginner,
@@ -161,10 +161,10 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_groove_bossa',
-    name: 'Bossa-Groove',
+    name: 'Bossa Groove',
     description:
-        'Leichter, synkopierter Bossa-Nova-Feel — weniger Ghost-Notes als '
-        'Funk, dafür ein sanfter Auftakt-Schwung in den Akzenten.',
+        'A light, syncopated bossa nova feel — fewer ghost notes than '
+        'funk, but a gentle pickup lean in the accents.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.intermediate,
@@ -186,11 +186,11 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_groove_shuffle',
-    name: 'Shuffle-Swing',
+    name: 'Shuffle Swing',
     description:
-        'Triolische Achtel mit Akzent auf dem ersten Schlag jeder Triole — '
-        'der Long-Short-Schlenker, der einen Shuffle schwingen statt '
-        'mechanisch klappern lässt.',
+        'Triplet eighths with an accent on the first note of each triplet — '
+        'the long-short lope that makes a shuffle swing instead of '
+        'clattering mechanically.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.advanced,
@@ -208,9 +208,9 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
     id: 'etude_pad_groove_boombap',
     name: 'Boom-Bap',
     description:
-        'Entspannter Hip-Hop-Groove: wenige starke Schläge (Zählzeit 1 und '
-        'das "&" von 3) über einem Teppich leiser Ghost-Notes — Raum statt '
-        'Dichte.',
+        'A laid-back hip-hop groove: a few strong hits (beat 1 and '
+        'the "&" of 3) over a bed of quiet ghost notes — space rather '
+        'than density.',
     collection: ExerciseCollection.padWorkouts,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.advanced,

@@ -20,12 +20,12 @@ enum NoteGrid {
 /// Display label for the Subdivision filter axis (brief: "Subdivision").
 extension NoteGridLabel on NoteGrid {
   String get label => switch (this) {
-        NoteGrid.quarter => 'Viertel',
-        NoteGrid.eighth => '8tel',
-        NoteGrid.triplet => 'Triolen',
-        NoteGrid.sixteenth => '16tel',
-        NoteGrid.sixteenthTriplet => '16tel-Triolen',
-        NoteGrid.thirtySecond => '32tel',
+        NoteGrid.quarter => 'Quarters',
+        NoteGrid.eighth => '8ths',
+        NoteGrid.triplet => 'Triplets',
+        NoteGrid.sixteenth => '16ths',
+        NoteGrid.sixteenthTriplet => '16th triplets',
+        NoteGrid.thirtySecond => '32nds',
       };
 }
 
@@ -110,9 +110,9 @@ enum ExerciseVoicing { pad, kit }
 /// Tag axis: what the exercise trains. Multiple values per exercise are
 /// normal — e.g. a linear fill trains both fill and coordination.
 enum Skill {
-  control(label: 'Kontrolle'),
-  coordination(label: 'Koordination'),
-  endurance(label: 'Ausdauer'),
+  control(label: 'Control'),
+  coordination(label: 'Coordination'),
+  endurance(label: 'Endurance'),
   groove(label: 'Groove'),
   fill(label: 'Fill'),
   independence(label: 'Independence');
@@ -137,9 +137,9 @@ enum Genre {
 
 /// A named, browsable set of exercises (distinct from the base catalog).
 enum ExerciseCollection {
-  rudimentEtudes(label: 'Rudiment-Étüden'),
-  techniqueStudies(label: 'Technik-Studien'),
-  padWorkouts(label: 'Pad-Workouts');
+  rudimentEtudes(label: 'Rudiment Etudes'),
+  techniqueStudies(label: 'Technique Studies'),
+  padWorkouts(label: 'Pad Workouts');
 
   final String label;
   const ExerciseCollection({required this.label});
@@ -147,10 +147,10 @@ enum ExerciseCollection {
 
 /// Tag axis: which limbs the exercise engages.
 enum Limb {
-  hands(label: 'Hände'),
-  feet(label: 'Füße'),
-  doubleBass(label: 'Doublebass'),
-  allFour(label: 'Alle vier');
+  hands(label: 'Hands'),
+  feet(label: 'Feet'),
+  doubleBass(label: 'Double bass'),
+  allFour(label: 'All four');
 
   final String label;
   const Limb({required this.label});

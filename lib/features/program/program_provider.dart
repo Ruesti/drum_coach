@@ -60,12 +60,12 @@ bool isScheduledRestDay(DateTime start, DateTime date, int totalDays) {
 TrainingProgram trainingProgram(TrainingProgramRef ref) {
   final config = SettingsService.programConfig;
   return TrainingProgram(
-    name: 'Adaptives Programm',
+    name: 'Adaptive Program',
     description: config == null
-        ? 'Wähle Dauer, Startniveau und Übungspool, um dein persönliches '
-            'Programm zu starten.'
-        : 'Passt sich automatisch an dein Tempo an — Pool: '
-            '${config.pool.label}, Start: ${config.startDifficulty.label}.',
+        ? 'Choose duration, start level and exercise pool to start your '
+            'personal program.'
+        : 'Adapts automatically to your tempo — pool: '
+            '${config.pool.label}, start: ${config.startDifficulty.label}.',
     totalWeeks: config?.durationWeeks ?? 12,
     phases: const [],
   );

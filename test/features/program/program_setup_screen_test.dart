@@ -23,7 +23,7 @@ void main() {
 
     // Duration is a free-form slider (default 8 weeks), not preset chips.
     expect(find.text('8'), findsOneWidget);
-    expect(find.text('Wochen'), findsOneWidget);
+    expect(find.text('weeks'), findsOneWidget);
     expect(find.byType(Slider), findsOneWidget);
 
     // Start-difficulty options.
@@ -32,14 +32,14 @@ void main() {
     expect(find.text('Advanced'), findsOneWidget);
 
     // Pool options — one per exercise source plus "mixed".
-    expect(find.text('Klassische Schlagübungen'), findsOneWidget);
-    expect(find.text('Rudiment-Étüden'), findsOneWidget);
-    expect(find.text('Technik-Studien'), findsOneWidget);
-    expect(find.text('Pad-Workouts'), findsOneWidget);
-    expect(find.text('Gemischt'), findsOneWidget);
+    expect(find.text('Classic stroke exercises'), findsOneWidget);
+    expect(find.text('Rudiment Etudes'), findsOneWidget);
+    expect(find.text('Technique Studies'), findsOneWidget);
+    expect(find.text('Pad Workouts'), findsOneWidget);
+    expect(find.text('Mixed'), findsOneWidget);
 
     // Start button.
-    expect(find.text('Programm starten'), findsOneWidget);
+    expect(find.text('Start program'), findsOneWidget);
     expect(find.byType(ElevatedButton), findsOneWidget);
   });
 
@@ -90,7 +90,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ProgramSetupScreen), findsOneWidget);
 
-    await tester.tap(find.text('Programm starten'));
+    await tester.tap(find.text('Start program'));
     await tester.pumpAndSettle();
 
     expect(find.text('program'), findsOneWidget);

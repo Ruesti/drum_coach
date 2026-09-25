@@ -58,7 +58,7 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
               onChanged: (v) => setState(() => _selectedGenres = v),
             ),
           _FilterAxisRow<Limb>(
-            label: 'Gliedmaßen',
+            label: 'Limbs',
             values: Limb.values,
             selected: _selectedLimbs,
             labelOf: (l) => l.label,
@@ -150,7 +150,7 @@ class _EmptyFilterState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        'Keine Übungen für diese Filterkombination.',
+        'No exercises match this filter combination.',
         style: AppTypography.body.copyWith(color: AppColors.textMuted),
       ),
     );
@@ -184,7 +184,7 @@ class _RudimentTile extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.info_outline, color: AppColors.textFaint),
-            tooltip: 'Erklärung anzeigen',
+            tooltip: 'Show explanation',
             onPressed: () => context.push('/lessons/${rudiment.id}'),
           ),
         ],

@@ -44,9 +44,9 @@ List<StrokeBeat> _dragSixteenthBar(Hand lead) {
 final List<Rudiment> dragEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_drag_1',
-    name: 'Drag · Étude 1',
+    name: 'Drag · Etude 1',
     description:
-        'Reine Viertel-Drags im ständigen Wechsel zwischen rechter und linker Führungshand.',
+        'Pure quarter-note drags, constantly alternating between right and left lead hand.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Drag',
     difficulty: Difficulty.beginner,
@@ -69,9 +69,9 @@ final List<Rudiment> dragEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_drag_2',
-    name: 'Drag · Étude 2',
+    name: 'Drag · Etude 2',
     description:
-        'Single Drag Tap: Drag plus Antipper pro Zählzeit, die Tap-Note trägt den Akzent.',
+        'Single drag tap: a drag plus a tap on each beat, with the tap note carrying the accent.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Drag',
     difficulty: Difficulty.beginner,
@@ -88,9 +88,9 @@ final List<Rudiment> dragEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_drag_3',
-    name: 'Drag · Étude 3',
+    name: 'Drag · Etude 3',
     description:
-        'Drags eingebettet in einen Achtel-Fluss, mit Pausen für mehr Raum zwischen den Phrasen.',
+        'Drags embedded in a stream of eighth notes, with rests for extra space between phrases.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Drag',
     difficulty: Difficulty.intermediate,
@@ -114,9 +114,9 @@ final List<Rudiment> dragEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_drag_4',
-    name: 'Drag · Étude 4',
+    name: 'Drag · Etude 4',
     description:
-        'Drag auf Zählzeit 1 führt in durchlaufende 16tel-Antipper – vier Takte, wechselnde Führungshand.',
+        'A drag on beat 1 leads into continuous 16th-note taps – four bars, alternating lead hand.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Drag',
     difficulty: Difficulty.advanced,
@@ -134,9 +134,9 @@ final List<Rudiment> dragEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_drag_5',
-    name: 'Drag · Étude 5',
+    name: 'Drag · Etude 5',
     description:
-        'Herausforderung: akzentuierte Drag-Taps im Wechsel, letzter Takt zu 16teln verdichtet.',
+        'Challenge: alternating accented drag taps, with the last bar condensed into 16ths.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Drag',
     difficulty: Difficulty.professional,

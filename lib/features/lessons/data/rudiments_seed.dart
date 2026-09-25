@@ -25,31 +25,31 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Lass den Stock nach dem Aufprall natürlich zurückfedern — kein aktives Hochziehen. '
-            'Die Bewegung kommt aus dem Handgelenk, der Arm bleibt entspannt. '
-            'Beide Hände sollten identisch aussehen und klingen.',
+            'Let the stick rebound naturally after impact — no active lifting. '
+            'The motion comes from the wrist; keep the arm relaxed. '
+            'Both hands should look and sound identical.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Zu festes Greifen beim Rebound — der Stock braucht Spielraum\n'
-            '• Ungleiche Lautstärke zwischen rechts und links\n'
-            '• Schultern hochziehen bei höherem Tempo',
+            '• Gripping too tightly on the rebound — the stick needs room to move\n'
+            '• Uneven volume between right and left\n'
+            '• Raising the shoulders at higher tempos',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Beginne mit 60 BPM als Achtelnoten. Steigere erst wenn beide Hände '
-            'klingen wie eine. Nutze ein Metronom und höre auf Lücken oder Rushes. '
-            'Übe vor einem Spiegel um die Handhaltung zu vergleichen.',
+            'Start at 60 BPM in eighth notes. Only speed up once both hands '
+            'sound like one. Use a metronome and listen for gaps or rushing. '
+            'Practice in front of a mirror to compare hand positions.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Grundlage für alles — Fills, Hi-Hat-Patterns, Ghostnote-Grooves. '
-            'Ohne einen soliden Single Stroke Roll funktioniert kein anderes Rudiment.',
+            'The foundation for everything — fills, hi-hat patterns, ghost note grooves. '
+            'Without a solid single stroke roll, no other rudiment works.',
       ),
     ],
   ),
@@ -76,33 +76,33 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Erster Schlag: volle Stockhöhe, aktiver Handgelenksschwung. '
-            'Zweiter Schlag: kontrollierter Rebound — der Stock "fällt" zurück. '
-            'Bei langsamem Tempo: zwei bewusste Schläge. Bei Geschwindigkeit: '
-            'Rebound übernimmt den zweiten Schlag automatisch.',
+            'First stroke: full stick height, active wrist throw. '
+            'Second stroke: controlled rebound — the stick "falls" back. '
+            'At slow tempos: two deliberate strokes. At speed: '
+            'the rebound takes over the second stroke automatically.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Zweiter Schlag leiser als der erste\n'
-            '• Zu wenig Fingerkontrolle — Finger helfen dem Rebound\n'
-            '• Beide Schläge gleich weit auseinander statt eng beieinander',
+            '• Second stroke quieter than the first\n'
+            '• Not enough finger control — the fingers assist the rebound\n'
+            '• Strokes evenly spaced instead of close together',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Übe zunächst jeden Doppelschlag extrem langsam als zwei separate, '
-            'bewusste Bewegungen. Steigere das Tempo schrittweise. '
-            'Das "Klick-Klick" muss sich wie ein "Klack" anfühlen.',
+            'First practice each double stroke extremely slowly as two separate, '
+            'deliberate motions. Increase the tempo step by step. '
+            'The "click-click" should start to feel like a single "clack".',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Kern des Buzz Rolls bei Höchstgeschwindigkeit. '
-            'Doppelschläge auf Snare und Toms für Fills. '
-            'Wichtig in Latin-Rhythmen (Conga-Transfers).',
+            'The core of the buzz roll at top speed. '
+            'Double strokes on snare and toms for fills. '
+            'Important in Latin rhythms (conga transfers).',
       ),
     ],
   ),
@@ -125,32 +125,32 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Drücke den Stock leicht in das Fell — nicht festhalten, sondern '
-            'geführt drücken. Der Stock bounced mehrfach unkontrolliert. '
-            'Der Druck bestimmt die Dichte der Bounces. '
-            'Wechsle beide Hände so, dass kein Unterbruch hörbar ist.',
+            'Press the stick lightly into the head — a guided press, not a '
+            'clamped grip. The stick bounces multiple times freely. '
+            'The pressure controls the density of the bounces. '
+            'Alternate hands so that no gap is audible.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Stock zwischen den Schlägen anheben (hörbare Lücken)\n'
-            '• Zu viel oder zu wenig Druck\n'
-            '• Hände nicht gleichmäßig wechseln',
+            '• Lifting the stick between strokes (audible gaps)\n'
+            '• Too much or too little pressure\n'
+            '• Uneven hand-to-hand transitions',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Finde zunächst mit einer Hand die richtige Druckstärke. '
-            'Dann übe beide Hände einzeln. Erst wenn jede Hand allein '
-            'einen gleichmäßigen Buzz erzeugt, kombiniere sie.',
+            'First find the right amount of pressure with one hand. '
+            'Then practice each hand separately. Only combine them once '
+            'each hand produces an even buzz on its own.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Crescendo-Rolls und Fermatenschläge. Unverzichtbar im Orchester '
-            'und Marching Band. Gibt Snare-Solos dramatischen Ausdruck.',
+            'Crescendo rolls and fermata strokes. Essential in orchestral '
+            'and marching band playing. Gives snare solos dramatic expression.',
       ),
     ],
   ),
@@ -179,33 +179,33 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Akzent auf Schlag 1 jeder Gruppe (R und L abwechselnd). '
-            'Die Doppelschläge am Ende jeder Gruppe (RR / LL) wechseln '
-            'automatisch die führende Hand beim nächsten Durchgang. '
-            'Sprich das Pattern laut: "Para-did-dle, para-did-dle".',
+            'Accent on beat 1 of each group (alternating R and L). '
+            'The double strokes at the end of each group (RR / LL) '
+            'automatically switch the leading hand on the next pass. '
+            'Say the pattern out loud: "Para-did-dle, para-did-dle".',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Akzent nur auf der rechten Hand\n'
-            '• Doppelschläge ungleichmäßig (zweiter Schlag zu leise)\n'
-            '• Tempo beim Wechsel der führenden Hand instabil',
+            '• Accenting only with the right hand\n'
+            '• Uneven double strokes (second stroke too quiet)\n'
+            '• Unstable tempo when the leading hand switches',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Übe zunächst nur R–L–R–R, dann nur L–R–L–L. '
-            'Dann verbinde beide. Variante: Akzente auf den Doubles (RL**RR** / LR**LL**) '
-            'für einen anderen Groove-Charakter.',
+            'First practice only R–L–R–R, then only L–R–L–L. '
+            'Then connect the two. Variation: accent the doubles (RL**RR** / LR**LL**) '
+            'for a different groove character.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Eines der vielseitigsten Rudiments. Fills, Grooves, Solo-Patterns. '
-            'Über das Drumset verteilt ergibt jeder Schlag einen anderen Klang. '
-            'Eines der 40 PAS-Rudiments die jeder Schlagzeuger kennen muss.',
+            'One of the most versatile rudiments. Fills, grooves, solo patterns. '
+            'Spread around the kit, every stroke gets a different sound. '
+            'One of the 40 PAS rudiments every drummer needs to know.',
       ),
     ],
   ),
@@ -236,31 +236,31 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            '12 Noten pro Zyklus: RLRLRR / LRLRLL. '
-            'Vier Einzelschläge, dann ein Doppelschlag. '
-            'Akzent auf Note 1 wechselt automatisch zwischen R und L. '
-            'Denke: "Para-para-diddle".',
+            '12 notes per cycle: RLRLRR / LRLRLL. '
+            'Four single strokes, then a double stroke. '
+            'The accent on note 1 alternates automatically between R and L. '
+            'Think: "Para-para-diddle".',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Den Überblick verlieren welche Hand führt\n'
-            '• Ungleichmäßige Unterteilungen\n'
-            '• Doppelschlag bricht das Groove-Gefühl',
+            '• Losing track of which hand is leading\n'
+            '• Uneven subdivisions\n'
+            '• The double stroke breaking the flow of the groove',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Zähle "1-e-+-a-2-+" um die 12er-Gruppe in 12/8-Feeling einzubetten. '
-            'Übe zunächst extrem langsam mit Akzenten, dann steigere das Tempo.',
+            'Count "1-e-+-a-2-+" to place the 12-note group in a 12/8 feel. '
+            'Start extremely slowly with accents, then build the tempo.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Funktioniert natürlich über Triolen-Rhythmen (12/8, Shuffle). '
-            'Häufig in Jazz und Fusion. Gut für Fills über drei Beats.',
+            'Sits naturally over triplet rhythms (12/8, shuffle). '
+            'Common in jazz and fusion. Great for fills across three beats.',
       ),
     ],
   ),
@@ -291,30 +291,30 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            '6 Noten: R-L-RR-LL. Denke: "Para-did-dle-did-dle". '
-            'Das Pattern teilt sich in drei 2er-Gruppen, was bei '
-            'Wiederholung einen 3-gegen-2 Polyrhythmus erzeugt.',
+            '6 notes: R-L-RR-LL. Think: "Para-did-dle-did-dle". '
+            'The pattern splits into three groups of two, which creates '
+            'a 3-over-2 polyrhythm when repeated.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Doppelschläge in unterschiedlichen Lautstärken\n'
-            '• Zweiter Doppelschlag (LL) wird hastig gespielt\n'
-            '• Akzent geht verloren bei höherem Tempo',
+            '• Double strokes at different volumes\n'
+            '• Rushing the second double stroke (LL)\n'
+            '• Losing the accent at higher tempos',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Denke in 6er-Gruppen. Übe als Triolen (3+3 über 4/4) '
-            'um das Polyrhythmus-Gefühl zu entwickeln.',
+            'Think in groups of six. Practice as triplets (3+3 over 4/4) '
+            'to develop the polyrhythmic feel.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Erzeugt bei Geschwindigkeit ein polyrhythmisches Gefühl. '
-            'Sehr effektiv in Drum-Solos und für komplexe Fills.',
+            'Creates a polyrhythmic feel at speed. '
+            'Very effective in drum solos and for complex fills.',
       ),
     ],
   ),
@@ -342,33 +342,33 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Stockhaltung',
+        title: 'Stick Heights',
         body:
-            'Grace-Note-Hand: Stock 2–3 cm über dem Fell halten. '
-            'Hauptschlag-Hand: Stock 20–25 cm hoch. '
-            'Beide Stöcke landen fast gleichzeitig — Grace Note knapp vorher. '
-            'Nach dem Flam wechseln die Hände die Höhe.',
+            'Grace note hand: hold the stick 2–3 cm above the head. '
+            'Primary stroke hand: stick 20–25 cm high. '
+            'Both sticks land almost together — the grace note just before. '
+            'After the flam, the hands swap heights.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Grace Note zu laut — klingt wie zwei separate Schläge\n'
-            '• Beide Hände auf gleicher Höhe\n'
-            '• Flam zu "offen" (zu viel Zeit zwischen Grace Note und Hauptschlag)',
+            '• Grace note too loud — sounds like two separate strokes\n'
+            '• Both hands at the same height\n'
+            '• Flam too "open" (too much time between grace note and primary stroke)',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Übe extrem langsam. Halte die Grace-Note-Hand dicht am Fell '
-            'und bewege nur die Hauptschlag-Hand. '
-            'Akzeptiere anfangs einen "offenen" Flam und schließe ihn schrittweise.',
+            'Practice extremely slowly. Keep the grace note hand close to the head '
+            'and move only the primary stroke hand. '
+            'Accept an "open" flam at first and tighten it up gradually.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Fügt Snare-Akzenten Gewicht und Textur hinzu. '
-            'Klassisch in Rock, Rudimental- und Marching-Drumming. '
-            'Macht Fills dramatischer und "fetter".',
+            'Adds weight and texture to snare accents. '
+            'A classic in rock, rudimental, and marching drumming. '
+            'Makes fills more dramatic and "fatter".',
       ),
     ],
   ),
@@ -395,30 +395,30 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Jede Gruppe: Flam (lR oder rL) gefolgt von zwei Taps. '
-            'Der Flam ist der Akzent, die zwei Taps sind leise. '
-            'Sprich: "FLAM-tap-tap, FLAM-tap-tap".',
+            'Each group: a flam (lR or rL) followed by two taps. '
+            'The flam is the accent; the two taps stay quiet. '
+            'Say: "FLAM-tap-tap, FLAM-tap-tap".',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Taps nach dem Flam zu laut\n'
-            '• Flam nicht eng genug\n'
-            '• Tempo bricht nach dem Flam ein',
+            '• Taps after the flam too loud\n'
+            '• Flam not tight enough\n'
+            '• Tempo collapsing after the flam',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Übe zunächst jede Gruppe einzeln: Flam, Tap, Tap — Pause. '
-            'Dann verbinde. Akzentiere den Flam stark, spiele die Taps sehr leise.',
+            'First practice each group in isolation: flam, tap, tap — rest. '
+            'Then connect them. Accent the flam strongly and play the taps very softly.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Klassisches Rudimental-Pattern. Ideal für Snare-Solos und Fills. '
-            'In der Marching-Percussion allgegenwärtig.',
+            'A classic rudimental pattern. Ideal for snare solos and fills. '
+            'Ubiquitous in marching percussion.',
       ),
     ],
   ),
@@ -447,31 +447,31 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Ein Paradiddle mit Flam auf dem ersten Schlag jeder Gruppe. '
-            'lRLRR: Grace Note links, Hauptschlag rechts, dann L-R-R weiter. '
-            'Die Grace Note muss trotz nachfolgender Schläge eng am Flam bleiben.',
+            'A paradiddle with a flam on the first stroke of each group. '
+            'lRLRR: grace note left, primary stroke right, then continue L-R-R. '
+            'The grace note must stay tight to the flam despite the following strokes.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Grace Note geht im Rest des Patterns unter\n'
-            '• Tempo nach dem Flam instabil\n'
-            '• Doppelschlag am Ende verliert Kontrolle',
+            '• Grace note getting lost in the rest of the pattern\n'
+            '• Unstable tempo after the flam\n'
+            '• Losing control of the double stroke at the end',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Beherrsche zuerst den Single Paradiddle ohne Flam. '
-            'Füge dann langsam die Grace Note hinzu. '
-            'Sehr langsames Üben (40 BPM) ist hier essenziell.',
+            'Master the single paradiddle without the flam first. '
+            'Then slowly add the grace note. '
+            'Very slow practice (40 BPM) is essential here.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Hohes Niveau der Stockkontrolle. Eindrucksvolle Textur für '
-            'Drum-Solos und komplexe Fills. Setzt Paradiddle und Flam-Kontrolle voraus.',
+            'A high level of stick control. Impressive texture for '
+            'drum solos and complex fills. Requires solid paradiddle and flam control.',
       ),
     ],
   ),
@@ -497,32 +497,32 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Was ist ein Drag?',
+        title: 'What Is a Drag?',
         body:
-            'Ein Drag besteht aus zwei Ghost Notes (ll oder rr) direkt vor '
-            'dem Hauptschlag. Sie klingen wie ein miniatur Doppelschlag. '
-            'Der Drag soll sich wie ein einzelnes Ereignis anfühlen, nicht drei.',
+            'A drag is two ghost notes (ll or rr) placed right before '
+            'the primary stroke. They sound like a miniature double stroke. '
+            'The drag should feel like a single event, not three.',
       ),
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Die zwei Ghost Notes sehr eng und leise, fast gleichzeitig. '
-            'Dann der Hauptschlag mit voller Lautstärke. '
-            'Denke: "drr-SCHLAG, drr-SCHLAG" nicht "l-l-R".',
+            'Play the two ghost notes very tight and soft, almost together. '
+            'Then the primary stroke at full volume. '
+            'Think: "drr-HIT, drr-HIT", not "l-l-R".',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Drag-Noten zu laut oder zu weit auseinander\n'
-            '• Drag klingt wie drei separate Schläge\n'
-            '• Timing des Hauptschlags durch den Drag versetzt',
+            '• Drag notes too loud or too far apart\n'
+            '• Drag sounding like three separate strokes\n'
+            '• The drag pushing the primary stroke off time',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Übe zunächst nur den Drag (ll) ohne Hauptschlag. '
-            'Dann füge den Hauptschlag hinzu. Der Drag muss "zerquetscht" '
-            'klingen — dicht vor dem Akzent.',
+            'First practice only the drag (ll) without the primary stroke. '
+            'Then add the primary stroke. The drag should sound "crushed" — '
+            'packed tight against the accent.',
       ),
     ],
   ),
@@ -547,31 +547,31 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Aufbau',
+        title: 'Structure',
         body:
-            'Drag + Akzent + Tap, dann wiederholen: llR L / llR L. '
-            'Insgesamt vier Schläge pro Gruppe: zwei Ghost-Noten, ein Akzent, ein Tap. '
-            'Der Tap nach dem Akzent ist mittelstark.',
+            'Drag + accent + tap, then repeat: llR L / llR L. '
+            'Four strokes per group in total: two ghost notes, one accent, one tap. '
+            'The tap after the accent sits at medium volume.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Hetzen nach dem Drag\n'
-            '• Tap nach dem Akzent zu laut oder zu leise\n'
-            '• Drags werden breiter bei höherem Tempo',
+            '• Rushing after the drag\n'
+            '• Tap after the accent too loud or too quiet\n'
+            '• Drags opening up at higher tempos',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Zähle in 4er-Gruppen. Der Drag nimmt fast keine Zeit ein — '
-            'er wird direkt vor Beat 1 "gequetscht". '
-            'Übe den Drag separat bis er automatisch sitzt.',
+            'Count in groups of four. The drag takes almost no time — '
+            'it gets "squeezed" in right before beat 1. '
+            'Practice the drag separately until it locks in automatically.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Komplexes Rudimental-Pattern. Taucht in Snare-Drum-Etüden '
-            'und Drum-Corps-Musik auf.',
+            'A complex rudimental pattern. Appears in snare drum etudes '
+            'and drum corps music.',
       ),
     ],
   ),
@@ -604,32 +604,32 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Herkunft',
+        title: 'Origin',
         body:
-            '"Lesson 25" stammt aus dem traditionellen Drum-Corps-Unterricht. '
-            'Zwei Drags gefolgt von einem Doppelschlag: llR llR R. '
-            'Der Name kommt von der Lektion Nr. 25 in klassischen Unterrichtswerken.',
+            '"Lesson 25" comes from traditional drum corps instruction. '
+            'Two drags followed by a double stroke: llR llR R. '
+            'The name refers to lesson no. 25 in classic method books.',
       ),
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Erster Drag + Akzent, zweiter Drag + Akzent, dann Doppelschlag. '
-            'Alle Drags bleiben eng und leise. Der abschließende Doppelschlag '
-            'hat dieselbe Lautstärke wie die Akzente.',
+            'First drag + accent, second drag + accent, then the double stroke. '
+            'All drags stay tight and soft. The closing double stroke '
+            'matches the accents in volume.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Doppelschlag am Ende zu laut oder zu leise\n'
-            '• Drags werden breiter und lauter unter Druck\n'
-            '• Timing driftet im zweiten Drag',
+            '• Closing double stroke too loud or too quiet\n'
+            '• Drags getting wider and louder under pressure\n'
+            '• Timing drifting on the second drag',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Dieses Pattern braucht viel Zeit. '
-            'Beginne bei 40 BPM und steigere erst nach Wochen. '
-            'Übe jeden Drag separat bis er sitzt.',
+            'This pattern takes time. '
+            'Start at 40 BPM and only speed up after weeks of practice. '
+            'Work on each drag separately until it locks in.',
       ),
     ],
   ),
@@ -659,34 +659,34 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Das Konzept',
+        title: 'The Concept',
         body:
-            'Ghost Notes sind so leise, dass sie kaum hörbar sind — '
-            'sie "fühlen" den Groove, anstatt ihn zu bestimmen. '
-            'Die Dynamikdifferenz zwischen Akzent und Ghost Note '
-            'muss dramatisch sein: Akzente 20–25 cm Stockhöhe, '
-            'Ghost Notes 1–2 cm.',
+            'Ghost notes are so quiet they are barely audible — '
+            'they "feel" the groove rather than define it. '
+            'The dynamic difference between accent and ghost note '
+            'must be dramatic: accents from 20–25 cm stick height, '
+            'ghost notes from 1–2 cm.',
       ),
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Akzent-Hand: Handgelenk schnappt nach unten aus voller Höhe. '
-            'Ghost-Note-Hand: Stock liegt fast auf dem Fell, '
-            'minimale Bewegung, kein Handgelenkschwung.',
+            'Accent hand: the wrist snaps down from full height. '
+            'Ghost note hand: the stick hovers just above the head — '
+            'minimal motion, no wrist throw.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Ghost Notes zu laut — dominieren den Groove\n'
-            '• Stockhöhe bei Akzenten zu niedrig\n'
-            '• Timing der Ghost Notes ungenau',
+            '• Ghost notes too loud — they dominate the groove\n'
+            '• Stick height too low on accents\n'
+            '• Imprecise ghost note timing',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Grundlage von Funk und R&B-Drumming. '
-            'Ghost Notes geben dem Groove Tiefe und "Feel". '
-            'Denk an Steve Gadd, Vinnie Colaiuta, Questlove.',
+            'The foundation of funk and R&B drumming. '
+            'Ghost notes give the groove depth and "feel". '
+            'Think Steve Gadd, Vinnie Colaiuta, Questlove.',
       ),
     ],
   ),
@@ -714,33 +714,33 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Grundprinzip',
+        title: 'Core Principle',
         body:
-            'Lautstärke kommt aus der Stockhöhe, nicht aus der Kraft. '
-            'Forte = hoher Stock (20–25 cm), lockeres Handgelenk, '
-            'schneller Schwung. Piano = niedriger Stock (2–3 cm), '
-            'kontrollierte, kleine Bewegung.',
+            'Volume comes from stick height, not from force. '
+            'Forte = high stick (20–25 cm), relaxed wrist, '
+            'fast throw. Piano = low stick (2–3 cm), '
+            'controlled, small motion.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Lautstärke durch Griffdruck steuern (falsch!)\n'
-            '• Forte-Schläge zu verkrampft\n'
-            '• Piano-Schläge zittern oder sind ungleichmäßig',
+            '• Controlling volume with grip pressure (wrong!)\n'
+            '• Forte strokes too tense\n'
+            '• Piano strokes shaky or uneven',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Übe beide Schlagtypen separat bis jede Höhe konsistent ist. '
-            'Dann wechsle zwischen beiden. Aufnehmen und zurückhören '
-            'hilft extrem um den Dynamikunterschied objektiv zu beurteilen.',
+            'Practice both stroke types separately until each height is consistent. '
+            'Then alternate between them. Recording yourself and listening back '
+            'helps enormously in judging the dynamic contrast objectively.',
       ),
       TechniqueSection(
-        title: 'Warum ist das wichtig?',
+        title: 'Why It Matters',
         body:
-            'Dynamikkontrolle ist Musikalität. Wer Lautstärke kontrollieren kann, '
-            'kann jeden Stil bedienen — von leisem Jazz bis hartem Rock. '
-            'Es ist die grundlegendste Ausdrucksmöglichkeit am Schlagzeug.',
+            'Dynamic control is musicality. If you can control volume, '
+            'you can serve any style — from quiet jazz to hard rock. '
+            'It is the most fundamental means of expression on the drums.',
       ),
     ],
   ),
@@ -772,32 +772,32 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Was ist Linear?',
+        title: 'What Does Linear Mean?',
         body:
-            'Linear bedeutet: es schlägt immer nur eine Hand gleichzeitig. '
-            'Keine Unisono-Hits. Die Hände füllen gegenseitig die Lücken '
-            'und erzeugen so einen fließenden, gleichmäßigen Strom von Noten.',
+            'Linear means only one hand strikes at a time. '
+            'No unison hits. The hands fill each other\'s gaps, '
+            'creating a flowing, even stream of notes.',
       ),
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Akzente von 20 cm Höhe, Taps von 10 cm, Ghost Notes von 2 cm. '
-            'Die verschiedenen Höhen innerhalb des Patterns geben ihm '
-            'Tiefe und Groove. Kein Schlag gleicht dem anderen.',
+            'Accents from 20 cm, taps from 10 cm, ghost notes from 2 cm. '
+            'The different heights within the pattern give it '
+            'depth and groove. No two strokes are alike.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Zögern zwischen den Noten — das Pattern muss fließen\n'
-            '• Alle Noten auf gleicher Lautstärke\n'
-            '• Tempo bricht bei Handwechsel von R zu R oder L zu L',
+            '• Hesitating between notes — the pattern must flow\n'
+            '• Every note at the same volume\n'
+            '• Tempo breaking on R-to-R or L-to-L transitions',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Beginne bei 50 BPM und spiele das Pattern bis es sich automatisch '
-            'anfühlt. Dann steigere. Übertragen auf das Drumset: '
-            'jede Hand auf ein anderes Instrument verteilen.',
+            'Start at 50 BPM and play the pattern until it feels automatic. '
+            'Then speed up. To move it onto the drum set, '
+            'assign each hand to a different instrument.',
       ),
     ],
   ),
@@ -827,33 +827,33 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Aufbau',
+        title: 'Structure',
         body:
-            'Eine andere Gruppierung als Linear Beat 1. '
-            'Doppelschläge derselben Hand (RR, LL) sind erlaubt — '
-            'das unterscheidet es vom reinen Alternating-Linear-Pattern. '
-            'Akzente auf Positionen 1, 5, 9 erzeugen eine 10-Noten-Phrase.',
+            'A different grouping than Linear Beat 1. '
+            'Same-hand doubles (RR, LL) are allowed — '
+            'that sets it apart from a purely alternating linear pattern. '
+            'Accents on positions 1, 5, and 9 create a 10-note phrase.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Doppelschläge (RR, LL) zu laut oder ungleich\n'
-            '• Akzentmuster geht verloren\n'
-            '• Ghost Notes fehlen oder sind zu laut',
+            '• Doubles (RR, LL) too loud or uneven\n'
+            '• Losing the accent pattern\n'
+            '• Ghost notes missing or too loud',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Lerne zunächst das Akzentmuster allein. '
-            'Dann füge die Ghost Notes und Taps hinzu. '
-            'Zähle die 10-Noten-Gruppe bewusst, um den Einstiegspunkt '
-            'beim Loop zu finden.',
+            'Learn the accent pattern on its own first. '
+            'Then add the ghost notes and taps. '
+            'Count the 10-note group deliberately to find your entry point '
+            'when looping.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Funk- und Fusion-Grooves. Erzeugt Komplexität ohne Schwere. '
-            'Inspirationsquellen: Tony Williams, Vinnie Colaiuta.',
+            'Funk and fusion grooves. Creates complexity without heaviness. '
+            'Sources of inspiration: Tony Williams, Vinnie Colaiuta.',
       ),
     ],
   ),
@@ -862,11 +862,11 @@ const rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'akzent_alle_viertel',
-    name: 'Akzent auf allen Vierteln',
+    name: 'Accents on Every Quarter Note',
     skills: {Skill.control},
     description:
-        'Jeder Schlag wird akzentuiert. Gleiche Lautstärke und Rebound beider '
-        'Hände trainieren. Ideal zum Aufwärmen.',
+        'Every stroke is accented. Train equal volume and rebound in both '
+        'hands. Ideal as a warm-up.',
     minBpm: 50,
     targetBpm: 160,
     difficulty: Difficulty.beginner,
@@ -878,27 +878,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Beide Hände sollen identisch klingen. Höre auf Lautstärkenunterschiede '
-            'zwischen rechts und links und gleiche sie aktiv aus.',
+            'Both hands should sound identical. Listen for volume differences '
+            'between right and left and actively even them out.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Starte bei 50–60 BPM. Erhöhe erst, wenn beide Hände wirklich '
-            'gleich klingen. Übe auch mit geschlossenen Augen.',
+            'Start at 50–60 BPM. Only speed up once both hands truly '
+            'sound the same. Practice with your eyes closed too.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'akzent_zwei_vier',
-    name: 'Akzent auf 2 und 4',
+    name: 'Accents on 2 and 4',
     skills: {Skill.control},
     description:
-        'Backbeat-Training: Schläge auf Zählzeit 2 und 4 werden akzentuiert, '
-        '1 und 3 bleiben leise. Grundlage für Snare-Backbeats.',
+        'Backbeat training: accent the strokes on beats 2 and 4 while '
+        '1 and 3 stay quiet. The foundation for snare backbeats.',
     minBpm: 50,
     targetBpm: 160,
     difficulty: Difficulty.beginner,
@@ -910,27 +910,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Den Backbeat internalisieren. Der Akzent auf 2 und 4 muss automatisch '
-            'sitzen, ohne nachzudenken. Das ist die Basis aller Rock- und Pop-Grooves.',
+            'Internalize the backbeat. The accent on 2 and 4 must land '
+            'automatically, without thinking. It is the basis of every rock and pop groove.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Zähle laut "1-2-3-4" mit, während du spielst. Fühle den Puls auf '
-            '2 und 4. Viele Schlagzeugschüler trainieren dies täglich.',
+            'Count "1-2-3-4" out loud while you play. Feel the pulse on '
+            '2 and 4. Many drum students train this daily.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'akzent_wandernd',
-    name: 'Wandernder Akzent',
+    name: 'Moving Accent',
     skills: {Skill.control},
     description:
-        'Der Akzent wandert von Schlag zu Schlag durch alle acht Positionen. '
-        'Fördert das Denken in Grooves und Phrasierungen.',
+        'The accent moves stroke by stroke through all eight positions. '
+        'Encourages thinking in grooves and phrasing.',
     minBpm: 50,
     targetBpm: 130,
     difficulty: Difficulty.intermediate,
@@ -946,27 +946,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Übe dasselbe Muster mit dem Akzent auf 1, dann auf 2, dann auf 3 usw. '
-            'Jede Position fühlt sich anders an — das trainiert Flexibilität.',
+            'Practice the same pattern with the accent on 1, then on 2, then on 3, and so on. '
+            'Each position feels different — that builds flexibility.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Spiele 4 Takte mit Akzent auf Position 1, dann 4 Takte auf Position 2 '
-            'usw., ohne anzuhalten. Metronom läuft durch.',
+            'Play 4 bars with the accent on position 1, then 4 bars on position 2, '
+            'and so on, without stopping. Keep the metronome running throughout.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'ghostnote_training',
-    name: 'Ghostnote-Training',
+    name: 'Ghost Note Training',
     skills: {Skill.control},
     description:
-        'Wechsel zwischen lauten Akzentschlägen und sehr leisen Ghostnotes. '
-        'Dynamik-Kontrolle ist das Kernziel.',
+        'Alternate between loud accented strokes and very soft ghost notes. '
+        'Dynamic control is the core goal.',
     minBpm: 50,
     targetBpm: 140,
     difficulty: Difficulty.intermediate,
@@ -982,24 +982,24 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Akzente: Stock hoch, volles Handgelenk. Ghostnotes: Stock bleibt '
-            'nah am Fell, ca. 2–3 cm Stockhöhe. Der Kontrast macht den Groove.',
+            'Accents: stick high, full wrist stroke. Ghost notes: stick stays '
+            'close to the head, about 2–3 cm high. The contrast makes the groove.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Ghostnotes zu laut (unkontrollierter Rebound)\n'
-            '• Akzente zu leise (Angst den Rhythmus zu verlieren)\n'
-            '• Tempo schwankt bei Wechseln zwischen Ghost und Akzent',
+            '• Ghost notes too loud (uncontrolled rebound)\n'
+            '• Accents too quiet (afraid of losing the rhythm)\n'
+            '• Tempo wavering on transitions between ghost and accent',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Erst nur Akzente, dann nur Ghostnotes üben. Dann kombinieren. '
-            'Ziel: der Hörer soll nur die Akzente klar hören, Ghostnotes im '
-            'Hintergrund fühlen.',
+            'Practice only the accents first, then only the ghost notes. Then combine. '
+            'Goal: the listener should hear only the accents clearly and feel the '
+            'ghost notes in the background.',
       ),
     ],
   ),
@@ -1009,8 +1009,8 @@ const rudimentsSeedData = <Rudiment>[
     name: 'Paradiddle-Diddle',
     skills: {Skill.control},
     description:
-        'Erweiterung des Paradiddles: RLRRLL LRLLRR. Sechs Noten pro Gruppe — '
-        'ideal für Triolen und 6/8-Anwendungen.',
+        'An extension of the paradiddle: RLRRLL LRLLRR. Six notes per group — '
+        'ideal for triplets and 6/8 applications.',
     minBpm: 50,
     targetBpm: 150,
     difficulty: Difficulty.intermediate,
@@ -1030,16 +1030,16 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Die Doppelschläge am Ende (RRLL) nutzen Rebound. Der erste der '
-            'Doppelschläge ist aktiv, der zweite "fällt" zurück.',
+            'The doubles at the end (RRLL) use rebound. The first stroke of each '
+            'double is active; the second "falls" back.',
       ),
       TechniqueSection(
-        title: 'Musikalische Anwendung',
+        title: 'Musical Application',
         body:
-            'Perfekt für Triolen-Fills. Aus RLRRLL entsteht über drei Toms '
-            'eine aufsteigende Phrasen. Beliebt in Fusion und Latin.',
+            'Perfect for triplet fills. Spread across three toms, RLRRLL '
+            'becomes an ascending phrase. Popular in fusion and Latin.',
       ),
     ],
   ),
@@ -1049,8 +1049,8 @@ const rudimentsSeedData = <Rudiment>[
     name: 'Six Stroke Roll',
     skills: {Skill.control},
     description:
-        'RLLRRL — sechs Schläge mit zwei Doppelschlägen in der Mitte. '
-        'Verbindet Einzel- und Doppelschläge zu einem fließenden Muster.',
+        'RLLRRL — six strokes with two doubles in the middle. '
+        'Combines single and double strokes into one flowing pattern.',
     minBpm: 50,
     targetBpm: 160,
     difficulty: Difficulty.intermediate,
@@ -1064,27 +1064,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Erster und letzter Schlag sind Akzente mit vollem Schwung. '
-            'Die vier mittleren Schläge (LLRR) nutzen Rebound und bleiben leiser.',
+            'The first and last strokes are accents with a full throw. '
+            'The four middle strokes (LLRR) use rebound and stay quieter.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Langsam starten: Akzent — Double — Double — Akzent. '
-            'Dann Tempo erhöhen bis der Übergang nahtlos wirkt.',
+            'Start slowly: accent — double — double — accent. '
+            'Then raise the tempo until the transitions feel seamless.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'gleichmaessigkeit_16tel',
-    name: 'Gleichmäßigkeit — Sechzehntel',
+    name: 'Evenness — Sixteenth Notes',
     skills: {Skill.control},
     description:
-        'Sechzehntel-Noten in strenger Alternation, ohne Akzente. '
-        'Reines Kontroll- und Ausdauertraining für beide Hände.',
+        'Sixteenth notes in strict alternation, no accents. '
+        'Pure control and endurance training for both hands.',
     minBpm: 60,
     targetBpm: 200,
     difficulty: Difficulty.beginner,
@@ -1108,27 +1108,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Perfekte zeitliche Gleichmäßigkeit. Metronom genau in der Mitte '
-            'zwischen zwei Schlägen. Höre auf Lücken oder Rushes.',
+            'Perfect timing evenness. Place the metronome click exactly halfway '
+            'between two strokes. Listen for gaps or rushing.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Aufnahme mit Handy machen und zurückhören. Übe Abschnitte von '
-            '2–5 Minuten ohne Unterbrechung. Ausdauer ist das Ziel.',
+            'Record yourself with your phone and listen back. Practice stretches of '
+            '2–5 minutes without stopping. Endurance is the goal.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'moeller_motion',
-    name: 'Moeller-Bewegung',
+    name: 'Moeller Motion',
     skills: {Skill.control},
     description:
-        'Arm-Peitschenbewegung für effizienten Energiefluss. Erzeugt mehrere '
-        'Schläge aus einer Armbewegung: Akzent — Tap — Tap.',
+        'A whipping arm motion for efficient energy flow. Produces several '
+        'strokes from one arm movement: accent — tap — tap.',
     minBpm: 40,
     targetBpm: 120,
     difficulty: Difficulty.advanced,
@@ -1142,35 +1142,35 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Arm hebt sich für den Akzent (Down Stroke). Der Arm fällt und '
-            'erzeugt automatisch zwei weitere leise Schläge (Tap + Up). '
-            'Keine Muskelkraft — Schwerkraft und Rebound machen die Arbeit.',
+            'The arm rises for the accent (down stroke). As the arm falls, it '
+            'automatically produces two more quiet strokes (tap + up). '
+            'No muscle power — gravity and rebound do the work.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Arm aktiv anheben statt fallen lassen\n'
-            '• Taps zu laut (kein Unterschied zur Akzent-Lautstärke)\n'
-            '• Tempo zu hoch am Anfang — langsam ist hier schwerer',
+            '• Actively lifting the arm instead of letting it fall\n'
+            '• Taps too loud (no contrast with the accent volume)\n'
+            '• Starting too fast — slow is harder here',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Extrem langsam beginnen (40 BPM). Erst wenn die Bewegung sich '
-            '"von selbst" anfühlt, Tempo erhöhen. Täglich 5 Minuten.',
+            'Start extremely slowly (40 BPM). Only raise the tempo once the '
+            'motion feels like it happens "by itself". Five minutes daily.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'doppelschlag_basis',
-    name: 'Doppelschläge (Basis)',
+    name: 'Double Strokes (Basics)',
     skills: {Skill.control},
     description:
-        'RRLL im gemächlichen Tempo. Grundlage jeder Stockkontrolle: zwei '
-        'kontrollierte Schläge pro Hand, der zweite aus dem Rebound.',
+        'RRLL at an easy tempo. The foundation of all stick control: two '
+        'controlled strokes per hand, the second from the rebound.',
     minBpm: 50,
     targetBpm: 140,
     difficulty: Difficulty.beginner,
@@ -1186,27 +1186,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Der erste Schlag jeder Hand ist aktiv aus dem Handgelenk, der zweite '
-            '"fällt" aus dem Rebound nach. Beide sollen gleich laut klingen.',
+            'The first stroke of each hand is active from the wrist; the second '
+            '"falls" out of the rebound. Both should sound equally loud.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Langsam beginnen (50 BPM) und auf einen sauberen zweiten Schlag '
-            'achten. Erst erhöhen, wenn beide Schläge gleichmäßig klingen.',
+            'Start slowly (50 BPM) and focus on a clean second stroke. '
+            'Only speed up once both strokes sound even.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'speed_singles_basis',
-    name: 'Single-Stroke-Tempo (Basis)',
+    name: 'Single Stroke Speed (Basics)',
     skills: {Skill.control},
     description:
-        'Gleichmäßige Sechzehntel-Einzelschläge zum schrittweisen Tempoaufbau. '
-        'Locker bleiben — Geschwindigkeit kommt aus Entspannung, nicht aus Kraft.',
+        'Even sixteenth-note single strokes for gradual speed building. '
+        'Stay loose — speed comes from relaxation, not from force.',
     minBpm: 60,
     targetBpm: 200,
     difficulty: Difficulty.beginner,
@@ -1231,16 +1231,16 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Das höchste Tempo finden, bei dem du noch entspannt und gleichmäßig '
-            'spielst. Sobald es verkrampft, einen Schritt zurück.',
+            'Find the highest tempo at which you still play relaxed and even. '
+            'As soon as you tense up, take a step back.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'In 5-BPM-Schritten steigern. Jede Stufe 1 Minute halten. Notiere '
-            'dir dein aktuelles Maximaltempo und vergleiche über Wochen.',
+            'Increase in 5 BPM steps. Hold each step for one minute. Write '
+            'down your current top tempo and compare over the weeks.',
       ),
     ],
   ),
@@ -1250,8 +1250,8 @@ const rudimentsSeedData = <Rudiment>[
     name: 'Speed Bursts',
     skills: {Skill.control},
     description:
-        'Vier schnelle Sechzehntel, dann Pause. Trainiert kurze Schnelligkeits-'
-        'spitzen mit Entspannung dazwischen.',
+        'Four fast sixteenths, then a rest. Trains short bursts of speed '
+        'with relaxation in between.',
     minBpm: 70,
     targetBpm: 180,
     difficulty: Difficulty.intermediate,
@@ -1268,27 +1268,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Den Burst bewusst locker explodieren lassen und in der Pause '
-            'komplett entspannen. Die Pause ist Teil der Übung.',
+            'Let the burst explode while staying deliberately loose, then relax '
+            'completely during the rest. The rest is part of the exercise.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• In der Pause angespannt bleiben\n'
-            '• Den Burst überhasten und ungleichmäßig spielen',
+            '• Staying tense during the rest\n'
+            '• Rushing the burst and playing it unevenly',
       ),
     ],
   ),
 
   Rudiment(
     id: 'speed_doubles',
-    name: 'Double-Stroke-Tempo',
+    name: 'Double Stroke Speed',
     skills: {Skill.control},
     description:
-        'Schnelle Doppelschläge (RRLL) als Sechzehntel. Tempo basiert auf '
-        'sauberem Rebound — nicht auf Kraft.',
+        'Fast double strokes (RRLL) as sixteenths. Speed is built on '
+        'clean rebound — not on force.',
     minBpm: 60,
     targetBpm: 170,
     difficulty: Difficulty.advanced,
@@ -1313,27 +1313,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Bei hohem Tempo wird der zweite Schlag fast nur durch den Rebound '
-            'erzeugt. Druck mit den Fingern statt Armkraft.',
+            'At high tempos the second stroke comes almost entirely from the '
+            'rebound. Use finger pressure instead of arm strength.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Erst langsam mit gleich lauten Schlägen. Tempo nur erhöhen, wenn '
-            'der zweite Schlag nicht in der Lautstärke abfällt.',
+            'Start slowly with equally loud strokes. Only raise the tempo if '
+            'the second stroke does not drop in volume.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'ausdauer_dauerlauf',
-    name: 'Sechzehntel-Dauerlauf',
+    name: 'Sixteenth-Note Marathon',
     skills: {Skill.endurance},
     description:
-        'Durchgehende Sechzehntel über mehrere Minuten ohne Pause. '
-        'Baut Kondition und gleichbleibende Klangqualität auf.',
+        'Continuous sixteenths for several minutes without a break. '
+        'Builds stamina and consistent sound quality.',
     minBpm: 70,
     targetBpm: 150,
     difficulty: Difficulty.beginner,
@@ -1358,27 +1358,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Über die gesamte Dauer gleich laut und gleichmäßig bleiben. '
-            'Achte auf den Moment, in dem die Hände müde werden.',
+            'Stay equally loud and even for the entire duration. '
+            'Notice the moment your hands start to tire.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Mit 2 Minuten starten und wöchentlich verlängern. Bei nachlassender '
-            'Qualität bewusst entspannen statt aufzuhören.',
+            'Start with 2 minutes and extend weekly. When quality drops, '
+            'consciously relax instead of stopping.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'ausdauer_doubles',
-    name: 'Doppelschlag-Ausdauer',
+    name: 'Double Stroke Endurance',
     skills: {Skill.endurance},
     description:
-        'Durchgehende Doppelschläge (RRLL) zum Aufbau von Unterarm- und '
-        'Fingerausdauer bei gleichbleibendem Klang.',
+        'Continuous double strokes (RRLL) to build forearm and finger '
+        'endurance while keeping the sound consistent.',
     minBpm: 60,
     targetBpm: 140,
     difficulty: Difficulty.intermediate,
@@ -1403,27 +1403,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Der zweite Schlag wird mit zunehmender Müdigkeit leiser\n'
-            '• Verkrampfen im Unterarm — Schultern locker lassen',
+            '• The second stroke getting quieter as fatigue sets in\n'
+            '• Tensing up in the forearm — keep the shoulders loose',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Moderate 2–3 Minuten am Stück. Lieber sauber und kürzer als lang '
-            'und ungleichmäßig.',
+            'A moderate 2–3 minutes at a time. Better clean and short than long '
+            'and uneven.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'akzent_offbeat',
-    name: 'Akzent auf dem Offbeat',
+    name: 'Offbeat Accents',
     skills: {Skill.control},
     description:
-        'Achtel mit Akzent auf dem "und" (Offbeat). Trainiert das Gefühl für '
-        'Synkopen und gegen-den-Puls-Phrasierung.',
+        'Eighth notes with the accent on the "and" (offbeat). Trains your feel '
+        'for syncopation and against-the-pulse phrasing.',
     minBpm: 50,
     targetBpm: 150,
     difficulty: Difficulty.intermediate,
@@ -1439,27 +1439,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Der Akzent liegt zwischen den Zählzeiten ("und"). Zähle "1-und-2-und" '
-            'und betone konsequent das "und".',
+            'The accent falls between the beats (the "and"). Count "1-and-2-and" '
+            'and consistently stress the "and".',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Erst laut mitzählen, dann nur denken. Das Offbeat-Gefühl ist die '
-            'Grundlage für Funk- und Reggae-Phrasierung.',
+            'Count out loud first, then only in your head. The offbeat feel is '
+            'the foundation of funk and reggae phrasing.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'ghost_um_akzent',
-    name: 'Ghostnotes um den Akzent',
+    name: 'Ghost Notes Around the Accent',
     skills: {Skill.control},
     description:
-        'Ein lauter Akzent eingebettet in leise Ghostnotes. Maximaler Dynamik-'
-        'kontrast auf engem Raum.',
+        'One loud accent embedded in soft ghost notes. Maximum dynamic '
+        'contrast in a tight space.',
     minBpm: 50,
     targetBpm: 130,
     difficulty: Difficulty.intermediate,
@@ -1484,27 +1484,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Ghostnotes bleiben 2–3 cm über dem Fell, der Akzent kommt von oben. '
-            'Der Höhenunterschied der Stöcke erzeugt die Dynamik automatisch.',
+            'Ghost notes stay 2–3 cm above the head; the accent comes from up high. '
+            'The difference in stick height creates the dynamics automatically.',
       ),
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Der Hörer soll nur den Akzent klar wahrnehmen, die Ghostnotes als '
-            'leises Brodeln im Hintergrund.',
+            'The listener should perceive only the accent clearly, with the ghost '
+            'notes as a quiet simmer in the background.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'timing_achtel_triolen',
-    name: 'Achtel-Triolen gleichmäßig',
+    name: 'Even Eighth-Note Triplets',
     skills: {Skill.control},
     description:
-        'Triolen mit Akzent auf jeder Zählzeit. Schult das gleichmäßige Dritteln '
-        'des Pulses — Grundlage für Shuffle und Swing.',
+        'Triplets with an accent on every beat. Trains dividing the pulse '
+        'evenly into three — the foundation for shuffle and swing.',
     minBpm: 50,
     targetBpm: 150,
     difficulty: Difficulty.intermediate,
@@ -1525,27 +1525,27 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Alle drei Triolen-Noten exakt gleich weit auseinander. Zähle '
-            '"1-trio-le, 2-trio-le" und lege den Akzent genau auf die Zählzeit.',
+            'All three triplet notes spaced exactly evenly. Count '
+            '"1-trip-let, 2-trip-let" and place the accent right on the beat.',
       ),
       TechniqueSection(
-        title: 'Übungsplan',
+        title: 'Practice Plan',
         body:
-            'Mit dem Metronom auf die Viertel spielen und prüfen, ob die '
-            'mittlere Triolennote sauber in der Mitte sitzt.',
+            'Play against a metronome clicking quarter notes and check that the '
+            'middle triplet note sits cleanly in the center.',
       ),
     ],
   ),
 
   Rudiment(
     id: 'timing_galopp',
-    name: 'Galopp-Rhythmus',
+    name: 'Gallop Rhythm',
     skills: {Skill.control},
     description:
-        'Achtel gefolgt von zwei Sechzehnteln pro Zählzeit ("Galopp"). '
-        'Schult präzise Subdivision innerhalb des Beats.',
+        'An eighth note followed by two sixteenths on each beat (the "gallop"). '
+        'Trains precise subdivision within the beat.',
     minBpm: 50,
     targetBpm: 140,
     difficulty: Difficulty.intermediate,
@@ -1570,16 +1570,16 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Der erste Schlag ist lang (Achtel), darauf folgen zwei schnelle '
-            'Sechzehntel. Das "da-da-dim"-Gefühl muss gleichmäßig bleiben.',
+            'The first stroke is long (an eighth), followed by two quick '
+            'sixteenths. The "da-da-dum" feel must stay even.',
       ),
       TechniqueSection(
-        title: 'Häufige Fehler',
+        title: 'Common Mistakes',
         body:
-            '• Die beiden Sechzehntel werden zu früh gespielt (Triole statt Galopp)\n'
-            '• Ungleiche Pause nach dem ersten Schlag',
+            '• Playing the two sixteenths too early (triplet instead of gallop)\n'
+            '• Uneven gap after the first stroke',
       ),
     ],
   ),
@@ -1592,8 +1592,8 @@ const rudimentsSeedData = <Rudiment>[
     skills: {Skill.control},
     genres: {Genre.drumCorps},
     description:
-        'Acht Sechzehntel pro Hand mit Akzent auf jeder Zählzeit. '
-        'Grundlegendes Marching-Warm-up für Kontrolle und gleichmäßigen Anschlag.',
+        'Eight sixteenths per hand with an accent on every beat. '
+        'A fundamental marching warm-up for control and an even stroke.',
     minBpm: 60,
     targetBpm: 160,
     difficulty: Difficulty.beginner,
@@ -1619,16 +1619,16 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Ziel',
+        title: 'Goal',
         body:
-            'Gleichmäßige Sechzehntel mit klarem Akzent auf 1, 2, 3, 4. '
-            'Die unbetonten Noten bleiben tief und locker.',
+            'Even sixteenths with a clear accent on 1, 2, 3, 4. '
+            'The unaccented notes stay low and relaxed.',
       ),
       TechniqueSection(
-        title: 'Tipp',
+        title: 'Tip',
         body:
-            'Handgelenk führt die Akzente, Finger kontrollieren die tiefen Töne. '
-            'Beide Hände sollen identisch klingen.',
+            'The wrist drives the accents; the fingers control the low notes. '
+            'Both hands should sound identical.',
       ),
     ],
   ),
@@ -1639,8 +1639,8 @@ const rudimentsSeedData = <Rudiment>[
     skills: {Skill.control},
     genres: {Genre.drumCorps},
     description:
-        'Flam auf der betonten Zählzeit, gefolgt von zwei Tap-Noten — '
-        'im Triolen-Feel. Ein Eckpfeiler der Marching-Rudiments.',
+        'A flam on the accented beat, followed by two tap notes — '
+        'in a triplet feel. A cornerstone of the marching rudiments.',
     minBpm: 50,
     targetBpm: 140,
     difficulty: Difficulty.intermediate,
@@ -1656,10 +1656,10 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Bewegung',
+        title: 'Motion',
         body:
-            'Der Flam landet als kräftiger Akzent, die beiden folgenden Taps '
-            'bleiben tief. Hände wechseln nach jeder Triole.',
+            'The flam lands as a strong accent; the two following taps '
+            'stay low. Hands switch after every triplet.',
       ),
     ],
   ),
@@ -1670,8 +1670,8 @@ const rudimentsSeedData = <Rudiment>[
     skills: {Skill.control},
     genres: {Genre.drumCorps},
     description:
-        'Flam gefolgt von einem Tap derselben Hand: lR-R rL-L. '
-        'Trainiert den Down-Up-Stroke und Doppelschläge mit Flam.',
+        'A flam followed by a tap with the same hand: lR-R rL-L. '
+        'Trains the down-up stroke and double strokes with a flam.',
     minBpm: 50,
     targetBpm: 150,
     difficulty: Difficulty.intermediate,
@@ -1691,8 +1691,8 @@ const rudimentsSeedData = <Rudiment>[
       TechniqueSection(
         title: 'Down-Up',
         body:
-            'Der Flam ist ein Down-Stroke (laut, bleibt unten), der Tap ein '
-            'tiefer Up-Stroke, der die nächste Hand vorbereitet.',
+            'The flam is a down stroke (loud, staying low); the tap is a '
+            'low up stroke that prepares the next hand.',
       ),
     ],
   ),
@@ -1703,8 +1703,8 @@ const rudimentsSeedData = <Rudiment>[
     skills: {Skill.control},
     genres: {Genre.drumCorps},
     description:
-        'Flam, danach ein Akzent auf der zweiten Note, zwei Taps und ein '
-        'abschließender Flam. Klassisches, ausdrucksstarkes Rudiment.',
+        'A flam, then an accent on the second note, two taps, and a '
+        'closing flam. A classic, expressive rudiment.',
     minBpm: 50,
     targetBpm: 130,
     difficulty: Difficulty.advanced,
@@ -1722,10 +1722,10 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Akzent',
+        title: 'Accent',
         body:
-            'Der Akzent liegt nicht auf dem Flam, sondern auf der Note direkt '
-            'danach. Genau diese Verschiebung macht den Flamacue aus.',
+            'The accent is not on the flam but on the note right after it. '
+            'Exactly this shift is what defines the flamacue.',
       ),
     ],
   ),
@@ -1736,8 +1736,8 @@ const rudimentsSeedData = <Rudiment>[
     skills: {Skill.control},
     genres: {Genre.drumCorps},
     description:
-        'Ein Paradiddle, dessen erste Note ein Flam mit Akzent ist: '
-        'lR-L-R-R rL-R-L-L. Verbindet Flam-Kontrolle mit Doppelschlägen.',
+        'A paradiddle whose first note is an accented flam: '
+        'lR-L-R-R rL-R-L-L. Combines flam control with double strokes.',
     minBpm: 50,
     targetBpm: 140,
     difficulty: Difficulty.advanced,
@@ -1755,10 +1755,10 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Tipp',
+        title: 'Tip',
         body:
-            'Der Flam-Akzent eröffnet jeden Paradiddle, der abschließende '
-            'Diddle (RR bzw. LL) bleibt tief und kontrolliert.',
+            'The flam accent opens each paradiddle; the closing '
+            'diddle (RR or LL) stays low and controlled.',
       ),
     ],
   ),
@@ -1769,8 +1769,8 @@ const rudimentsSeedData = <Rudiment>[
     skills: {Skill.control},
     genres: {Genre.drumCorps},
     description:
-        'Ein Flam direkt gefolgt von einem Diddle: lR-R rL-L. '
-        'Hybrid-Rudiment, das Flam und Doppelschlag in einer Bewegung verbindet.',
+        'A flam followed immediately by a diddle: lR-R rL-L. '
+        'A hybrid rudiment that merges flam and double stroke into one motion.',
     minBpm: 50,
     targetBpm: 130,
     difficulty: Difficulty.advanced,
@@ -1788,10 +1788,10 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Idee',
+        title: 'Idea',
         body:
-            'Der Flam und der erste Diddle-Schlag verschmelzen fast zu einem '
-            'Klang. Locker bleiben, der Diddle kommt aus den Fingern.',
+            'The flam and the first diddle stroke almost merge into a single '
+            'sound. Stay loose — the diddle comes from the fingers.',
       ),
     ],
   ),
@@ -1802,8 +1802,8 @@ const rudimentsSeedData = <Rudiment>[
     skills: {Skill.control},
     genres: {Genre.drumCorps},
     description:
-        'Flam Tap, bei dem der Flam auf den Off-Beat fällt: R lR L rL. '
-        'Anspruchsvolle Variante für Timing und Handabwechslung.',
+        'A flam tap where the flam falls on the offbeat: R lR L rL. '
+        'A demanding variation for timing and hand-to-hand control.',
     minBpm: 50,
     targetBpm: 130,
     difficulty: Difficulty.professional,
@@ -1821,10 +1821,10 @@ const rudimentsSeedData = <Rudiment>[
     ],
     technique: [
       TechniqueSection(
-        title: 'Achtung',
+        title: 'Watch Out',
         body:
-            'Der Flam liegt auf dem "und" der Zählzeit. Erst sehr langsam üben, '
-            'damit der versetzte Akzent sauber sitzt.',
+            'The flam sits on the "and" of the beat. Practice very slowly at '
+            'first so the displaced accent lands cleanly.',
       ),
     ],
   ),

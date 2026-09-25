@@ -20,7 +20,7 @@ Announcement? analysisAnnouncement(SessionAnalysis analysis,
     {required bool analysisMode}) {
   if (analysis.signalTooWeak) {
     return const Announcement(
-      'Aufnahme zu leise für eine Analyse — leg das Handy näher ans Pad.',
+      'Recording too quiet to analyze — move the phone closer to the pad.',
       positive: false,
     );
   }
@@ -29,7 +29,7 @@ Announcement? analysisAnnouncement(SessionAnalysis analysis,
   if (al == null) return null;
   if (analysis.timing != null) {
     return const Announcement(
-      'Sauber durchgespielt — Hand-Analyse unten.',
+      'Clean run — hand analysis below.',
       positive: true,
     );
   }
@@ -44,25 +44,24 @@ Announcement? analysisAnnouncement(SessionAnalysis analysis,
     if (lapses.length == 1) {
       final durS = (first.durationMs / 1000).round().clamp(1, 999);
       return Announcement(
-        'Bei ${mmss(first.startMs)} für ~$durS s rausgekommen — das sitzt '
-        'noch nicht.',
+        'Fell off at ${mmss(first.startMs)} for ~$durS s — not solid yet.',
         positive: false,
       );
     }
     return Announcement(
-      '${lapses.length} Einbrüche (erster bei ${mmss(first.startMs)}) — das '
-      'sitzt noch nicht.',
+      '${lapses.length} breakdowns (first at ${mmss(first.startMs)}) — not '
+      'solid yet.',
       positive: false,
     );
   }
   if (al.jitterLimitExceeded) {
     return const Announcement(
-      'Zu unruhig für eine Hand-Analyse — das sitzt noch nicht.',
+      'Too unsteady for hand analysis — not solid yet.',
       positive: false,
     );
   }
   return const Announcement(
-    'Zu viele Aussetzer für eine Hand-Analyse — das sitzt noch nicht.',
+    'Too many dropped notes for hand analysis — not solid yet.',
     positive: false,
   );
 }

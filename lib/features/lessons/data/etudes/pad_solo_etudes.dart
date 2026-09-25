@@ -77,13 +77,13 @@ List<StrokeBeat> _rollFillBar(Hand lead) {
 final List<Rudiment> padSoloEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_pad_solo_1',
-    name: 'Pad-Solo · Antrittsfigur',
+    name: 'Pad Solo · Opening Figure',
     description:
-        'Marschartiges Thema in Vierteln/Achteln, kontrastiert mit einer '
-        '16tel-Passage, kehrt zum Thema zurück und schließt mit einer '
-        'Kadenz — ein Solo mit klarem roten Faden statt loser Figuren.',
+        'A march-like theme in quarters/eighths, contrasted with a '
+        '16th-note passage, returning to the theme and closing with a '
+        'cadence — a solo with one clear thread instead of loose figures.',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Pad-Solo',
+    collectionGroup: 'Pad Solo',
     difficulty: Difficulty.intermediate,
     minBpm: 60,
     targetBpm: 110,
@@ -103,13 +103,13 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_solo_2',
-    name: 'Pad-Solo · Achtel trifft Sechzehntel',
+    name: 'Pad Solo · Eighths Meet Sixteenths',
     description:
-        'Eine Achtel-Idee wird von einer schnelleren 16tel-Version '
-        'beantwortet, zweimal durchlaufen mit wechselnder Führungshand, '
-        'Schluss mit Roll-Fill und Kadenz.',
+        'An eighth-note idea is answered by a faster 16th-note version, '
+        'run through twice with alternating lead hand, '
+        'closing with a roll fill and cadence.',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Pad-Solo',
+    collectionGroup: 'Pad Solo',
     difficulty: Difficulty.intermediate,
     minBpm: 66,
     targetBpm: 116,
@@ -129,12 +129,12 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_solo_3',
-    name: 'Pad-Solo · Wellenbewegung',
+    name: 'Pad Solo · Wave Motion',
     description:
-        'Durchgehendes 16tel-Thema mit wanderndem Akzent (0→1→2→3), das '
-        'einmal komplett "wandert" bevor der Atemzug zur Kadenz führt.',
+        'A continuous 16th-note theme with a moving accent (0→1→2→3) that '
+        'completes one full walk before a breath leads into the cadence.',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Pad-Solo',
+    collectionGroup: 'Pad Solo',
     difficulty: Difficulty.advanced,
     minBpm: 78,
     targetBpm: 126,
@@ -154,12 +154,12 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_solo_4',
-    name: 'Pad-Solo · Groove-Break',
+    name: 'Pad Solo · Groove Break',
     description:
-        'Achtel-Groove-Thema, das von einem markanten Break (Viertelpause + '
-        'Roll-Fill) unterbrochen wird, bevor Thema und Kadenz zurückkehren.',
+        'An eighth-note groove theme interrupted by a striking break (quarter '
+        'rest + roll fill) before the theme and cadence return.',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Pad-Solo',
+    collectionGroup: 'Pad Solo',
     difficulty: Difficulty.advanced,
     minBpm: 80,
     targetBpm: 130,
@@ -179,12 +179,12 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_solo_5',
-    name: 'Pad-Solo · Aufbau',
+    name: 'Pad Solo · Build-Up',
     description:
-        'Ein Thema, das sich takt-für-takt steigert — von Vierteln über '
-        'Achtel zu 16teln — und in einem doppelten Roll-Fill-Finale endet.',
+        'A theme that builds bar by bar — from quarters through eighths '
+        'to 16ths — and ends in a double roll-fill finale.',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Pad-Solo',
+    collectionGroup: 'Pad Solo',
     difficulty: Difficulty.intermediate,
     minBpm: 64,
     targetBpm: 118,
@@ -203,13 +203,13 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_pad_solo_6',
-    name: 'Pad-Solo · Zuruf & Echo',
+    name: 'Pad Solo · Call & Echo',
     description:
-        'Ein Viertel-Zuruf bekommt jedes Mal eine schnellere 16tel-Antwort, '
-        'dreimal variiert (Führungshand, Akzentposition), bevor das große '
-        'Finale mit zwei Roll-Fills schließt.',
+        'A quarter-note call gets a faster 16th-note answer each time, '
+        'varied three times (lead hand, accent position) before the big '
+        'finale closes with two roll fills.',
     collection: ExerciseCollection.padWorkouts,
-    collectionGroup: 'Pad-Solo',
+    collectionGroup: 'Pad Solo',
     difficulty: Difficulty.advanced,
     minBpm: 84,
     targetBpm: 132,

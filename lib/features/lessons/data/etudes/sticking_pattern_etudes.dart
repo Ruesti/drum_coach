@@ -27,14 +27,14 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [R, L, L, R, L, R, R, L]; // 4:4
     return Rudiment(
       id: 'etude_pad_sticking_1',
-      name: 'Kreuzmuster',
+      name: 'Crossover Pattern',
       description:
-          'Motiv R L L R L R R L: erst als Einzelschläge gespielt und '
-          'gespiegelt, dann dasselbe Motiv als Doppelschläge verdichtet und '
-          'wieder gespiegelt — eine 8-Takt-Studie mit rotem Faden statt '
-          'loser Handsatz-Häppchen.',
+          'Motif R L L R L R R L: first played as single strokes and '
+          'mirrored, then the same motif densified into doubles and '
+          'mirrored again — an 8-bar study with one common thread instead '
+          'of loose sticking snippets.',
       collection: ExerciseCollection.padWorkouts,
-      collectionGroup: 'Sticking-Patterns',
+      collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.beginner,
       minBpm: 70,
       targetBpm: 110,
@@ -53,12 +53,12 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [L, R, R, L, L, R, L, R]; // 4:4
     return Rudiment(
       id: 'etude_pad_sticking_2',
-      name: 'Wellenmuster',
+      name: 'Wave Pattern',
       description:
-          'Motiv L R R L L R L R: erst als Einzelschläge, dann als '
-          'Doppelschläge verdichtet — jeweils gespiegelt wiederholt.',
+          'Motif L R R L L R L R: first as single strokes, then densified '
+          'into doubles — each repeated in mirror image.',
       collection: ExerciseCollection.padWorkouts,
-      collectionGroup: 'Sticking-Patterns',
+      collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.beginner,
       minBpm: 70,
       targetBpm: 115,
@@ -77,12 +77,12 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [R, R, L, R, L, L, R, L]; // 4:4
     return Rudiment(
       id: 'etude_pad_sticking_3',
-      name: 'Doppel-Wechsel',
+      name: 'Double Switch',
       description:
-          'Motiv R R L R L L R L: erst als Einzelschläge, dann als '
-          'Doppelschläge verdichtet — jeweils gespiegelt wiederholt.',
+          'Motif R R L R L L R L: first as single strokes, then densified '
+          'into doubles — each repeated in mirror image.',
       collection: ExerciseCollection.padWorkouts,
-      collectionGroup: 'Sticking-Patterns',
+      collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.beginner,
       minBpm: 75,
       targetBpm: 120,
@@ -101,13 +101,13 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [R, R, L, R, R, L, L, R]; // 5 R : 3 L
     return Rudiment(
       id: 'etude_pad_sticking_4',
-      name: 'Rechts-Schwerpunkt',
+      name: 'Right-Hand Focus',
       description:
-          'Asymmetrisches Motiv R R L R R L L R (5:3): erst als '
-          'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
-          'gespiegelt wiederholt.',
+          'Asymmetric motif R R L R R L L R (5:3): first as single '
+          'strokes, then densified into doubles — each repeated in '
+          'mirror image.',
       collection: ExerciseCollection.padWorkouts,
-      collectionGroup: 'Sticking-Patterns',
+      collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.intermediate,
       minBpm: 90,
       targetBpm: 130,
@@ -126,13 +126,13 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [L, R, R, L, R, L, R, R]; // 5 R : 3 L
     return Rudiment(
       id: 'etude_pad_sticking_5',
-      name: 'Rechts-Fluss',
+      name: 'Right-Hand Flow',
       description:
-          'Asymmetrisches Motiv L R R L R L R R (5:3): erst als '
-          'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
-          'gespiegelt wiederholt.',
+          'Asymmetric motif L R R L R L R R (5:3): first as single '
+          'strokes, then densified into doubles — each repeated in '
+          'mirror image.',
       collection: ExerciseCollection.padWorkouts,
-      collectionGroup: 'Sticking-Patterns',
+      collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.intermediate,
       minBpm: 95,
       targetBpm: 135,
@@ -151,13 +151,13 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
     const motif = [R, L, L, R, L, L, R, L]; // 3 R : 5 L
     return Rudiment(
       id: 'etude_pad_sticking_6',
-      name: 'Links-Schwerpunkt',
+      name: 'Left-Hand Focus',
       description:
-          'Asymmetrisches Motiv R L L R L L R L (3:5): erst als '
-          'Einzelschläge, dann als Doppelschläge verdichtet — jeweils '
-          'gespiegelt wiederholt.',
+          'Asymmetric motif R L L R L L R L (3:5): first as single '
+          'strokes, then densified into doubles — each repeated in '
+          'mirror image.',
       collection: ExerciseCollection.padWorkouts,
-      collectionGroup: 'Sticking-Patterns',
+      collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.intermediate,
       minBpm: 100,
       targetBpm: 140,

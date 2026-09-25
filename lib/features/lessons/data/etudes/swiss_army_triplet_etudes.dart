@@ -42,9 +42,9 @@ List<StrokeBeat> _bar(List<Hand> leads, {bool ghostTaps = false}) => [
 final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
   Rudiment(
     id: 'etude_swiss_army_triplet_1',
-    name: 'Swiss Army Triplet · Étude 1',
+    name: 'Swiss Army Triplet · Etude 1',
     description:
-        'Reine Swiss Army Triplets im Triolen-Feel, durchgehend von rechts geführt (Flam-R, R, L).',
+        'Pure Swiss Army Triplets in a triplet feel, led by the right hand throughout (flam-R, R, L).',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.beginner,
@@ -60,9 +60,9 @@ final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_swiss_army_triplet_2',
-    name: 'Swiss Army Triplet · Étude 2',
+    name: 'Swiss Army Triplet · Etude 2',
     description:
-        'Wie Étude 1, aber die beiden Tap-Noten werden geghostet – der akzentuierte Flam tritt stärker hervor.',
+        'Like Etude 1, but the two tap notes are ghosted – the accented flam stands out more.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.beginner,
@@ -78,9 +78,9 @@ final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_swiss_army_triplet_3',
-    name: 'Swiss Army Triplet · Étude 3',
+    name: 'Swiss Army Triplet · Etude 3',
     description:
-        'Phrasiert: ein Schlag wird durch eine akzentuierte Viertelnote ersetzt – schafft Raum im Triolen-Lauf.',
+        'Phrased: one stroke is replaced by an accented quarter note – creates space in the triplet run.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.intermediate,
@@ -102,9 +102,9 @@ final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_swiss_army_triplet_4',
-    name: 'Swiss Army Triplet · Étude 4',
+    name: 'Swiss Army Triplet · Etude 4',
     description:
-        'Vier Takte: die Führungshand wechselt alle zwei Schläge, im Kontrast zu geraden Achtel-Akzent-Takten.',
+        'Four bars: the lead hand switches every two strokes, contrasted with straight eighth-note accent bars.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.advanced,
@@ -126,9 +126,9 @@ final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
   ),
   Rudiment(
     id: 'etude_swiss_army_triplet_5',
-    name: 'Swiss Army Triplet · Étude 5',
+    name: 'Swiss Army Triplet · Etude 5',
     description:
-        'Herausforderung: durchgehende Swiss Army Triplets bis zum Zieltempo, die Führung wechselt pro Takt, letzter Takt dichter mit akzentuierten Taps.',
+        'Challenge: continuous Swiss Army Triplets up to the target tempo; the lead switches every bar, and the last bar gets denser with accented taps.',
     collection: ExerciseCollection.rudimentEtudes,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.professional,
