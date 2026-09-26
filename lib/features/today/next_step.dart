@@ -92,13 +92,15 @@ PathStep computeNextStep({
   }
   final block = day.blocks[index];
   final bpm = block.startBpm == null ? '' : ' · ${block.startBpm} BPM';
+  final detail =
+      'Day ${day.dayNumber} · Step ${index + 1} of ${day.blocks.length}$bpm';
   return PathStep(
     kind: PathStepKind.exercise,
     title: nameOf(block.exerciseKey),
-    detail:
-        'Day ${day.dayNumber} · Step ${index + 1} of ${day.blocks.length}$bpm',
+    detail: detail,
     minutes: block.durationMinutes,
-    route: practiceRouteFor(block),
+    // The practice header repeats the path position under the exercise name.
+    route: practiceRouteFor(block, ctx: detail),
     phase: day.phase.index,
   );
 }

@@ -55,6 +55,10 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   /// through [buildLadderPlan]'s steps and ends with the clean-pass question.
   final bool isLadder;
 
+  /// Second header line under the exercise name, e.g. the path position
+  /// "Day 9 · Step 2 of 3 · 84 BPM". Null shows the exercise's difficulty.
+  final String? contextLine;
+
   const PracticeSessionScreen({
     super.key,
     required this.rudimentId,
@@ -62,6 +66,7 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
     this.targetBpm,
     this.targetMinutes,
     this.isLadder = false,
+    this.contextLine,
   });
 
   @override

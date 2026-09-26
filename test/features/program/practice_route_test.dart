@@ -19,4 +19,18 @@ void main() {
         ExerciseBlock(type: BlockType.warmup, exerciseKey: 'single_stroke_roll');
     expect(practiceRouteFor(block), '/practice/single_stroke_roll');
   });
+
+  test('appends the context line url-encoded', () {
+    const block = ExerciseBlock(
+      type: BlockType.technique,
+      exerciseKey: 'single_paradiddle',
+      startBpm: 84,
+      durationMinutes: 8,
+    );
+    final route =
+        practiceRouteFor(block, ctx: 'Day 9 · Step 2 of 3 · 84 BPM');
+    expect(route, startsWith('/practice/single_paradiddle?bpm=84&min=8&ctx='));
+    expect(Uri.parse(route).queryParameters['ctx'],
+        'Day 9 · Step 2 of 3 · 84 BPM');
+  });
 }
