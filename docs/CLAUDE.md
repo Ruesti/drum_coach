@@ -223,6 +223,11 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
   (`PracticeColors`, wrapped in `drumCoachPracticeTheme`). Shared widgets
   read `AppPalette.of(context)`. Fonts are bundled under `assets/google_fonts/`
   — never rely on runtime fetching (tests would break).
+- `PracticeSessionScreen` (K2 step 2): no AppBar — header row (back, name,
+  context line from `?ctx=`, mode chip), the notation sheet, the `BeatCounter`
+  (1 2 3 4), `TempoRow` (±4 BPM, tap the number for exact entry), one primary
+  button Start/Stop/Resume with the time, Finish on its own row while paused,
+  options (duration, sound, about) behind "⋯".
 
 ## Sticking Pattern Widget
 
