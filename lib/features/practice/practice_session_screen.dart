@@ -315,8 +315,48 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     return _timerLabel;
   }
 
-  /// Duration, sound and explanation live behind "⋯" (Task 5 fills this).
-  Future<void> _showOptionsSheet() async {}
+  /// Duration, sound and the exercise explanation live behind "⋯" — rarely
+  /// touched while playing, so they leave the main controls alone.
+  Future<void> _showOptionsSheet() async {
+    final screenContext = context;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: PracticeColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+      ),
+      builder: (sheetContext) => Theme(
+        data: drumCoachPracticeTheme,
+        child: Consumer(
+          builder: (context, ref, _) {
+            final soundType = ref.watch(
+                metronomeNotifierProvider.select((s) => s.soundType));
+            return _OptionsSheet(
+              goalSeconds: _goalSeconds,
+              suggestedMinutes: widget.targetMinutes,
+              durationLocked: _elapsedSeconds > 0,
+              onGoalSelected: (s) => setState(() => _goalSeconds = s),
+              soundType: soundType,
+              onSoundSelected:
+                  ref.read(metronomeNotifierProvider.notifier).setSoundType,
+              onAbout: () {
+                Navigator.of(sheetContext).pop();
+                // A plain Navigator push, not context.push('/library/...') —
+                // this screen lives on the top-level /practice route (outside
+                // the bottom-nav shell), and pushing a shell-branch route from
+                // there caused a duplicate-page-key crash.
+                Navigator.of(screenContext).push(MaterialPageRoute(
+                  builder: (_) =>
+                      LessonDetailScreen(rudimentId: widget.rudimentId),
+                ));
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
 
   Future<void> _showRatingSheet() async {
     if (_sessionFinished) return;
@@ -908,6 +948,119 @@ class _MoreButton extends StatelessWidget {
   }
 }
 
+
+// ── Options sheet ─────────────────────────────────────────────────────────────
+
+class _OptionsSheet extends StatefulWidget {
+  const _OptionsSheet({
+    required this.goalSeconds,
+    required this.suggestedMinutes,
+    required this.durationLocked,
+    required this.onGoalSelected,
+    required this.soundType,
+    required this.onSoundSelected,
+    required this.onAbout,
+  });
+
+  final int? goalSeconds;
+  final int? suggestedMinutes;
+  final bool durationLocked;
+  final ValueChanged<int?> onGoalSelected;
+  final SoundType soundType;
+  final ValueChanged<SoundType> onSoundSelected;
+  final VoidCallback onAbout;
+
+  @override
+  State<_OptionsSheet> createState() => _OptionsSheetState();
+}
+
+class _OptionsSheetState extends State<_OptionsSheet> {
+  // Local copy so the chips update while the sheet is open — the screen's
+  // setState does not rebuild a modal sheet's builder.
+  late int? _goal = widget.goalSeconds;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Options', style: PracticeTypography.title),
+            const SizedBox(height: 18),
+            const _SectionLabel('DURATION'),
+            const SizedBox(height: 8),
+            if (widget.durationLocked)
+              Text('Duration is set once the session runs',
+                  style: PracticeTypography.body
+                      .copyWith(color: PracticeColors.textMuted))
+            else
+              _TimerGoalRow(
+                selected: _goal,
+                suggestedMinutes: widget.suggestedMinutes,
+                onSelected: (s) {
+                  setState(() => _goal = s);
+                  widget.onGoalSelected(s);
+                },
+              ),
+            const SizedBox(height: 18),
+            const _SectionLabel('SOUND'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: SoundType.values
+                  .map((t) => AppSelectableChip(
+                        label: t.label,
+                        selected: t == widget.soundType,
+                        onTap: () => widget.onSoundSelected(t),
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.info_outline,
+                  color: PracticeColors.textSecondary),
+              title:
+                  Text('About this exercise', style: PracticeTypography.body),
+              trailing: const Icon(Icons.chevron_right,
+                  color: PracticeColors.textMuted),
+              onTap: widget.onAbout,
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: PracticeColors.textPrimary,
+                  side: const BorderSide(color: PracticeColors.textFaint),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Done'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text,
+        style: PracticeTypography.label.copyWith(
+            fontSize: 11, letterSpacing: 0.9, color: PracticeColors.textMuted),
+      );
+}
 
 // ── Rating sheet ───────────────────────────────────────────────────────────────
 

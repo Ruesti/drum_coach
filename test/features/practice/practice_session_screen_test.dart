@@ -1,5 +1,6 @@
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
+import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:flutter/material.dart';
@@ -258,6 +259,45 @@ void main() {
     await tester.tap(find.text('Stop'));
     await tester.pump();
     expect(tester.takeException(), isNull);
+    container.dispose();
+  });
+
+  testWidgets('options: duration chip sets the length on the Start button',
+      (tester) async {
+    await _pumpScreen(tester, screen: _screen(targetMinutes: 4));
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+    expect(find.text('Options'), findsOneWidget);
+    expect(find.text('4 min ✦'), findsOneWidget);
+
+    await tester.tap(find.text('10 min'));
+    await tester.pump();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.text('10 min'), findsOneWidget);
+  });
+
+  testWidgets('options: sound chip switches the click sound', (tester) async {
+    final container = await _pumpScreen(tester, screen: _screen());
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rim'));
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).soundType, SoundType.rim);
+  });
+
+  testWidgets('options: duration is locked once the session runs',
+      (tester) async {
+    final container =
+        await _pumpScreen(tester, screen: _screen(targetMinutes: 4));
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 5));
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+    expect(find.text('Duration is set once the session runs'), findsOneWidget);
+    expect(find.text('10 min'), findsNothing);
     container.dispose();
   });
 }
