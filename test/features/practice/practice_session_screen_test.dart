@@ -3,16 +3,15 @@ import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Overrides [MetronomeNotifier] so its very first `build()` already reports
-/// the metronome as playing mid-pattern — exactly the state a real device
-/// hits when [PracticeSessionScreen] is pushed while the keep-alive metronome
-/// provider is already running from an earlier screen. The real engine is
-/// never touched (no SoLoud / isolate), so this stays a fast, hermetic
-/// widget test.
+/// the metronome as playing mid-pattern — the state a real device hits when
+/// the screen is pushed while the keep-alive metronome is already running.
+/// No SoLoud / isolate is touched, so the tests stay hermetic.
 class _AlreadyPlayingMetronomeNotifier extends MetronomeNotifier {
   @override
   MetronomeState build() {
@@ -20,13 +19,14 @@ class _AlreadyPlayingMetronomeNotifier extends MetronomeNotifier {
   }
 }
 
-/// Idle metronome without engine/SoLoud so preset logic runs hermetically.
+/// Idle metronome without engine/SoLoud. start/stop/setBpm of the real
+/// notifier are engine-null-safe, so tapping Start/Stop works in tests.
 class _IdleMetronomeNotifier extends MetronomeNotifier {
   @override
   MetronomeState build() => const MetronomeState();
 }
 
-Future<void> _pumpScreen(
+Future<ProviderContainer> _pumpScreen(
   WidgetTester tester, {
   required PracticeSessionScreen screen,
   MetronomeNotifier Function()? metronome,
@@ -42,93 +42,121 @@ Future<void> _pumpScreen(
       child: MaterialApp(home: screen),
     ),
   );
+  await tester.pump();
+  return container;
 }
+
+PracticeSessionScreen _screen({
+  int? targetBpm,
+  int? targetMinutes,
+  bool isLadder = false,
+  String? contextLine,
+}) =>
+    PracticeSessionScreen(
+      rudimentId: rudimentsSeedData.first.id,
+      isFromRoutine: false,
+      targetBpm: targetBpm,
+      targetMinutes: targetMinutes,
+      isLadder: isLadder,
+      contextLine: contextLine,
+    );
 
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await SettingsService.init();
+    // Phone-sized surface so a layout that overflows on a device fails here.
+    final binding = TestWidgetsFlutterBinding.ensureInitialized();
+    binding.platformDispatcher.views.first.physicalSize = const Size(1080, 2340);
+    binding.platformDispatcher.views.first.devicePixelRatio = 3.0;
+  });
+
+  tearDown(() {
+    final view = TestWidgetsFlutterBinding.ensureInitialized()
+        .platformDispatcher
+        .views
+        .first;
+    view.resetPhysicalSize();
+    view.resetDevicePixelRatio();
   });
 
   testWidgets(
       'does not throw LateInitializationError when the metronome is already '
-      'playing on first build (regression for _playback being set only in a '
-      'postFrameCallback)', (tester) async {
-    final container = ProviderContainer(overrides: [
-      metronomeNotifierProvider
-          .overrideWith(() => _AlreadyPlayingMetronomeNotifier()),
-    ]);
-    addTearDown(container.dispose);
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: MaterialApp(
-          home: PracticeSessionScreen(
-            rudimentId: rudimentsSeedData.first.id,
-            isFromRoutine: false,
-          ),
-        ),
-      ),
+      'playing on first build', (tester) async {
+    final container = await _pumpScreen(
+      tester,
+      screen: _screen(),
+      metronome: () => _AlreadyPlayingMetronomeNotifier(),
     );
-
-    // The first build() must read `_playback` while the provider already
-    // reports isPlaying == true and currentBeatIndex == 0 — before this
-    // fix, `_playback` was still unset at this point and build() threw a
-    // LateInitializationError.
     expect(tester.takeException(), isNull);
     expect(find.byType(PracticeSessionScreen), findsOneWidget);
-
-    // Let the postFrameCallback (metronome clock/volume setup) run too.
-    await tester.pump();
-    expect(tester.takeException(), isNull);
-
-    // Dispose before the test ends, not just via addTearDown — the session
-    // timer's real Timer.periodic (started in initState) must be cancelled
-    // inside the test body, or flutter_test's "no pending timers" invariant
-    // check (which runs before tearDowns) fails.
+    // Running state: Stop is the primary action, no Finish yet.
+    expect(find.text('Stop'), findsOneWidget);
+    expect(find.text('Finish'), findsNothing);
     container.dispose();
   });
 
-  testWidgets('übernimmt die vorgeschlagene Blockdauer als Countdown-Ziel',
-      (tester) async {
-    await _pumpScreen(
-      tester,
-      screen: PracticeSessionScreen(
-        rudimentId: rudimentsSeedData.first.id,
-        isFromRoutine: false,
-        targetMinutes: 4,
-      ),
-    );
-    await tester.pump();
-    // Countdown preset to 4 min and offered as an explicit chip.
-    expect(find.text('04:00'), findsOneWidget);
-    expect(find.text('4 min ✦'), findsOneWidget);
+  testWidgets('ready: Start shows the suggested block length', (tester) async {
+    await _pumpScreen(tester, screen: _screen(targetMinutes: 4));
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.text('4 min'), findsOneWidget);
+    expect(find.text('Finish'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Leiter-Modus zeigt die Stufen und startet auf der untersten',
+  testWidgets('ready without a length: plain Start, no time', (tester) async {
+    await _pumpScreen(tester, screen: _screen());
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.text('00:00'), findsNothing);
+    expect(find.text('Finish'), findsNothing);
+  });
+
+  testWidgets('header shows the context line, or the difficulty without one',
       (tester) async {
-    await _pumpScreen(
-      tester,
-      screen: PracticeSessionScreen(
-        rudimentId: rudimentsSeedData.first.id,
-        isFromRoutine: false,
-        targetBpm: 80,
-        targetMinutes: 4,
-        isLadder: true,
-      ),
-    );
-    await tester.pump();
-    expect(find.text('Tempo ladder'), findsOneWidget);
-    for (final bpm in ['76', '80', '84']) {
-      expect(find.text(bpm), findsOneWidget);
+    final first = await _pumpScreen(tester,
+        screen: _screen(contextLine: 'Day 9 · Step 2 of 3 · 84 BPM'));
+    expect(find.text('Day 9 · Step 2 of 3 · 84 BPM'), findsOneWidget);
+    // Close the first container before the second screen: its session
+    // timer must not survive into the pending-timers check.
+    first.dispose();
+
+    final second = await _pumpScreen(tester, screen: _screen());
+    expect(
+        find.text(rudimentsSeedData.first.difficulty.label), findsOneWidget);
+    second.dispose();
+  });
+
+  testWidgets('counter shows one digit per beat of the bar', (tester) async {
+    await _pumpScreen(tester, screen: _screen());
+    for (var i = 1; i <= rudimentsSeedData.first.beatsPerBar; i++) {
+      expect(find.text('$i'), findsWidgets);
     }
-    // Metronome preset to the lowest ladder step — 72 appears in the BPM
-    // display AND its step chip.
-    expect(find.text('72'), findsNWidgets(2));
   });
 
-  testWidgets('stellt eine unterbrochene Session aus dem Snapshot wieder her',
+  testWidgets('running: Stop with the remaining time; paused: Resume + Finish',
+      (tester) async {
+    final container =
+        await _pumpScreen(tester, screen: _screen(targetMinutes: 4));
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 40));
+    expect(find.text('Stop'), findsOneWidget);
+    expect(find.text('03:20'), findsOneWidget);
+    expect(find.text('Finish'), findsNothing);
+
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    expect(find.text('Resume'), findsOneWidget);
+    expect(find.text('03:20'), findsOneWidget);
+    expect(find.text('Finish'), findsOneWidget);
+
+    await tester.tap(find.text('Finish'));
+    await tester.pumpAndSettle();
+    expect(find.text('How did it feel?'), findsOneWidget);
+    container.dispose();
+  });
+
+  testWidgets('restored session starts paused with Resume and Finish',
       (tester) async {
     SharedPreferences.setMockInitialValues({
       'practice_snap_id': rudimentsSeedData.first.id,
@@ -137,65 +165,99 @@ void main() {
     });
     await SettingsService.init();
 
-    await _pumpScreen(
-      tester,
-      screen: PracticeSessionScreen(
-        rudimentId: rudimentsSeedData.first.id,
-        isFromRoutine: false,
-      ),
-    );
-    await tester.pump();
-    // Elapsed timer restored (03:20 count-up) + hint shown.
+    final container = await _pumpScreen(tester, screen: _screen());
+    expect(find.text('Resume'), findsOneWidget);
     expect(find.text('03:20'), findsOneWidget);
+    expect(find.text('Finish'), findsOneWidget);
     expect(find.textContaining('Resumed'), findsOneWidget);
+    container.dispose();
   });
 
-  testWidgets('abgelaufener Snapshot wird ignoriert', (tester) async {
+  testWidgets('expired snapshot is ignored', (tester) async {
     SharedPreferences.setMockInitialValues({
       'practice_snap_id': rudimentsSeedData.first.id,
       'practice_snap_elapsed': 200,
-      'practice_snap_time': DateTime.now()
-          .subtract(const Duration(hours: 2))
-          .toIso8601String(),
+      'practice_snap_time':
+          DateTime.now().subtract(const Duration(hours: 2)).toIso8601String(),
     });
     await SettingsService.init();
 
-    await _pumpScreen(
-      tester,
-      screen: PracticeSessionScreen(
-        rudimentId: rudimentsSeedData.first.id,
-        isFromRoutine: false,
-      ),
-    );
-    await tester.pump();
-    // Both AppBar timers (exercise + cross-exercise session) sit at zero.
-    expect(find.text('00:00'), findsNWidgets(2));
+    await _pumpScreen(tester, screen: _screen());
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.text('Resume'), findsNothing);
+    expect(find.text('Finish'), findsNothing);
   });
 
-  testWidgets(
-      'manuelle BPM-Änderung rebasiert die Leiter (Gerätetest-Feedback: '
-      '"100 eingestellt, startet trotzdem mit 52")', (tester) async {
-    await _pumpScreen(
-      tester,
-      screen: PracticeSessionScreen(
-        rudimentId: rudimentsSeedData.first.id,
-        isFromRoutine: false,
-        targetBpm: 60,
-        targetMinutes: 4,
-        isLadder: true,
-      ),
-    );
-    await tester.pump();
-    // Gate 60 → Stufen 52/56/60/64, Metronom auf der untersten (52).
+  testWidgets('ladder mode shows the steps and starts on the lowest',
+      (tester) async {
+    await _pumpScreen(tester,
+        screen: _screen(targetBpm: 80, targetMinutes: 4, isLadder: true));
+    expect(find.text('LADDER'), findsOneWidget);
+    for (final bpm in ['76', '80', '84']) {
+      expect(find.text(bpm), findsOneWidget);
+    }
+    // Lowest step both in the tempo display and its chip.
+    expect(find.text('72'), findsNWidgets(2));
+  });
+
+  testWidgets('manual +4 rebases the ladder instead of the program tempo',
+      (tester) async {
+    await _pumpScreen(tester,
+        screen: _screen(targetBpm: 60, targetMinutes: 4, isLadder: true));
+    // Gate 60 → steps 52/56/60/64, metronome on the lowest (52).
     expect(find.text('52'), findsNWidgets(2));
     expect(find.text('64'), findsOneWidget);
 
-    // Manuell +5 → 57: Die aktuelle Stufe wird 57, die Leiter zieht mit
-    // (57/61/65/69) statt das Programm-Tempo zu erzwingen.
-    await tester.tap(find.text('+5'));
+    await tester.tap(find.byIcon(Icons.add));
     await tester.pump();
-    expect(find.text('57'), findsNWidgets(2));
-    expect(find.text('69'), findsOneWidget);
+    // Current step becomes 56, the ladder follows (56/60/64/68).
+    expect(find.text('56'), findsNWidgets(2));
+    expect(find.text('68'), findsOneWidget);
     expect(find.text('52'), findsNothing);
+  });
+
+  testWidgets('mode chip only with mic analysis, tap toggles it',
+      (tester) async {
+    final withoutMic = await _pumpScreen(tester, screen: _screen());
+    expect(find.text('LEARN'), findsNothing);
+    expect(find.text('ANALYSIS'), findsNothing);
+    withoutMic.dispose();
+
+    // With mic analysis on, initState asks permission_handler for the
+    // microphone. There is no platform in a widget test, so answer the
+    // method channel ourselves: 7 = Permission.microphone, 1 = granted.
+    const channel = MethodChannel('flutter.baseflow.com/permissions/methods');
+    tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'requestPermissions') return <int, int>{7: 1};
+      if (call.method == 'checkPermissionStatus') return 1;
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null));
+
+    await SettingsService.setMicAnalysisEnabled(true);
+    final withMic = await _pumpScreen(tester, screen: _screen());
+    expect(find.text('LEARN'), findsOneWidget);
+    await tester.tap(find.text('LEARN'));
+    await tester.pump();
+    expect(find.text('ANALYSIS'), findsOneWidget);
+    expect(
+        SettingsService.analysisModeFor(rudimentsSeedData.first.id), isTrue);
+    withMic.dispose();
+  });
+
+  testWidgets('no overflow in ready, running and paused state',
+      (tester) async {
+    final container = await _pumpScreen(tester,
+        screen: _screen(targetBpm: 60, targetMinutes: 8, isLadder: true));
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    container.dispose();
   });
 }

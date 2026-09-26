@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -10,8 +11,6 @@ import '../../app/design_tokens.dart';
 import '../../app/theme.dart';
 import '../../data/local/settings_service.dart';
 import '../../shared/widgets/app_badge.dart';
-import '../../shared/widgets/beat_indicator.dart';
-import '../../shared/widgets/bpm_control.dart';
 import '../../shared/widgets/notation_staff_widget.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -32,6 +31,8 @@ import '../program/program_provider.dart';
 import 'ladder_plan.dart';
 import 'practice_provider.dart';
 import 'session_timer_provider.dart';
+import 'widgets/beat_counter.dart';
+import 'widgets/tempo_row.dart';
 
 String _formatDuration(int seconds) {
   final m = seconds ~/ 60;
@@ -298,6 +299,25 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     return _formatDuration(remaining ?? _elapsedSeconds);
   }
 
+  /// Label of the primary button: Stop while playing, Resume once time has
+  /// elapsed, Start before the first note.
+  String _primaryLabel(bool isPlaying) {
+    if (isPlaying) return 'Stop';
+    return _elapsedSeconds > 0 ? 'Resume' : 'Start';
+  }
+
+  /// Time next to the label: the chosen length ("8 min") before the first
+  /// start, otherwise remaining time with a goal / elapsed time without.
+  String? _primaryTime(bool isPlaying) {
+    if (!isPlaying && _elapsedSeconds == 0) {
+      return _goalSeconds == null ? null : '${_goalSeconds! ~/ 60} min';
+    }
+    return _timerLabel;
+  }
+
+  /// Duration, sound and explanation live behind "⋯" (Task 5 fills this).
+  Future<void> _showOptionsSheet() async {}
+
   Future<void> _showRatingSheet() async {
     if (_sessionFinished) return;
     final metronome = ref.read(metronomeNotifierProvider.notifier);
@@ -446,7 +466,6 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   Widget build(BuildContext context) {
     final rudiment = ref.watch(rudimentByIdProvider(widget.rudimentId));
     final notifier = ref.read(metronomeNotifierProvider.notifier);
-    final sessionSeconds = ref.watch(sessionTimerNotifierProvider);
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
       // Record beat timestamps for mic correlation — only pattern ticks that
@@ -479,8 +498,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     });
 
     // Selective watches: the pattern clock updates currentBeatIndex up to
-    // ~80×/s, but everything visible here changes only per NOTE. Watching
-    // the whole state rebuilt the entire screen on every tick and clogged
+    // ~80×/s, but everything visible here changes only per NOTE or per BEAT.
+    // Watching the whole state rebuilt the screen on every tick and clogged
     // the main-isolate queue the click playback runs through (measured
     // 20-30 ms click-fire spikes every few seconds, §Wiedergabe-Diagnose).
     final activeBeat = ref.watch(metronomeNotifierProvider.select((s) =>
@@ -488,123 +507,51 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             ? _playback
                 .noteIndexAtTick(s.currentBeatIndex % _playback.totalTicks)
             : null));
+    final barBeat = ref.watch(metronomeNotifierProvider.select((s) =>
+        s.isPlaying && s.currentBeatIndex >= 0
+            ? beatOfTick(s.currentBeatIndex % _playback.totalTicks,
+                ticksPerQuarter: _playback.ticksPerQuarter,
+                beatsPerBar: rudiment.beatsPerBar)
+            : null));
     final isPlaying =
         ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
     final bpm = ref.watch(metronomeNotifierProvider.select((s) => s.bpm));
-    final soundType =
-        ref.watch(metronomeNotifierProvider.select((s) => s.soundType));
-    final isAccent =
-        ref.watch(metronomeNotifierProvider.select((s) => s.isAccent));
 
-    final isCountdown = _goalSeconds != null;
-    final timerColor = isCountdown && (_goalSeconds! - _elapsedSeconds) <= 30
-        ? PracticeColors.accent
-        : PracticeColors.textPrimary;
+    final paused = !isPlaying && _elapsedSeconds > 0;
+    final showLadder = _ladderActive && _ladderPlan != null;
 
-    return Theme(
-      data: drumCoachPracticeTheme,
-      child: Scaffold(
-        backgroundColor: PracticeColors.base,
-        appBar: AppBar(
-          // Long étude names must truncate — with two timers plus icons in the
-          // actions there is little room left, and an unconstrained title
-          // overflows the toolbar.
-          title:
-              Text(rudiment.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.info_outline),
-              tooltip: 'Show explanation',
-              // A plain Navigator push, not context.push('/library/...') — this
-              // screen lives on the top-level /practice route (outside the
-              // bottom-nav shell, see router.dart), and pushing a shell-branch
-              // route from there previously caused a duplicate-page-key crash.
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) =>
-                    LessonDetailScreen(rudimentId: widget.rudimentId),
-              )),
-            ),
-            if (SettingsService.micAnalysisEnabled)
-              IconButton(
-                icon: Icon(
-                  _analysisMode ? Icons.insights : Icons.insights_outlined,
-                  size: 20,
-                  color: _analysisMode
-                      ? PracticeColors.accent
-                      : PracticeColors.textFaint,
-                ),
-                tooltip: _analysisMode
-                    ? 'Analysis mode (per-hand values) — tap for Learn mode'
-                    : 'Learn mode — tap for hand analysis',
-                onPressed: () {
-                  setState(() => _analysisMode = !_analysisMode);
-                  SettingsService.setAnalysisModeFor(
-                      widget.rudimentId, _analysisMode);
-                },
-              ),
-            if (SettingsService.micAnalysisEnabled)
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: Icon(
-                  _micRecording ? Icons.mic : Icons.mic_off,
-                  size: 18,
-                  color: _micRecording
-                      ? PracticeColors.accent
-                      : PracticeColors.textFaint,
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Center(
-                // Single row, not stacked — a two-line Column here silently
-                // clipped against the AppBar's fixed toolbar height, making
-                // the session timer invisible on-device.
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isCountdown)
-                      const Icon(Icons.timer_outlined,
-                          size: 16, color: PracticeColors.textMuted),
-                    if (isCountdown) const SizedBox(width: 4),
-                    Text(
-                      _timerLabel,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: timerColor,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.timelapse,
-                        size: 16, color: PracticeColors.textMuted),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatDuration(sessionSeconds),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: PracticeColors.textPrimary,
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 16, 0, 20),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // No AppBar on this screen, so nothing else sets the status-bar icons;
+      // the screen is dark, the icons must be light.
+      value: SystemUiOverlayStyle.light,
+      child: Theme(
+        data: drumCoachPracticeTheme,
+        child: Scaffold(
+          backgroundColor: PracticeColors.base,
+          body: SafeArea(
             child: Column(
               children: [
-                // Sheet bleeds to the screen edges (minus a tiny 4px margin) —
-                // every pixel of width matters for note spacing, unlike the
-                // controls below which read fine with normal 20px insets.
+                _Header(
+                  title: rudiment.name,
+                  subtitle: widget.contextLine ?? rudiment.difficulty.label,
+                  modeChip: SettingsService.micAnalysisEnabled
+                      ? _ModeChip(
+                          analysis: _analysisMode,
+                          micOn: _micRecording,
+                          onTap: () {
+                            setState(() => _analysisMode = !_analysisMode);
+                            SettingsService.setAnalysisModeFor(
+                                widget.rudimentId, _analysisMode);
+                          },
+                        )
+                      : null,
+                ),
+                // The sheet draws its own paper card; only the margins are
+                // ours. 16 px at the sides costs a little note spacing versus
+                // the old 4 px, in exchange for the card reading as a card.
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                     child: NotationStaffWidget(
                       rudiment: rudiment,
                       activeIndex: activeBeat,
@@ -612,45 +559,53 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                if (_ladderActive && _ladderPlan != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                    child: _LadderStepRow(
-                      bpms: _ladderPlan!.bpms,
-                      currentStep: _ladderPlan!.stepIndexAt(_elapsedSeconds),
-                    ),
-                  ),
+                const SizedBox(height: 22),
+                BeatCounter(
+                    beatsPerBar: rudiment.beatsPerBar, activeBeat: barBeat),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _CompactMetronome(
-                    bpm: bpm,
-                    isPlaying: isPlaying,
-                    isAccent: isAccent,
-                    currentBeatIndex: activeBeat ?? -1,
-                    soundType: soundType,
-                    onBpmChanged: _onUserBpmChanged,
-                    onToggle: notifier.toggle,
-                    onSoundTypeChanged: notifier.setSoundType,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                if (!isPlaying && _elapsedSeconds == 0)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                    child: _TimerGoalRow(
-                      selected: _goalSeconds,
-                      suggestedMinutes: widget.targetMinutes,
-                      onSelected: (s) => setState(() => _goalSeconds = s),
-                    ),
-                  ),
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: ElevatedButton.icon(
-                    onPressed: _showRatingSheet,
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Finish Session'),
+                  padding: const EdgeInsets.fromLTRB(16, 22, 16, 20),
+                  child: Column(
+                    children: [
+                      if (showLadder) ...[
+                        _LadderStepRow(
+                          bpms: _ladderPlan!.bpms,
+                          currentStep:
+                              _ladderPlan!.stepIndexAt(_elapsedSeconds),
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+                      TempoRow(bpm: bpm, onChanged: _onUserBpmChanged),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _PrimaryButton(
+                              icon: isPlaying
+                                  ? Icons.stop_rounded
+                                  : Icons.play_arrow_rounded,
+                              label: _primaryLabel(isPlaying),
+                              time: _primaryTime(isPlaying),
+                              onPressed: notifier.toggle,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          _MoreButton(onPressed: _showOptionsSheet),
+                        ],
+                      ),
+                      // Finish gets its own row: "Resume 03:20", "Finish"
+                      // and "⋯" side by side overflow a 360 dp phone.
+                      if (paused) ...[
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: _GhostButton(
+                            icon: Icons.check_circle_outline,
+                            label: 'Finish',
+                            onPressed: _showRatingSheet,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
@@ -681,10 +636,12 @@ class _LadderStepRow extends StatelessWidget {
       spacing: 6,
       runSpacing: 6,
       children: [
-        const Icon(Icons.stairs_outlined,
-            size: 16, color: PracticeColors.accent),
-        const Text('Tempo ladder',
-            style: TextStyle(color: PracticeColors.textMuted, fontSize: 12)),
+        const Text('LADDER',
+            style: TextStyle(
+                color: PracticeColors.textMuted,
+                fontSize: 11,
+                letterSpacing: 0.9,
+                fontWeight: FontWeight.w600)),
         for (var i = 0; i < bpms.length; i++)
           AppSelectableChip(
             label: '${bpms[i]}',
@@ -743,112 +700,214 @@ class _TimerGoalRow extends StatelessWidget {
   }
 }
 
-// ── Compact metronome ──────────────────────────────────────────────────────────
+// ── Header ────────────────────────────────────────────────────────────────────
 
-class _CompactMetronome extends StatelessWidget {
-  final int bpm;
-  final bool isPlaying;
-  final bool isAccent;
-  final int currentBeatIndex;
-  final SoundType soundType;
-  final ValueChanged<int> onBpmChanged;
-  final VoidCallback onToggle;
-  final ValueChanged<SoundType> onSoundTypeChanged;
+class _Header extends StatelessWidget {
+  const _Header({required this.title, required this.subtitle, this.modeChip});
 
-  const _CompactMetronome({
-    required this.bpm,
-    required this.isPlaying,
-    required this.isAccent,
-    required this.currentBeatIndex,
-    required this.soundType,
-    required this.onBpmChanged,
-    required this.onToggle,
-    required this.onSoundTypeChanged,
-  });
+  final String title;
+  final String subtitle;
+  final Widget? modeChip;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-      decoration: BoxDecoration(
-        color: PracticeColors.raised,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-      ),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 16, 0),
+      child: Row(
         children: [
-          Row(
-            children: [
-              BeatIndicator(
-                diameter: 64,
-                isPlaying: isPlaying,
-                isAccent: isAccent,
-                beatTrigger: currentBeatIndex,
-                onTap: onToggle,
-                child: Icon(
-                  isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                  color: PracticeColors.textPrimary,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () async {
-                    final value = await editBpmDialog(context, current: bpm);
-                    if (value != null) onBpmChanged(value);
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('$bpm', style: PracticeTypography.display),
-                      const SizedBox(width: 4),
-                      Text('BPM',
-                          style: PracticeTypography.label
-                              .copyWith(color: PracticeColors.textMuted)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            tooltip: 'Back',
+            color: PracticeColors.textPrimary,
+            constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+            onPressed: () => Navigator.of(context).maybePop(),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              BpmStepButtons(
-                bpm: bpm,
-                onChanged: onBpmChanged,
-                alignment: MainAxisAlignment.start,
-              ),
-              Expanded(
-                child: Slider(
-                  value: bpm.toDouble(),
-                  min: 40,
-                  max: 240,
-                  divisions: 200,
-                  onChanged: (v) => onBpmChanged(v.round()),
-                ),
-              ),
-            ],
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: PracticeTypography.subtitle),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: PracticeTypography.body.copyWith(
+                        fontSize: 13, color: PracticeColors.textMuted)),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: SoundType.values.map((t) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: AppSelectableChip(
-                  label: t.label,
-                  selected: t == soundType,
-                  onTap: () => onSoundTypeChanged(t),
-                ),
-              );
-            }).toList(),
-          ),
+          if (modeChip != null) ...[const SizedBox(width: 10), modeChip!],
         ],
       ),
     );
   }
 }
+
+/// "ANALYSIS" / "LEARN" pill with the mic state; tap switches the mode.
+class _ModeChip extends StatelessWidget {
+  const _ModeChip({
+    required this.analysis,
+    required this.micOn,
+    required this.onTap,
+  });
+
+  final bool analysis;
+  final bool micOn;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: analysis
+          ? 'Analysis mode (per-hand values) — tap for Learn mode'
+          : 'Learn mode — tap for hand analysis',
+      child: Material(
+        color: Colors.transparent,
+        shape: const StadiumBorder(
+            side: BorderSide(color: PracticeColors.textFaint)),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 0, 12, 0),
+            child: SizedBox(
+              height: 44,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(micOn ? Icons.mic : Icons.mic_off,
+                      size: 16,
+                      color: micOn
+                          ? PracticeColors.accent
+                          : PracticeColors.textFaint),
+                  const SizedBox(width: 6),
+                  Text(analysis ? 'ANALYSIS' : 'LEARN',
+                      style: PracticeTypography.label.copyWith(
+                          fontSize: 11,
+                          letterSpacing: 0.66,
+                          color: PracticeColors.textSecondary)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Footer buttons ────────────────────────────────────────────────────────────
+
+/// The orange main action: icon, label and (optionally) a time.
+class _PrimaryButton extends StatelessWidget {
+  const _PrimaryButton({
+    required this.icon,
+    required this.label,
+    required this.time,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final String? time;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 56,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: PracticeColors.accent,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.card)),
+        ),
+        onPressed: onPressed,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 22),
+            const SizedBox(width: 10),
+            Text(label,
+                style:
+                    PracticeTypography.subtitle.copyWith(color: Colors.white)),
+            if (time != null) ...[
+              const SizedBox(width: 10),
+              Text(time!,
+                  style: PracticeTypography.label.copyWith(
+                    fontSize: 15,
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  )),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GhostButton extends StatelessWidget {
+  const _GhostButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 56,
+      child: OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: PracticeColors.textPrimary,
+          side: const BorderSide(color: PracticeColors.textFaint),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.card)),
+        ),
+        onPressed: onPressed,
+        icon: Icon(icon, size: 20),
+        label: Text(label, style: PracticeTypography.subtitle),
+      ),
+    );
+  }
+}
+
+class _MoreButton extends StatelessWidget {
+  const _MoreButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 56,
+      height: 56,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: PracticeColors.textSecondary,
+          side: const BorderSide(color: PracticeColors.textFaint),
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.card)),
+        ),
+        onPressed: onPressed,
+        child: const Tooltip(
+            message: 'Options', child: Icon(Icons.more_horiz, size: 22)),
+      ),
+    );
+  }
+}
+
 
 // ── Rating sheet ───────────────────────────────────────────────────────────────
 
