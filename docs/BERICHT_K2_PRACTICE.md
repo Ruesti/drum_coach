@@ -23,8 +23,9 @@ hinter „⋯". Der Screen bleibt dunkel.
   mit Minus, großer BPM-Zahl, Plus. Plus/Minus springen 4 BPM (eine
   Leiterstufe), ein Tipp auf die Zahl öffnet den Eingabe-Dialog. Schieberegler
   und ±1/±5-Knöpfe entfallen.
-- **Hauptknopf** orange: „Start · 8 min" vor dem Start, „Stop 07:32" laufend
-  (Restzeit, bei ∞ die verstrichene Zeit), „Resume 07:32" pausiert. Pausiert
+- **Hauptknopf** orange: „Start  8 min" vor dem Start (Label und Zeit mit
+  Abstand, ohne Mittelpunkt), „Stop 07:32" laufend (Restzeit, bei ∞ die
+  verstrichene Zeit), „Resume 07:32" pausiert. Pausiert
   erscheint darunter eine volle Zeile „Finish", die das Bewertungs-Blatt
   öffnet. Zeitablauf beendet die Sitzung automatisch wie bisher.
 - **„⋯"-Blatt:** Dauer (5/10/15/∞ plus Vorschlag „8 min ✦", nur vor dem
@@ -40,8 +41,25 @@ hinter „⋯". Der Screen bleibt dunkel.
 | Ein Knopf für Stop und Finish? | Stop pausiert; pausiert erscheint „Finish" | Auftraggeber 25.09. |
 | Schrittweite Plus/Minus | 4 BPM, Feinwert über Dialog (Tipp auf Zahl) | Spec |
 | Finish neben Resume und ⋯? | Nein: eigene Zeile darunter — drei nebeneinander liefen auf 360 dp um 80 px über | Umsetzung 26.09. (Ruling im Ledger) |
-| Sitzungsuhr (Tageszeit) in der Kopfzeile | Entfällt hier; Today und Progress zeigen die Minuten | Spec |
+| Sitzungsuhr (Tageszeit) in der Kopfzeile | Entfällt hier. Der Provider läuft weiter (Snapshot nutzt ihn), wird aber derzeit nirgends angezeigt — Today/Progress zeigen die Minuten aus den gespeicherten Sitzungen. Ob Today/Progress ihn anzeigen oder er wegfällt: Entscheidung in Schritt 3 | Spec + Review 26.09. |
 | Kontextzeile beim freien Üben | Vorerst die Stufe der Übung; K4 (Bibliothek) darf das ändern | Spec §6 |
+
+## Review-Befunde (frischer Reviewer, 26.09.) und Fixes
+
+- **Zählwerk bei Mustern kürzer als ein Takt** (wichtig, behoben): die Spec-Formel
+  brach den Tick am Muster um; bei 19 von 41 Übungen im Seed (Schleife 2, 3, 5,
+  6 oder 7 Schläge) blieben dadurch Ziffern dauerhaft grau. Jetzt zählt das
+  Zählwerk aus dem globalen Tick des Motors, der Cursor auf dem Blatt folgt
+  weiter der Schleife. Test: Six Stroke Roll bei Tick 80 → „4" leuchtet.
+- **Zeitablauf bei offenem „⋯"-Blatt** (hochgestuft, behoben): die Bewertung
+  stapelte sich auf das Blatt, der letzte Pop schloss das Blatt statt den
+  Screen. Jetzt schließt der Auto-Abschluss das Blatt zuerst. Test dazu.
+- Kleinere Punkte (zurückgestellt, siehe Ledger): Blatt ohne Scroll-Reserve bei
+  großer Systemschrift, Dauer-Sperre erst ab der zweiten Sekunde, Layout-Sprung
+  beim Erscheinen der Finish-Zeile, Tastatur-Resize des Scaffolds, kein
+  Deaktiviert-Zustand von ± bei 40/240, Kopfzeile 17/13 px statt 22 px.
+- Folgeticket Inhalt: Seed-Muster auf ganze Takte bringen oder `beatsPerBar`
+  setzen (wie `barCountOrThrow` es für Étüden schon erzwingt).
 
 ## Tests
 

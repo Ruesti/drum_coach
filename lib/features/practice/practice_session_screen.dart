@@ -317,8 +317,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
   /// Duration, sound and the exercise explanation live behind "⋯" — rarely
   /// touched while playing, so they leave the main controls alone.
+  /// True while the "⋯" sheet is up, so an auto-finish can close it first.
+  bool _optionsOpen = false;
+
   Future<void> _showOptionsSheet() async {
     final screenContext = context;
+    _optionsOpen = true;
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: PracticeColors.surface,
@@ -356,10 +360,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         ),
       ),
     );
+    _optionsOpen = false;
   }
 
   Future<void> _showRatingSheet() async {
     if (_sessionFinished) return;
+    // The goal can expire while the "⋯" sheet is open; the rating sheet must
+    // not stack on it, or the final pop leaves a finished screen behind.
+    if (_optionsOpen && mounted) Navigator.of(context).pop();
     final metronome = ref.read(metronomeNotifierProvider.notifier);
     metronome.stop();
     _stopTicker();
@@ -547,9 +555,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             ? _playback
                 .noteIndexAtTick(s.currentBeatIndex % _playback.totalTicks)
             : null));
+    // The counter takes the engine's global tick, NOT the loop-wrapped one
+    // the sheet cursor uses: many patterns loop after 2, 3 or 6 beats, and a
+    // count that restarts with the loop leaves digits permanently grey. The
+    // drummer counts 1 2 3 4 in the exercise's meter no matter how long the
+    // figure is (review finding, 26.09.).
     final barBeat = ref.watch(metronomeNotifierProvider.select((s) =>
         s.isPlaying && s.currentBeatIndex >= 0
-            ? beatOfTick(s.currentBeatIndex % _playback.totalTicks,
+            ? beatOfTick(s.currentBeatIndex,
                 ticksPerQuarter: _playback.ticksPerQuarter,
                 beatsPerBar: rudiment.beatsPerBar)
             : null));

@@ -72,10 +72,15 @@ Eigenes Widget `BeatCounter` (`lib/features/practice/widgets/beat_counter.dart`)
   Zahl `textFaint`, Strich transparent. Im Stand (nicht spielend) ist kein
   Schlag aktiv.
 - Eingabe: `activeBeat` (0-basiert oder null). Der Screen berechnet ihn aus
-  dem Metronom über einen selektiven Watch:
-  `tick = currentBeatIndex % _playback.totalTicks`,
-  `activeBeat = (tick ~/ _playback.ticksPerQuarter) % rudiment.beatsPerBar`,
+  dem Metronom über einen selektiven Watch aus dem **globalen, nicht
+  umgebrochenen** Tick des Motors:
+  `activeBeat = (currentBeatIndex ~/ _playback.ticksPerQuarter) % rudiment.beatsPerBar`,
   null, wenn nicht spielend oder `currentBeatIndex < 0`.
+  Korrektur 26.09. (Review): die erste Fassung brach den Tick am Muster um
+  (`% _playback.totalTicks`, wie der Notenblatt-Cursor). Viele Muster sind
+  aber kürzer als ein Takt (2, 3 oder 6 Schläge) — dann blieben Ziffern
+  dauerhaft grau. Der Drummer zählt 1 2 3 4 im Takt der Übung, egal wie lang
+  die Figur ist; nur der Cursor auf dem Blatt folgt der Schleife.
 - Reine Funktion `beatOfTick(tick, ticksPerQuarter, beatsPerBar)` neben dem
   Widget, damit die Rechnung ohne Widget testbar ist.
 

@@ -1,3 +1,4 @@
+import 'package:drum_coach/app/design_tokens.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
@@ -18,6 +19,12 @@ class _AlreadyPlayingMetronomeNotifier extends MetronomeNotifier {
   MetronomeState build() {
     return const MetronomeState(isPlaying: true, currentBeatIndex: 0);
   }
+
+  /// Reports a later global (never wrapping) tick, as the engine does after
+  /// a few bars. Must be called after the screen's first frame: its
+  /// postFrameCallback sets the pattern clock, which resets the index to -1.
+  void reportTick(int globalTick) =>
+      state = state.copyWith(isPlaying: true, currentBeatIndex: globalTick);
 }
 
 /// Idle metronome without engine/SoLoud. start/stop/setBpm of the real
@@ -132,6 +139,28 @@ void main() {
     for (var i = 1; i <= rudimentsSeedData.first.beatsPerBar; i++) {
       expect(find.text('$i'), findsWidgets);
     }
+  });
+
+  testWidgets('counter follows the running bar count, not the pattern loop',
+      (tester) async {
+    // Six Stroke Roll loops after 3 beats (72 ticks). At global tick 80 a
+    // drummer counting 4/4 is on beat 4; the loop-wrapped tick (8) would say
+    // beat 1 and leave "4" permanently grey.
+    final container = await _pumpScreen(
+      tester,
+      screen: const PracticeSessionScreen(
+          rudimentId: 'six_stroke_roll', isFromRoutine: false),
+      metronome: () => _AlreadyPlayingMetronomeNotifier(),
+    );
+    (container.read(metronomeNotifierProvider.notifier)
+            as _AlreadyPlayingMetronomeNotifier)
+        .reportTick(80);
+    await tester.pump();
+    Color? colorOf(String digit) =>
+        tester.widget<Text>(find.text(digit)).style?.color;
+    expect(colorOf('4'), PracticeColors.accent);
+    expect(colorOf('1'), PracticeColors.textFaint);
+    container.dispose();
   });
 
   testWidgets('running: Stop with the remaining time; paused: Resume + Finish',
@@ -298,6 +327,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Duration is set once the session runs'), findsOneWidget);
     expect(find.text('10 min'), findsNothing);
+    container.dispose();
+  });
+
+  testWidgets('auto-finish closes an open options sheet first',
+      (tester) async {
+    final container =
+        await _pumpScreen(tester, screen: _screen(targetMinutes: 1));
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+    expect(find.text('Options'), findsOneWidget);
+
+    // The goal expires while the sheet is open: the rating must not stack on
+    // top of it, or the final pop leaves the user on a dead practice screen.
+    await tester.pump(const Duration(seconds: 61));
+    await tester.pumpAndSettle();
+    expect(find.text('Options'), findsNothing);
+    expect(find.text('How did it feel?'), findsOneWidget);
     container.dispose();
   });
 }
