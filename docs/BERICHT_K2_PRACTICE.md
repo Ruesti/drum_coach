@@ -107,6 +107,22 @@ geprüft, dass `com.example.drum_coach` im Vordergrund ist.
   `practice-emulator.html`.
 - **Offen vom Auftraggeber:** ein besserer App-Name als „DrumCoach".
 
+### Zweiter Nachtrag, 27.09. abends
+
+- **Willkommen als Vollbild:** das Loft-Foto füllt den Screen, Willkommen,
+  Ziel-Auswahl und Erinnerung liegen auf einem dunklen Verlauf darauf.
+- **Foto hinter dem Übungsscreen:** gedimmt wie eine Bühne. Aus Today läuft
+  das Bild der Phase weiter (`?phase=`), beim freien Üben nach Stufe.
+- **Pulsbalken:** Marker läuft weich durch die Schleife, Viertel-Striche,
+  je Anschlag ein Puls in drei Größen für Akzent, normal und Ghost. Der
+  Screen baut weiter nur je Anschlag neu, nur der Balken malt pro Frame.
+- Tests: Pulsbalken (Takt-Rechnung, Puls-Stufen, Blitz und Ausblenden),
+  Willkommen (Bild füllt den Screen), Route mit Phase, Hintergrund nach Phase
+  und Stufe. Suite 313 Tests grün.
+- Test-Lehre: bei laufender Übung nie `pumpAndSettle` — der Ticker des
+  Balkens plant immer weiter Frames, die Test-Uhr läuft dann bis zum
+  Zeitablauf der Übung vor.
+
 ## Offen
 
 - Feinschritte ±1 nur über den Dialog; falls das am Pad stört: Langdruck.

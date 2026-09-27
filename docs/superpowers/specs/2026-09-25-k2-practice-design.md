@@ -85,6 +85,28 @@ Platz geht ans Notenblatt. Stattdessen:
 - Kein Akzent auf der Eins (bewusst): Muster kürzer als ein Takt würden den
   Akzent an die falsche Stelle setzen; ein gleichmäßiger Puls ist ehrlich.
 
+**Nachtrag 27.09. abends (Auftraggeber): „Mitlaufender Balken mit Puls, ob
+leise oder laut."** Der Puls bekommt doch ein Bild, aber keine Zahlen: der
+**Pulsbalken** (`PulseBar`, `lib/features/practice/widgets/pulse_bar.dart`)
+unter dem Notenblatt. Ein Marker läuft durch die Übungsschleife, gerechnet
+aus dem letzten gemeldeten Anschlag (globaler Tick, Zeitstempel
+`lastBeatPlannedAt`) und der Tickdauer `60000 / bpm / ticksPerQuarter`, per
+Ticker weich zwischen den Noten (`progressAt`). Striche markieren die
+Viertel. Jeder Anschlag blitzt am Marker einen Puls auf, dessen Größe die
+Lautstärke der Note zeigt (`pulseLevel`: Akzent 1,0, normal 0,6, Ghost 0,3,
+Pause nichts), Ausblenden über 300 ms. Nur das Widget malt pro Frame; der
+Screen selbst baut weiter nur je Anschlag neu (Select auf Tick und
+Zeitstempel).
+
+**Nachtrag 27.09. abends: Bilder.** Willkommen wird Vollbild (Loft-Foto,
+dunkler Verlauf, Text und Formular darauf). Der Übungsscreen bekommt ein
+gedimmtes Foto hinter dem ganzen Screen wie eine Bühne (Auftraggeber wählte
+das gegenüber einem Banner): Today gibt die Phase über `?phase=` mit, das
+Bild ist dasselbe wie sein Banner; beim freien Üben richtet es sich nach der
+Stufe der Übung (Beginner → Phase 1 … Professional → Phase 4). Dunkler
+Verlauf 72 % oben bis 96 % unten, damit Blatt, Tempo und Knöpfe aus 60 cm
+lesbar bleiben.
+
 Der ursprüngliche Abschnitt bleibt als Historie stehen:
 
 ### 2.3 (alt) Zählwerk

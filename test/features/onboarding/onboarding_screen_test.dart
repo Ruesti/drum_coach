@@ -22,10 +22,10 @@ void main() {
     view.resetDevicePixelRatio();
   });
 
-  testWidgets('welcome opens with a big drummer photo, not the emoji drum',
+  testWidgets('welcome is a full-screen drummer photo with the form on top',
       (tester) async {
-    // Decided 27.09.: the small comic drum looked generated; a real-looking
-    // drummer photo from the Today set opens the app instead.
+    // Decided 27.09.: the emoji drum looked generated → a photo; then "full
+    // screen": the photo fills the whole screen, text and form lie on it.
     await tester.pumpWidget(
         MaterialApp(home: OnboardingScreen(onComplete: () {})));
     await tester.pump();
@@ -33,6 +33,10 @@ void main() {
     final image = tester.widget<Image>(find.byType(Image));
     expect((image.image as AssetImage).assetName,
         'assets/illustrations/today/done.jpg');
+    // Fills the screen (360×780 dp).
+    final rect = tester.getRect(find.byType(Image));
+    expect(rect.width, 360);
+    expect(rect.height, 780);
     expect(find.text('Welcome to DrumCoach'), findsOneWidget);
     expect(find.text("Let's go!"), findsOneWidget);
     expect(tester.takeException(), isNull);

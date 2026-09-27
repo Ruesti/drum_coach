@@ -3,6 +3,7 @@ import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
+import 'package:drum_coach/features/practice/widgets/pulse_bar.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +55,7 @@ PracticeSessionScreen _screen({
   int? targetMinutes,
   bool isLadder = false,
   String? contextLine,
+  int? phase,
 }) =>
     PracticeSessionScreen(
       rudimentId: rudimentsSeedData.first.id,
@@ -62,7 +64,13 @@ PracticeSessionScreen _screen({
       targetMinutes: targetMinutes,
       isLadder: isLadder,
       contextLine: contextLine,
+      phase: phase,
     );
+
+String _backdropOf(WidgetTester tester) => (tester
+        .widget<Image>(find.byType(Image).first)
+        .image as AssetImage)
+    .assetName;
 
 void main() {
   setUp(() async {
@@ -127,6 +135,33 @@ void main() {
     expect(
         find.text(rudimentsSeedData.first.difficulty.label), findsOneWidget);
     second.dispose();
+  });
+
+  testWidgets('backdrop photo: the program phase from Today, else by difficulty',
+      (tester) async {
+    // Decided 27.09.: a dimmed photo behind the whole screen, like a stage.
+    final fromToday = await _pumpScreen(tester, screen: _screen(phase: 3));
+    expect(_backdropOf(tester), 'assets/illustrations/today/phase3.jpg');
+    final rect = tester.getRect(find.byType(Image).first);
+    expect(rect.width, 360);
+    expect(rect.height, 780);
+    fromToday.dispose();
+
+    // Free practice: Single Stroke Roll is a beginner exercise → phase 1.
+    final free = await _pumpScreen(tester, screen: _screen());
+    expect(_backdropOf(tester), 'assets/illustrations/today/phase1.jpg');
+    free.dispose();
+  });
+
+  testWidgets('pulse bar sits under the sheet and follows the loop',
+      (tester) async {
+    final container = await _pumpScreen(tester, screen: _screen());
+    expect(find.byType(PulseBar), findsOneWidget);
+    final bar = tester.widget<PulseBar>(find.byType(PulseBar));
+    expect(bar.playing, isFalse);
+    expect(bar.totalTicks, greaterThan(0));
+    expect(bar.ticksPerQuarter, 24);
+    container.dispose();
   });
 
   testWidgets('a short sheet sits centred between header and tempo row, not '
@@ -314,7 +349,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 5));
     await tester.tap(find.byIcon(Icons.more_horiz));
-    await tester.pumpAndSettle();
+    // Fixed pumps, not pumpAndSettle: while playing, the pulse bar's ticker
+    // keeps scheduling frames and pumpAndSettle would run the clock until
+    // the session's goal expires.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
     expect(find.text('Duration is set once the session runs'), findsOneWidget);
     expect(find.text('10 min'), findsNothing);
     container.dispose();
@@ -327,7 +366,9 @@ void main() {
     await tester.tap(find.text('Start'));
     await tester.pump();
     await tester.tap(find.byIcon(Icons.more_horiz));
-    await tester.pumpAndSettle();
+    // Fixed pumps while playing (see the duration-lock test).
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
     expect(find.text('Options'), findsOneWidget);
 
     // The goal expires while the sheet is open: the rating must not stack on

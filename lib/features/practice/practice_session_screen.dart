@@ -25,12 +25,14 @@ import '../coaching/widgets/coach_feedback_card.dart';
 import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
+import '../lessons/models/rudiment.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import '../program/program_provider.dart';
 import 'ladder_plan.dart';
 import 'practice_provider.dart';
 import 'session_timer_provider.dart';
+import 'widgets/pulse_bar.dart';
 import 'widgets/tempo_row.dart';
 
 String _formatDuration(int seconds) {
@@ -59,6 +61,10 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   /// "Day 9 · Step 2 of 3 · 84 BPM". Null shows the exercise's difficulty.
   final String? contextLine;
 
+  /// Program phase 1–4 for the backdrop photo (continues Today's picture).
+  /// Null (free practice) picks it by the exercise's difficulty.
+  final int? phase;
+
   const PracticeSessionScreen({
     super.key,
     required this.rudimentId,
@@ -67,6 +73,7 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
     this.targetMinutes,
     this.isLadder = false,
     this.contextLine,
+    this.phase,
   });
 
   @override
@@ -570,6 +577,17 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
     final bpm = ref.watch(metronomeNotifierProvider.select((s) => s.bpm));
 
+    // Pulse bar input: changes once per onset (the engine only reports
+    // audible ticks), so this select never rebuilds per silent grid tick.
+    final onset = ref.watch(metronomeNotifierProvider.select((s) =>
+        s.isPlaying && s.currentBeatIndex >= 0
+            ? (tick: s.currentBeatIndex, at: s.lastBeatPlannedAt)
+            : null));
+    final onsetTick = onset?.tick ?? -1;
+    final pulseVolume = onsetTick >= 0
+        ? _playback.tickVolumes[onsetTick % _playback.totalTicks]
+        : 0.0;
+
     final paused = !isPlaying && _elapsedSeconds > 0;
     final showLadder = _ladderActive && _ladderPlan != null;
 
@@ -581,7 +599,33 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         data: drumCoachPracticeTheme,
         child: Scaffold(
           backgroundColor: PracticeColors.base,
-          body: SafeArea(
+          // A dimmed photo behind the whole screen, like a stage (decided
+          // 27.09.): Today's phase picture continues here; free practice
+          // picks one by difficulty. The gradient keeps sheet, tempo and
+          // buttons readable from the pad.
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                _backdropAsset(rudiment),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xB8101010),
+                      Color(0xD6101010),
+                      Color(0xF5101010),
+                    ],
+                    stops: [0.0, 0.45, 1.0],
+                  ),
+                ),
+              ),
+              SafeArea(
             child: Column(
               children: [
                 _Header(
@@ -618,10 +662,23 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                     ),
                   ),
                 ),
-                // No digit counter (decided 27.09.): the beat is audible as
-                // the click track instead, switchable in the options sheet.
+                // The pulse bar (decided 27.09., instead of the digit
+                // counter): the marker runs through the loop, each onset
+                // flashes a pulse sized by its volume.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 22, 16, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                  child: PulseBar(
+                    playing: isPlaying,
+                    anchorTick: onsetTick,
+                    anchorAt: onset?.at,
+                    tickDurMs: 60000.0 / bpm / _playback.ticksPerQuarter,
+                    totalTicks: _playback.totalTicks,
+                    ticksPerQuarter: _playback.ticksPerQuarter,
+                    pulseVolume: pulseVolume,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
                   child: Column(
                     children: [
                       if (showLadder) ...[
@@ -669,9 +726,19 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               ],
             ),
           ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  /// Backdrop: the program phase's picture when Today handed one over,
+  /// otherwise the exercise's difficulty (beginner → phase 1 … professional
+  /// → phase 4). Same assets as Today's banner, so no extra bytes.
+  String _backdropAsset(Rudiment rudiment) {
+    final phase = (widget.phase ?? (rudiment.difficulty.index + 1)).clamp(1, 4);
+    return 'assets/illustrations/today/phase$phase.jpg';
   }
 }
 

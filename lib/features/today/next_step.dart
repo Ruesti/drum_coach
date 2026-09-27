@@ -99,8 +99,9 @@ PathStep computeNextStep({
     title: nameOf(block.exerciseKey),
     detail: detail,
     minutes: block.durationMinutes,
-    // The practice header repeats the path position under the exercise name.
-    route: practiceRouteFor(block, ctx: detail),
+    // The practice header repeats the path position under the exercise name;
+    // its backdrop continues the phase picture.
+    route: practiceRouteFor(block, ctx: detail, phase: day.phase.index),
     phase: day.phase.index,
   );
 }

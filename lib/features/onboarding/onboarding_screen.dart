@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
@@ -29,44 +30,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            // A real-looking drummer fills the whole screen (decided 27.09.:
+            // the emoji drum read as generated, then "full screen"). Same
+            // asset as Today's "day done" banner, so no extra bytes.
+            Image.asset(
+              'assets/illustrations/today/done.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+            // Dark from the middle down so text and form read on the photo.
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x00101010),
+                    Color(0x99101010),
+                    Color(0xF2101010),
+                  ],
+                  stops: [0.25, 0.55, 1.0],
+                ),
+              ),
+            ),
+            SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // A real-looking drummer opens the app (decided 27.09.: the
-              // emoji drum read as generated). Same asset as Today's
-              // "day done" banner, so no extra bytes.
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.card),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Image.asset(
-                    'assets/illustrations/today/done.jpg',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Text(
+              const Spacer(),
+              const Text(
                 'Welcome to DrumCoach',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    height: 1.15),
               ),
               const SizedBox(height: AppSpacing.sm),
               const Text(
                 'Train drum rudiments with a smart spaced-repetition system that adapts to your progress.',
                 style: TextStyle(
-                    color: AppColors.textSecondary, fontSize: 15, height: 1.5),
+                    color: Colors.white70, fontSize: 15, height: 1.5),
               ),
-              const Spacer(),
+              const SizedBox(height: AppSpacing.xl),
               const _SectionTitle('Daily practice goal'),
               const SizedBox(height: AppSpacing.md),
               _TargetPicker(
@@ -80,7 +97,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 enabled: _remindersEnabled,
                 onChanged: (v) => setState(() => _remindersEnabled = v),
               ),
-              const Spacer(),
+              const SizedBox(height: AppSpacing.xl),
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -92,6 +109,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const SizedBox(height: AppSpacing.md),
             ],
           ),
+        ),
+            ),
+          ],
         ),
       ),
     );
@@ -108,10 +128,9 @@ class _SectionTitle extends StatelessWidget {
       text,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
+      // On the photo, not on paper — white like the title.
       style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 15,
-          color: AppColors.textSecondary),
+          fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white),
     );
   }
 }

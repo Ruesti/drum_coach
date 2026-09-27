@@ -20,6 +20,18 @@ void main() {
     expect(practiceRouteFor(block), '/practice/single_stroke_roll');
   });
 
+  test('carries the program phase for the practice backdrop', () {
+    const block = ExerciseBlock(
+      type: BlockType.technique,
+      exerciseKey: 'single_paradiddle',
+      startBpm: 84,
+      durationMinutes: 8,
+    );
+    final route = practiceRouteFor(block, ctx: 'Day 9', phase: 2);
+    expect(Uri.parse(route).queryParameters['phase'], '2');
+    expect(Uri.parse(route).queryParameters['ctx'], 'Day 9');
+  });
+
   test('appends the context line url-encoded', () {
     const block = ExerciseBlock(
       type: BlockType.technique,
