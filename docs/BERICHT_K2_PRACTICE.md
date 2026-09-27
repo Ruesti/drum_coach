@@ -97,6 +97,16 @@ geprüft, dass `com.example.drum_coach` im Vordergrund ist.
 | pausiert | ausstehend | |
 | ⋯-Blatt | ausstehend | |
 
+## Nachträge vom 27.09. (Emulator-Test)
+
+- **Willkommens-Screen:** öffnet jetzt mit dem Loft-Bild aus dem Today-Satz
+  (16:9) statt der Emoji-Trommel („sieht KI-generiert aus"). Test dazu.
+- **Look-Prüfung ohne S23:** Android-Emulator „s23" (1080×2340, 420 dpi) auf
+  der GPU-Box, Release-APK dort gebaut, per adb gefahren und geschossen. Die
+  Screenshots liegen unter `~/k2-practice-screens/emu/`, Seite
+  `practice-emulator.html`.
+- **Offen vom Auftraggeber:** ein besserer App-Name als „DrumCoach".
+
 ## Offen
 
 - Feinschritte ±1 nur über den Dialog; falls das am Pad stört: Langdruck.
