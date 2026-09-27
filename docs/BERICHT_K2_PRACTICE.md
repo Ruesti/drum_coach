@@ -16,9 +16,13 @@ hinter „⋯". Der Screen bleibt dunkel.
   „LEARN", nur bei eingeschalteter Mikro-Analyse; ein Tipp wechselt den Modus.
   Info-Knopf, Modus-Symbol und die zwei Uhren der alten Kopfzeile sind weg.
 - **Notenblatt** mit 16 px Rand als Papierkarte, füllt den freien Platz.
-- **Zählwerk** `BeatCounter`: eine große Monozahl je Schlag des Taktes
-  (`rudiment.beatsPerBar`), aktiver Schlag orange mit Strich, im Stand grau.
-  Reine Funktion `beatOfTick` rechnet Tick → Schlag.
+- **Klick-Spur statt Zählwerk** (Auftraggeber 27.09. nach dem Emulator-Test:
+  „Das Zählwerk mag ich nicht, lieber ein mitlaufender Metronom-Klick,
+  wählbar"): ein eigener kurzer, heller Puls auf jedem Viertel als zweite
+  Stimme im gerenderten Loop, neben den Muster-Noten. Schalter „Click track"
+  im „⋯"-Blatt, Standard an, in den Einstellungen gemerkt; im Analyse-Modus
+  immer aus (das Mikro würde ihn als Schläge hören). Das Zählwerk-Widget ist
+  gelöscht, der Platz geht ans Notenblatt.
 - **Steuerung:** Leiter-Chips wie bisher (Label „LADDER"), dann `TempoRow`
   mit Minus, großer BPM-Zahl, Plus. Plus/Minus springen 4 BPM (eine
   Leiterstufe), ein Tipp auf die Zahl öffnet den Eingabe-Dialog. Schieberegler

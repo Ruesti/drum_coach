@@ -31,7 +31,6 @@ import '../program/program_provider.dart';
 import 'ladder_plan.dart';
 import 'practice_provider.dart';
 import 'session_timer_provider.dart';
-import 'widgets/beat_counter.dart';
 import 'widgets/tempo_row.dart';
 
 String _formatDuration(int seconds) {
@@ -145,6 +144,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       final metronome = _metronomeNotifier
         ..setPatternClock(_playback.ticksPerQuarter)
         ..setPatternVolumes(_playback.tickVolumes);
+      _applyClickTrack();
       if (_ladderActive) {
         metronome.setBpm(_ladderPlan!.bpmAt(_elapsedSeconds));
       } else if (widget.targetBpm != null) {
@@ -299,6 +299,11 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     return _formatDuration(remaining ?? _elapsedSeconds);
   }
 
+  /// The pulse follows the setting but never runs in analysis mode: the mic
+  /// would hear it as strokes (decided 27.09.).
+  void _applyClickTrack() => _metronomeNotifier
+      .setClickTrack(SettingsService.clickTrackEnabled && !_analysisMode);
+
   /// Label of the primary button: Stop while playing, Resume once time has
   /// elapsed, Start before the first note.
   String _primaryLabel(bool isPlaying) {
@@ -344,6 +349,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               soundType: soundType,
               onSoundSelected:
                   ref.read(metronomeNotifierProvider.notifier).setSoundType,
+              clickTrack: SettingsService.clickTrackEnabled,
+              analysisMode: _analysisMode,
+              onClickTrack: (on) async {
+                await SettingsService.setClickTrackEnabled(on);
+                _applyClickTrack();
+              },
               onAbout: () {
                 Navigator.of(sheetContext).pop();
                 // A plain Navigator push, not context.push('/library/...') —
@@ -555,17 +566,6 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             ? _playback
                 .noteIndexAtTick(s.currentBeatIndex % _playback.totalTicks)
             : null));
-    // The counter takes the engine's global tick, NOT the loop-wrapped one
-    // the sheet cursor uses: many patterns loop after 2, 3 or 6 beats, and a
-    // count that restarts with the loop leaves digits permanently grey. The
-    // drummer counts 1 2 3 4 in the exercise's meter no matter how long the
-    // figure is (review finding, 26.09.).
-    final barBeat = ref.watch(metronomeNotifierProvider.select((s) =>
-        s.isPlaying && s.currentBeatIndex >= 0
-            ? beatOfTick(s.currentBeatIndex,
-                ticksPerQuarter: _playback.ticksPerQuarter,
-                beatsPerBar: rudiment.beatsPerBar)
-            : null));
     final isPlaying =
         ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
     final bpm = ref.watch(metronomeNotifierProvider.select((s) => s.bpm));
@@ -595,6 +595,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                             setState(() => _analysisMode = !_analysisMode);
                             SettingsService.setAnalysisModeFor(
                                 widget.rudimentId, _analysisMode);
+                            _applyClickTrack();
                           },
                         )
                       : null,
@@ -617,9 +618,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 22),
-                BeatCounter(
-                    beatsPerBar: rudiment.beatsPerBar, activeBeat: barBeat),
+                // No digit counter (decided 27.09.): the beat is audible as
+                // the click track instead, switchable in the options sheet.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 22, 16, 20),
                   child: Column(
@@ -977,6 +977,9 @@ class _OptionsSheet extends StatefulWidget {
     required this.onGoalSelected,
     required this.soundType,
     required this.onSoundSelected,
+    required this.clickTrack,
+    required this.analysisMode,
+    required this.onClickTrack,
     required this.onAbout,
   });
 
@@ -986,6 +989,9 @@ class _OptionsSheet extends StatefulWidget {
   final ValueChanged<int?> onGoalSelected;
   final SoundType soundType;
   final ValueChanged<SoundType> onSoundSelected;
+  final bool clickTrack;
+  final bool analysisMode;
+  final ValueChanged<bool> onClickTrack;
   final VoidCallback onAbout;
 
   @override
@@ -996,11 +1002,15 @@ class _OptionsSheetState extends State<_OptionsSheet> {
   // Local copy so the chips update while the sheet is open — the screen's
   // setState does not rebuild a modal sheet's builder.
   late int? _goal = widget.goalSeconds;
+  late bool _clickTrack = widget.clickTrack;
 
   @override
   Widget build(BuildContext context) {
+    // Scrollable: with the click-track switch the sheet outgrows the 9/16
+    // screen share a bottom sheet gets on a 780 dp phone (and any phone with
+    // a larger system font).
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1038,6 +1048,24 @@ class _OptionsSheetState extends State<_OptionsSheet> {
                   .toList(),
             ),
             const SizedBox(height: 12),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('Click track', style: PracticeTypography.body),
+              subtitle: Text(
+                widget.analysisMode
+                    ? 'Off while analysing — the mic would hear it'
+                    : 'A quarter-note pulse next to the exercise',
+                style: PracticeTypography.body
+                    .copyWith(fontSize: 13, color: PracticeColors.textMuted),
+              ),
+              value: _clickTrack,
+              onChanged: widget.analysisMode
+                  ? null
+                  : (on) {
+                      setState(() => _clickTrack = on);
+                      widget.onClickTrack(on);
+                    },
+            ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.info_outline,

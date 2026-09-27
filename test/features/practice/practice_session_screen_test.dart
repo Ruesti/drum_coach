@@ -1,10 +1,9 @@
-import 'package:drum_coach/app/design_tokens.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
-import 'package:drum_coach/features/practice/widgets/beat_counter.dart';
+import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,12 +20,6 @@ class _AlreadyPlayingMetronomeNotifier extends MetronomeNotifier {
   MetronomeState build() {
     return const MetronomeState(isPlaying: true, currentBeatIndex: 0);
   }
-
-  /// Reports a later global (never wrapping) tick, as the engine does after
-  /// a few bars. Must be called after the screen's first frame: its
-  /// postFrameCallback sets the pattern clock, which resets the index to -1.
-  void reportTick(int globalTick) =>
-      state = state.copyWith(isPlaying: true, currentBeatIndex: globalTick);
 }
 
 /// Idle metronome without engine/SoLoud. start/stop/setBpm of the real
@@ -136,7 +129,7 @@ void main() {
     second.dispose();
   });
 
-  testWidgets('a short sheet sits centred between header and counter, not '
+  testWidgets('a short sheet sits centred between header and tempo row, not '
       'glued to the top', (tester) async {
     // Seen on the emulator: a one-bar exercise left the card at the top with
     // a big hole under it. The design centres the card in its area.
@@ -153,40 +146,11 @@ void main() {
             matching: find.byType(CustomPaint))
         .first);
     final header = tester.getRect(find.text('Six Stroke Roll'));
-    final counter = tester.getRect(find.byType(BeatCounter));
+    final tempo = tester.getRect(find.byType(TempoRow));
     final above = sheet.top - header.bottom;
-    final below = counter.top - sheet.bottom;
+    final below = tempo.top - sheet.bottom;
     expect(below - above, lessThan(40),
         reason: 'gap above $above, gap below $below');
-  });
-
-  testWidgets('counter shows one digit per beat of the bar', (tester) async {
-    await _pumpScreen(tester, screen: _screen());
-    for (var i = 1; i <= rudimentsSeedData.first.beatsPerBar; i++) {
-      expect(find.text('$i'), findsWidgets);
-    }
-  });
-
-  testWidgets('counter follows the running bar count, not the pattern loop',
-      (tester) async {
-    // Six Stroke Roll loops after 3 beats (72 ticks). At global tick 80 a
-    // drummer counting 4/4 is on beat 4; the loop-wrapped tick (8) would say
-    // beat 1 and leave "4" permanently grey.
-    final container = await _pumpScreen(
-      tester,
-      screen: const PracticeSessionScreen(
-          rudimentId: 'six_stroke_roll', isFromRoutine: false),
-      metronome: () => _AlreadyPlayingMetronomeNotifier(),
-    );
-    (container.read(metronomeNotifierProvider.notifier)
-            as _AlreadyPlayingMetronomeNotifier)
-        .reportTick(80);
-    await tester.pump();
-    Color? colorOf(String digit) =>
-        tester.widget<Text>(find.text(digit)).style?.color;
-    expect(colorOf('4'), PracticeColors.accent);
-    expect(colorOf('1'), PracticeColors.textFaint);
-    container.dispose();
   });
 
   testWidgets('running: Stop with the remaining time; paused: Resume + Finish',
@@ -372,6 +336,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Options'), findsNothing);
     expect(find.text('How did it feel?'), findsOneWidget);
+    container.dispose();
+  });
+
+  testWidgets('click track runs by default and is switchable in the options',
+      (tester) async {
+    // Decided 27.09.: no digit counter — a quarter-note pulse next to the
+    // exercise instead, on by default, remembered in the settings.
+    final container = await _pumpScreen(tester, screen: _screen());
+    expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
+
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+    expect(find.text('Click track'), findsOneWidget);
+    await tester.tap(find.byType(Switch));
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).clickTrack, isFalse);
+    expect(SettingsService.clickTrackEnabled, isFalse);
+  });
+
+  testWidgets('analysis mode silences the click track, learn mode restores it',
+      (tester) async {
+    const channel = MethodChannel('flutter.baseflow.com/permissions/methods');
+    tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'requestPermissions') return <int, int>{7: 1};
+      if (call.method == 'checkPermissionStatus') return 1;
+      return null;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null));
+    await SettingsService.setMicAnalysisEnabled(true);
+
+    final container = await _pumpScreen(tester, screen: _screen());
+    expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
+    await tester.tap(find.text('LEARN'));
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).clickTrack, isFalse);
+    // The preference itself is untouched — only the mode mutes the pulse.
+    expect(SettingsService.clickTrackEnabled, isTrue);
+    await tester.tap(find.text('ANALYSIS'));
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
     container.dispose();
   });
 }

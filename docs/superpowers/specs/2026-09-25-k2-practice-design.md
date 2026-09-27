@@ -62,7 +62,32 @@ Was aus der Kopfzeile verschwindet: der Info-Knopf (Erklärung; wandert nach
 16/14/16/0, Innenabstand 16/16/6/16) mit `NotationStaffWidget` wie heute
 (`activeIndex`, `autoScroll: true`). Nichts am Widget ändern.
 
-### 2.3 Zählwerk
+### 2.3 Zählwerk → ersetzt durch die Klick-Spur (Auftraggeber 27.09.)
+
+**Entscheidung 27.09. nach dem Emulator-Test:** „Das Zählwerk mag ich nicht.
+Fände es besser, wenn ein Metronom-Klick mitlaufen würde, natürlich wählbar."
+Das Zählwerk entfällt komplett (Widget, Takt-Rechnung, Tests gelöscht); der
+Platz geht ans Notenblatt. Stattdessen:
+
+- **Klick-Spur:** ein Puls auf jedem Viertel, der neben den Muster-Noten
+  läuft. Im Motor eine zweite Stimme im gerenderten Loop
+  (`buildLoopWav(pulseSamples:, pulseEvery: factor)`), mit eigenem, kurzem,
+  hellem Klang (`MetronomeEngine.pulseSamples()`: 2,6 kHz, 12 ms, leiser als
+  der Übungs-Klick), damit das Ohr Puls und Muster unterscheidet. Nur im
+  Muster-Modus; im reinen Metronom sind die Ticks selbst der Puls.
+- **Wählbar:** Schalter „Click track" im „⋯"-Blatt, gemerkt in
+  `SettingsService.clickTrackEnabled` (Standard an).
+- **Analyse-Modus:** Puls immer aus (Auftraggeber: „An, im Analyse-Modus
+  aus"), weil das Mikro ihn sonst als Schläge hört; der Schalter ist dann
+  deaktiviert mit Hinweis. Die Einstellung selbst bleibt unangetastet.
+- **Messung unberührt:** die Puls-Stimme ist nur Audio; Beat-Log und Alignment
+  kennen weiterhin nur die Muster-Noten (`tickVolumes`).
+- Kein Akzent auf der Eins (bewusst): Muster kürzer als ein Takt würden den
+  Akzent an die falsche Stelle setzen; ein gleichmäßiger Puls ist ehrlich.
+
+Der ursprüngliche Abschnitt bleibt als Historie stehen:
+
+### 2.3 (alt) Zählwerk
 
 Eigenes Widget `BeatCounter` (`lib/features/practice/widgets/beat_counter.dart`):
 - Zeigt die Schläge eines Taktes als Zahlen `1 … beatsPerBar`

@@ -24,6 +24,10 @@ class MetronomeState {
   /// shared time axis (§1.3).
   final DateTime? lastBeatPlannedAt;
 
+  /// Click track next to a pattern (practice screen, K2 step 2): a
+  /// quarter-note pulse. Off until a screen asks for it.
+  final bool clickTrack;
+
   const MetronomeState({
     this.isPlaying = false,
     this.bpm = 100,
@@ -32,6 +36,7 @@ class MetronomeState {
     this.currentBeatIndex = -1,
     this.isAccent = false,
     this.lastBeatPlannedAt,
+    this.clickTrack = false,
   });
 
   MetronomeState copyWith({
@@ -42,6 +47,7 @@ class MetronomeState {
     int? currentBeatIndex,
     bool? isAccent,
     DateTime? lastBeatPlannedAt,
+    bool? clickTrack,
   }) {
     return MetronomeState(
       isPlaying: isPlaying ?? this.isPlaying,
@@ -51,6 +57,7 @@ class MetronomeState {
       currentBeatIndex: currentBeatIndex ?? this.currentBeatIndex,
       isAccent: isAccent ?? this.isAccent,
       lastBeatPlannedAt: lastBeatPlannedAt ?? this.lastBeatPlannedAt,
+      clickTrack: clickTrack ?? this.clickTrack,
     );
   }
 }
@@ -131,6 +138,13 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   void setSoundType(SoundType soundType) {
     _engine?.setSoundType(soundType);
     state = state.copyWith(soundType: soundType);
+  }
+
+  /// Click track next to a pattern; the engine ignores it in plain
+  /// metronome mode.
+  void setClickTrack(bool on) {
+    _engine?.setPulse(on);
+    state = state.copyWith(clickTrack: on);
   }
 
   void setPatternVolumes(List<double>? volumes) {
