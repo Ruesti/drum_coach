@@ -4,6 +4,8 @@ import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
+import 'package:drum_coach/features/practice/widgets/beat_counter.dart';
+import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -132,6 +134,30 @@ void main() {
     expect(
         find.text(rudimentsSeedData.first.difficulty.label), findsOneWidget);
     second.dispose();
+  });
+
+  testWidgets('a short sheet sits centred between header and counter, not '
+      'glued to the top', (tester) async {
+    // Seen on the emulator: a one-bar exercise left the card at the top with
+    // a big hole under it. The design centres the card in its area.
+    // Six Stroke Roll is a single short row, so the card cannot fill the area.
+    await _pumpScreen(
+        tester,
+        screen: const PracticeSessionScreen(
+            rudimentId: 'six_stroke_roll', isFromRoutine: false));
+    // The widget's scroll view fills the area; the painted card inside it is
+    // what the eye sees.
+    final sheet = tester.getRect(find
+        .descendant(
+            of: find.byType(NotationStaffWidget),
+            matching: find.byType(CustomPaint))
+        .first);
+    final header = tester.getRect(find.text('Six Stroke Roll'));
+    final counter = tester.getRect(find.byType(BeatCounter));
+    final above = sheet.top - header.bottom;
+    final below = counter.top - sheet.bottom;
+    expect(below - above, lessThan(40),
+        reason: 'gap above $above, gap below $below');
   });
 
   testWidgets('counter shows one digit per beat of the bar', (tester) async {

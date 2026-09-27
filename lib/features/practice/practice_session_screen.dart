@@ -602,13 +602,18 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 // The sheet draws its own paper card; only the margins are
                 // ours. 16 px at the sides costs a little note spacing versus
                 // the old 4 px, in exchange for the card reading as a card.
+                // Center: a short exercise (one row) must not leave the card
+                // glued to the top with a hole under it — the scroll view
+                // shrinks to the card here and still scrolls long sheets.
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                    child: NotationStaffWidget(
-                      rudiment: rudiment,
-                      activeIndex: activeBeat,
-                      autoScroll: true,
+                    child: Center(
+                      child: NotationStaffWidget(
+                        rudiment: rudiment,
+                        activeIndex: activeBeat,
+                        autoScroll: true,
+                      ),
                     ),
                   ),
                 ),
