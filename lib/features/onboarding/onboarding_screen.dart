@@ -42,7 +42,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Image.asset(
               'assets/illustrations/today/done.jpg',
               fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+              // The 16:9 photo is cropped to portrait: keep the drummer (in
+              // the right third of the picture) in view, not the window.
+              alignment: const Alignment(0.45, 0),
               errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
             // Dark from the middle down so text and form read on the photo.

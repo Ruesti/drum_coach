@@ -616,12 +616,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
+                    // 55 % at the top so the photo still reads, 94 % at the
+                    // bottom where the controls sit.
                     colors: [
-                      Color(0xB8101010),
-                      Color(0xD6101010),
-                      Color(0xF5101010),
+                      Color(0x8C101010),
+                      Color(0xC7101010),
+                      Color(0xF0101010),
                     ],
-                    stops: [0.0, 0.45, 1.0],
+                    stops: [0.0, 0.5, 1.0],
                   ),
                 ),
               ),
