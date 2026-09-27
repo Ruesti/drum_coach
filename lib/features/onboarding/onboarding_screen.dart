@@ -36,9 +36,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Spacer(),
-              const Text('🥁', style: TextStyle(fontSize: 64)),
-              const SizedBox(height: AppSpacing.lg),
+              // A real-looking drummer opens the app (decided 27.09.: the
+              // emoji drum read as generated). Same asset as Today's
+              // "day done" banner, so no extra bytes.
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.asset(
+                    'assets/illustrations/today/done.jpg',
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
               Text(
                 'Welcome to DrumCoach',
                 maxLines: 2,
