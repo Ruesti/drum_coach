@@ -57,6 +57,13 @@ class SettingsService {
   static Future<void> setMicAnalysisEnabled(bool v) =>
       _prefs.setBool('mic_analysis_enabled', v);
 
+  /// Click track on the practice screen (K2 step 2, 27.09.): a quarter-note
+  /// pulse next to the exercise. Default on; analysis mode mutes it anyway.
+  static bool get clickTrackEnabled =>
+      _prefs.getBool('click_track_enabled') ?? true;
+  static Future<void> setClickTrackEnabled(bool v) =>
+      _prefs.setBool('click_track_enabled', v);
+
   /// Loopback-calibrated output+input latency (§1.3). `null` = never
   /// calibrated; onsets are then compared uncorrected.
   static double? get latencyOffsetMs => _prefs.getDouble('latency_offset_ms');

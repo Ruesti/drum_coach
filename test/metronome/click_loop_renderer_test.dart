@@ -19,6 +19,56 @@ double _rmsAt(Int16List pcm, int startSample, int windowSamples) {
 }
 
 void main() {
+  group('pulse voice (click track next to the exercise)', () {
+    // 120 BPM, factor 2 → tick = 0.25 s; quarters fall on ticks 0 and 2.
+    const tickSamples = _sr ~/ 4;
+    final win = _sr ~/ 100;
+
+    test('adds a click on every quarter tick next to a silent pattern', () {
+      final wav = buildLoopWav(
+        bpm: 120,
+        factor: 2,
+        tickVolumes: const [0.0, 0.0, 0.0, 0.0],
+        accentSamples:
+            MetronomeEngine.synthSamples(SoundType.click, accent: true),
+        normalSamples:
+            MetronomeEngine.synthSamples(SoundType.click, accent: false),
+        pulseSamples: MetronomeEngine.pulseSamples(),
+        pulseEvery: 2,
+      );
+      final pcm = _pcm(wav);
+      expect(_rmsAt(pcm, 0, win), greaterThan(1e-6));
+      expect(_rmsAt(pcm, 2 * tickSamples, win), greaterThan(1e-6));
+      expect(_rmsAt(pcm, tickSamples, win), lessThan(1e-9));
+      expect(_rmsAt(pcm, 3 * tickSamples, win), lessThan(1e-9));
+    });
+
+    test('without pulse samples the silent pattern stays silent', () {
+      final wav = buildLoopWav(
+        bpm: 120,
+        factor: 2,
+        tickVolumes: const [0.0, 0.0, 0.0, 0.0],
+        accentSamples:
+            MetronomeEngine.synthSamples(SoundType.click, accent: true),
+        normalSamples:
+            MetronomeEngine.synthSamples(SoundType.click, accent: false),
+        pulseEvery: 2,
+      );
+      final pcm = _pcm(wav);
+      for (var t = 0; t < 4; t++) {
+        expect(_rmsAt(pcm, t * tickSamples, win), lessThan(1e-9));
+      }
+    });
+
+    test('the pulse is a shorter, quieter sound than the exercise click', () {
+      final pulse = MetronomeEngine.pulseSamples();
+      final click = MetronomeEngine.synthSamples(SoundType.click, accent: false);
+      expect(pulse.length, lessThan(click.length));
+      final peak = pulse.map((s) => s.abs()).reduce((a, b) => a > b ? a : b);
+      expect(peak, lessThan(0.55));
+    });
+  });
+
   group('buildLoopWav', () {
     test('loop length is exactly ticks × tick duration', () {
       // 120 BPM quarters, 4 ticks → 4 × 0.5 s = 2 s.

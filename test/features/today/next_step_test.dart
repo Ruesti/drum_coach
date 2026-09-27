@@ -58,7 +58,11 @@ void main() {
     expect(step.title, 'Single Paradiddle');
     expect(step.detail, 'Day 9 · Step 2 of 3 · 84 BPM');
     expect(step.minutes, 8);
-    expect(step.route, '/practice/single_paradiddle?bpm=84&min=8');
+    expect(step.route,
+        startsWith('/practice/single_paradiddle?bpm=84&min=8&ctx='));
+    expect(Uri.parse(step.route!).queryParameters['ctx'], step.detail);
+    // The practice backdrop continues Today's phase picture.
+    expect(Uri.parse(step.route!).queryParameters['phase'], '1');
     expect(step.phase, 1);
   });
 

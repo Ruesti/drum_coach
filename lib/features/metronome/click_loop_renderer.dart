@@ -41,12 +41,18 @@ int advanceGlobalTick({
   return candidate;
 }
 
+/// [pulseSamples], when given, is a second voice: a plain pulse on every
+/// [pulseEvery]-th grid tick (the quarter notes), mixed under the exercise so
+/// the player hears the beat even where the pattern has no note (the click
+/// track, K2 step 2).
 Uint8List buildLoopWav({
   required int bpm,
   required int factor,
   required List<double> tickVolumes,
   required List<double> accentSamples,
   required List<double> normalSamples,
+  List<double>? pulseSamples,
+  int pulseEvery = 1,
   int sampleRate = 44100,
 }) {
   final tickDurSec = 60.0 / bpm / factor;
@@ -61,6 +67,15 @@ Uint8List buildLoopWav({
     final start = (t * tickDurSec * sampleRate).round();
     for (var i = 0; i < src.length; i++) {
       mix[(start + i) % totalSamples] += src[i] * vol;
+    }
+  }
+
+  if (pulseSamples != null && pulseEvery > 0) {
+    for (var t = 0; t < ticks; t += pulseEvery) {
+      final start = (t * tickDurSec * sampleRate).round();
+      for (var i = 0; i < pulseSamples.length; i++) {
+        mix[(start + i) % totalSamples] += pulseSamples[i];
+      }
     }
   }
 

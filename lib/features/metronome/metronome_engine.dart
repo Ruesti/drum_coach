@@ -190,6 +190,10 @@ class MetronomeEngine {
       normalSamples: synthetic
           ? synthSamples(fallbackSound, accent: false)
           : _snarePcm,
+      pulseSamples: _pulse && _beatVolumes != null && _beatVolumes!.isNotEmpty
+          ? pulseSamples()
+          : null,
+      pulseEvery: _factor,
     );
     // Timeout-guarded: on a dead audio engine loadMem never answers — this
     // path must FAIL fast so the start supervisor can revive the engine,
@@ -525,6 +529,15 @@ class MetronomeEngine {
     _scheduleLoopRebuild();
   }
 
+  /// Click track (K2 step 2, 27.09.): a quarter-note pulse mixed under a
+  /// pattern. Ignored in plain metronome mode, where the ticks are the pulse.
+  bool _pulse = false;
+  void setPulse(bool on) {
+    if (_pulse == on) return;
+    _pulse = on;
+    _scheduleLoopRebuild();
+  }
+
   @visibleForTesting
   int get debugBpm => _bpm;
   @visibleForTesting
@@ -579,6 +592,19 @@ class MetronomeEngine {
         // [_snarePcm] for the loop renderer.
         throw ArgumentError('snare is sample-based; use the decoded PCM');
     }
+  }
+
+  /// The click track's own voice: a short, high, dry tick — clearly apart
+  /// from the exercise sounds (click 800/1200 Hz · 30 ms, rim, snare), so the
+  /// ear can tell the pulse from the pattern.
+  static List<double> pulseSamples({int sampleRate = 44100}) {
+    final n = (sampleRate * 0.012).round();
+    return [
+      for (var i = 0; i < n; i++)
+        0.45 *
+            math.exp(-350.0 * (i / sampleRate)) *
+            math.sin(2 * math.pi * 2600.0 * (i / sampleRate)),
+    ];
   }
 
   static double _rimSample(double t, double amplitude) {
