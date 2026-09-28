@@ -169,6 +169,15 @@ Blatts ein; unnötiger Neustart bei Pegeländerung ohne Stil.
   `backing-emulator.html` daneben.
 - Klang: Hör-Seite des Klang-Gates (oben).
 
+## Vorgabe für den Katalog (Uli 28.09., 18:55)
+
+„Die Übungen, wenn sie nicht reines Rudiment sind, gerne etwas länger und
+abwechslungsreicher." Anlass: die Zwei-Takt-Étüde „Moving Cadence" im
+Emulator. Ist-Stand (gemessen): 41 Rudiments meist ein Takt (laufen als
+Schleife); 86 Étüden: 32 × 2 Takte, 30 × 4, 20 × 8, 4 × 9–12. Beim
+Komponieren der 8 Fill-Stickings und 6 Stücke (Brief §3) beachten; die
+alten Zwei-Takt-Étüden werden mit dem neuen Katalog ersetzt (Brief §7.4).
+
 ## Offen
 
 - Gerätetest am S23 mit Kabel-Kopfhörern: Stil wählen, Tempo ändern (Loop
