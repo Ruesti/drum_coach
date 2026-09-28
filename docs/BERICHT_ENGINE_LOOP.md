@@ -53,7 +53,11 @@ eigene Lautstärke.
   (ab 140 BPM Rock 8ths, die Band geht auf Achtel) → sonst Rock 8ths. Bei
   jeder Tempoänderung neu ausgewertet.
 - **Hintergrundbild heller** (Uli: „kaum zu erkennen"): Schleier über dem
-  Übungs-Foto von 55/78/94 % auf 30/60/88 % zurückgenommen.
+  Übungs-Foto von 55/78/94 % auf 30/60/88 % zurückgenommen. Uli 16:19:
+  Helligkeit passt, aber das Notenblatt verdeckt das Foto → das Blatt ist
+  vor dem Start (Tempo und Optionen einstellen) zu 60 % durchsichtig und
+  wird mit dem Start deckend (weicher Übergang 350 ms); pausiert bleibt es
+  deckend.
 - **Kopfhörer-Regel:** Das Mikro würde Band und Klick-Spur mithören. Die
   **Band läuft nur mit Kopfhörern, sobald das Mikro überhaupt mithört**
   (Mikro-Analyse eingeschaltet, in beiden Modi); mit Mikro aus (Standard)

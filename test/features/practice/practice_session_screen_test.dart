@@ -711,4 +711,26 @@ void main() {
     expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
     container.dispose();
   });
+
+  testWidgets(
+      'the notation sheet is translucent while configuring and opaque once '
+      'the session has started', (tester) async {
+    // Uli 28.09.: the sheet hid the backdrop photo — see through it while
+    // setting tempo and options, solid once you play.
+    await _pumpScreen(tester, screen: _screen());
+    AnimatedOpacity sheet() => tester.widget<AnimatedOpacity>(find
+        .ancestor(
+            of: find.byType(NotationStaffWidget),
+            matching: find.byType(AnimatedOpacity))
+        .first);
+    expect(sheet().opacity, 0.6);
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    expect(sheet().opacity, 1.0);
+    // Paused after a stop: the session has started, the sheet stays solid.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    expect(sheet().opacity, 1.0);
+  });
 }

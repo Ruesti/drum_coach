@@ -831,14 +831,22 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 // Center: a short exercise (one row) must not leave the card
                 // glued to the top with a hole under it — the scroll view
                 // shrinks to the card here and still scrolls long sheets.
+                // Translucent while configuring so the backdrop photo reads
+                // (Uli 28.09.: the sheet hid it), solid once the session has
+                // started and the notes are what matters.
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                     child: Center(
-                      child: NotationStaffWidget(
-                        rudiment: rudiment,
-                        activeIndex: activeBeat,
-                        autoScroll: true,
+                      child: AnimatedOpacity(
+                        opacity: isPlaying || _elapsedSeconds > 0 ? 1.0 : 0.6,
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.easeOut,
+                        child: NotationStaffWidget(
+                          rudiment: rudiment,
+                          activeIndex: activeBeat,
+                          autoScroll: true,
+                        ),
                       ),
                     ),
                   ),
