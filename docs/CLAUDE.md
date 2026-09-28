@@ -230,8 +230,10 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
   entry), one primary button Start/Stop/Resume with the time, Finish on its
   own row while paused, options (duration, sound, backing on/off + level —
   the style is automatic, `autoBackingStyle`, click track, about) behind
-  "⋯". Backdrop photo dimmed 30/60/88 % top→bottom; the notation sheet is
-  60 % translucent until the session starts, then solid (`AnimatedOpacity`).
+  "⋯". Backdrop photo: random from `practiceBackdrops` (`backdrop.dart`) on
+  every open, never the previous one; scrim 15/40/85 % while configuring,
+  30/60/88 % once started; the notation sheet is 60 % translucent until the
+  session starts, then solid (`AnimatedOpacity`).
 - Result (K2 step 3): one light `ResultSheet` after the session — verdict
   banner, rating chips (save on tap, once), three plain-language `coreValues`
   (hits, timing, hands/evenness), details folded, Done. Ladder dialog and

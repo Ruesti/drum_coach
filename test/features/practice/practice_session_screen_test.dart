@@ -6,6 +6,7 @@ import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/metronome/backing_styles.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
+import 'package:drum_coach/features/practice/backdrop.dart';
 import 'package:drum_coach/features/practice/practice_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:drum_coach/features/practice/widgets/pulse_bar.dart';
@@ -192,20 +193,32 @@ void main() {
     second.dispose();
   });
 
-  testWidgets('backdrop photo: the program phase from Today, else by difficulty',
+  testWidgets('backdrop photo: a random one from the practice pool, full screen',
       (tester) async {
     // Decided 27.09.: a dimmed photo behind the whole screen, like a stage.
+    // 28.09. (Uli): random from a big pool instead of the program phase.
     final fromToday = await _pumpScreen(tester, screen: _screen(phase: 3));
-    expect(_backdropOf(tester), 'assets/illustrations/today/phase3.jpg');
+    expect(practiceBackdrops, contains(_backdropOf(tester)));
     final rect = tester.getRect(find.byType(Image).first);
     expect(rect.width, 360);
     expect(rect.height, 780);
     fromToday.dispose();
+  });
 
-    // Free practice: Single Stroke Roll is a beginner exercise → phase 1.
-    final free = await _pumpScreen(tester, screen: _screen());
-    expect(_backdropOf(tester), 'assets/illustrations/today/phase1.jpg');
-    free.dispose();
+  testWidgets('the scrim over the photo is lighter while configuring and '
+      'darkens with the start', (tester) async {
+    // Uli 28.09.: "das Bild könnte noch ein bisschen heller bei
+    // durchsichtigen Noten" — 15/40/85 % before the start, 30/60/88 % after.
+    await _pumpScreen(tester, screen: _screen());
+    LinearGradient scrim() => (tester
+            .widget<AnimatedContainer>(
+                find.byKey(const ValueKey('backdrop-scrim')))
+            .decoration as BoxDecoration)
+        .gradient as LinearGradient;
+    expect(scrim().colors.map((c) => c.alpha).toList(), [0x26, 0x66, 0xD9]);
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    expect(scrim().colors.map((c) => c.alpha).toList(), [0x4D, 0x99, 0xE0]);
   });
 
   testWidgets('pulse bar sits under the sheet and follows the loop',

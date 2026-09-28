@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +20,7 @@ import '../../data/local/session_log_service.dart';
 import '../coaching/models/session_analysis.dart';
 import 'analysis_announcement.dart';
 import 'auto_backing.dart';
+import 'backdrop.dart';
 import '../coaching/services/recording_setup.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
@@ -63,7 +65,8 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   /// "Day 9 · Step 2 of 3 · 84 BPM". Null shows the exercise's difficulty.
   final String? contextLine;
 
-  /// Program phase 1–4 for the backdrop photo (continues Today's picture).
+  /// Program phase 1–4 handed over by Today. Since 28.09. the backdrop photo
+  /// is random (`backdrop.dart`), so this only travels with the route.
   /// Null (free practice) picks it by the exercise's difficulty.
   final int? phase;
 
@@ -155,6 +158,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   @override
   void initState() {
     super.initState();
+    // Draw this screen's photo now and remember it, so the next exercise
+    // gets a different one.
+    _lastBackdrop = _backdrop;
     WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
@@ -785,24 +791,34 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             fit: StackFit.expand,
             children: [
               Image.asset(
-                _backdropAsset(rudiment),
+                _backdrop,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
-              const DecoratedBox(
+              AnimatedContainer(
+                key: const ValueKey('backdrop-scrim'),
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOut,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    // 30 % at the top so the photo really reads (28.09.:
-                    // "kaum zu erkennen" at 55 %), 88 % at the bottom where
-                    // the controls sit.
-                    colors: [
-                      Color(0x4D101010),
-                      Color(0x99101010),
-                      Color(0xE0101010),
-                    ],
-                    stops: [0.0, 0.5, 1.0],
+                    // Lighter while configuring — the sheet is translucent
+                    // then and the photo should read (Uli 28.09.) — darker
+                    // once the session runs; the bottom stays dark for the
+                    // controls either way.
+                    colors: isPlaying || _elapsedSeconds > 0
+                        ? const [
+                            Color(0x4D101010),
+                            Color(0x99101010),
+                            Color(0xE0101010),
+                          ]
+                        : const [
+                            Color(0x26101010),
+                            Color(0x66101010),
+                            Color(0xD9101010),
+                          ],
+                    stops: const [0.0, 0.5, 1.0],
                   ),
                 ),
               ),
@@ -922,13 +938,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     );
   }
 
-  /// Backdrop: the program phase's picture when Today handed one over,
-  /// otherwise the exercise's difficulty (beginner → phase 1 … professional
-  /// → phase 4). Same assets as Today's banner, so no extra bytes.
-  String _backdropAsset(Rudiment rudiment) {
-    final phase = (widget.phase ?? (rudiment.difficulty.index + 1)).clamp(1, 4);
-    return 'assets/illustrations/today/phase$phase.jpg';
-  }
+  /// Backdrop: a random photo from the practice pool each time the screen
+  /// opens (28.09., Uli), never the one shown last time. The program phase
+  /// from Today no longer picks it.
+  static String? _lastBackdrop;
+  late final String _backdrop =
+      pickBackdrop(Random(), avoid: _lastBackdrop);
 }
 
 // ── Ladder step row ────────────────────────────────────────────────────────────

@@ -57,7 +57,17 @@ eigene Lautstärke.
   Helligkeit passt, aber das Notenblatt verdeckt das Foto → das Blatt ist
   vor dem Start (Tempo und Optionen einstellen) zu 60 % durchsichtig und
   wird mit dem Start deckend (weicher Übergang 350 ms); pausiert bleibt es
-  deckend.
+  deckend. Uli 16:55: bei durchsichtigem Blatt noch heller → vor dem Start
+  liegt nur 15/40/85 % Schleier über dem Foto, mit dem Start blendet er auf
+  30/60/88 % (gleichzeitig mit dem Blatt).
+- **Zufallsfoto je Übung** (Uli 16:55: „Bild per Zufallsgenerator in jeder
+  Übung? … ca. 30 Fotos"): `backdrop.dart` zieht bei jedem Öffnen ein Foto
+  aus dem Vorrat `practiceBackdrops`, nie zweimal hintereinander dasselbe;
+  die Programm-Phase von Today bestimmt das Bild nicht mehr. Der Vorrat wird
+  aus 36 neu gerenderten Hochformat-Kandidaten (gleiches Rezept wie der
+  Today-Satz, 768×1344, 18 Motive × 2 Seeds, Skript
+  `render_practice36.py`) nach Ulis Auswahl gefüllt; bis dahin die sieben
+  Today-Fotos.
 - **Kopfhörer-Regel:** Das Mikro würde Band und Klick-Spur mithören. Die
   **Band läuft nur mit Kopfhörern, sobald das Mikro überhaupt mithört**
   (Mikro-Analyse eingeschaltet, in beiden Modi); mit Mikro aus (Standard)
