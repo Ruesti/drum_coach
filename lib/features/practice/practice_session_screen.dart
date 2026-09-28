@@ -27,7 +27,6 @@ import '../coaching/services/mic_analysis_service.dart';
 import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
-import '../lessons/models/rudiment.dart';
 import '../metronome/backing_styles.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';

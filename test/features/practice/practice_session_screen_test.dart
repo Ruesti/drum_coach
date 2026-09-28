@@ -215,10 +215,12 @@ void main() {
                 find.byKey(const ValueKey('backdrop-scrim')))
             .decoration as BoxDecoration)
         .gradient as LinearGradient;
-    expect(scrim().colors.map((c) => c.alpha).toList(), [0x26, 0x66, 0xD9]);
+    List<int> alphas() =>
+        scrim().colors.map((c) => (c.a * 255).round()).toList();
+    expect(alphas(), [0x26, 0x66, 0xD9]);
     await tester.tap(find.text('Start'));
     await tester.pump();
-    expect(scrim().colors.map((c) => c.alpha).toList(), [0x4D, 0x99, 0xE0]);
+    expect(alphas(), [0x4D, 0x99, 0xE0]);
   });
 
   testWidgets('pulse bar sits under the sheet and follows the loop',
