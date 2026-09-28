@@ -183,6 +183,12 @@ void main() {
     final first = await _pumpScreen(tester,
         screen: _screen(contextLine: 'Day 9 · Step 2 of 3 · 84 BPM'));
     expect(find.text('Day 9 · Step 2 of 3 · 84 BPM'), findsOneWidget);
+    // Uli 28.09.: a light shadow so the header reads on bright photos.
+    final line =
+        tester.widget<Text>(find.text('Day 9 · Step 2 of 3 · 84 BPM'));
+    expect(line.style?.shadows, isNotEmpty);
+    final name = tester.widget<Text>(find.text(rudimentsSeedData.first.name));
+    expect(name.style?.shadows, isNotEmpty);
     // Close the first container before the second screen: its session
     // timer must not survive into the pending-timers check.
     first.dispose();

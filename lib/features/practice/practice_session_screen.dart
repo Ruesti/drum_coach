@@ -1030,6 +1030,12 @@ class _TimerGoalRow extends StatelessWidget {
 
 // ── Header ────────────────────────────────────────────────────────────────────
 
+/// Light shadow behind the header texts so they read on bright backdrop
+/// photos too (Uli 28.09.: "bitte leichter Schatten").
+const _headerShadow = [
+  Shadow(color: Color(0x99000000), blurRadius: 6, offset: Offset(0, 1)),
+];
+
 class _Header extends StatelessWidget {
   const _Header({required this.title, required this.subtitle, this.modeChip});
 
@@ -1058,13 +1064,16 @@ class _Header extends StatelessWidget {
                 Text(title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: PracticeTypography.subtitle),
+                    style: PracticeTypography.subtitle
+                        .copyWith(shadows: _headerShadow)),
                 const SizedBox(height: 2),
                 Text(subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: PracticeTypography.body.copyWith(
-                        fontSize: 13, color: PracticeColors.textMuted)),
+                        fontSize: 13,
+                        color: PracticeColors.textMuted,
+                        shadows: _headerShadow)),
               ],
             ),
           ),
