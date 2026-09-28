@@ -5,7 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('the practice photo pool is large and lists real asset paths', () {
-    expect(practiceBackdrops.length, greaterThanOrEqualTo(7));
+    // Uli 28.09.: "ca. 30 Fotos" — the pool is the practice set, not Today's.
+    expect(practiceBackdrops.length, greaterThanOrEqualTo(30));
+    expect(
+        practiceBackdrops
+            .every((p) => p.startsWith('assets/illustrations/practice/')),
+        isTrue);
     expect(practiceBackdrops.toSet().length, practiceBackdrops.length);
     expect(
         practiceBackdrops

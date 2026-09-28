@@ -47,6 +47,7 @@ flutter:
     # fetches at runtime and tests run offline; see assets/google_fonts/OFL_*.txt.
     - assets/google_fonts/
     - assets/illustrations/today/
+    - assets/illustrations/practice/
   fonts:
     - family: Bravura
       fonts:

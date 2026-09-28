@@ -63,11 +63,12 @@ eigene Lautstärke.
 - **Zufallsfoto je Übung** (Uli 16:55: „Bild per Zufallsgenerator in jeder
   Übung? … ca. 30 Fotos"): `backdrop.dart` zieht bei jedem Öffnen ein Foto
   aus dem Vorrat `practiceBackdrops`, nie zweimal hintereinander dasselbe;
-  die Programm-Phase von Today bestimmt das Bild nicht mehr. Der Vorrat wird
-  aus 36 neu gerenderten Hochformat-Kandidaten (gleiches Rezept wie der
-  Today-Satz, 768×1344, 18 Motive × 2 Seeds, Skript
-  `render_practice36.py`) nach Ulis Auswahl gefüllt; bis dahin die sieben
-  Today-Fotos.
+  die Programm-Phase von Today bestimmt das Bild nicht mehr. Der Vorrat sind
+  36 neu gerenderte Hochformat-Fotos (gleiches Rezept wie der Today-Satz,
+  768×1344, 18 Motive × 2 Seeds, Skript `render_practice36.py`, Bogen
+  https://claude.ai/artifact/GW83fX1QkwFM1tCrbZmHyG), Uli 18:10: „Alle 36
+  nehmen" → `assets/illustrations/practice/` (1080 px breit, 6,8 MB,
+  README dort).
 - **Kopfhörer-Regel:** Das Mikro würde Band und Klick-Spur mithören. Die
   **Band läuft nur mit Kopfhörern, sobald das Mikro überhaupt mithört**
   (Mikro-Analyse eingeschaltet, in beiden Modi); mit Mikro aus (Standard)
