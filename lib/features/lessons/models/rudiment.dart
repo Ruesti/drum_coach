@@ -244,6 +244,10 @@ class Rudiment {
   /// Optional sub-heading within the collection (e.g. the rudiment name).
   final String? collectionGroup;
 
+  /// Default backing style id (see `backing_styles.dart`), null = off. The
+  /// user's own choice per exercise overrides it.
+  final String? backing;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -263,5 +267,6 @@ class Rudiment {
     this.limbs = const {Limb.hands},
     this.collection,
     this.collectionGroup,
+    this.backing,
   });
 }

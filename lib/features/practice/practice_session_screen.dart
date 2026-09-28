@@ -626,15 +626,15 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final notifier = ref.read(metronomeNotifierProvider.notifier);
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
-      // Record beat timestamps for mic correlation — only pattern ticks that
-      // carry a note onset (silent grid ticks are not expected strokes), and
-      // logged as note index so the sticking pattern maps hits to hands.
+      // Record beat timestamps for mic correlation — only main-note onsets
+      // (silent grid ticks and flam/drag grace ticks are not expected
+      // strokes), logged as note index so the sticking maps hits to hands.
       if (_micRecording &&
           next.isPlaying &&
           next.currentBeatIndex >= 0 &&
           next.currentBeatIndex != (prev?.currentBeatIndex ?? -2)) {
         final tick = next.currentBeatIndex % _playback.totalTicks;
-        if (_playback.tickVolumes[tick] > 0) {
+        if (_playback.isOnsetTick(tick)) {
           _beatLog.add((
             beatIndex: _playback.noteIndexAtTick(tick),
             // Scheduled instant from the timing isolate (§1.3) — not the

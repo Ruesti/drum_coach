@@ -148,4 +148,19 @@ void main() {
       expect(pp.onsetTicks, [0, 12]);
     });
   });
+
+  group('isOnsetTick (measurement takes main notes only)', () {
+    test('grace ticks are audible but not onsets', () {
+      const beats = [
+        StrokeBeat(hand: Hand.left),
+        StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
+      ];
+      final pp = buildPatternPlayback(beats, NoteGrid.quarter);
+      expect(pp.tickVolumes[23], graceVolume);
+      expect(pp.isOnsetTick(23), isFalse);
+      expect(pp.isOnsetTick(24), isTrue);
+      expect(pp.isOnsetTick(0), isTrue);
+      expect(pp.isOnsetTick(1), isFalse);
+    });
+  });
 }

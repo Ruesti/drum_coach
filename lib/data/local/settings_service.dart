@@ -64,6 +64,20 @@ class SettingsService {
   static Future<void> setClickTrackEnabled(bool v) =>
       _prefs.setBool('click_track_enabled', v);
 
+  /// Backing loop (Engine part 1): the style chosen for one exercise —
+  /// null = never chosen (exercise default applies), 'off' = chosen off.
+  static String? backingStyleFor(String exerciseId) =>
+      _prefs.getString('backing_style_$exerciseId');
+  static Future<void> setBackingStyleFor(String exerciseId, String? id) =>
+      id == null
+          ? _prefs.remove('backing_style_$exerciseId')
+          : _prefs.setString('backing_style_$exerciseId', id);
+
+  /// The backing track's own level, global. Default 0.7.
+  static double get backingLevel => _prefs.getDouble('backing_level') ?? 0.7;
+  static Future<void> setBackingLevel(double v) =>
+      _prefs.setDouble('backing_level', v.clamp(0.0, 1.0).toDouble());
+
   /// Loopback-calibrated output+input latency (§1.3). `null` = never
   /// calibrated; onsets are then compared uncorrected.
   static double? get latencyOffsetMs => _prefs.getDouble('latency_offset_ms');
