@@ -21,7 +21,6 @@ import 'analysis_announcement.dart';
 import '../coaching/services/recording_setup.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
-import '../coaching/widgets/coach_feedback_card.dart';
 import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
@@ -33,6 +32,7 @@ import 'ladder_plan.dart';
 import 'practice_provider.dart';
 import 'session_timer_provider.dart';
 import 'widgets/pulse_bar.dart';
+import 'widgets/result_sheet.dart';
 import 'widgets/tempo_row.dart';
 
 String _formatDuration(int seconds) {
@@ -87,6 +87,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   int? _goalSeconds;
   Timer? _ticker;
   bool _sessionFinished = false;
+  bool _finishing = false; // result sheet is opening or open
 
   // Tempo ladder (program block): plan + current step. The gate is the
   // clean-pass tempo the ladder climbs to (+4 above it is the top step);
@@ -118,6 +119,13 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
   /// metronome's per-tick volumes and map the playback cursor to a note.
   late PatternPlayback _playback;
+
+  // Result sheet inputs that arrive after it opened (K2 step 3).
+  final _ladderResult = ValueNotifier<String?>(null);
+  final _sessionLogN = ValueNotifier<SessionLog?>(null);
+  final _coachFeedback = ValueNotifier<String?>(null);
+  final _coachLoading = ValueNotifier<bool>(false);
+  SessionAnalysis? _pendingAnalysis;
 
   @override
   void initState() {
@@ -213,6 +221,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     WidgetsBinding.instance.removeObserver(this);
     WakelockPlus.disable();
     _ticker?.cancel();
+    _ladderResult.dispose();
+    _sessionLogN.dispose();
+    _coachFeedback.dispose();
+    _coachLoading.dispose();
     // Leaving the screen while playing (e.g. backing out mid-exercise) never
     // fires the ref.listen isPlaying transition below — that listener is
     // gone the moment this widget is disposed — so the session timer would
@@ -254,7 +266,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         }
       }
       if (_goalSeconds != null && _elapsedSeconds >= _goalSeconds!) {
-        _showRatingSheet();
+        _finishSession();
       }
     });
   }
@@ -381,70 +393,156 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _optionsOpen = false;
   }
 
-  Future<void> _showRatingSheet() async {
-    if (_sessionFinished) return;
-    // The goal can expire while the "⋯" sheet is open; the rating sheet must
+  /// Session end (Finish or the goal expiring): stop everything, analyse,
+  /// and open the ONE result sheet. Saving happens on the rating tap.
+  Future<void> _finishSession() async {
+    // A second Finish tap while the mic is still stopping must not open a
+    // second sheet on top of the first.
+    if (_sessionFinished || _finishing) return;
+    _finishing = true;
+    // The goal can expire while the "⋯" sheet is open; the result sheet must
     // not stack on it, or the final pop leaves a finished screen behind.
     if (_optionsOpen && mounted) Navigator.of(context).pop();
     final metronome = ref.read(metronomeNotifierProvider.notifier);
     metronome.stop();
     _stopTicker();
     await _stopMicRecording();
-
     if (!mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: PracticeColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
-      ),
-      builder: (_) => Theme(
-        data: drumCoachPracticeTheme,
-        child: _RatingSheet(onRating: _saveAndShowFeedback),
-      ),
-    );
-  }
-
-  Future<void> _saveAndShowFeedback(int rating) async {
-    if (_sessionFinished) return;
-    _sessionFinished = true;
 
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
     final metState = ref.read(metronomeNotifierProvider);
-
-    await ref.read(practiceNotifierProvider.notifier).saveSession(
-          rudimentId: widget.rudimentId,
-          durationSeconds: _elapsedSeconds,
-          achievedBpm: metState.bpm,
-          rating: rating,
-          targetBpm: rudiment.targetBpm,
-        );
-    await SettingsService.clearPracticeSnapshot();
-
-    String? ladderResult;
-    if (_ladderActive && mounted) ladderResult = await _askCleanPass();
-
-    // Analyse mic data if available
     SessionAnalysis? analysis;
     if (_micService != null && _beatLog.isNotEmpty) {
-      analysis = _micService!.analyze(
-        beatLog: _beatLog,
-        sticking: rudiment.sticking,
-        latencyOffsetMs: SettingsService.latencyOffsetMs ?? 0,
-        analysisMode: _analysisMode,
-      );
+      try {
+        analysis = _micService!.analyze(
+          beatLog: _beatLog,
+          sticking: rudiment.sticking,
+          latencyOffsetMs: SettingsService.latencyOffsetMs ?? 0,
+          analysisMode: _analysisMode,
+        );
+      } catch (e) {
+        // A broken analysis must not block saving the session.
+        debugPrint('analysis failed: $e');
+      }
     }
+    _pendingAnalysis = analysis;
+    final announcement = analysis == null
+        ? null
+        : analysisAnnouncement(analysis, analysisMode: _analysisMode);
 
-    // Raw session log (Brief Phase 2) — every session, mic or not.
-    SessionLog? sessionLog;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+      ),
+      // isDismissible only covers the barrier; the back button and the
+      // back gesture would still close the sheet before anything is saved.
+      builder: (sheetContext) => PopScope(
+        canPop: false,
+        child: Theme(
+          data: drumCoachTheme,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+            child: ResultSheet(
+              rudimentName: rudiment.name,
+              bpm: metState.bpm,
+              durationSeconds: _elapsedSeconds,
+              analysisMode: _analysisMode,
+              analysis: analysis,
+              announcement: announcement,
+              ladderResult: _ladderResult,
+              sessionLog: _sessionLogN,
+              coachFeedback: _coachFeedback,
+              coachLoading: _coachLoading,
+              coachEnabled: SettingsService.claudeApiKey.isNotEmpty,
+              onRate: _onRated,
+              onDone: () => Navigator.of(sheetContext).pop(),
+              onExport: () async {
+                final log = _sessionLogN.value;
+                if (log == null) return;
+                final file = await SessionLogService.exportSession(log);
+                await SharePlus.instance
+                    .share(ShareParams(files: [XFile(file.path)]));
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    _finishing = false;
+    // The sheet only closes through Done, i.e. after a saved rating. Should
+    // it ever close otherwise, stay on the paused screen with Finish live.
+    if (mounted && _sessionFinished) context.pop();
+  }
+
+  /// Rating tapped on the result sheet: save (once), clear the snapshot,
+  /// ladder dialog — Done unlocks when this returns. Session log and coach
+  /// answer follow on their own and fill the sheet in when they arrive.
+  /// Throws when saving fails so the sheet can release the rating.
+  Future<void> _onRated(int rating) async {
+    if (_sessionFinished) return;
+    _sessionFinished = true;
+    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    final metState = ref.read(metronomeNotifierProvider);
+    // Without an API key the coach card only ever showed an error for an
+    // expected condition — so it stays hidden entirely.
+    final apiKey = SettingsService.claudeApiKey;
+    // Flag "loading" before the first await so the card never shows an
+    // error for a request that has not been sent yet.
+    if (apiKey.isNotEmpty) _coachLoading.value = true;
     try {
-      sessionLog = buildSessionLog(
-        analysis: analysis,
+      await ref.read(practiceNotifierProvider.notifier).saveSession(
+            rudimentId: widget.rudimentId,
+            durationSeconds: _elapsedSeconds,
+            achievedBpm: metState.bpm,
+            rating: rating,
+            targetBpm: rudiment.targetBpm,
+          );
+    } catch (e) {
+      _sessionFinished = false;
+      if (mounted) _coachLoading.value = false;
+      rethrow;
+    }
+    await SettingsService.clearPracticeSnapshot();
+    if (!mounted) return;
+
+    if (_ladderActive) {
+      final line = await _askCleanPass();
+      if (!mounted) return;
+      _ladderResult.value = line;
+    }
+    unawaited(_afterSave(
+      rating: rating,
+      rudimentName: rudiment.name,
+      targetBpm: rudiment.targetBpm,
+      achievedBpm: metState.bpm,
+      apiKey: apiKey,
+    ));
+  }
+
+  /// Session log and coach call after the rating is saved. The notifiers
+  /// may be gone by the time these finish (Done pressed meanwhile), so every
+  /// write checks `mounted`.
+  Future<void> _afterSave({
+    required int rating,
+    required String rudimentName,
+    required int targetBpm,
+    required int achievedBpm,
+    required String apiKey,
+  }) async {
+    // Raw session log (Brief Phase 2) — every session, mic or not.
+    try {
+      final log = buildSessionLog(
+        analysis: _pendingAnalysis,
         beatLog: _beatLog,
         exerciseId: widget.rudimentId,
-        bpm: metState.bpm,
+        bpm: achievedBpm,
         durationSeconds: _elapsedSeconds,
         rating: rating,
         startedAt: DateTime.now().subtract(Duration(seconds: _elapsedSeconds)),
@@ -453,39 +551,31 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         latencyOffsetMs: SettingsService.latencyOffsetMs,
         mode: _analysisMode ? 'analysis' : 'learn',
       );
-      await SessionLogService.save(sessionLog);
+      await SessionLogService.save(log);
+      if (!mounted) return;
+      _sessionLogN.value = log;
     } catch (e) {
       debugPrint('session log failed: $e');
     }
 
+    if (apiKey.isEmpty) return;
+    String? text;
+    try {
+      text = await _aiService.getCoachingFeedback(
+        apiKey: apiKey,
+        rudimentName: rudimentName,
+        achievedBpm: achievedBpm,
+        targetBpm: targetBpm,
+        durationSeconds: _elapsedSeconds,
+        rating: rating,
+        analysis: _pendingAnalysis,
+      );
+    } catch (e) {
+      debugPrint('coach failed: $e');
+    }
     if (!mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: PracticeColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
-      ),
-      builder: (_) => Theme(
-        data: drumCoachPracticeTheme,
-        child: _FeedbackSheet(
-          rudimentName: rudiment.name,
-          achievedBpm: metState.bpm,
-          targetBpm: rudiment.targetBpm,
-          durationSeconds: _elapsedSeconds,
-          rating: rating,
-          analysis: analysis,
-          analysisMode: _analysisMode,
-          sessionLog: sessionLog,
-          ladderResult: ladderResult,
-          aiService: _aiService,
-          onClose: () => Navigator.pop(context),
-        ),
-      ),
-    );
-
-    if (mounted) context.pop();
+    _coachFeedback.value = text;
+    _coachLoading.value = false;
   }
 
   /// §6 gate, asked right after a ladder session: a clean pass lifts the
@@ -495,13 +585,15 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final gate = _gateBpm!;
     final ok = await showDialog<bool>(
       context: context,
+      // Shown over the light result sheet with the light app theme (the
+      // dialog uses the screen's context, above the dark practice theme).
       builder: (ctx) => AlertDialog(
-        backgroundColor: PracticeColors.surface,
+        backgroundColor: AppColors.surface,
         title: const Text('Clean & relaxed?'),
         content: Text(
           'Did the tempo ladder run evenly and relaxed all the way to '
           '${gate + 4} BPM? Yes makes ${gate + 4} BPM your new clean tempo.',
-          style: const TextStyle(color: PracticeColors.textSecondary),
+          style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
@@ -718,7 +810,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                           child: _GhostButton(
                             icon: Icons.check_circle_outline,
                             label: 'Finish',
-                            onPressed: _showRatingSheet,
+                            onPressed: _finishSession,
                           ),
                         ),
                       ],
@@ -1175,480 +1267,4 @@ class _SectionLabel extends StatelessWidget {
         style: PracticeTypography.label.copyWith(
             fontSize: 11, letterSpacing: 0.9, color: PracticeColors.textMuted),
       );
-}
-
-// ── Rating sheet ───────────────────────────────────────────────────────────────
-
-class _RatingSheet extends StatelessWidget {
-  final void Function(int rating) onRating;
-  const _RatingSheet({required this.onRating});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: PracticeColors.textFaint,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'How did it feel?',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          _RatingButton(
-            emoji: '😓',
-            label: 'Struggled',
-            subtitle: 'Keep the same BPM',
-            color: PracticeColors.struggled,
-            onTap: () {
-              Navigator.pop(context);
-              onRating(1);
-            },
-          ),
-          const SizedBox(height: 10),
-          _RatingButton(
-            emoji: '😐',
-            label: 'OK',
-            subtitle: '+2 BPM next time',
-            color: PracticeColors.ok,
-            onTap: () {
-              Navigator.pop(context);
-              onRating(2);
-            },
-          ),
-          const SizedBox(height: 10),
-          _RatingButton(
-            emoji: '💪',
-            label: 'Solid',
-            subtitle: '+5 BPM next time',
-            color: PracticeColors.solidStreak,
-            onTap: () {
-              Navigator.pop(context);
-              onRating(3);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RatingButton extends StatelessWidget {
-  final String emoji;
-  final String label;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _RatingButton({
-    required this.emoji,
-    required this.label,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          child: Row(
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 28)),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label,
-                      style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: color)),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 12, color: PracticeColors.textMuted)),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Feedback sheet ─────────────────────────────────────────────────────────────
-
-class _FeedbackSheet extends StatefulWidget {
-  final String rudimentName;
-  final int achievedBpm;
-  final int targetBpm;
-  final int durationSeconds;
-  final int rating;
-  final SessionAnalysis? analysis;
-  final bool analysisMode;
-  final SessionLog? sessionLog;
-  final String? ladderResult;
-  final AICoachingService aiService;
-  final VoidCallback onClose;
-
-  const _FeedbackSheet({
-    required this.rudimentName,
-    required this.achievedBpm,
-    required this.targetBpm,
-    required this.durationSeconds,
-    required this.rating,
-    required this.analysis,
-    this.analysisMode = false,
-    this.sessionLog,
-    this.ladderResult,
-    required this.aiService,
-    required this.onClose,
-  });
-
-  @override
-  State<_FeedbackSheet> createState() => _FeedbackSheetState();
-}
-
-class _FeedbackSheetState extends State<_FeedbackSheet> {
-  String? _feedback;
-  bool _loading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final apiKey = SettingsService.claudeApiKey;
-    if (apiKey.isNotEmpty) _fetchFeedback(apiKey);
-  }
-
-  Future<void> _fetchFeedback(String apiKey) async {
-    setState(() => _loading = true);
-    final result = await widget.aiService.getCoachingFeedback(
-      apiKey: apiKey,
-      rudimentName: widget.rudimentName,
-      achievedBpm: widget.achievedBpm,
-      targetBpm: widget.targetBpm,
-      durationSeconds: widget.durationSeconds,
-      rating: widget.rating,
-      analysis: widget.analysis,
-    );
-    if (mounted) {
-      setState(() {
-        _feedback = result;
-        _loading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hasMicData = widget.analysis?.hasData ?? false;
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-          24, 24, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: PracticeColors.textFaint,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text('Session complete',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(
-            '${widget.achievedBpm} BPM  ·  '
-            '${widget.durationSeconds ~/ 60}min ${widget.durationSeconds % 60}s',
-            style:
-                const TextStyle(color: PracticeColors.textMuted, fontSize: 13),
-          ),
-          if (widget.ladderResult != null) ...[
-            const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.stairs_outlined,
-                    size: 16, color: PracticeColors.accent),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    widget.ladderResult!,
-                    style: const TextStyle(
-                        color: PracticeColors.accent,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-          ],
-          // Render the card also when the recording was too weak to judge —
-          // exactly then the user needs its announcement (13.09.: card
-          // vanished entirely and the session looked unanalyzed).
-          if (hasMicData &&
-              (widget.analysis?.unassigned != null ||
-                  widget.analysis?.signalTooWeak == true)) ...[
-            const SizedBox(height: 16),
-            // The coach verdict as an unmissable banner ABOVE the numbers:
-            // as faint small print it was overlooked outright (14.09.).
-            if (analysisAnnouncement(widget.analysis!,
-                    analysisMode: widget.analysisMode)
-                case final Announcement a) ...[
-              _VerdictBanner(announcement: a),
-              const SizedBox(height: 10),
-            ],
-            _AnalysisSummary(
-                analysis: widget.analysis!, analysisMode: widget.analysisMode),
-          ],
-          // Without an API key the coach card only ever shows an error for
-          // an expected condition — and shouts over the actual verdict.
-          if (SettingsService.claudeApiKey.isNotEmpty)
-            CoachFeedbackCard(
-              feedback: _feedback,
-              isLoading: _loading,
-              hasAnalysis: hasMicData,
-            ),
-          const SizedBox(height: 20),
-          if (widget.sessionLog != null) ...[
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.ios_share, size: 18),
-                label: const Text('Export session (JSONL)'),
-                onPressed: () async {
-                  final file =
-                      await SessionLogService.exportSession(widget.sessionLog!);
-                  await SharePlus.instance
-                      .share(ShareParams(files: [XFile(file.path)]));
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: widget.onClose,
-              child: const Text('Done'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AnalysisSummary extends StatelessWidget {
-  final SessionAnalysis analysis;
-  final bool analysisMode;
-  const _AnalysisSummary({required this.analysis, this.analysisMode = false});
-
-  String _signed(double v) => '${v > 0 ? '+' : ''}${v.toStringAsFixed(1)} ms';
-
-  @override
-  Widget build(BuildContext context) {
-    final t = analysis.timing;
-    final d = analysis.dynamics;
-    // Null when the recording was too weak to judge (signalTooWeak): the
-    // card must still render — it carries the "too quiet" announcement.
-    final u = analysis.unassigned;
-    final al = analysis.alignment;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: PracticeColors.raised,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Mic Analysis',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: PracticeColors.textSecondary)),
-          const SizedBox(height: 10),
-          // Assignment-free measures (§1.4) — shown whenever computed.
-          if (u != null) ...[
-            _Row(
-              label: 'Timing vs click',
-              value: '${_signed(u.timingMedianMs)} median · '
-                  '±${u.timingSpreadMs.toStringAsFixed(1)} ms',
-            ),
-            _Row(
-              label: 'Evenness',
-              value: '±${u.intervalSpreadMs.toStringAsFixed(1)} ms',
-            ),
-            if (u.dynamicsSpread != null)
-              _Row(
-                label: 'Dynamics spread',
-                value: '${(u.dynamicsSpread! * 100).round()}%',
-              ),
-            _Row(
-              label: 'Strokes',
-              value: '${u.playedCount} / ${u.expectedCount} expected',
-            ),
-          ],
-          if (al != null)
-            _Row(
-              label: 'Matched / missed / extra',
-              value: '${al.hitCount} / ${al.missedCount} / ${al.extraCount}',
-            ),
-          if (analysis.latencyOffsetAppliedMs != 0)
-            _Row(
-              label: 'Latency correction',
-              value:
-                  '−${analysis.latencyOffsetAppliedMs.toStringAsFixed(0)} ms',
-            ),
-          // Per-hand values only above the §1.2 confidence gate.
-          if (t != null) ...[
-            const Divider(height: 18, color: PracticeColors.textFaint),
-            _Row(label: 'R hand', value: _signed(t.rightHandDeviationMs)),
-            _Row(label: 'L hand', value: _signed(t.leftHandDeviationMs)),
-            _Row(
-              label: 'Consistency',
-              value: '±${t.jitterMs.toStringAsFixed(1)} ms jitter',
-            ),
-            if (d != null)
-              _Row(
-                label: 'Dynamics R / L',
-                value:
-                    '${(d.rightHandLevel * 100).round()}% / ${(d.leftHandLevel * 100).round()}%',
-              ),
-          ] else if (!analysisMode && !analysis.signalTooWeak) ...[
-            // Learn mode keeps its calm inline hint — a permanent mode, not
-            // a verdict. All verdicts render as the banner above the card.
-            const SizedBox(height: 6),
-            const Text(
-              'Learn mode — timing and evenness without hand analysis. '
-              'Mistakes are normal here.',
-              style: TextStyle(color: PracticeColors.textFaint, fontSize: 12),
-            ),
-          ],
-          // Raw numbers for the §1.1/§1.3 device checks (peak levels must
-          // keep their loud/soft ratio; setup documents the audio path).
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              title: const Text('Measurement details',
-                  style:
-                      TextStyle(color: PracticeColors.textFaint, fontSize: 12)),
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Levels (×100): ${analysis.peakLevels.map((p) => (p * 100).round()).join(' ')}\n'
-                    'Deviation (ms): ${analysis.deviationsMs.map((d) => d.round()).join(' ')}\n'
-                    'Recording: ${analysis.recordingSetup ?? 'unknown'}',
-                    style: const TextStyle(
-                        color: PracticeColors.textFaint,
-                        fontSize: 11,
-                        fontFamily: 'monospace'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  final String label;
-  final String value;
-  const _Row({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          Text(label,
-              style: const TextStyle(
-                  color: PracticeColors.textFaint, fontSize: 12)),
-          const Spacer(),
-          Text(value,
-              style: const TextStyle(
-                  color: PracticeColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-}
-
-/// The coach verdict as a banner nobody can miss — the faint inline line
-/// was overlooked outright (14.09.).
-class _VerdictBanner extends StatelessWidget {
-  final Announcement announcement;
-  const _VerdictBanner({required this.announcement});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = announcement.positive
-        ? PracticeColors.solidStreak
-        : PracticeColors.accent;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: color, width: 1.2),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            announcement.positive
-                ? Icons.check_circle_outline
-                : Icons.report_gmailerrorred_outlined,
-            size: 20,
-            color: color,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              announcement.text,
-              style: TextStyle(
-                color: color,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                height: 1.3,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

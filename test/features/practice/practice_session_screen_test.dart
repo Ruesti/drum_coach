@@ -2,6 +2,7 @@ import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
+import 'package:drum_coach/features/practice/practice_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:drum_coach/features/practice/widgets/pulse_bar.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
@@ -30,14 +31,36 @@ class _IdleMetronomeNotifier extends MetronomeNotifier {
   MetronomeState build() => const MetronomeState();
 }
 
+/// Records saves instead of writing to Isar (no database in widget tests).
+/// The ratings go into a list the TEST owns: the provider is autoDispose, so
+/// the notifier instance is thrown away right after the screen's call and a
+/// later `container.read` would hand back a fresh, empty one.
+class _FakePracticeNotifier extends PracticeNotifier {
+  _FakePracticeNotifier(this.saves);
+  final List<int> saves;
+  @override
+  Future<void> saveSession({
+    required String rudimentId,
+    required int durationSeconds,
+    required int achievedBpm,
+    required int rating,
+    required int targetBpm,
+  }) async {
+    saves.add(rating);
+  }
+}
+
 Future<ProviderContainer> _pumpScreen(
   WidgetTester tester, {
   required PracticeSessionScreen screen,
   MetronomeNotifier Function()? metronome,
+  List<int>? saves,
 }) async {
   final container = ProviderContainer(overrides: [
     metronomeNotifierProvider
         .overrideWith(metronome ?? () => _IdleMetronomeNotifier()),
+    practiceNotifierProvider
+        .overrideWith(() => _FakePracticeNotifier(saves ?? <int>[])),
   ]);
   addTearDown(container.dispose);
   await tester.pumpWidget(
@@ -207,7 +230,11 @@ void main() {
 
     await tester.tap(find.text('Finish'));
     await tester.pumpAndSettle();
-    expect(find.text('How did it feel?'), findsOneWidget);
+    // One result sheet (K2 step 3), not the old rating sheet.
+    expect(find.text('How did it feel?'), findsNothing);
+    expect(find.text('HOW DID IT FEEL?'), findsOneWidget);
+    expect(find.text('SESSION COMPLETE'), findsOneWidget);
+    expect(find.text('No mic analysis this time'), findsOneWidget);
     container.dispose();
   });
 
@@ -376,7 +403,49 @@ void main() {
     await tester.pump(const Duration(seconds: 61));
     await tester.pumpAndSettle();
     expect(find.text('Options'), findsNothing);
-    expect(find.text('How did it feel?'), findsOneWidget);
+    expect(find.text('HOW DID IT FEEL?'), findsOneWidget);
+    container.dispose();
+  });
+
+  testWidgets('rating on the result sheet saves once and unlocks Done',
+      (tester) async {
+    final saves = <int>[];
+    final container = await _pumpScreen(tester,
+        screen: _screen(targetMinutes: 1), saves: saves);
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    // An interrupted-session snapshot, as the app writes it when it goes to
+    // the background — saving the rating must clear it.
+    await SettingsService.savePracticeSnapshot(
+        rudimentId: rudimentsSeedData.first.id, elapsedSeconds: 3);
+    expect(SettingsService.practiceSnapshotFor(rudimentsSeedData.first.id),
+        isNotNull);
+    await tester.tap(find.text('Finish'));
+    await tester.pumpAndSettle();
+    FilledButton done() => tester
+        .widget<FilledButton>(find.widgetWithText(FilledButton, 'Done'));
+    expect(done().onPressed, isNull);
+
+    // The back button must not close the sheet before a rating is saved.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('HOW DID IT FEEL?'), findsOneWidget);
+
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(saves, [2]);
+    // Saved: the interrupted-session snapshot is gone and Done is live.
+    expect(SettingsService.practiceSnapshotFor(rudimentsSeedData.first.id),
+        isNull);
+    expect(done().onPressed, isNotNull);
+
+    // A second chip does not save again.
+    await tester.tap(find.text('Solid'));
+    await tester.pumpAndSettle();
+    expect(saves, [2]);
     container.dispose();
   });
 
