@@ -180,20 +180,31 @@ class MetronomeEngine {
     final synthetic = _soundType != SoundType.snare || _snarePcm.isEmpty;
     final fallbackSound =
         _soundType == SoundType.snare ? SoundType.click : _soundType;
+    final volumes0 = _loopVolumes();
     final wav = buildLoopWav(
       bpm: _bpm,
       factor: _factor,
-      tickVolumes: _loopVolumes(),
-      accentSamples: synthetic
-          ? synthSamples(fallbackSound, accent: true)
-          : _snarePcm,
-      normalSamples: synthetic
-          ? synthSamples(fallbackSound, accent: false)
-          : _snarePcm,
-      pulseSamples: _pulse && _beatVolumes != null && _beatVolumes!.isNotEmpty
-          ? pulseSamples()
-          : null,
-      pulseEvery: _factor,
+      voices: [
+        LoopVoice(
+          tickVolumes: volumes0,
+          loudSamples: synthetic
+              ? synthSamples(fallbackSound, accent: true)
+              : _snarePcm,
+          softSamples: synthetic
+              ? synthSamples(fallbackSound, accent: false)
+              : _snarePcm,
+          loudFrom: 1.2,
+        ),
+        if (_pulse && _beatVolumes != null && _beatVolumes!.isNotEmpty)
+          LoopVoice(
+            tickVolumes: [
+              for (var t = 0; t < volumes0.length; t++)
+                t % _factor == 0 ? 1.0 : 0.0
+            ],
+            loudSamples: pulseSamples(),
+            softSamples: pulseSamples(),
+          ),
+      ],
     );
     // Timeout-guarded: on a dead audio engine loadMem never answers — this
     // path must FAIL fast so the start supervisor can revive the engine,
