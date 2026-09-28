@@ -224,10 +224,16 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
   read `AppPalette.of(context)`. Fonts are bundled under `assets/google_fonts/`
   — never rely on runtime fetching (tests would break).
 - `PracticeSessionScreen` (K2 step 2): no AppBar — header row (back, name,
-  context line from `?ctx=`, mode chip), the notation sheet, the `BeatCounter`
-  (1 2 3 4), `TempoRow` (±4 BPM, tap the number for exact entry), one primary
-  button Start/Stop/Resume with the time, Finish on its own row while paused,
-  options (duration, sound, about) behind "⋯".
+  context line from `?ctx=`, mode chip), the notation sheet, the `PulseBar`
+  (running marker + volume pulses; the click track is a second voice in the
+  loop, off in analysis mode), `TempoRow` (±4 BPM, tap the number for exact
+  entry), one primary button Start/Stop/Resume with the time, Finish on its
+  own row while paused, options (duration, sound, click track, about) behind
+  "⋯".
+- Result (K2 step 3): one light `ResultSheet` after the session — verdict
+  banner, rating chips (save on tap, once), three plain-language `coreValues`
+  (hits, timing, hands/evenness), details folded, Done. Ladder dialog and
+  coach feedback arrive via `ValueNotifier`s after the rating.
 
 ## Sticking Pattern Widget
 
