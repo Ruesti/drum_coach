@@ -87,6 +87,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   int? _goalSeconds;
   Timer? _ticker;
   bool _sessionFinished = false;
+  bool _finishing = false; // result sheet is opening or open
 
   // Tempo ladder (program block): plan + current step. The gate is the
   // clean-pass tempo the ladder climbs to (+4 above it is the top step);
@@ -395,7 +396,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// Session end (Finish or the goal expiring): stop everything, analyse,
   /// and open the ONE result sheet. Saving happens on the rating tap.
   Future<void> _finishSession() async {
-    if (_sessionFinished) return;
+    // A second Finish tap while the mic is still stopping must not open a
+    // second sheet on top of the first.
+    if (_sessionFinished || _finishing) return;
+    _finishing = true;
     // The goal can expire while the "⋯" sheet is open; the result sheet must
     // not stack on it, or the final pop leaves a finished screen behind.
     if (_optionsOpen && mounted) Navigator.of(context).pop();
@@ -409,12 +413,17 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final metState = ref.read(metronomeNotifierProvider);
     SessionAnalysis? analysis;
     if (_micService != null && _beatLog.isNotEmpty) {
-      analysis = _micService!.analyze(
-        beatLog: _beatLog,
-        sticking: rudiment.sticking,
-        latencyOffsetMs: SettingsService.latencyOffsetMs ?? 0,
-        analysisMode: _analysisMode,
-      );
+      try {
+        analysis = _micService!.analyze(
+          beatLog: _beatLog,
+          sticking: rudiment.sticking,
+          latencyOffsetMs: SettingsService.latencyOffsetMs ?? 0,
+          analysisMode: _analysisMode,
+        );
+      } catch (e) {
+        // A broken analysis must not block saving the session.
+        debugPrint('analysis failed: $e');
+      }
     }
     _pendingAnalysis = analysis;
     final announcement = analysis == null
@@ -431,64 +440,109 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
       ),
-      builder: (sheetContext) => Theme(
-        data: drumCoachTheme,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-              bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
-          child: ResultSheet(
-            rudimentName: rudiment.name,
-            bpm: metState.bpm,
-            durationSeconds: _elapsedSeconds,
-            analysisMode: _analysisMode,
-            analysis: analysis,
-            announcement: announcement,
-            ladderResult: _ladderResult,
-            sessionLog: _sessionLogN,
-            coachFeedback: _coachFeedback,
-            coachLoading: _coachLoading,
-            coachEnabled: SettingsService.claudeApiKey.isNotEmpty,
-            onRate: _onRated,
-            onDone: () => Navigator.of(sheetContext).pop(),
-            onExport: () async {
-              final log = _sessionLogN.value;
-              if (log == null) return;
-              final file = await SessionLogService.exportSession(log);
-              await SharePlus.instance
-                  .share(ShareParams(files: [XFile(file.path)]));
-            },
+      // isDismissible only covers the barrier; the back button and the
+      // back gesture would still close the sheet before anything is saved.
+      builder: (sheetContext) => PopScope(
+        canPop: false,
+        child: Theme(
+          data: drumCoachTheme,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+            child: ResultSheet(
+              rudimentName: rudiment.name,
+              bpm: metState.bpm,
+              durationSeconds: _elapsedSeconds,
+              analysisMode: _analysisMode,
+              analysis: analysis,
+              announcement: announcement,
+              ladderResult: _ladderResult,
+              sessionLog: _sessionLogN,
+              coachFeedback: _coachFeedback,
+              coachLoading: _coachLoading,
+              coachEnabled: SettingsService.claudeApiKey.isNotEmpty,
+              onRate: _onRated,
+              onDone: () => Navigator.of(sheetContext).pop(),
+              onExport: () async {
+                final log = _sessionLogN.value;
+                if (log == null) return;
+                final file = await SessionLogService.exportSession(log);
+                await SharePlus.instance
+                    .share(ShareParams(files: [XFile(file.path)]));
+              },
+            ),
           ),
         ),
       ),
     );
-    if (mounted) context.pop();
+    _finishing = false;
+    // The sheet only closes through Done, i.e. after a saved rating. Should
+    // it ever close otherwise, stay on the paused screen with Finish live.
+    if (mounted && _sessionFinished) context.pop();
   }
 
-  /// Rating tapped on the result sheet: save (once), log, ladder dialog,
-  /// coach call — the sheet stays open and fills in what arrives.
+  /// Rating tapped on the result sheet: save (once), clear the snapshot,
+  /// ladder dialog — Done unlocks when this returns. Session log and coach
+  /// answer follow on their own and fill the sheet in when they arrive.
+  /// Throws when saving fails so the sheet can release the rating.
   Future<void> _onRated(int rating) async {
     if (_sessionFinished) return;
     _sessionFinished = true;
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
     final metState = ref.read(metronomeNotifierProvider);
-    await ref.read(practiceNotifierProvider.notifier).saveSession(
-          rudimentId: widget.rudimentId,
-          durationSeconds: _elapsedSeconds,
-          achievedBpm: metState.bpm,
-          rating: rating,
-          targetBpm: rudiment.targetBpm,
-        );
+    // Without an API key the coach card only ever showed an error for an
+    // expected condition — so it stays hidden entirely.
+    final apiKey = SettingsService.claudeApiKey;
+    // Flag "loading" before the first await so the card never shows an
+    // error for a request that has not been sent yet.
+    if (apiKey.isNotEmpty) _coachLoading.value = true;
+    try {
+      await ref.read(practiceNotifierProvider.notifier).saveSession(
+            rudimentId: widget.rudimentId,
+            durationSeconds: _elapsedSeconds,
+            achievedBpm: metState.bpm,
+            rating: rating,
+            targetBpm: rudiment.targetBpm,
+          );
+    } catch (e) {
+      _sessionFinished = false;
+      if (mounted) _coachLoading.value = false;
+      rethrow;
+    }
     await SettingsService.clearPracticeSnapshot();
+    if (!mounted) return;
 
-    if (_ladderActive && mounted) _ladderResult.value = await _askCleanPass();
+    if (_ladderActive) {
+      final line = await _askCleanPass();
+      if (!mounted) return;
+      _ladderResult.value = line;
+    }
+    unawaited(_afterSave(
+      rating: rating,
+      rudimentName: rudiment.name,
+      targetBpm: rudiment.targetBpm,
+      achievedBpm: metState.bpm,
+      apiKey: apiKey,
+    ));
+  }
 
+  /// Session log and coach call after the rating is saved. The notifiers
+  /// may be gone by the time these finish (Done pressed meanwhile), so every
+  /// write checks `mounted`.
+  Future<void> _afterSave({
+    required int rating,
+    required String rudimentName,
+    required int targetBpm,
+    required int achievedBpm,
+    required String apiKey,
+  }) async {
     // Raw session log (Brief Phase 2) — every session, mic or not.
     try {
       final log = buildSessionLog(
         analysis: _pendingAnalysis,
         beatLog: _beatLog,
         exerciseId: widget.rudimentId,
-        bpm: metState.bpm,
+        bpm: achievedBpm,
         durationSeconds: _elapsedSeconds,
         rating: rating,
         startedAt: DateTime.now().subtract(Duration(seconds: _elapsedSeconds)),
@@ -498,28 +552,30 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         mode: _analysisMode ? 'analysis' : 'learn',
       );
       await SessionLogService.save(log);
+      if (!mounted) return;
       _sessionLogN.value = log;
     } catch (e) {
       debugPrint('session log failed: $e');
     }
 
-    // Without an API key the coach card only ever showed an error for an
-    // expected condition — so it stays hidden entirely.
-    final apiKey = SettingsService.claudeApiKey;
-    if (apiKey.isNotEmpty) {
-      _coachLoading.value = true;
-      final text = await _aiService.getCoachingFeedback(
+    if (apiKey.isEmpty) return;
+    String? text;
+    try {
+      text = await _aiService.getCoachingFeedback(
         apiKey: apiKey,
-        rudimentName: rudiment.name,
-        achievedBpm: metState.bpm,
-        targetBpm: rudiment.targetBpm,
+        rudimentName: rudimentName,
+        achievedBpm: achievedBpm,
+        targetBpm: targetBpm,
         durationSeconds: _elapsedSeconds,
         rating: rating,
         analysis: _pendingAnalysis,
       );
-      _coachFeedback.value = text;
-      _coachLoading.value = false;
+    } catch (e) {
+      debugPrint('coach failed: $e');
     }
+    if (!mounted) return;
+    _coachFeedback.value = text;
+    _coachLoading.value = false;
   }
 
   /// §6 gate, asked right after a ladder session: a clean pass lifts the
@@ -529,13 +585,15 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final gate = _gateBpm!;
     final ok = await showDialog<bool>(
       context: context,
+      // Shown over the light result sheet with the light app theme (the
+      // dialog uses the screen's context, above the dark practice theme).
       builder: (ctx) => AlertDialog(
-        backgroundColor: PracticeColors.surface,
+        backgroundColor: AppColors.surface,
         title: const Text('Clean & relaxed?'),
         content: Text(
           'Did the tempo ladder run evenly and relaxed all the way to '
           '${gate + 4} BPM? Yes makes ${gate + 4} BPM your new clean tempo.',
-          style: const TextStyle(color: PracticeColors.textSecondary),
+          style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(

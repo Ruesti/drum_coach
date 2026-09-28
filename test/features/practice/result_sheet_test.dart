@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:drum_coach/app/theme.dart';
 import 'package:drum_coach/data/local/models/session_log.dart';
 import 'package:drum_coach/features/coaching/models/session_analysis.dart';
+import 'package:drum_coach/features/coaching/widgets/coach_feedback_card.dart';
 import 'package:drum_coach/features/practice/analysis_announcement.dart';
 import 'package:drum_coach/features/practice/widgets/result_sheet.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +55,7 @@ void main() {
     Announcement? announcement,
     SessionLog? log,
     bool coach = false,
+    Future<void> Function(int)? onRate,
   }) async {
     final rated = <int>[];
     final done = <int>[];
@@ -72,7 +76,7 @@ void main() {
             coachFeedback: ValueNotifier<String?>(null),
             coachLoading: ValueNotifier<bool>(false),
             coachEnabled: coach,
-            onRate: rated.add,
+            onRate: onRate ?? (r) async => rated.add(r),
             onDone: () => done.add(1),
             onExport: () => exported.add(1),
           ),
@@ -134,6 +138,60 @@ void main() {
     expect(r.done.length, 1);
   });
 
+  testWidgets('Done stays locked while the save is still running',
+      (tester) async {
+    final saving = Completer<void>();
+    await pump(tester, a: analysis, onRate: (_) => saving.future);
+    await tester.tap(find.text('OK'));
+    await tester.pump();
+    expect(doneButton(tester).onPressed, isNull);
+    saving.complete();
+    await tester.pump();
+    expect(doneButton(tester).onPressed, isNotNull);
+  });
+
+  testWidgets('a failed save releases the rating and says so',
+      (tester) async {
+    var calls = 0;
+    await pump(tester, a: analysis, onRate: (_) async {
+      calls++;
+      if (calls == 1) throw StateError('db closed');
+    });
+    await tester.tap(find.text('OK'));
+    await tester.pump();
+    expect(find.textContaining("Couldn't save the session"), findsOneWidget);
+    expect(doneButton(tester).onPressed, isNull);
+    // The chip is free again: the next tap saves.
+    await tester.tap(find.text('Solid'));
+    await tester.pump();
+    expect(calls, 2);
+    expect(find.textContaining("Couldn't save the session"), findsNothing);
+    expect(doneButton(tester).onPressed, isNotNull);
+  });
+
+  testWidgets('coach card appears only after the rating', (tester) async {
+    await pump(tester, a: analysis, coach: true);
+    expect(find.byType(CoachFeedbackCard), findsNothing);
+    await tester.tap(find.text('OK'));
+    await tester.pump();
+    expect(find.byType(CoachFeedbackCard), findsOneWidget);
+  });
+
+  testWidgets('too weak signal: banner, no core values, no no-mic line',
+      (tester) async {
+    const weak = SessionAnalysis(
+        signalTooWeak: true, detectedHits: 30, expectedHits: 32);
+    await pump(tester,
+        a: weak,
+        announcement: const Announcement(
+            'Recording too quiet to analyze — move the phone closer to the pad.',
+            positive: false));
+    expect(find.byType(VerdictBanner), findsOneWidget);
+    expect(find.text('No mic analysis this time'), findsNothing);
+    expect(find.textContaining('on the click'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('without analysis: calm line, no details, no banner',
       (tester) async {
     await pump(tester);
@@ -180,7 +238,7 @@ void main() {
             coachFeedback: ValueNotifier<String?>(null),
             coachLoading: ValueNotifier<bool>(false),
             coachEnabled: false,
-            onRate: (_) {},
+            onRate: (_) async {},
             onDone: () {},
             onExport: () {},
           ),

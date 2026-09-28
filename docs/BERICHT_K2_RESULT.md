@@ -11,8 +11,9 @@ dunklen (erst Bewertung, dann Feedback). Es folgt dem K2-Entwurf vom 15.09.:
 Rating oben, Kernwerte in Klartext, Messdetails zum Aufklappen.
 
 - **Ablauf:** Stop → Finish (oder Zeitablauf) hält Metronom, Marker und Mikro
-  an, rechnet die Analyse und öffnet das Blatt. Es lässt sich nicht
-  wegwischen; der einzige Weg zurück ist „Done".
+  an, rechnet die Analyse und öffnet das Blatt. Es lässt sich weder
+  wegwischen noch mit der Zurück-Taste schließen (`PopScope`); der einzige
+  Weg zurück ist „Done".
 - **Kopf:** „SESSION COMPLETE", Name der Übung, Zeile „84 BPM · 8:00 ·
   analysis" (bzw. „learn").
 - **Banner** (nur mit Mikro-Analyse): grün bei sauberem Lauf („Clean run —
@@ -21,11 +22,17 @@ Rating oben, Kernwerte in Klartext, Messdetails zum Aufklappen.
   „Recording too quiet …").
 - **„HOW DID IT FEEL?"** — drei Chips Struggled / OK / Solid mit der
   Tempo-Folge darunter („same BPM", „+2 BPM", „+5 BPM"). Der **erste Tipp
-  speichert** die Sitzung, ein zweiter Tipp ändert nichts mehr. „Done" ist
-  erst nach dem Tipp aktiv.
+  speichert** die Sitzung, ein zweiter Tipp ändert nichts mehr. „Done" wird
+  frei, sobald Speichern, Snapshot-Löschen und (bei der Leiter) der
+  Clean-Dialog durch sind. Schlägt das Speichern fehl, gibt das Blatt den
+  Chip wieder frei und sagt es („Couldn't save the session — tap a rating to
+  try again.").
 - **Nach dem Rating** erscheinen darunter, sobald sie da sind: die Leiter-
-  Meldung („Clean tempo now 88 BPM."), das Coach-Feedback (mit Ladeanzeige,
-  nur mit API-Schlüssel) und der Export-Link „Export session (JSONL)".
+  Meldung („Clean tempo now 88 BPM."), das Coach-Feedback (Karte erst ab dem
+  Rating, sofort als „lädt", nur mit API-Schlüssel) und der Export-Link
+  „Export session (JSONL)". Log und Coach laufen nach dem Freigeben weiter;
+  wer vorher Done tippt, verliert nichts (Log ist gespeichert, Coach-Antwort
+  wird verworfen).
 - **Drei Kernwerte** in Klartext, je eine fette Aussage plus eine graue
   Messzeile (Tabelle unten). Ohne Mikro-Analyse steht stattdessen ruhig
   „No mic analysis this time".
@@ -61,17 +68,22 @@ Bei zu leiser Aufnahme bleibt die Liste leer (das Banner sagt es).
 
 ## Tests
 
-- `core_values_test.dart` (12): jede Schwelle von beiden Seiten, Einzahl/
-  Mehrzahl, Rückfall auf `unassigned`, leere Liste bei zu leisem Signal.
-- `result_sheet_test.dart` (6): Kopf/Banner/Kernwerte, Done erst nach dem
-  Rating und nur ein Speichern, No-mic-Zeile, Details auf/zu, Export nur mit
-  Log, Leiter-Meldung kommt später an.
+- `core_values_test.dart` (13): jede Schwelle von beiden Seiten und mit
+  beiden Vorzeichen (Timing ±5/±6, ±15/±16; Hände 5/6; Gleichmäßigkeit
+  10/11, 20/21), Einzahl/Mehrzahl, Rückfall auf `unassigned`, leere Liste
+  bei zu leisem Signal.
+- `result_sheet_test.dart` (10): Kopf/Banner/Kernwerte, Done erst nach dem
+  Rating und nur ein Speichern, Done gesperrt solange das Speichern läuft,
+  Fehlerpfad gibt den Chip frei, Coach-Karte erst nach dem Rating, zu leises
+  Signal (Banner, keine Kernwerte, keine No-mic-Zeile), No-mic-Zeile,
+  Details auf/zu, Export nur mit Log, Leiter-Meldung kommt später an.
 - `result_sheet_golden_test.dart` (1): Vorschau mit Beispielwerten,
   `test/goldens/result_sheet_preview.png` (1080×2760, absichtlich höher als
   ein Handy, damit das ganze Blatt ohne Scrollen sichtbar ist).
 - `practice_session_screen_test.dart`: Finish und Zeitablauf öffnen das
-  Blatt, ein Rating speichert genau einmal (Fake-Notifier statt Isar).
-- Ganze Suite auf der GPU-Box: **333 Tests grün** (vorher 305), Analyzer nur
+  Blatt, die Zurück-Taste schließt es nicht, ein Rating speichert genau
+  einmal und löscht einen echten Snapshot (Fake-Notifier statt Isar).
+- Ganze Suite auf der GPU-Box: **338 Tests grün** (vorher 305), Analyzer nur
   die 12 bekannten `experimental_member_use`-Warnungen.
 
 ## Sichtprüfung
@@ -92,6 +104,37 @@ Bei zu leiser Aufnahme bleibt die Liste leer (das Banner sagt es).
   dem Aufruf stirbt.
 - Symbole erscheinen im Golden als Kästchen (Icon-Schrift wird in Tests nicht
   geladen) — bekannt, kein Fehler.
+
+## Review-Durchgang (frischer Reviewer, 28.09.)
+
+Drei Important, sieben Minor, drei Nit — alle Important und die meisten
+Minor gefixt:
+
+- **Zurück-Taste schloss das Blatt ohne Speichern** → `PopScope(canPop:
+  false)`; zusätzlich poppt der Screen nach dem Blatt nur noch, wenn die
+  Sitzung gespeichert ist.
+- **Done war schon aktiv, während das Speichern lief** (schneller Done-Tipp
+  übersprang den Leiter-Dialog und traf entsorgte Notifier) → `onRate` ist
+  jetzt `Future`, das Blatt sperrt Done bis es zurückkommt; im Screen nach
+  jedem `await` ein `mounted`-Check; Log und Coach laufen entkoppelt.
+- **Coach-Karte zeigte vor dem Rating einen Fehler** → Karte erst ab dem
+  Rating, Ladezustand wird vor dem ersten `await` gesetzt.
+- Speicherfehler wurden verschluckt → Fehlerpfad im Blatt (siehe oben).
+- Analyse-Absturz hätte das Speichern blockiert → try/catch, Blatt ohne
+  Analyse.
+- Doppelter Finish-Tipp konnte zwei Blätter öffnen → `_finishing`-Sperre.
+- Snapshot-Test bewies nichts → legt jetzt einen echten Snapshot an.
+- Schwellen-Tests nur einseitig → beidseitig ergänzt (siehe Tests).
+- Rating-Chips: Mindest- statt Festhöhe (große Schrift, schmale Geräte),
+  `Semantics(button, selected)`.
+- Leiter-Dialog war dunkel unter hellem Theme (Titel unlesbar, älter als der
+  Branch) → hell wie das Blatt.
+- Gesperrter Done-Knopf: grauer Grund statt blassem Orange mit weißer Schrift.
+- Spec-Nit: „|m| ≤ 0,5" → „gerundet 0", passend zum Code und zur Anzeige.
+
+Bewusst nicht geändert: Details-Zeile hat die Material-Mindesthöhe 56 statt
+der 48 aus der Spec (Standard-`ExpansionTile`); `hasMic` schließt
+`signalTooWeak` ein (Banner „too quiet" braucht den Zweig).
 
 ## Offen
 

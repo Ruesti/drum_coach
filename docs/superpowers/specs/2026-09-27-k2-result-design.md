@@ -91,7 +91,8 @@ Vorzeichen: positiv = hinter dem Klick (Konvention der Messung).
 - 5 < |m| ≤ 15 → m < 0 „You rush a little", m > 0 „You drag a little"
 - |m| > 15 → „You rush" / „You drag"
 - Messzeile „|m| ms ahead of the click · ±S ms spread" bzw. „behind the
-  click"; bei |m| ≤ 0,5 „on the click · ±S ms spread".
+  click"; bei gerundetem m = 0 „on the click · ±S ms spread" (alle Schwellen gelten
+  für den gerundeten Wert, damit Aussage und angezeigte Zahl zusammenpassen).
 
 **Hände / Gleichmäßigkeit:**
 - `analysisMode && timing != null` (Hand-Werte freigegeben): `diff = right −

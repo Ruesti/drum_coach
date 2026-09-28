@@ -417,11 +417,22 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.tap(find.text('Stop'));
     await tester.pump();
+    // An interrupted-session snapshot, as the app writes it when it goes to
+    // the background — saving the rating must clear it.
+    await SettingsService.savePracticeSnapshot(
+        rudimentId: rudimentsSeedData.first.id, elapsedSeconds: 3);
+    expect(SettingsService.practiceSnapshotFor(rudimentsSeedData.first.id),
+        isNotNull);
     await tester.tap(find.text('Finish'));
     await tester.pumpAndSettle();
     FilledButton done() => tester
         .widget<FilledButton>(find.widgetWithText(FilledButton, 'Done'));
     expect(done().onPressed, isNull);
+
+    // The back button must not close the sheet before a rating is saved.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('HOW DID IT FEEL?'), findsOneWidget);
 
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();

@@ -84,7 +84,9 @@ class ResultSheet extends StatefulWidget {
   final ValueListenable<bool> coachLoading;
   final bool coachEnabled;
 
-  final ValueChanged<int> onRate;
+  /// Saves the session; Done stays locked until it completes. A thrown
+  /// error releases the rating and shows a hint.
+  final Future<void> Function(int rating) onRate;
   final VoidCallback onDone;
   final VoidCallback onExport;
 
@@ -94,12 +96,31 @@ class ResultSheet extends StatefulWidget {
 
 class _ResultSheetState extends State<ResultSheet> {
   int? _rating;
+  bool _saving = false;
+  String? _saveError;
 
-  void _rate(int r) {
+  Future<void> _rate(int r) async {
     if (_rating != null) return; // saved once
-    setState(() => _rating = r);
-    widget.onRate(r);
+    setState(() {
+      _rating = r;
+      _saving = true;
+      _saveError = null;
+    });
+    try {
+      await widget.onRate(r);
+      if (mounted) setState(() => _saving = false);
+    } catch (e) {
+      debugPrint('save failed: $e');
+      if (!mounted) return;
+      setState(() {
+        _rating = null;
+        _saving = false;
+        _saveError = "Couldn't save the session — tap a rating to try again.";
+      });
+    }
   }
+
+  bool get _doneEnabled => _rating != null && !_saving;
 
   String get _duration {
     final m = widget.durationSeconds ~/ 60;
@@ -174,6 +195,15 @@ class _ResultSheetState extends State<ResultSheet> {
               ),
             ],
           ),
+          if (_saveError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(_saveError!,
+                  style: AppTypography.body.copyWith(
+                      fontSize: 13,
+                      color: AppColors.struggled,
+                      fontWeight: FontWeight.w600)),
+            ),
           ValueListenableBuilder<String?>(
             valueListenable: widget.ladderResult,
             builder: (_, text, __) => text == null
@@ -214,7 +244,9 @@ class _ResultSheetState extends State<ResultSheet> {
                     .copyWith(fontSize: 13, color: AppColors.textMuted),
               ),
             ),
-          if (widget.coachEnabled) ...[
+          // Only once a request is on its way — before that the card would
+          // show an error for a state that is simply "not asked yet".
+          if (widget.coachEnabled && _rating != null) ...[
             const SizedBox(height: 16),
             ValueListenableBuilder<bool>(
               valueListenable: widget.coachLoading,
@@ -237,15 +269,17 @@ class _ResultSheetState extends State<ResultSheet> {
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor:
-                    AppColors.accent.withValues(alpha: 0.35),
-                disabledForegroundColor: Colors.white,
+                disabledBackgroundColor: AppColors.inset,
+                disabledForegroundColor: AppColors.textMuted,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.card)),
               ),
-              onPressed: _rating == null ? null : widget.onDone,
+              onPressed: _doneEnabled ? widget.onDone : null,
               child: Text('Done',
-                  style: AppTypography.subtitle.copyWith(color: Colors.white)),
+                  style: AppTypography.subtitle.copyWith(
+                      color: _doneEnabled
+                          ? Colors.white
+                          : AppColors.textMuted)),
             ),
           ),
           ValueListenableBuilder<SessionLog?>(
@@ -291,35 +325,46 @@ class _RatingChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected
-          ? AppColors.accent.withValues(alpha: 0.14)
-          : AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        side: BorderSide(
-            color: selected ? AppColors.accent : AppColors.textFaint,
-            width: selected ? 1.5 : 1),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        onTap: onTap,
-        child: SizedBox(
-          height: 56,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(label,
-                  style: AppTypography.body.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: selected
-                          ? AppColors.accent
-                          : AppColors.textPrimary)),
-              const SizedBox(height: 2),
-              Text(sub,
-                  style: AppTypography.label
-                      .copyWith(fontSize: 11, color: AppColors.textMuted)),
-            ],
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected
+            ? AppColors.accent.withValues(alpha: 0.14)
+            : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          side: BorderSide(
+              color: selected ? AppColors.accent : AppColors.textFaint,
+              width: selected ? 1.5 : 1),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          onTap: onTap,
+          // Minimum height, not fixed: large fonts or narrow phones may wrap.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(label,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.body.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: selected
+                              ? AppColors.accent
+                              : AppColors.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text(sub,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.label.copyWith(
+                          fontSize: 11, color: AppColors.textMuted)),
+                ],
+              ),
+            ),
           ),
         ),
       ),

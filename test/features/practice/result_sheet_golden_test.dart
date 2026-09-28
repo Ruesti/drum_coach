@@ -71,7 +71,7 @@ void main() {
               coachFeedback: ValueNotifier<String?>(null),
               coachLoading: ValueNotifier<bool>(false),
               coachEnabled: false,
-              onRate: (_) {},
+              onRate: (_) async {},
               onDone: () {},
               onExport: () {},
             ),

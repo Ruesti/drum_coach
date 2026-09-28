@@ -93,6 +93,12 @@ void main() {
       expect(heads(a(unassigned: u(median: 15)))[1], 'You drag a little');
       expect(heads(a(unassigned: u(median: 16)))[1], 'You drag');
       expect(heads(a(unassigned: u(median: -30)))[1], 'You rush');
+      // Both sides of each threshold, both signs.
+      expect(heads(a(unassigned: u(median: 5)))[1],
+          "You're right on the click");
+      expect(heads(a(unassigned: u(median: 6)))[1], 'You drag a little');
+      expect(heads(a(unassigned: u(median: -15)))[1], 'You rush a little');
+      expect(heads(a(unassigned: u(median: -16)))[1], 'You rush');
     });
     test('measurement line names direction and spread', () {
       final rush = coreValues(a(unassigned: u(median: -3.2, spread: 11.4)),
@@ -134,6 +140,21 @@ void main() {
       expect(heads(a(unassigned: u(), timing: leftLate))[2],
           'Your left hand is late');
     });
+    test('hand threshold at 5 ms, both sides', () {
+      TimingAnalysis t(double r, double l) => TimingAnalysis(
+          overallDeviationMs: 3,
+          rightHandDeviationMs: r,
+          leftHandDeviationMs: l,
+          jitterMs: 9);
+      expect(heads(a(unassigned: u(), timing: t(5, 0)))[2],
+          'Your hands are even');
+      expect(heads(a(unassigned: u(), timing: t(0, 5)))[2],
+          'Your hands are even');
+      expect(heads(a(unassigned: u(), timing: t(6, 0)))[2],
+          'Your right hand is late');
+      expect(heads(a(unassigned: u(), timing: t(0, 6)))[2],
+          'Your left hand is late');
+    });
     test('learn mode never shows hands, even with values', () {
       final v = coreValues(a(unassigned: u(interval: 6), timing: even),
           analysisMode: false);
@@ -143,7 +164,11 @@ void main() {
     test('evenness thresholds at 10 and 20 ms', () {
       expect(heads(a(unassigned: u(interval: 10)))[2],
           'Your strokes are even');
+      expect(heads(a(unassigned: u(interval: 11)))[2],
+          'Your strokes are slightly uneven');
       expect(heads(a(unassigned: u(interval: 14)))[2],
+          'Your strokes are slightly uneven');
+      expect(heads(a(unassigned: u(interval: 20)))[2],
           'Your strokes are slightly uneven');
       expect(heads(a(unassigned: u(interval: 21)))[2],
           'Your strokes are uneven');
