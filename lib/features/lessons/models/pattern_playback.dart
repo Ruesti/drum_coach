@@ -50,6 +50,12 @@ class PatternPlayback {
     return idx;
   }
 
+  /// True when [tick] is a main-note onset. Grace ticks (flam/drag, one or
+  /// two ticks before a note) are audible but are not expected strokes for
+  /// the measurement — counting them logged phantom notes with the previous
+  /// note's index and skewed the hand values.
+  bool isOnsetTick(int tick) => onsetTicks.contains(tick);
+
   factory PatternPlayback.forRudiment(Rudiment r, {int ticksPerQuarter = 24}) =>
       buildPatternPlayback(r.sticking, r.gridUnit,
           ticksPerQuarter: ticksPerQuarter);

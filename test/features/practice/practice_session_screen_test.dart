@@ -1,11 +1,17 @@
+import 'dart:async';
+
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
+import 'package:drum_coach/features/lessons/models/rudiment.dart';
+import 'package:drum_coach/features/metronome/backing_styles.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
+import 'package:drum_coach/features/practice/backdrop.dart';
 import 'package:drum_coach/features/practice/practice_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:drum_coach/features/practice/widgets/pulse_bar.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
+import 'package:drum_coach/shared/widgets/app_badge.dart';
 import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -95,6 +101,33 @@ String _backdropOf(WidgetTester tester) => (tester
         .image as AssetImage)
     .assetName;
 
+/// Mocks the native audio channel: headphone type for the analysis-mode
+/// rule. Returns a handle to change the answer mid-test.
+({void Function(String) set}) _mockHeadphones(WidgetTester tester, String type) {
+  var current = type;
+  const channel = MethodChannel('drum_coach/audio');
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+      (call) async {
+    if (call.method == 'headphonesType') return current;
+    return null;
+  });
+  addTearDown(() => tester.binding.defaultBinaryMessenger
+      .setMockMethodCallHandler(channel, null));
+  return (set: (t) => current = t);
+}
+
+void _mockMicPermission(WidgetTester tester) {
+  const channel = MethodChannel('flutter.baseflow.com/permissions/methods');
+  tester.binding.defaultBinaryMessenger
+      .setMockMethodCallHandler(channel, (call) async {
+    if (call.method == 'requestPermissions') return <int, int>{7: 1};
+    if (call.method == 'checkPermissionStatus') return 1;
+    return null;
+  });
+  addTearDown(() => tester.binding.defaultBinaryMessenger
+      .setMockMethodCallHandler(channel, null));
+}
+
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -150,6 +183,12 @@ void main() {
     final first = await _pumpScreen(tester,
         screen: _screen(contextLine: 'Day 9 · Step 2 of 3 · 84 BPM'));
     expect(find.text('Day 9 · Step 2 of 3 · 84 BPM'), findsOneWidget);
+    // Uli 28.09.: a light shadow so the header reads on bright photos.
+    final line =
+        tester.widget<Text>(find.text('Day 9 · Step 2 of 3 · 84 BPM'));
+    expect(line.style?.shadows, isNotEmpty);
+    final name = tester.widget<Text>(find.text(rudimentsSeedData.first.name));
+    expect(name.style?.shadows, isNotEmpty);
     // Close the first container before the second screen: its session
     // timer must not survive into the pending-timers check.
     first.dispose();
@@ -160,20 +199,34 @@ void main() {
     second.dispose();
   });
 
-  testWidgets('backdrop photo: the program phase from Today, else by difficulty',
+  testWidgets('backdrop photo: a random one from the practice pool, full screen',
       (tester) async {
     // Decided 27.09.: a dimmed photo behind the whole screen, like a stage.
+    // 28.09. (Uli): random from a big pool instead of the program phase.
     final fromToday = await _pumpScreen(tester, screen: _screen(phase: 3));
-    expect(_backdropOf(tester), 'assets/illustrations/today/phase3.jpg');
+    expect(practiceBackdrops, contains(_backdropOf(tester)));
     final rect = tester.getRect(find.byType(Image).first);
     expect(rect.width, 360);
     expect(rect.height, 780);
     fromToday.dispose();
+  });
 
-    // Free practice: Single Stroke Roll is a beginner exercise → phase 1.
-    final free = await _pumpScreen(tester, screen: _screen());
-    expect(_backdropOf(tester), 'assets/illustrations/today/phase1.jpg');
-    free.dispose();
+  testWidgets('the scrim over the photo is lighter while configuring and '
+      'darkens with the start', (tester) async {
+    // Uli 28.09.: "das Bild könnte noch ein bisschen heller bei
+    // durchsichtigen Noten" — 15/40/85 % before the start, 30/60/88 % after.
+    await _pumpScreen(tester, screen: _screen());
+    LinearGradient scrim() => (tester
+            .widget<AnimatedContainer>(
+                find.byKey(const ValueKey('backdrop-scrim')))
+            .decoration as BoxDecoration)
+        .gradient as LinearGradient;
+    List<int> alphas() =>
+        scrim().colors.map((c) => (c.a * 255).round()).toList();
+    expect(alphas(), [0x26, 0x66, 0xD9]);
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    expect(alphas(), [0x4D, 0x99, 0xE0]);
   });
 
   testWidgets('pulse bar sits under the sheet and follows the loop',
@@ -353,6 +406,8 @@ void main() {
 
     await tester.tap(find.text('10 min'));
     await tester.pump();
+    // The sheet scrolls (BACKING section since Engine part 1): bring Done in.
+    await tester.ensureVisible(find.text('Done'));
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(find.text('Start'), findsOneWidget);
@@ -459,7 +514,9 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_horiz));
     await tester.pumpAndSettle();
     expect(find.text('Click track'), findsOneWidget);
-    await tester.tap(find.byType(Switch));
+    // Two switches since Engine part 1: Backing first, Click track second.
+    await tester.ensureVisible(find.byType(Switch).last);
+    await tester.tap(find.byType(Switch).last);
     await tester.pump();
     expect(container.read(metronomeNotifierProvider).clickTrack, isFalse);
     expect(SettingsService.clickTrackEnabled, isFalse);
@@ -467,6 +524,7 @@ void main() {
 
   testWidgets('analysis mode silences the click track, learn mode restores it',
       (tester) async {
+    _mockHeadphones(tester, 'none');
     const channel = MethodChannel('flutter.baseflow.com/permissions/methods');
     tester.binding.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
@@ -489,5 +547,211 @@ void main() {
     await tester.pump();
     expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
     container.dispose();
+  });
+
+  testWidgets(
+      'backing is automatic: the sheet shows the chosen style, a switch and '
+      'the level slider, no chips', (tester) async {
+    _mockHeadphones(tester, 'none');
+    final container = await _pumpScreen(tester, screen: _screen());
+    // First seed exercise is an eighth-note pattern → Rock 8ths.
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+    expect(find.text('BACKING'), findsNothing);
+    expect(find.text('Backing'), findsOneWidget);
+    expect(find.text('Rock 8ths · automatic'), findsOneWidget);
+    for (final s in backingStyles) {
+      expect(find.widgetWithText(AppSelectableChip, s.label), findsNothing);
+    }
+    expect(tester.widget<Slider>(find.byType(Slider)).onChanged, isNotNull);
+
+    // Two switches now: Backing (first) and Click track.
+    await tester.ensureVisible(find.byType(Switch).first);
+    await tester.tap(find.byType(Switch).first);
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
+    expect(SettingsService.backingEnabled, isFalse);
+    expect(tester.widget<Slider>(find.byType(Slider)).onChanged, isNull);
+    expect(tester.takeException(), isNull);
+    container.dispose();
+  });
+
+  testWidgets('the level slider writes the backing level', (tester) async {
+    _mockHeadphones(tester, 'none');
+    final container = await _pumpScreen(tester, screen: _screen());
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.value, closeTo(0.7, 1e-9));
+    slider.onChanged!(0.0);
+    await tester.pump();
+    expect(SettingsService.backingLevel, 0.0);
+    expect(container.read(metronomeNotifierProvider).backingLevel, 0.0);
+    container.dispose();
+  });
+
+  testWidgets('the automatic style follows the tempo: sixteenths relax to '
+      'eighths from 140 BPM', (tester) async {
+    _mockHeadphones(tester, 'none');
+    final sixteenths = rudimentsSeedData
+        .firstWhere((r) => r.gridUnit == NoteGrid.sixteenth);
+    final container = await _pumpScreen(tester,
+        screen: PracticeSessionScreen(
+            rudimentId: sixteenths.id, isFromRoutine: false, targetBpm: 100));
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock16');
+    container.read(metronomeNotifierProvider.notifier).setBpm(150);
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+    container.dispose();
+  });
+
+  testWidgets(
+      'analysis mode without headphones mutes backing and click track, '
+      'with headphones both stay on', (tester) async {
+    _mockMicPermission(tester);
+    final phones = _mockHeadphones(tester, 'none');
+    await SettingsService.setMicAnalysisEnabled(true);
+
+    final container = await _pumpScreen(tester, screen: _screen());
+    await tester.pump(); // headphone query answered
+    // Learn mode, mic listening, no headphones: the band would reach the mic
+    // and pollute the learn-mode result — backing muted, click track (quiet,
+    // rule of 27.09.) still on.
+    expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
+    expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
+
+    await tester.tap(find.text('LEARN'));
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
+    expect(container.read(metronomeNotifierProvider).clickTrack, isFalse);
+
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+    expect(
+        find.text(
+            'Off while analysing without headphones — the mic would hear it'),
+        findsWidgets);
+    expect(
+        find.text(
+            'Off while the mic listens without headphones — it would hear the band'),
+        findsOneWidget);
+    await tester.tapAt(const Offset(10, 10)); // close the sheet
+    await tester.pumpAndSettle();
+
+    // Headphones plugged in: the metronome reports a route change.
+    phones.set('wired');
+    container
+        .read(metronomeNotifierProvider.notifier)
+        .notifyAudioRouteChanged();
+    await tester.pump();
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+    expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
+
+    // Unplugged again: muted again before the mic hears the band.
+    phones.set('none');
+    container
+        .read(metronomeNotifierProvider.notifier)
+        .notifyAudioRouteChanged();
+    await tester.pump();
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
+    expect(container.read(metronomeNotifierProvider).clickTrack, isFalse);
+    container.dispose();
+  });
+
+  testWidgets(
+      'backing needs headphones whenever the mic listens, even in learn mode; '
+      'with the mic off it plays freely', (tester) async {
+    _mockMicPermission(tester);
+    final phones = _mockHeadphones(tester, 'none');
+
+    // Mic analysis off (the default): band plays through the speaker.
+    var container = await _pumpScreen(tester, screen: _screen());
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+    // Tear the first screen down: a second pump of the same widget type
+    // would keep the old State (and its old, disposed notifier).
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
+
+    // Mic analysis on, learn mode, no headphones: muted.
+    await SettingsService.setMicAnalysisEnabled(true);
+    container = await _pumpScreen(tester, screen: _screen());
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
+    expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
+
+    // Headphones: allowed again.
+    phones.set('wired');
+    container
+        .read(metronomeNotifierProvider.notifier)
+        .notifyAudioRouteChanged();
+    await tester.pump();
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+    container.dispose();
+  });
+
+  testWidgets(
+      'a route change mutes the backing at once, before the headphone answer '
+      'arrives', (tester) async {
+    _mockMicPermission(tester);
+    await SettingsService.setMicAnalysisEnabled(true);
+    // First answer immediate ("wired"); the answer after the route change
+    // is held back until the test releases it.
+    const channel = MethodChannel('drum_coach/audio');
+    var calls = 0;
+    final held = Completer<String>();
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (call) async {
+      if (call.method != 'headphonesType') return null;
+      calls++;
+      return calls == 1 ? 'wired' : await held.future;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null));
+
+    final container = await _pumpScreen(tester, screen: _screen());
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+
+    container
+        .read(metronomeNotifierProvider.notifier)
+        .notifyAudioRouteChanged();
+    await tester.pump();
+    // Pessimistic: muted while the answer is still pending.
+    expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
+
+    held.complete('wired');
+    await tester.pump();
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+    container.dispose();
+  });
+
+  testWidgets(
+      'the notation sheet is translucent while configuring and opaque once '
+      'the session has started', (tester) async {
+    // Uli 28.09.: the sheet hid the backdrop photo — see through it while
+    // setting tempo and options, solid once you play.
+    await _pumpScreen(tester, screen: _screen());
+    AnimatedOpacity sheet() => tester.widget<AnimatedOpacity>(find
+        .ancestor(
+            of: find.byType(NotationStaffWidget),
+            matching: find.byType(AnimatedOpacity))
+        .first);
+    expect(sheet().opacity, 0.6);
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    expect(sheet().opacity, 1.0);
+    // Paused after a stop: the session has started, the sheet stays solid.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    expect(sheet().opacity, 1.0);
   });
 }

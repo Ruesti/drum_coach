@@ -5,7 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 
+import 'backing_sounds.dart';
+import 'backing_styles.dart';
 import 'click_loop_renderer.dart';
+import 'loop_voices.dart';
+import 'stroke_sounds.dart' as sounds;
 
 enum Subdivision {
   quarter(factor: 1, label: '♩', name: '1/4'),
@@ -180,21 +184,40 @@ class MetronomeEngine {
     final synthetic = _soundType != SoundType.snare || _snarePcm.isEmpty;
     final fallbackSound =
         _soundType == SoundType.snare ? SoundType.click : _soundType;
-    final wav = buildLoopWav(
-      bpm: _bpm,
-      factor: _factor,
-      tickVolumes: _loopVolumes(),
-      accentSamples: synthetic
-          ? synthSamples(fallbackSound, accent: true)
-          : _snarePcm,
-      normalSamples: synthetic
-          ? synthSamples(fallbackSound, accent: false)
-          : _snarePcm,
-      pulseSamples: _pulse && _beatVolumes != null && _beatVolumes!.isNotEmpty
-          ? pulseSamples()
-          : null,
-      pulseEvery: _factor,
-    );
+    final hasPattern = _beatVolumes != null && _beatVolumes!.isNotEmpty;
+    final patternLoud =
+        synthetic ? synthSamples(fallbackSound, accent: true) : _snarePcm;
+    final patternSoft =
+        synthetic ? synthSamples(fallbackSound, accent: false) : _snarePcm;
+    LoopPlan plan;
+    try {
+      plan = buildLoopPlan(
+        patternVolumes: _loopVolumes(),
+        patternLoud: patternLoud,
+        patternSoft: patternSoft,
+        factor: _factor,
+        pulse: _pulse && hasPattern,
+        pulseSound: pulseSamples(),
+        backing: hasPattern ? _backing : null,
+        backingLevel: _backingLevel,
+        beatsPerBar: _beatsPerBar,
+        kickSound: _kickPcm,
+        hihatLoud: _hihatLoudPcm,
+        hihatSoft: _hihatSoftPcm,
+      );
+    } catch (e) {
+      // A broken backing must never silence the exercise: render without it.
+      debugPrint('backing plan failed, rendering without backing: $e');
+      plan = buildLoopPlan(
+        patternVolumes: _loopVolumes(),
+        patternLoud: patternLoud,
+        patternSoft: patternSoft,
+        factor: _factor,
+        pulse: _pulse && hasPattern,
+        pulseSound: pulseSamples(),
+      );
+    }
+    final wav = buildLoopWav(bpm: _bpm, factor: _factor, voices: plan.voices);
     // Timeout-guarded: on a dead audio engine loadMem never answers — this
     // path must FAIL fast so the start supervisor can revive the engine,
     // instead of hanging forever before any watchdog exists.
@@ -212,7 +235,7 @@ class MetronomeEngine {
       return;
     }
     _loopSource = source;
-    final volumes = List<double>.of(_loopVolumes());
+    final volumes = List<double>.of(plan.patternVolumes);
     // Tick grid derived from getLength of the same source getPosition
     // reports on — defensive: with a healthy engine both equal the Dart
     // formula, but any position-scale quirk then shifts grid and position
@@ -538,6 +561,28 @@ class MetronomeEngine {
     _scheduleLoopRebuild();
   }
 
+  /// Backing loop (Engine part 1): kick + hi-hat from a style, only on the
+  /// 24-tick pattern clock. Sounds are synthesised once per process.
+  BackingStyle? _backing;
+  double _backingLevel = 0.7;
+  int _beatsPerBar = 4;
+  static final List<double> _kickPcm = kickSamples();
+  static final List<double> _hihatLoudPcm = hihatSamples(accent: true);
+  static final List<double> _hihatSoftPcm = hihatSamples(accent: false);
+
+  void setBacking(BackingStyle? style,
+      {required double level, required int beatsPerBar}) {
+    if (_backing == style &&
+        _backingLevel == level &&
+        _beatsPerBar == beatsPerBar) {
+      return;
+    }
+    _backing = style;
+    _backingLevel = level;
+    _beatsPerBar = beatsPerBar;
+    _scheduleLoopRebuild();
+  }
+
   @visibleForTesting
   int get debugBpm => _bpm;
   @visibleForTesting
@@ -569,23 +614,11 @@ class MetronomeEngine {
     required bool accent,
     int sampleRate = 44100,
   }) {
-    final amplitude = accent ? 0.95 : 0.55;
     switch (type) {
       case SoundType.click:
-        final frequency = accent ? 1200.0 : 800.0;
-        final n = (sampleRate * 0.030).round();
-        return [
-          for (var i = 0; i < n; i++)
-            amplitude *
-                math.exp(-140.0 * (i / sampleRate)) *
-                math.sin(2 * math.pi * frequency * (i / sampleRate)),
-        ];
+        return sounds.clickSamples(accent: accent, sampleRate: sampleRate);
       case SoundType.rim:
-        final n = (sampleRate * 0.10).round();
-        return [
-          for (var i = 0; i < n; i++)
-            _rimSample(i / sampleRate, amplitude),
-        ];
+        return sounds.rimSamples(accent: accent, sampleRate: sampleRate);
       case SoundType.snare:
         // The snare is a real recorded sample (assets/audio/snare.mp3); its
         // PCM is decoded once at init via readSamplesFromMem and kept in
@@ -597,22 +630,8 @@ class MetronomeEngine {
   /// The click track's own voice: a short, high, dry tick — clearly apart
   /// from the exercise sounds (click 800/1200 Hz · 30 ms, rim, snare), so the
   /// ear can tell the pulse from the pattern.
-  static List<double> pulseSamples({int sampleRate = 44100}) {
-    final n = (sampleRate * 0.012).round();
-    return [
-      for (var i = 0; i < n; i++)
-        0.45 *
-            math.exp(-350.0 * (i / sampleRate)) *
-            math.sin(2 * math.pi * 2600.0 * (i / sampleRate)),
-    ];
-  }
-
-  static double _rimSample(double t, double amplitude) {
-    final shell = math.sin(2 * math.pi * 280 * t) * math.exp(-55.0 * t) * 0.45;
-    final rim = math.sin(2 * math.pi * 680 * t) * math.exp(-130.0 * t) * 0.60;
-    final snap = math.sin(2 * math.pi * 2100 * t) * math.exp(-600.0 * t) * 0.35;
-    return amplitude * (shell + rim + snap);
-  }
+  static List<double> pulseSamples({int sampleRate = 44100}) =>
+      sounds.pulseSamples(sampleRate: sampleRate);
 
   static Uint8List _buildClickWav({
     required double frequency,

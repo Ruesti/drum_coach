@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,13 +19,15 @@ import '../../data/local/models/session_log.dart';
 import '../../data/local/session_log_service.dart';
 import '../coaching/models/session_analysis.dart';
 import 'analysis_announcement.dart';
+import 'auto_backing.dart';
+import 'backdrop.dart';
 import '../coaching/services/recording_setup.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
 import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
-import '../lessons/models/rudiment.dart';
+import '../metronome/backing_styles.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import '../program/program_provider.dart';
@@ -61,7 +64,8 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   /// "Day 9 · Step 2 of 3 · 84 BPM". Null shows the exercise's difficulty.
   final String? contextLine;
 
-  /// Program phase 1–4 for the backdrop photo (continues Today's picture).
+  /// Program phase 1–4 handed over by Today. Since 28.09. the backdrop photo
+  /// is random (`backdrop.dart`), so this only travels with the route.
   /// Null (free practice) picks it by the exercise's difficulty.
   final int? phase;
 
@@ -114,6 +118,29 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// Analysis mode (Brief Phase 3): remembered per exercise, learn is the
   /// default. Only the analysis mode may show per-hand values.
   late bool _analysisMode = SettingsService.analysisModeFor(widget.rudimentId);
+
+  /// Backing loop (Engine part 1; 28.09.: never picked by the user): the
+  /// style follows the exercise and the tempo via [autoBackingStyle].
+  /// Refreshed in [_applyExtras].
+  String? _backingStyleId;
+
+  /// Headphones detected — the extras may sound next to the mic only when
+  /// they cannot reach it.
+  bool _headphones = false;
+
+  /// Click track: rule of 27.09. — silent while analysing without headphones
+  /// (in learn mode the short, quiet pulse is tolerated).
+  bool get _extrasAllowed => !_analysisMode || _headphones;
+
+  /// Backing: silent whenever the mic listens at all (mic analysis on, learn
+  /// or analysis mode) without headphones — a kick at 70 % and hi-hat noise
+  /// through the speaker register as strokes and wreck the result.
+  bool get _backingAllowed =>
+      !SettingsService.micAnalysisEnabled || _headphones;
+
+  /// Overlapping headphone queries (start + route change): only the newest
+  /// answer counts.
+  int _headphoneQuerySeq = 0;
   late final SessionTimerNotifier _sessionTimerNotifier;
 
   /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
@@ -130,6 +157,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   @override
   void initState() {
     super.initState();
+    // Draw this screen's photo now and remember it, so the next exercise
+    // gets a different one.
+    _lastBackdrop = _backdrop;
     WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
@@ -158,8 +188,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final metronome = _metronomeNotifier
         ..setPatternClock(_playback.ticksPerQuarter)
-        ..setPatternVolumes(_playback.tickVolumes);
-      _applyClickTrack();
+        ..setPatternVolumes(_playback.tickVolumes)
+        ..setBackingLevel(SettingsService.backingLevel);
+      _applyExtras();
+      unawaited(_refreshHeadphones());
       if (_ladderActive) {
         metronome.setBpm(_ladderPlan!.bpmAt(_elapsedSeconds));
       } else if (widget.targetBpm != null) {
@@ -320,8 +352,32 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
   /// The pulse follows the setting but never runs in analysis mode: the mic
   /// would hear it as strokes (decided 27.09.).
-  void _applyClickTrack() => _metronomeNotifier
-      .setClickTrack(SettingsService.clickTrackEnabled && !_analysisMode);
+  /// Click track and backing follow the settings, the exercise and the
+  /// analysis-mode rule (spec §6): both silent while analysing without
+  /// headphones, the mic would hear them.
+  void _applyExtras() {
+    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    final bpm = ref.read(metronomeNotifierProvider).bpm;
+    _backingStyleId = autoBackingStyle(rudiment, bpm: bpm);
+    final backingOn = SettingsService.backingEnabled && _backingAllowed;
+    _metronomeNotifier
+      ..setClickTrack(SettingsService.clickTrackEnabled && _extrasAllowed)
+      ..setBacking(backingOn ? _backingStyleId : null,
+          beatsPerBar: rudiment.beatsPerBar);
+  }
+
+  /// Ask the platform for headphones, then re-apply the extras. Failure
+  /// counts as "no headphones" (the safe side while the mic listens).
+  Future<void> _refreshHeadphones() async {
+    final seq = ++_headphoneQuerySeq;
+    var type = 'none';
+    try {
+      type = await AudioCapabilities.headphonesType();
+    } catch (_) {}
+    if (!mounted || seq != _headphoneQuerySeq) return;
+    _headphones = type != 'none';
+    _applyExtras();
+  }
 
   /// Label of the primary button: Stop while playing, Resume once time has
   /// elapsed, Start before the first note.
@@ -346,6 +402,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
   Future<void> _showOptionsSheet() async {
     final screenContext = context;
+    // Headphone state is current here: queried at start and on every route
+    // change (plug/unplug) via the metronome's audioRouteChanges counter.
     _optionsOpen = true;
     await showModalBottomSheet<void>(
       context: context,
@@ -370,9 +428,22 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                   ref.read(metronomeNotifierProvider.notifier).setSoundType,
               clickTrack: SettingsService.clickTrackEnabled,
               analysisMode: _analysisMode,
+              backingEnabled: SettingsService.backingEnabled,
+              backingStyleLabel: backingStyleById(_backingStyleId)?.label,
+              backingLevel: SettingsService.backingLevel,
+              extrasAllowed: _extrasAllowed,
+              backingAllowed: _backingAllowed,
+              onBackingEnabled: (on) async {
+                await SettingsService.setBackingEnabled(on);
+                _applyExtras();
+              },
+              onBackingLevel: (level) async {
+                await SettingsService.setBackingLevel(level);
+                _metronomeNotifier.setBackingLevel(level);
+              },
               onClickTrack: (on) async {
                 await SettingsService.setClickTrackEnabled(on);
-                _applyClickTrack();
+                _applyExtras();
               },
               onAbout: () {
                 Navigator.of(sheetContext).pop();
@@ -625,16 +696,36 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final rudiment = ref.watch(rudimentByIdProvider(widget.rudimentId));
     final notifier = ref.read(metronomeNotifierProvider.notifier);
 
+    ref.listen<int>(metronomeNotifierProvider.select((s) => s.bpm),
+        (prev, next) {
+      // The automatic style follows the tempo (sixteenths relax to eighths
+      // from 140 BPM).
+      if (prev != null && next != prev) _applyExtras();
+    });
+
+    ref.listen<int>(
+        metronomeNotifierProvider.select((s) => s.audioRouteChanges),
+        (prev, next) {
+      // Headphones plugged or unplugged: assume they are gone until the
+      // query says otherwise — the running loop keeps sounding until it is
+      // re-rendered, so every millisecond counts while the mic listens.
+      if (prev != null && next != prev) {
+        _headphones = false;
+        _applyExtras();
+        unawaited(_refreshHeadphones());
+      }
+    });
+
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
-      // Record beat timestamps for mic correlation — only pattern ticks that
-      // carry a note onset (silent grid ticks are not expected strokes), and
-      // logged as note index so the sticking pattern maps hits to hands.
+      // Record beat timestamps for mic correlation — only main-note onsets
+      // (silent grid ticks and flam/drag grace ticks are not expected
+      // strokes), logged as note index so the sticking maps hits to hands.
       if (_micRecording &&
           next.isPlaying &&
           next.currentBeatIndex >= 0 &&
           next.currentBeatIndex != (prev?.currentBeatIndex ?? -2)) {
         final tick = next.currentBeatIndex % _playback.totalTicks;
-        if (_playback.tickVolumes[tick] > 0) {
+        if (_playback.isOnsetTick(tick)) {
           _beatLog.add((
             beatIndex: _playback.noteIndexAtTick(tick),
             // Scheduled instant from the timing isolate (§1.3) — not the
@@ -699,23 +790,34 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             fit: StackFit.expand,
             children: [
               Image.asset(
-                _backdropAsset(rudiment),
+                _backdrop,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
-              const DecoratedBox(
+              AnimatedContainer(
+                key: const ValueKey('backdrop-scrim'),
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeOut,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    // 55 % at the top so the photo still reads, 94 % at the
-                    // bottom where the controls sit.
-                    colors: [
-                      Color(0x8C101010),
-                      Color(0xC7101010),
-                      Color(0xF0101010),
-                    ],
-                    stops: [0.0, 0.5, 1.0],
+                    // Lighter while configuring — the sheet is translucent
+                    // then and the photo should read (Uli 28.09.) — darker
+                    // once the session runs; the bottom stays dark for the
+                    // controls either way.
+                    colors: isPlaying || _elapsedSeconds > 0
+                        ? const [
+                            Color(0x4D101010),
+                            Color(0x99101010),
+                            Color(0xE0101010),
+                          ]
+                        : const [
+                            Color(0x26101010),
+                            Color(0x66101010),
+                            Color(0xD9101010),
+                          ],
+                    stops: const [0.0, 0.5, 1.0],
                   ),
                 ),
               ),
@@ -733,7 +835,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                             setState(() => _analysisMode = !_analysisMode);
                             SettingsService.setAnalysisModeFor(
                                 widget.rudimentId, _analysisMode);
-                            _applyClickTrack();
+                            _applyExtras();
                           },
                         )
                       : null,
@@ -744,14 +846,22 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 // Center: a short exercise (one row) must not leave the card
                 // glued to the top with a hole under it — the scroll view
                 // shrinks to the card here and still scrolls long sheets.
+                // Translucent while configuring so the backdrop photo reads
+                // (Uli 28.09.: the sheet hid it), solid once the session has
+                // started and the notes are what matters.
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
                     child: Center(
-                      child: NotationStaffWidget(
-                        rudiment: rudiment,
-                        activeIndex: activeBeat,
-                        autoScroll: true,
+                      child: AnimatedOpacity(
+                        opacity: isPlaying || _elapsedSeconds > 0 ? 1.0 : 0.6,
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.easeOut,
+                        child: NotationStaffWidget(
+                          rudiment: rudiment,
+                          activeIndex: activeBeat,
+                          autoScroll: true,
+                        ),
                       ),
                     ),
                   ),
@@ -827,13 +937,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     );
   }
 
-  /// Backdrop: the program phase's picture when Today handed one over,
-  /// otherwise the exercise's difficulty (beginner → phase 1 … professional
-  /// → phase 4). Same assets as Today's banner, so no extra bytes.
-  String _backdropAsset(Rudiment rudiment) {
-    final phase = (widget.phase ?? (rudiment.difficulty.index + 1)).clamp(1, 4);
-    return 'assets/illustrations/today/phase$phase.jpg';
-  }
+  /// Backdrop: a random photo from the practice pool each time the screen
+  /// opens (28.09., Uli), never the one shown last time. The program phase
+  /// from Today no longer picks it.
+  static String? _lastBackdrop;
+  late final String _backdrop =
+      pickBackdrop(Random(), avoid: _lastBackdrop);
 }
 
 // ── Ladder step row ────────────────────────────────────────────────────────────
@@ -921,6 +1030,12 @@ class _TimerGoalRow extends StatelessWidget {
 
 // ── Header ────────────────────────────────────────────────────────────────────
 
+/// Light shadow behind the header texts so they read on bright backdrop
+/// photos too (Uli 28.09.: "bitte leichter Schatten").
+const _headerShadow = [
+  Shadow(color: Color(0x99000000), blurRadius: 6, offset: Offset(0, 1)),
+];
+
 class _Header extends StatelessWidget {
   const _Header({required this.title, required this.subtitle, this.modeChip});
 
@@ -949,13 +1064,16 @@ class _Header extends StatelessWidget {
                 Text(title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: PracticeTypography.subtitle),
+                    style: PracticeTypography.subtitle
+                        .copyWith(shadows: _headerShadow)),
                 const SizedBox(height: 2),
                 Text(subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: PracticeTypography.body.copyWith(
-                        fontSize: 13, color: PracticeColors.textMuted)),
+                        fontSize: 13,
+                        color: PracticeColors.textMuted,
+                        shadows: _headerShadow)),
               ],
             ),
           ),
@@ -1140,6 +1258,13 @@ class _OptionsSheet extends StatefulWidget {
     required this.onSoundSelected,
     required this.clickTrack,
     required this.analysisMode,
+    required this.backingEnabled,
+    required this.backingStyleLabel,
+    required this.backingLevel,
+    required this.extrasAllowed,
+    required this.backingAllowed,
+    required this.onBackingEnabled,
+    required this.onBackingLevel,
     required this.onClickTrack,
     required this.onAbout,
   });
@@ -1152,6 +1277,21 @@ class _OptionsSheet extends StatefulWidget {
   final ValueChanged<SoundType> onSoundSelected;
   final bool clickTrack;
   final bool analysisMode;
+  final bool backingEnabled;
+
+  /// Label of the automatically chosen style, shown under the switch.
+  final String? backingStyleLabel;
+  final double backingLevel;
+
+  /// False while analysing without headphones: click track and backing are
+  /// muted and their controls disabled with a hint.
+  final bool extrasAllowed;
+
+  /// False while the mic listens without headphones: the band is muted,
+  /// switch and level slider are disabled with a hint.
+  final bool backingAllowed;
+  final ValueChanged<bool> onBackingEnabled;
+  final ValueChanged<double> onBackingLevel;
   final ValueChanged<bool> onClickTrack;
   final VoidCallback onAbout;
 
@@ -1164,6 +1304,8 @@ class _OptionsSheetState extends State<_OptionsSheet> {
   // setState does not rebuild a modal sheet's builder.
   late int? _goal = widget.goalSeconds;
   late bool _clickTrack = widget.clickTrack;
+  late bool _backingOn = widget.backingEnabled;
+  late double _level = widget.backingLevel;
 
   @override
   Widget build(BuildContext context) {
@@ -1209,18 +1351,58 @@ class _OptionsSheetState extends State<_OptionsSheet> {
                   .toList(),
             ),
             const SizedBox(height: 12),
+            // Backing (Engine part 1): a band that fits the exercise by
+            // itself — no picking (28.09.); only on/off and its level.
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('Backing', style: PracticeTypography.body),
+              subtitle: Text(
+                !widget.backingAllowed
+                    ? 'Off while the mic listens without headphones — it would hear the band'
+                    : '${widget.backingStyleLabel ?? 'Off'} · automatic',
+                style: PracticeTypography.body
+                    .copyWith(fontSize: 13, color: PracticeColors.textMuted),
+              ),
+              value: _backingOn,
+              onChanged: !widget.backingAllowed
+                  ? null
+                  : (on) {
+                      setState(() => _backingOn = on);
+                      widget.onBackingEnabled(on);
+                    },
+            ),
+            Row(
+              children: [
+                Text('Level', style: PracticeTypography.body),
+                Expanded(
+                  child: Slider(
+                    value: _level,
+                    min: 0,
+                    max: 1,
+                    divisions: 10,
+                    label: '${(_level * 100).round()} %',
+                    onChanged: !_backingOn || !widget.backingAllowed
+                        ? null
+                        : (v) {
+                            setState(() => _level = v);
+                            widget.onBackingLevel(v);
+                          },
+                  ),
+                ),
+              ],
+            ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text('Click track', style: PracticeTypography.body),
               subtitle: Text(
-                widget.analysisMode
-                    ? 'Off while analysing — the mic would hear it'
+                !widget.extrasAllowed
+                    ? 'Off while analysing without headphones — the mic would hear it'
                     : 'A quarter-note pulse next to the exercise',
                 style: PracticeTypography.body
                     .copyWith(fontSize: 13, color: PracticeColors.textMuted),
               ),
               value: _clickTrack,
-              onChanged: widget.analysisMode
+              onChanged: !widget.extrasAllowed
                   ? null
                   : (on) {
                       setState(() => _clickTrack = on);

@@ -228,8 +228,13 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
   (running marker + volume pulses; the click track is a second voice in the
   loop, off in analysis mode), `TempoRow` (±4 BPM, tap the number for exact
   entry), one primary button Start/Stop/Resume with the time, Finish on its
-  own row while paused, options (duration, sound, click track, about) behind
-  "⋯".
+  own row while paused, options (duration, sound, backing on/off + level —
+  the style is automatic, `autoBackingStyle`, click track, about) behind
+  "⋯". Backdrop photo: random from `practiceBackdrops` (`backdrop.dart`, the
+  36 portrait photos in `assets/illustrations/practice/`) on every open,
+  never the previous one; scrim 15/40/85 % while configuring,
+  30/60/88 % once started; the notation sheet is 60 % translucent until the
+  session starts, then solid (`AnimatedOpacity`).
 - Result (K2 step 3): one light `ResultSheet` after the session — verdict
   banner, rating chips (save on tap, once), three plain-language `coreValues`
   (hits, timing, hands/evenness), details folded, Done. Ladder dialog and
@@ -279,6 +284,17 @@ StickingPatternWidget({
 - BPM range: 40–240
 - Tap Tempo: average of last 4 taps, reset after 3s of inactivity
 - Visual beat indicator must sync with audio, not with UI frame rate
+- Loop rendering (Engine part 1): `buildLoopPlan` (`loop_voices.dart`) turns
+  pattern, click track and a `BackingStyle` (kick + hi-hat, `backing_styles.dart`,
+  synthesised in `backing_sounds.dart`) into `LoopVoice`s over one cycle of
+  `lcm(pattern, bar)` ticks; `buildLoopWav` mixes them with a soft limiter
+  (knee 0.8, ceiling 0.98). Backing only on the 24-tick pattern clock.
+  Analysis-mode rule: click track and backing sound only with headphones
+  (the mic would hear them); the practice screen re-checks on the
+  metronome's `audioRouteChanges`. Sound gate:
+  `dart run tool/render_backing_demo.dart <dir>` renders every style.
+- Measurement takes main-note onsets only (`PatternPlayback.isOnsetTick`);
+  grace ticks (flam/drag) sound but are not expected strokes.
 
 ## UI & Theme Guidelines
 - **Dark theme only** – optimized for low-light practice environments
