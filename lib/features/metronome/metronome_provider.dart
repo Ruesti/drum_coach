@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/local/settings_service.dart';
 import '../coaching/services/recording_setup.dart';
+import 'backing_styles.dart';
 import 'metronome_engine.dart';
 
 part 'metronome_provider.g.dart';
@@ -28,6 +29,16 @@ class MetronomeState {
   /// quarter-note pulse. Off until a screen asks for it.
   final bool clickTrack;
 
+  /// Backing loop (Engine part 1): chosen style id (null = off) and the
+  /// backing track's own level 0..1.
+  final String? backingStyleId;
+  final double backingLevel;
+
+  /// Bumped on every headphone plug/unplug so the practice screen can
+  /// re-check headphones (the analysis-mode rule) without owning the single
+  /// platform callback this notifier already holds.
+  final int audioRouteChanges;
+
   const MetronomeState({
     this.isPlaying = false,
     this.bpm = 100,
@@ -37,6 +48,9 @@ class MetronomeState {
     this.isAccent = false,
     this.lastBeatPlannedAt,
     this.clickTrack = false,
+    this.backingStyleId,
+    this.backingLevel = 0.7,
+    this.audioRouteChanges = 0,
   });
 
   MetronomeState copyWith({
@@ -48,6 +62,10 @@ class MetronomeState {
     bool? isAccent,
     DateTime? lastBeatPlannedAt,
     bool? clickTrack,
+    String? backingStyleId,
+    bool clearBackingStyle = false,
+    double? backingLevel,
+    int? audioRouteChanges,
   }) {
     return MetronomeState(
       isPlaying: isPlaying ?? this.isPlaying,
@@ -58,6 +76,10 @@ class MetronomeState {
       isAccent: isAccent ?? this.isAccent,
       lastBeatPlannedAt: lastBeatPlannedAt ?? this.lastBeatPlannedAt,
       clickTrack: clickTrack ?? this.clickTrack,
+      backingStyleId:
+          clearBackingStyle ? null : (backingStyleId ?? this.backingStyleId),
+      backingLevel: backingLevel ?? this.backingLevel,
+      audioRouteChanges: audioRouteChanges ?? this.audioRouteChanges,
     );
   }
 }
@@ -82,8 +104,7 @@ class MetronomeNotifier extends _$MetronomeNotifier {
     // Headphone plug/unplug: reroute the audio engine (it does not survive
     // Android routing changes on its own). The notifier is keepAlive, so
     // this listener lives for the app's lifetime.
-    AudioCapabilities.onDevicesChanged(
-        () => _engine?.handleAudioRouteChanged());
+    AudioCapabilities.onDevicesChanged(notifyAudioRouteChanged);
     Future.microtask(_initAsync);
     return const MetronomeState();
   }
@@ -150,6 +171,34 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   void setPatternVolumes(List<double>? volumes) {
     _pendingVolumes = volumes;
     _engine?.setBeatVolumes(volumes);
+  }
+
+  int _beatsPerBar = 4;
+
+  /// Headphone plug/unplug: reroute the engine and tell listening screens.
+  @visibleForTesting
+  void notifyAudioRouteChanged() {
+    _engine?.handleAudioRouteChanged();
+    if (_disposed) return;
+    state = state.copyWith(audioRouteChanges: state.audioRouteChanges + 1);
+  }
+
+  /// Backing loop next to a pattern (Engine part 1). Unknown ids mean off.
+  void setBacking(String? styleId, {required int beatsPerBar}) {
+    final style = backingStyleById(styleId);
+    _beatsPerBar = beatsPerBar;
+    _engine?.setBacking(style,
+        level: state.backingLevel, beatsPerBar: beatsPerBar);
+    state = style == null
+        ? state.copyWith(clearBackingStyle: true)
+        : state.copyWith(backingStyleId: style.id);
+  }
+
+  void setBackingLevel(double level) {
+    final clamped = level.clamp(0.0, 1.0).toDouble();
+    _engine?.setBacking(backingStyleById(state.backingStyleId),
+        level: clamped, beatsPerBar: _beatsPerBar);
+    state = state.copyWith(backingLevel: clamped);
   }
 
   void setSubdivision(Subdivision subdivision) {

@@ -5,7 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 
+import 'backing_sounds.dart';
+import 'backing_styles.dart';
 import 'click_loop_renderer.dart';
+import 'loop_voices.dart';
 import 'stroke_sounds.dart' as sounds;
 
 enum Subdivision {
@@ -181,32 +184,40 @@ class MetronomeEngine {
     final synthetic = _soundType != SoundType.snare || _snarePcm.isEmpty;
     final fallbackSound =
         _soundType == SoundType.snare ? SoundType.click : _soundType;
-    final volumes0 = _loopVolumes();
-    final wav = buildLoopWav(
-      bpm: _bpm,
-      factor: _factor,
-      voices: [
-        LoopVoice(
-          tickVolumes: volumes0,
-          loudSamples: synthetic
-              ? synthSamples(fallbackSound, accent: true)
-              : _snarePcm,
-          softSamples: synthetic
-              ? synthSamples(fallbackSound, accent: false)
-              : _snarePcm,
-          loudFrom: 1.2,
-        ),
-        if (_pulse && _beatVolumes != null && _beatVolumes!.isNotEmpty)
-          LoopVoice(
-            tickVolumes: [
-              for (var t = 0; t < volumes0.length; t++)
-                t % _factor == 0 ? 1.0 : 0.0
-            ],
-            loudSamples: pulseSamples(),
-            softSamples: pulseSamples(),
-          ),
-      ],
-    );
+    final hasPattern = _beatVolumes != null && _beatVolumes!.isNotEmpty;
+    final patternLoud =
+        synthetic ? synthSamples(fallbackSound, accent: true) : _snarePcm;
+    final patternSoft =
+        synthetic ? synthSamples(fallbackSound, accent: false) : _snarePcm;
+    LoopPlan plan;
+    try {
+      plan = buildLoopPlan(
+        patternVolumes: _loopVolumes(),
+        patternLoud: patternLoud,
+        patternSoft: patternSoft,
+        factor: _factor,
+        pulse: _pulse && hasPattern,
+        pulseSound: pulseSamples(),
+        backing: hasPattern ? _backing : null,
+        backingLevel: _backingLevel,
+        beatsPerBar: _beatsPerBar,
+        kickSound: _kickPcm,
+        hihatLoud: _hihatLoudPcm,
+        hihatSoft: _hihatSoftPcm,
+      );
+    } catch (e) {
+      // A broken backing must never silence the exercise: render without it.
+      debugPrint('backing plan failed, rendering without backing: $e');
+      plan = buildLoopPlan(
+        patternVolumes: _loopVolumes(),
+        patternLoud: patternLoud,
+        patternSoft: patternSoft,
+        factor: _factor,
+        pulse: _pulse && hasPattern,
+        pulseSound: pulseSamples(),
+      );
+    }
+    final wav = buildLoopWav(bpm: _bpm, factor: _factor, voices: plan.voices);
     // Timeout-guarded: on a dead audio engine loadMem never answers — this
     // path must FAIL fast so the start supervisor can revive the engine,
     // instead of hanging forever before any watchdog exists.
@@ -224,7 +235,7 @@ class MetronomeEngine {
       return;
     }
     _loopSource = source;
-    final volumes = List<double>.of(_loopVolumes());
+    final volumes = List<double>.of(plan.patternVolumes);
     // Tick grid derived from getLength of the same source getPosition
     // reports on — defensive: with a healthy engine both equal the Dart
     // formula, but any position-scale quirk then shifts grid and position
@@ -547,6 +558,28 @@ class MetronomeEngine {
   void setPulse(bool on) {
     if (_pulse == on) return;
     _pulse = on;
+    _scheduleLoopRebuild();
+  }
+
+  /// Backing loop (Engine part 1): kick + hi-hat from a style, only on the
+  /// 24-tick pattern clock. Sounds are synthesised once per process.
+  BackingStyle? _backing;
+  double _backingLevel = 0.7;
+  int _beatsPerBar = 4;
+  static final List<double> _kickPcm = kickSamples();
+  static final List<double> _hihatLoudPcm = hihatSamples(accent: true);
+  static final List<double> _hihatSoftPcm = hihatSamples(accent: false);
+
+  void setBacking(BackingStyle? style,
+      {required double level, required int beatsPerBar}) {
+    if (_backing == style &&
+        _backingLevel == level &&
+        _beatsPerBar == beatsPerBar) {
+      return;
+    }
+    _backing = style;
+    _backingLevel = level;
+    _beatsPerBar = beatsPerBar;
     _scheduleLoopRebuild();
   }
 
