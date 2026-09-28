@@ -25,6 +25,7 @@ import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
 import '../lessons/models/rudiment.dart';
+import '../metronome/backing_styles.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import '../program/program_provider.dart';
@@ -114,6 +115,18 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// Analysis mode (Brief Phase 3): remembered per exercise, learn is the
   /// default. Only the analysis mode may show per-hand values.
   late bool _analysisMode = SettingsService.analysisModeFor(widget.rudimentId);
+
+  /// Backing loop (Engine part 1): the remembered/default style for this
+  /// exercise; null = off. Applied through [_applyExtras].
+  late String? _backingStyleId = resolveBackingStyle(
+    stored: SettingsService.backingStyleFor(widget.rudimentId),
+    exerciseDefault: ref.read(rudimentByIdProvider(widget.rudimentId)).backing,
+  );
+
+  /// Headphones detected — the analysis-mode rule: backing and click track
+  /// may sound next to the mic only when they cannot reach it.
+  bool _headphones = false;
+  bool get _extrasAllowed => !_analysisMode || _headphones;
   late final SessionTimerNotifier _sessionTimerNotifier;
 
   /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
@@ -158,8 +171,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final metronome = _metronomeNotifier
         ..setPatternClock(_playback.ticksPerQuarter)
-        ..setPatternVolumes(_playback.tickVolumes);
-      _applyClickTrack();
+        ..setPatternVolumes(_playback.tickVolumes)
+        ..setBackingLevel(SettingsService.backingLevel);
+      _applyExtras();
+      unawaited(_refreshHeadphones());
       if (_ladderActive) {
         metronome.setBpm(_ladderPlan!.bpmAt(_elapsedSeconds));
       } else if (widget.targetBpm != null) {
@@ -320,8 +335,28 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
   /// The pulse follows the setting but never runs in analysis mode: the mic
   /// would hear it as strokes (decided 27.09.).
-  void _applyClickTrack() => _metronomeNotifier
-      .setClickTrack(SettingsService.clickTrackEnabled && !_analysisMode);
+  /// Click track and backing follow the settings, the exercise and the
+  /// analysis-mode rule (spec §6): both silent while analysing without
+  /// headphones, the mic would hear them.
+  void _applyExtras() {
+    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    _metronomeNotifier
+      ..setClickTrack(SettingsService.clickTrackEnabled && _extrasAllowed)
+      ..setBacking(_extrasAllowed ? _backingStyleId : null,
+          beatsPerBar: rudiment.beatsPerBar);
+  }
+
+  /// Ask the platform for headphones, then re-apply the extras. Failure
+  /// counts as "no headphones" (the safe side while the mic listens).
+  Future<void> _refreshHeadphones() async {
+    var type = 'none';
+    try {
+      type = await AudioCapabilities.headphonesType();
+    } catch (_) {}
+    if (!mounted) return;
+    _headphones = type != 'none';
+    _applyExtras();
+  }
 
   /// Label of the primary button: Stop while playing, Resume once time has
   /// elapsed, Start before the first note.
@@ -346,6 +381,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
   Future<void> _showOptionsSheet() async {
     final screenContext = context;
+    // Headphone state is current here: queried at start and on every route
+    // change (plug/unplug) via the metronome's audioRouteChanges counter.
     _optionsOpen = true;
     await showModalBottomSheet<void>(
       context: context,
@@ -370,9 +407,22 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                   ref.read(metronomeNotifierProvider.notifier).setSoundType,
               clickTrack: SettingsService.clickTrackEnabled,
               analysisMode: _analysisMode,
+              backingStyleId: _backingStyleId,
+              backingLevel: SettingsService.backingLevel,
+              extrasAllowed: _extrasAllowed,
+              onBacking: (id) async {
+                _backingStyleId = id;
+                await SettingsService.setBackingStyleFor(
+                    widget.rudimentId, id ?? backingOff);
+                _applyExtras();
+              },
+              onBackingLevel: (level) async {
+                await SettingsService.setBackingLevel(level);
+                _metronomeNotifier.setBackingLevel(level);
+              },
               onClickTrack: (on) async {
                 await SettingsService.setClickTrackEnabled(on);
-                _applyClickTrack();
+                _applyExtras();
               },
               onAbout: () {
                 Navigator.of(sheetContext).pop();
@@ -625,6 +675,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final rudiment = ref.watch(rudimentByIdProvider(widget.rudimentId));
     final notifier = ref.read(metronomeNotifierProvider.notifier);
 
+    ref.listen<int>(
+        metronomeNotifierProvider.select((s) => s.audioRouteChanges),
+        (prev, next) {
+      // Headphones plugged or unplugged: re-check before the mic hears the
+      // band (analysis-mode rule).
+      if (prev != null && next != prev) unawaited(_refreshHeadphones());
+    });
+
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
       // Record beat timestamps for mic correlation — only main-note onsets
       // (silent grid ticks and flam/drag grace ticks are not expected
@@ -733,7 +791,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                             setState(() => _analysisMode = !_analysisMode);
                             SettingsService.setAnalysisModeFor(
                                 widget.rudimentId, _analysisMode);
-                            _applyClickTrack();
+                            _applyExtras();
                           },
                         )
                       : null,
@@ -1140,6 +1198,11 @@ class _OptionsSheet extends StatefulWidget {
     required this.onSoundSelected,
     required this.clickTrack,
     required this.analysisMode,
+    required this.backingStyleId,
+    required this.backingLevel,
+    required this.extrasAllowed,
+    required this.onBacking,
+    required this.onBackingLevel,
     required this.onClickTrack,
     required this.onAbout,
   });
@@ -1152,6 +1215,14 @@ class _OptionsSheet extends StatefulWidget {
   final ValueChanged<SoundType> onSoundSelected;
   final bool clickTrack;
   final bool analysisMode;
+  final String? backingStyleId;
+  final double backingLevel;
+
+  /// False while analysing without headphones: click track and backing are
+  /// muted and their controls disabled with a hint.
+  final bool extrasAllowed;
+  final ValueChanged<String?> onBacking;
+  final ValueChanged<double> onBackingLevel;
   final ValueChanged<bool> onClickTrack;
   final VoidCallback onAbout;
 
@@ -1164,6 +1235,8 @@ class _OptionsSheetState extends State<_OptionsSheet> {
   // setState does not rebuild a modal sheet's builder.
   late int? _goal = widget.goalSeconds;
   late bool _clickTrack = widget.clickTrack;
+  late String? _backing = widget.backingStyleId;
+  late double _level = widget.backingLevel;
 
   @override
   Widget build(BuildContext context) {
@@ -1208,19 +1281,71 @@ class _OptionsSheetState extends State<_OptionsSheet> {
                       ))
                   .toList(),
             ),
+            const SizedBox(height: 18),
+            const _SectionLabel('BACKING'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                AppSelectableChip(
+                  label: 'Off',
+                  selected: _backing == null,
+                  onTap: () {
+                    setState(() => _backing = null);
+                    widget.onBacking(null);
+                  },
+                ),
+                for (final s in backingStyles)
+                  AppSelectableChip(
+                    label: s.label,
+                    selected: _backing == s.id,
+                    onTap: () {
+                      setState(() => _backing = s.id);
+                      widget.onBacking(s.id);
+                    },
+                  ),
+              ],
+            ),
+            Row(
+              children: [
+                Text('Level', style: PracticeTypography.body),
+                Expanded(
+                  child: Slider(
+                    value: _level,
+                    min: 0,
+                    max: 1,
+                    divisions: 10,
+                    label: '${(_level * 100).round()} %',
+                    onChanged: _backing == null || !widget.extrasAllowed
+                        ? null
+                        : (v) {
+                            setState(() => _level = v);
+                            widget.onBackingLevel(v);
+                          },
+                  ),
+                ),
+              ],
+            ),
+            if (!widget.extrasAllowed)
+              Text(
+                'Off while analysing without headphones — the mic would hear it',
+                style: PracticeTypography.body
+                    .copyWith(fontSize: 13, color: PracticeColors.textMuted),
+              ),
             const SizedBox(height: 12),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text('Click track', style: PracticeTypography.body),
               subtitle: Text(
-                widget.analysisMode
-                    ? 'Off while analysing — the mic would hear it'
+                !widget.extrasAllowed
+                    ? 'Off while analysing without headphones — the mic would hear it'
                     : 'A quarter-note pulse next to the exercise',
                 style: PracticeTypography.body
                     .copyWith(fontSize: 13, color: PracticeColors.textMuted),
               ),
               value: _clickTrack,
-              onChanged: widget.analysisMode
+              onChanged: !widget.extrasAllowed
                   ? null
                   : (on) {
                       setState(() => _clickTrack = on);

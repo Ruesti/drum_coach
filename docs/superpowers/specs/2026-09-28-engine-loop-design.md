@@ -182,7 +182,8 @@ id)`, `setBackingLevel(double)`. Beides wird an den Engine durchgereicht.
 - **Kopfhörer-Regel (Analyse-Modus):** Das Mikro würde Band und Klick-Spur
   mithören. Daher laufen **Backing und Klick-Spur im Analyse-Modus nur mit
   erkannten Kopfhörern** (`AudioCapabilities.headphonesType() != 'none'`,
-  abgefragt beim Screen-Start und beim Öffnen des Blatts). Ohne Kopfhörer
+  abgefragt beim Screen-Start und bei jedem Kopfhörer-Wechsel, den das
+  Metronom als Routenwechsel meldet). Ohne Kopfhörer
   bleiben beide stumm; die Schalter im Blatt sind deaktiviert mit der Zeile
   „Off while analysing without headphones — the mic would hear it". Das
   erweitert die Regel vom 27.09. („Klick-Spur im Analyse-Modus aus") um den
