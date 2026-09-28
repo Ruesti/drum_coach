@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 import 'click_loop_renderer.dart';
+import 'stroke_sounds.dart' as sounds;
 
 enum Subdivision {
   quarter(factor: 1, label: '♩', name: '1/4'),
@@ -580,23 +581,11 @@ class MetronomeEngine {
     required bool accent,
     int sampleRate = 44100,
   }) {
-    final amplitude = accent ? 0.95 : 0.55;
     switch (type) {
       case SoundType.click:
-        final frequency = accent ? 1200.0 : 800.0;
-        final n = (sampleRate * 0.030).round();
-        return [
-          for (var i = 0; i < n; i++)
-            amplitude *
-                math.exp(-140.0 * (i / sampleRate)) *
-                math.sin(2 * math.pi * frequency * (i / sampleRate)),
-        ];
+        return sounds.clickSamples(accent: accent, sampleRate: sampleRate);
       case SoundType.rim:
-        final n = (sampleRate * 0.10).round();
-        return [
-          for (var i = 0; i < n; i++)
-            _rimSample(i / sampleRate, amplitude),
-        ];
+        return sounds.rimSamples(accent: accent, sampleRate: sampleRate);
       case SoundType.snare:
         // The snare is a real recorded sample (assets/audio/snare.mp3); its
         // PCM is decoded once at init via readSamplesFromMem and kept in
@@ -608,22 +597,8 @@ class MetronomeEngine {
   /// The click track's own voice: a short, high, dry tick — clearly apart
   /// from the exercise sounds (click 800/1200 Hz · 30 ms, rim, snare), so the
   /// ear can tell the pulse from the pattern.
-  static List<double> pulseSamples({int sampleRate = 44100}) {
-    final n = (sampleRate * 0.012).round();
-    return [
-      for (var i = 0; i < n; i++)
-        0.45 *
-            math.exp(-350.0 * (i / sampleRate)) *
-            math.sin(2 * math.pi * 2600.0 * (i / sampleRate)),
-    ];
-  }
-
-  static double _rimSample(double t, double amplitude) {
-    final shell = math.sin(2 * math.pi * 280 * t) * math.exp(-55.0 * t) * 0.45;
-    final rim = math.sin(2 * math.pi * 680 * t) * math.exp(-130.0 * t) * 0.60;
-    final snap = math.sin(2 * math.pi * 2100 * t) * math.exp(-600.0 * t) * 0.35;
-    return amplitude * (shell + rim + snap);
-  }
+  static List<double> pulseSamples({int sampleRate = 44100}) =>
+      sounds.pulseSamples(sampleRate: sampleRate);
 
   static Uint8List _buildClickWav({
     required double frequency,
