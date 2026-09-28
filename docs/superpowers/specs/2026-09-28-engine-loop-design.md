@@ -179,15 +179,24 @@ id)`, `setBackingLevel(double)`. Beides wird an den Engine durchgereicht.
 - **Übungsdaten:** `Rudiment.backing` (String?, Standard null). Auflösung beim
   Start: gemerkte Wahl der Übung → sonst `rudiment.backing` → sonst Off. Die
   heutigen Übungen bringen keinen Standard mit; der neue Katalog dann.
-- **Kopfhörer-Regel (Analyse-Modus):** Das Mikro würde Band und Klick-Spur
-  mithören. Daher laufen **Backing und Klick-Spur im Analyse-Modus nur mit
-  erkannten Kopfhörern** (`AudioCapabilities.headphonesType() != 'none'`,
-  abgefragt beim Screen-Start und bei jedem Kopfhörer-Wechsel, den das
-  Metronom als Routenwechsel meldet). Ohne Kopfhörer
-  bleiben beide stumm; die Schalter im Blatt sind deaktiviert mit der Zeile
-  „Off while analysing without headphones — the mic would hear it". Das
-  erweitert die Regel vom 27.09. („Klick-Spur im Analyse-Modus aus") um den
-  Kopfhörer-Fall. Im Lern-Modus gilt keine Einschränkung.
+- **Kopfhörer-Regel:** Das Mikro würde Band und Klick-Spur mithören.
+  Kopfhörer = `AudioCapabilities.headphonesType() != 'none'`, abgefragt beim
+  Screen-Start und bei jedem Kopfhörer-Wechsel, den das Metronom als
+  Routenwechsel meldet; bei einem Routenwechsel wird sofort pessimistisch
+  stummgeschaltet, bis die Abfrage antwortet (Review-Fix 28.09.).
+  - **Backing** läuft **nur mit Kopfhörern, sobald das Mikro überhaupt
+    mithört** (Mikro-Analyse eingeschaltet, Lern- wie Analyse-Modus): die
+    Band ist laut genug, um als Schläge zu zählen, und auch das Lern-Ergebnis
+    zeigt Treffer und Timing (Review-Ruling 28.09.). Mit ausgeschalteter
+    Mikro-Analyse (Standard) spielt die Band frei.
+  - **Klick-Spur** behält die Regel vom 27.09.: im Analyse-Modus nur mit
+    Kopfhörern, im Lern-Modus immer erlaubt (kurzer, leiser Puls).
+  - Im Blatt: der Level-Regler ist gesperrt und eine Zeile sagt „Off while
+    the mic listens without headphones — it would hear the band"; die
+    Stil-Chips bleiben tippbar (die Wahl wird gemerkt und greift, sobald
+    Kopfhörer stecken — Ruling 28.09.). Für die Klick-Spur ist der Schalter
+    gesperrt mit „Off while analysing without headphones — the mic would
+    hear it".
   Bekannte Grenze: Bluetooth-Kopfhörer verzögern das Gehörte um bis zu ~200 ms;
   die Latenz-Kalibrierung deckt das nicht ab, Kabel wird im Hinweis empfohlen.
 - **Sonst unverändert:** Kopfzeile, Notenblatt, Pulsbalken (zeigt weiter nur
@@ -239,9 +248,10 @@ nach dem Ja werden Engine-Anbindung, Blatt und Einstellungen gebaut.
 - `test/lessons/pattern_playback_test.dart`: `isOnsetTick` bei Flam/Drag.
 - `test/features/practice/practice_session_screen_test.dart`: Blatt zeigt
   Abschnitt BACKING mit Off + sechs Stilen; Wahl wird je Übung gemerkt; Slider
-  nur mit Stil aktiv; Analyse-Modus ohne Kopfhörer → Chips und Klick-Spur
-  deaktiviert mit Hinweis; mit Kopfhörern (Kanal gemockt) → aktiv; Beat-Log
-  ohne Vorschlags-Ticks.
+  nur mit Stil aktiv; Mikro hört mit ohne Kopfhörer → Backing stumm, Regler
+  gesperrt, Hinweis (Chips bleiben tippbar), Klick-Spur im Analyse-Modus
+  gesperrt; mit Kopfhörern (Kanal gemockt) → aktiv; Routenwechsel schaltet
+  sofort stumm, bevor die Abfrage antwortet; Beat-Log ohne Vorschlags-Ticks.
 - Gerätetest S23 mit Kabel-Kopfhörern: Stil wählen, Tempo ändern (Loop bleibt
   synchron), Analyse-Modus mit und ohne Kopfhörer, Flam-Übung messen (Hand-
   Werte plausibel), Marker läuft weiter richtig.

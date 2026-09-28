@@ -123,10 +123,23 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     exerciseDefault: ref.read(rudimentByIdProvider(widget.rudimentId)).backing,
   );
 
-  /// Headphones detected — the analysis-mode rule: backing and click track
-  /// may sound next to the mic only when they cannot reach it.
+  /// Headphones detected — the extras may sound next to the mic only when
+  /// they cannot reach it.
   bool _headphones = false;
+
+  /// Click track: rule of 27.09. — silent while analysing without headphones
+  /// (in learn mode the short, quiet pulse is tolerated).
   bool get _extrasAllowed => !_analysisMode || _headphones;
+
+  /// Backing: silent whenever the mic listens at all (mic analysis on, learn
+  /// or analysis mode) without headphones — a kick at 70 % and hi-hat noise
+  /// through the speaker register as strokes and wreck the result.
+  bool get _backingAllowed =>
+      !SettingsService.micAnalysisEnabled || _headphones;
+
+  /// Overlapping headphone queries (start + route change): only the newest
+  /// answer counts.
+  int _headphoneQuerySeq = 0;
   late final SessionTimerNotifier _sessionTimerNotifier;
 
   /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
@@ -342,18 +355,19 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
     _metronomeNotifier
       ..setClickTrack(SettingsService.clickTrackEnabled && _extrasAllowed)
-      ..setBacking(_extrasAllowed ? _backingStyleId : null,
+      ..setBacking(_backingAllowed ? _backingStyleId : null,
           beatsPerBar: rudiment.beatsPerBar);
   }
 
   /// Ask the platform for headphones, then re-apply the extras. Failure
   /// counts as "no headphones" (the safe side while the mic listens).
   Future<void> _refreshHeadphones() async {
+    final seq = ++_headphoneQuerySeq;
     var type = 'none';
     try {
       type = await AudioCapabilities.headphonesType();
     } catch (_) {}
-    if (!mounted) return;
+    if (!mounted || seq != _headphoneQuerySeq) return;
     _headphones = type != 'none';
     _applyExtras();
   }
@@ -410,6 +424,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               backingStyleId: _backingStyleId,
               backingLevel: SettingsService.backingLevel,
               extrasAllowed: _extrasAllowed,
+              backingAllowed: _backingAllowed,
               onBacking: (id) async {
                 _backingStyleId = id;
                 await SettingsService.setBackingStyleFor(
@@ -678,9 +693,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     ref.listen<int>(
         metronomeNotifierProvider.select((s) => s.audioRouteChanges),
         (prev, next) {
-      // Headphones plugged or unplugged: re-check before the mic hears the
-      // band (analysis-mode rule).
-      if (prev != null && next != prev) unawaited(_refreshHeadphones());
+      // Headphones plugged or unplugged: assume they are gone until the
+      // query says otherwise — the running loop keeps sounding until it is
+      // re-rendered, so every millisecond counts while the mic listens.
+      if (prev != null && next != prev) {
+        _headphones = false;
+        _applyExtras();
+        unawaited(_refreshHeadphones());
+      }
     });
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
@@ -1201,6 +1221,7 @@ class _OptionsSheet extends StatefulWidget {
     required this.backingStyleId,
     required this.backingLevel,
     required this.extrasAllowed,
+    required this.backingAllowed,
     required this.onBacking,
     required this.onBackingLevel,
     required this.onClickTrack,
@@ -1221,6 +1242,11 @@ class _OptionsSheet extends StatefulWidget {
   /// False while analysing without headphones: click track and backing are
   /// muted and their controls disabled with a hint.
   final bool extrasAllowed;
+
+  /// False while the mic listens without headphones: the band is muted and
+  /// the level slider disabled with a hint; the chips stay tappable so a
+  /// choice can be made for later (stored, applied once headphones are in).
+  final bool backingAllowed;
   final ValueChanged<String?> onBacking;
   final ValueChanged<double> onBackingLevel;
   final ValueChanged<bool> onClickTrack;
@@ -1317,7 +1343,7 @@ class _OptionsSheetState extends State<_OptionsSheet> {
                     max: 1,
                     divisions: 10,
                     label: '${(_level * 100).round()} %',
-                    onChanged: _backing == null || !widget.extrasAllowed
+                    onChanged: _backing == null || !widget.backingAllowed
                         ? null
                         : (v) {
                             setState(() => _level = v);
@@ -1327,9 +1353,9 @@ class _OptionsSheetState extends State<_OptionsSheet> {
                 ),
               ],
             ),
-            if (!widget.extrasAllowed)
+            if (!widget.backingAllowed)
               Text(
-                'Off while analysing without headphones — the mic would hear it',
+                'Off while the mic listens without headphones — it would hear the band',
                 style: PracticeTypography.body
                     .copyWith(fontSize: 13, color: PracticeColors.textMuted),
               ),

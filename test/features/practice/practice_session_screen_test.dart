@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/metronome/backing_styles.dart';
@@ -584,7 +586,10 @@ void main() {
 
     final container = await _pumpScreen(tester, screen: _screen());
     await tester.pump(); // headphone query answered
-    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+    // Learn mode, mic listening, no headphones: the band would reach the mic
+    // and pollute the learn-mode result — backing muted, click track (quiet,
+    // rule of 27.09.) still on.
+    expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
     expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
 
     await tester.tap(find.text('LEARN'));
@@ -601,6 +606,10 @@ void main() {
         find.text(
             'Off while analysing without headphones — the mic would hear it'),
         findsWidgets);
+    expect(
+        find.text(
+            'Off while the mic listens without headphones — it would hear the band'),
+        findsOneWidget);
     await tester.tap(find.text('Rock 16ths'));
     await tester.pump();
     // Choice is stored, but stays muted while the mic listens.
@@ -629,6 +638,80 @@ void main() {
     await tester.pump();
     expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
     expect(container.read(metronomeNotifierProvider).clickTrack, isFalse);
+    container.dispose();
+  });
+
+  testWidgets(
+      'backing needs headphones whenever the mic listens, even in learn mode; '
+      'with the mic off it plays freely', (tester) async {
+    _mockMicPermission(tester);
+    final phones = _mockHeadphones(tester, 'none');
+    await SettingsService.setBackingStyleFor(
+        rudimentsSeedData.first.id, 'rock8');
+
+    // Mic analysis off (the default): band plays through the speaker.
+    var container = await _pumpScreen(tester, screen: _screen());
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+    // Tear the first screen down: a second pump of the same widget type
+    // would keep the old State (and its old, disposed notifier).
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
+
+    // Mic analysis on, learn mode, no headphones: muted.
+    await SettingsService.setMicAnalysisEnabled(true);
+    container = await _pumpScreen(tester, screen: _screen());
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
+    expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
+
+    // Headphones: allowed again.
+    phones.set('wired');
+    container
+        .read(metronomeNotifierProvider.notifier)
+        .notifyAudioRouteChanged();
+    await tester.pump();
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+    container.dispose();
+  });
+
+  testWidgets(
+      'a route change mutes the backing at once, before the headphone answer '
+      'arrives', (tester) async {
+    _mockMicPermission(tester);
+    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setBackingStyleFor(
+        rudimentsSeedData.first.id, 'rock8');
+    // First answer immediate ("wired"); the answer after the route change
+    // is held back until the test releases it.
+    const channel = MethodChannel('drum_coach/audio');
+    var calls = 0;
+    final held = Completer<String>();
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (call) async {
+      if (call.method != 'headphonesType') return null;
+      calls++;
+      return calls == 1 ? 'wired' : await held.future;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null));
+
+    final container = await _pumpScreen(tester, screen: _screen());
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+
+    container
+        .read(metronomeNotifierProvider.notifier)
+        .notifyAudioRouteChanged();
+    await tester.pump();
+    // Pessimistic: muted while the answer is still pending.
+    expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
+
+    held.complete('wired');
+    await tester.pump();
+    await tester.pump();
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
     container.dispose();
   });
 }

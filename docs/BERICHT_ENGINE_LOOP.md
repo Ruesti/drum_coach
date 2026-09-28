@@ -48,13 +48,17 @@ eigene Lautstärke.
   Stilen sowie ein Level-Regler (0–100 %, nur mit Stil aktiv). Die Wahl wird
   je Übung gemerkt (auch ein bewusstes „Off"), der Pegel global (Standard
   70 %).
-- **Kopfhörer-Regel im Analyse-Modus:** Das Mikro würde Band und Klick-Spur
-  mithören. Beide laufen im Analyse-Modus nur mit erkannten Kopfhörern;
-  ohne bleiben sie stumm, die Schalter sind gesperrt mit dem Hinweis „Off
-  while analysing without headphones — the mic would hear it". Die
-  Kopfhörer werden beim Start abgefragt und bei jedem Wechsel, den das
-  Metronom als Routenwechsel meldet (neuer Zähler `audioRouteChanges` im
-  Metronom-Zustand). Im Lern-Modus keine Einschränkung.
+- **Kopfhörer-Regel:** Das Mikro würde Band und Klick-Spur mithören. Die
+  **Band läuft nur mit Kopfhörern, sobald das Mikro überhaupt mithört**
+  (Mikro-Analyse eingeschaltet, in beiden Modi); mit Mikro aus (Standard)
+  spielt sie frei über den Lautsprecher. Die **Klick-Spur** behält die Regel
+  vom 27.09. (im Analyse-Modus nur mit Kopfhörern). Ohne Kopfhörer ist der
+  Level-Regler gesperrt mit dem Hinweis „Off while the mic listens without
+  headphones — it would hear the band"; die Stil-Chips bleiben tippbar, die
+  Wahl greift, sobald Kopfhörer stecken. Kopfhörer werden beim Start
+  abgefragt und bei jedem Wechsel, den das Metronom als Routenwechsel meldet
+  (neuer Zähler `audioRouteChanges`); beim Wechsel wird sofort
+  stummgeschaltet, bis die Abfrage antwortet.
 - **Nebenbei behoben:** Vorschlagsnoten (Flam, Drag) wurden im Beat-Log als
   eigene Sollnoten mit dem Index der Vornote geführt und verzerrten die
   Hand-Werte. Das Log nimmt jetzt nur Hauptnoten
@@ -92,7 +96,9 @@ Klänge und Stile blieben unverändert.
   sechs Stilen, Wahl je Übung gemerkt, Slider nur mit Stil; Level-Regler
   schreibt den Pegel; Analyse-Modus ohne Kopfhörer stumm, mit Kopfhörern
   an, Wechsel über Routenwechsel-Meldung in beide Richtungen.
-- Ganze Suite auf der GPU-Box: **375 Tests grün** (vorher 338), Analyzer nur
+- Nach dem Review: +2 Screen-Tests (Mikro-Regel im Lern-Modus, sofortiges
+  Stummschalten beim Routenwechsel).
+- Ganze Suite auf der GPU-Box: **377 Tests grün** (vorher 338), Analyzer nur
   die 12 bekannten `experimental_member_use`-Warnungen.
 
 ## Entscheidungen beim Bauen (Ledger)
@@ -109,6 +115,29 @@ Klänge und Stile blieben unverändert.
   als reine Funktionen herausgelöst, damit das Demo-Werkzeug ohne Flutter
   läuft; der Engine delegiert dorthin, sein Klang ist unverändert.
 
+## Review-Durchgang (frischer Reviewer, 28.09.)
+
+0 Critical, 2 Important, 7 Minor. Beide Important gefixt:
+
+- **Lern-Modus: Band lief ins Mikro.** Das Mikro nimmt auch im Lern-Modus
+  auf (bei eingeschalteter Mikro-Analyse), und das Lern-Ergebnis zeigt
+  Treffer und Timing — Kick und Hi-Hat über den Lautsprecher hätten als
+  Extraschläge gezählt. Ruling: Backing braucht Kopfhörer, sobald das Mikro
+  mithört, in beiden Modi; Klick-Spur unverändert nach der Regel vom 27.09.
+- **Ausstecken mitten in der Sitzung:** Bis die Kopfhörer-Abfrage
+  antwortete, lief die Band weiter. Jetzt wird beim Routenwechsel sofort
+  stummgeschaltet und erst die Antwort schaltet wieder frei; überlappende
+  Abfragen zählen nur die neueste. Restfenster: die laufende Schleife
+  klingt noch, bis sie neu gerendert ist (Entprellung 150 ms plus Render),
+  siehe Gerätetest.
+
+Ruling zu Minor 1: die Stil-Chips bleiben tippbar, auch wenn die Band
+gerade stumm ist (Wahl wird gemerkt); Spec §6/§10 angeglichen. Zurückgestellt
+(Minor): 64-Takte-Deckel großzügig und ohne `debugPrint`; Begrenzer-Test kann
+nicht rot werden; fehlende Tests (Tick-Uhr bei Zykluswechsel, Flam-Beat-Log
+auf Screen-Ebene); Blatt-Zustand friert beim Stecken während des offenen
+Blatts ein; unnötiger Neustart bei Pegeländerung ohne Stil.
+
 ## Sichtprüfung
 
 - Emulator (AVD s23, kein Ton beurteilbar): „⋯"-Blatt mit BACKING-Abschnitt,
@@ -120,8 +149,9 @@ Klänge und Stile blieben unverändert.
 ## Offen
 
 - Gerätetest am S23 mit Kabel-Kopfhörern: Stil wählen, Tempo ändern (Loop
-  bleibt synchron), Analyse-Modus mit und ohne Kopfhörer, Flam-Übung messen
-  (Hand-Werte plausibel).
+  bleibt synchron), Mikro-Analyse mit und ohne Kopfhörer (Band stumm/an),
+  Kopfhörer mitten in einer Analyse-Sitzung ziehen (Session-Log auf
+  Extraschläge prüfen), Flam-Übung messen (Hand-Werte plausibel).
 - Das „⋯"-Blatt ist mit dem BACKING-Abschnitt länger und scrollt auf dem
   Handy; wenn das stört, zwei Blätter oder ein eigener Backing-Dialog.
 - Bass als dritte Stimme (Entscheidung 28.09.: später).
