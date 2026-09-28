@@ -1,5 +1,4 @@
 import 'package:drum_coach/features/coaching/models/session_analysis.dart';
-import 'package:drum_coach/features/coaching/services/unassigned_metrics.dart';
 import 'package:drum_coach/features/practice/core_values.dart';
 import 'package:flutter_test/flutter_test.dart';
 

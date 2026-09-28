@@ -225,7 +225,7 @@ class _ResultSheetState extends State<ResultSheet> {
               ),
             ),
           ],
-          if (hasMic && a != null) ...[
+          if (hasMic) ...[
             const SizedBox(height: 16),
             _DetailsSection(analysis: a, analysisMode: widget.analysisMode),
           ],

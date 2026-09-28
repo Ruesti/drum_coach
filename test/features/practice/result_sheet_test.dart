@@ -1,10 +1,8 @@
 import 'package:drum_coach/app/theme.dart';
 import 'package:drum_coach/data/local/models/session_log.dart';
 import 'package:drum_coach/features/coaching/models/session_analysis.dart';
-import 'package:drum_coach/features/coaching/services/unassigned_metrics.dart';
 import 'package:drum_coach/features/practice/analysis_announcement.dart';
 import 'package:drum_coach/features/practice/widgets/result_sheet.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
