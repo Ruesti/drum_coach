@@ -9,6 +9,13 @@ Dynamik, Messung. Jeder Teil mit eigener Spec, Plan, Bau und Gerätetest.
 
 ## 0. Entscheidungen des Auftraggebers (28.09.)
 
+> **Nachtrag 28.09. nachmittags (nach dem Bau):** „Ich möchte den Backing-
+> Track nicht auswählen müssen. Er soll einfach automatisch zur Übung
+> passen." → Keine Stil-Wahl im Blatt mehr; ein Schalter „Backing" (Standard
+> an, global) plus Level-Regler; der Stil kommt aus `autoBackingStyle`
+> (§6a). Außerdem: „Das Hintergrundbild kann man kaum erkennen" → Schleier
+> über dem Übungs-Foto von 55/78/94 % auf 30/60/88 % zurückgenommen.
+
 1. Reihenfolge Loop → Dynamik → Messung.
 2. Der Backing-Loop ist **nur zum Hören** (Band aus dem Handy). Gespielt wird
    weiter **einstimmig am Pad**. Übungen fürs Set sind der nächste Bauabschnitt.
@@ -169,16 +176,32 @@ id)`, `setBackingLevel(double)`. Beides wird an den Engine durchgereicht.
 
 ## 6. Bedienung im Übungs-Screen
 
-- **„⋯"-Blatt**, neuer Abschnitt `BACKING` direkt unter `SOUND`: Chips „Off"
-  plus die sechs Stil-Labels (`Wrap` wie bei SOUND). Darunter ein Slider
-  „Level" 0–100 % in 10er-Schritten, nur aktiv, wenn ein Stil gewählt ist.
-- **Einstellungen** (`SettingsService`): `backingStyleFor(exerciseId)` /
-  `setBackingStyleFor(exerciseId, String? id)` (je Übung, wie
-  `analysisModeFor`), `backingLevel` / `setBackingLevel` (global, Standard
-  0,7).
-- **Übungsdaten:** `Rudiment.backing` (String?, Standard null). Auflösung beim
-  Start: gemerkte Wahl der Übung → sonst `rudiment.backing` → sonst Off. Die
-  heutigen Übungen bringen keinen Standard mit; der neue Katalog dann.
+- **„⋯"-Blatt** (Nachtrag 28.09., ersetzt die Stil-Chips): unter `SOUND` ein
+  Schalter „Backing" mit der Zeile „<Stil> · automatic" (Standard an, global
+  gemerkt) und darunter der Slider „Level" 0–100 % in 10er-Schritten, nur
+  aktiv, wenn der Schalter an ist.
+- **Einstellungen** (`SettingsService`): `backingEnabled` /
+  `setBackingEnabled` (global, Standard an), `backingLevel` /
+  `setBackingLevel` (global, Standard 0,7).
+- **Übungsdaten:** `Rudiment.backing` (String?, Standard null) als
+  ausdrückliche Vorgabe für den Katalog; sonst greift §6a.
+
+### 6a. Automatischer Stil — `lib/features/practice/auto_backing.dart`
+
+`String autoBackingStyle(Rudiment r, {required int bpm})`, reine Funktion,
+bei jedem Anwenden (Start, Tempoänderung, Modus-/Kopfhörer-Wechsel) neu
+ausgewertet:
+
+| Übung | Stil |
+|---|---|
+| `r.backing` ist eine bekannte Kennung | genau der |
+| Genre Jazz | `swing` |
+| Genre Funk | `funk16` |
+| Triolen-Raster oder Triolen/Sextolen im Muster | `shuffle` |
+| Sechzehntel-Raster (≥ 4 Zellen je Viertel) oder Sechzehntel/32tel-Werte im Muster | `rock16`, ab 140 BPM `rock8` |
+| alles andere | `rock8` |
+
+`halftime` bleibt im Vorrat für ausdrückliche Vorgaben.
 - **Kopfhörer-Regel:** Das Mikro würde Band und Klick-Spur mithören.
   Kopfhörer = `AudioCapabilities.headphonesType() != 'none'`, abgefragt beim
   Screen-Start und bei jedem Kopfhörer-Wechsel, den das Metronom als
@@ -191,12 +214,10 @@ id)`, `setBackingLevel(double)`. Beides wird an den Engine durchgereicht.
     Mikro-Analyse (Standard) spielt die Band frei.
   - **Klick-Spur** behält die Regel vom 27.09.: im Analyse-Modus nur mit
     Kopfhörern, im Lern-Modus immer erlaubt (kurzer, leiser Puls).
-  - Im Blatt: der Level-Regler ist gesperrt und eine Zeile sagt „Off while
-    the mic listens without headphones — it would hear the band"; die
-    Stil-Chips bleiben tippbar (die Wahl wird gemerkt und greift, sobald
-    Kopfhörer stecken — Ruling 28.09.). Für die Klick-Spur ist der Schalter
-    gesperrt mit „Off while analysing without headphones — the mic would
-    hear it".
+  - Im Blatt: Backing-Schalter und Level-Regler sind gesperrt, die Zeile
+    unter dem Schalter sagt „Off while the mic listens without headphones —
+    it would hear the band". Für die Klick-Spur ist der Schalter gesperrt
+    mit „Off while analysing without headphones — the mic would hear it".
   Bekannte Grenze: Bluetooth-Kopfhörer verzögern das Gehörte um bis zu ~200 ms;
   die Latenz-Kalibrierung deckt das nicht ab, Kabel wird im Hinweis empfohlen.
 - **Sonst unverändert:** Kopfzeile, Notenblatt, Pulsbalken (zeigt weiter nur
@@ -247,11 +268,13 @@ nach dem Ja werden Engine-Anbindung, Blatt und Einstellungen gebaut.
   erhalten.
 - `test/lessons/pattern_playback_test.dart`: `isOnsetTick` bei Flam/Drag.
 - `test/features/practice/practice_session_screen_test.dart`: Blatt zeigt
-  Abschnitt BACKING mit Off + sechs Stilen; Wahl wird je Übung gemerkt; Slider
-  nur mit Stil aktiv; Mikro hört mit ohne Kopfhörer → Backing stumm, Regler
-  gesperrt, Hinweis (Chips bleiben tippbar), Klick-Spur im Analyse-Modus
-  gesperrt; mit Kopfhörern (Kanal gemockt) → aktiv; Routenwechsel schaltet
-  sofort stumm, bevor die Abfrage antwortet; Beat-Log ohne Vorschlags-Ticks.
+  Schalter „Backing" mit „<Stil> · automatic", keine Chips; Schalter aus →
+  Band aus, Regler gesperrt; Stil folgt dem Tempo (Sechzehntel → Achtel ab
+  140 BPM); Mikro hört mit ohne Kopfhörer → Backing stumm, Schalter und
+  Regler gesperrt, Hinweis, Klick-Spur im Analyse-Modus gesperrt; mit
+  Kopfhörern (Kanal gemockt) → aktiv; Routenwechsel schaltet sofort stumm,
+  bevor die Abfrage antwortet; Beat-Log ohne Vorschlags-Ticks.
+  `test/features/practice/auto_backing_test.dart`: jede Regel-Zeile.
 - Gerätetest S23 mit Kabel-Kopfhörern: Stil wählen, Tempo ändern (Loop bleibt
   synchron), Analyse-Modus mit und ohne Kopfhörer, Flam-Übung messen (Hand-
   Werte plausibel), Marker läuft weiter richtig.

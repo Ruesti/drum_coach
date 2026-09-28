@@ -36,11 +36,6 @@ class BackingStyle {
 /// Ticks in one 4/4 bar at 24 ticks per quarter.
 const int backingBarTicks = 96;
 
-/// Stored value meaning "the user chose no backing for this exercise" —
-/// distinct from "never chose" (null), which falls back to the exercise
-/// default.
-const String backingOff = 'off';
-
 List<BackingHit> _eighths({double quarter = 1.0, double and = 0.7}) => [
       for (var q = 0; q < 4; q++) ...[
         BackingHit(q * 24, quarter),
@@ -139,18 +134,6 @@ BackingStyle? backingStyleById(String? id) {
     if (s.id == id) return s;
   }
   return null;
-}
-
-/// Which style an exercise starts with: the remembered choice (including an
-/// explicit off), else the exercise's own default, else off. Unknown ids
-/// (a style removed later, a typo in seed data) mean off — never an error.
-String? resolveBackingStyle({
-  required String? stored,
-  required String? exerciseDefault,
-}) {
-  if (stored == backingOff) return null;
-  final id = stored ?? exerciseDefault;
-  return backingStyleById(id)?.id;
 }
 
 /// Per-tick volumes of one backing voice across [cycleTicks]: the style's

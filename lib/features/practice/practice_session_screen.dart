@@ -18,6 +18,7 @@ import '../../data/local/models/session_log.dart';
 import '../../data/local/session_log_service.dart';
 import '../coaching/models/session_analysis.dart';
 import 'analysis_announcement.dart';
+import 'auto_backing.dart';
 import '../coaching/services/recording_setup.dart';
 import '../coaching/services/ai_coaching_service.dart';
 import '../coaching/services/mic_analysis_service.dart';
@@ -116,12 +117,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// default. Only the analysis mode may show per-hand values.
   late bool _analysisMode = SettingsService.analysisModeFor(widget.rudimentId);
 
-  /// Backing loop (Engine part 1): the remembered/default style for this
-  /// exercise; null = off. Applied through [_applyExtras].
-  late String? _backingStyleId = resolveBackingStyle(
-    stored: SettingsService.backingStyleFor(widget.rudimentId),
-    exerciseDefault: ref.read(rudimentByIdProvider(widget.rudimentId)).backing,
-  );
+  /// Backing loop (Engine part 1; 28.09.: never picked by the user): the
+  /// style follows the exercise and the tempo via [autoBackingStyle].
+  /// Refreshed in [_applyExtras].
+  String? _backingStyleId;
 
   /// Headphones detected — the extras may sound next to the mic only when
   /// they cannot reach it.
@@ -353,9 +352,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// headphones, the mic would hear them.
   void _applyExtras() {
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    final bpm = ref.read(metronomeNotifierProvider).bpm;
+    _backingStyleId = autoBackingStyle(rudiment, bpm: bpm);
+    final backingOn = SettingsService.backingEnabled && _backingAllowed;
     _metronomeNotifier
       ..setClickTrack(SettingsService.clickTrackEnabled && _extrasAllowed)
-      ..setBacking(_backingAllowed ? _backingStyleId : null,
+      ..setBacking(backingOn ? _backingStyleId : null,
           beatsPerBar: rudiment.beatsPerBar);
   }
 
@@ -421,14 +423,13 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                   ref.read(metronomeNotifierProvider.notifier).setSoundType,
               clickTrack: SettingsService.clickTrackEnabled,
               analysisMode: _analysisMode,
-              backingStyleId: _backingStyleId,
+              backingEnabled: SettingsService.backingEnabled,
+              backingStyleLabel: backingStyleById(_backingStyleId)?.label,
               backingLevel: SettingsService.backingLevel,
               extrasAllowed: _extrasAllowed,
               backingAllowed: _backingAllowed,
-              onBacking: (id) async {
-                _backingStyleId = id;
-                await SettingsService.setBackingStyleFor(
-                    widget.rudimentId, id ?? backingOff);
+              onBackingEnabled: (on) async {
+                await SettingsService.setBackingEnabled(on);
                 _applyExtras();
               },
               onBackingLevel: (level) async {
@@ -690,6 +691,13 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final rudiment = ref.watch(rudimentByIdProvider(widget.rudimentId));
     final notifier = ref.read(metronomeNotifierProvider.notifier);
 
+    ref.listen<int>(metronomeNotifierProvider.select((s) => s.bpm),
+        (prev, next) {
+      // The automatic style follows the tempo (sixteenths relax to eighths
+      // from 140 BPM).
+      if (prev != null && next != prev) _applyExtras();
+    });
+
     ref.listen<int>(
         metronomeNotifierProvider.select((s) => s.audioRouteChanges),
         (prev, next) {
@@ -786,12 +794,13 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    // 55 % at the top so the photo still reads, 94 % at the
-                    // bottom where the controls sit.
+                    // 30 % at the top so the photo really reads (28.09.:
+                    // "kaum zu erkennen" at 55 %), 88 % at the bottom where
+                    // the controls sit.
                     colors: [
-                      Color(0x8C101010),
-                      Color(0xC7101010),
-                      Color(0xF0101010),
+                      Color(0x4D101010),
+                      Color(0x99101010),
+                      Color(0xE0101010),
                     ],
                     stops: [0.0, 0.5, 1.0],
                   ),
@@ -1218,11 +1227,12 @@ class _OptionsSheet extends StatefulWidget {
     required this.onSoundSelected,
     required this.clickTrack,
     required this.analysisMode,
-    required this.backingStyleId,
+    required this.backingEnabled,
+    required this.backingStyleLabel,
     required this.backingLevel,
     required this.extrasAllowed,
     required this.backingAllowed,
-    required this.onBacking,
+    required this.onBackingEnabled,
     required this.onBackingLevel,
     required this.onClickTrack,
     required this.onAbout,
@@ -1236,18 +1246,20 @@ class _OptionsSheet extends StatefulWidget {
   final ValueChanged<SoundType> onSoundSelected;
   final bool clickTrack;
   final bool analysisMode;
-  final String? backingStyleId;
+  final bool backingEnabled;
+
+  /// Label of the automatically chosen style, shown under the switch.
+  final String? backingStyleLabel;
   final double backingLevel;
 
   /// False while analysing without headphones: click track and backing are
   /// muted and their controls disabled with a hint.
   final bool extrasAllowed;
 
-  /// False while the mic listens without headphones: the band is muted and
-  /// the level slider disabled with a hint; the chips stay tappable so a
-  /// choice can be made for later (stored, applied once headphones are in).
+  /// False while the mic listens without headphones: the band is muted,
+  /// switch and level slider are disabled with a hint.
   final bool backingAllowed;
-  final ValueChanged<String?> onBacking;
+  final ValueChanged<bool> onBackingEnabled;
   final ValueChanged<double> onBackingLevel;
   final ValueChanged<bool> onClickTrack;
   final VoidCallback onAbout;
@@ -1261,7 +1273,7 @@ class _OptionsSheetState extends State<_OptionsSheet> {
   // setState does not rebuild a modal sheet's builder.
   late int? _goal = widget.goalSeconds;
   late bool _clickTrack = widget.clickTrack;
-  late String? _backing = widget.backingStyleId;
+  late bool _backingOn = widget.backingEnabled;
   late double _level = widget.backingLevel;
 
   @override
@@ -1307,31 +1319,26 @@ class _OptionsSheetState extends State<_OptionsSheet> {
                       ))
                   .toList(),
             ),
-            const SizedBox(height: 18),
-            const _SectionLabel('BACKING'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                AppSelectableChip(
-                  label: 'Off',
-                  selected: _backing == null,
-                  onTap: () {
-                    setState(() => _backing = null);
-                    widget.onBacking(null);
-                  },
-                ),
-                for (final s in backingStyles)
-                  AppSelectableChip(
-                    label: s.label,
-                    selected: _backing == s.id,
-                    onTap: () {
-                      setState(() => _backing = s.id);
-                      widget.onBacking(s.id);
+            const SizedBox(height: 12),
+            // Backing (Engine part 1): a band that fits the exercise by
+            // itself — no picking (28.09.); only on/off and its level.
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('Backing', style: PracticeTypography.body),
+              subtitle: Text(
+                !widget.backingAllowed
+                    ? 'Off while the mic listens without headphones — it would hear the band'
+                    : '${widget.backingStyleLabel ?? 'Off'} · automatic',
+                style: PracticeTypography.body
+                    .copyWith(fontSize: 13, color: PracticeColors.textMuted),
+              ),
+              value: _backingOn,
+              onChanged: !widget.backingAllowed
+                  ? null
+                  : (on) {
+                      setState(() => _backingOn = on);
+                      widget.onBackingEnabled(on);
                     },
-                  ),
-              ],
             ),
             Row(
               children: [
@@ -1343,7 +1350,7 @@ class _OptionsSheetState extends State<_OptionsSheet> {
                     max: 1,
                     divisions: 10,
                     label: '${(_level * 100).round()} %',
-                    onChanged: _backing == null || !widget.backingAllowed
+                    onChanged: !_backingOn || !widget.backingAllowed
                         ? null
                         : (v) {
                             setState(() => _level = v);
@@ -1353,13 +1360,6 @@ class _OptionsSheetState extends State<_OptionsSheet> {
                 ),
               ],
             ),
-            if (!widget.backingAllowed)
-              Text(
-                'Off while the mic listens without headphones — it would hear the band',
-                style: PracticeTypography.body
-                    .copyWith(fontSize: 13, color: PracticeColors.textMuted),
-              ),
-            const SizedBox(height: 12),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text('Click track', style: PracticeTypography.body),

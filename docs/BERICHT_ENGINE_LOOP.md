@@ -44,18 +44,24 @@ eigene Lautstärke.
   wie das kleinste gemeinsame Vielfache von Muster und Takt, damit der
   Stil-Takt ganz bleibt (19 der 41 Basis-Rudiments sind kürzer als ein Takt).
   Ohne Backing ändert sich nichts.
-- **Bedienung:** Im „⋯"-Blatt ein Abschnitt BACKING mit „Off" und den sechs
-  Stilen sowie ein Level-Regler (0–100 %, nur mit Stil aktiv). Die Wahl wird
-  je Übung gemerkt (auch ein bewusstes „Off"), der Pegel global (Standard
-  70 %).
+- **Bedienung (Nachtrag 28.09. nachmittags, Uli: „nicht auswählen müssen,
+  soll automatisch zur Übung passen"):** Im „⋯"-Blatt nur ein Schalter
+  „Backing" (Standard an, global) mit der Zeile „<Stil> · automatic" und der
+  Level-Regler (0–100 %, Standard 70 %). Den Stil wählt
+  `autoBackingStyle` aus den Übungsdaten: ausdrückliche Vorgabe → Genre Jazz
+  = Swing, Funk = Funk 16ths → Triolen = Shuffle → Sechzehntel = Rock 16ths
+  (ab 140 BPM Rock 8ths, die Band geht auf Achtel) → sonst Rock 8ths. Bei
+  jeder Tempoänderung neu ausgewertet.
+- **Hintergrundbild heller** (Uli: „kaum zu erkennen"): Schleier über dem
+  Übungs-Foto von 55/78/94 % auf 30/60/88 % zurückgenommen.
 - **Kopfhörer-Regel:** Das Mikro würde Band und Klick-Spur mithören. Die
   **Band läuft nur mit Kopfhörern, sobald das Mikro überhaupt mithört**
   (Mikro-Analyse eingeschaltet, in beiden Modi); mit Mikro aus (Standard)
   spielt sie frei über den Lautsprecher. Die **Klick-Spur** behält die Regel
-  vom 27.09. (im Analyse-Modus nur mit Kopfhörern). Ohne Kopfhörer ist der
-  Level-Regler gesperrt mit dem Hinweis „Off while the mic listens without
-  headphones — it would hear the band"; die Stil-Chips bleiben tippbar, die
-  Wahl greift, sobald Kopfhörer stecken. Kopfhörer werden beim Start
+  vom 27.09. (im Analyse-Modus nur mit Kopfhörern). Ohne Kopfhörer sind
+  Backing-Schalter und Level-Regler gesperrt mit dem Hinweis „Off while the
+  mic listens without headphones — it would hear the band". Kopfhörer
+  werden beim Start
   abgefragt und bei jedem Wechsel, den das Metronom als Routenwechsel meldet
   (neuer Zähler `audioRouteChanges`); beim Wechsel wird sofort
   stummgeschaltet, bis die Abfrage antwortet.
@@ -92,10 +98,12 @@ Klänge und Stile blieben unverändert.
   Pegel geklemmt, Routenwechsel-Zähler.
 - `settings_backing_test.dart` (2), `pattern_playback_test.dart` (+1
   `isOnsetTick`).
-- `practice_session_screen_test.dart` (+3): BACKING-Abschnitt mit Off und
-  sechs Stilen, Wahl je Übung gemerkt, Slider nur mit Stil; Level-Regler
-  schreibt den Pegel; Analyse-Modus ohne Kopfhörer stumm, mit Kopfhörern
-  an, Wechsel über Routenwechsel-Meldung in beide Richtungen.
+- `auto_backing_test.dart` (6): jede Regel-Zeile inklusive 139/140 BPM.
+- `practice_session_screen_test.dart` (+3): Schalter „Backing" mit „Rock
+  8ths · automatic", keine Chips, Schalter aus sperrt Regler; Level-Regler
+  schreibt den Pegel; Stil folgt dem Tempo; Analyse-Modus ohne Kopfhörer
+  stumm, mit Kopfhörern an, Wechsel über Routenwechsel-Meldung in beide
+  Richtungen.
 - Nach dem Review: +2 Screen-Tests (Mikro-Regel im Lern-Modus, sofortiges
   Stummschalten beim Routenwechsel).
 - Ganze Suite auf der GPU-Box: **377 Tests grün** (vorher 338), Analyzer nur
@@ -131,8 +139,8 @@ Klänge und Stile blieben unverändert.
   klingt noch, bis sie neu gerendert ist (Entprellung 150 ms plus Render),
   siehe Gerätetest.
 
-Ruling zu Minor 1: die Stil-Chips bleiben tippbar, auch wenn die Band
-gerade stumm ist (Wahl wird gemerkt); Spec §6/§10 angeglichen. Zurückgestellt
+Ruling zu Minor 1 (Stil-Chips bleiben tippbar) ist durch den Nachtrag
+überholt: es gibt keine Chips mehr. Zurückgestellt
 (Minor): 64-Takte-Deckel großzügig und ohne `debugPrint`; Begrenzer-Test kann
 nicht rot werden; fehlende Tests (Tick-Uhr bei Zykluswechsel, Flam-Beat-Log
 auf Screen-Ebene); Blatt-Zustand friert beim Stecken während des offenen

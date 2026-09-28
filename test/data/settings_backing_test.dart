@@ -1,5 +1,4 @@
 import 'package:drum_coach/data/local/settings_service.dart';
-import 'package:drum_coach/features/metronome/backing_styles.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -8,15 +7,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await SettingsService.init();
   });
-  test('backing style is remembered per exercise, off is explicit', () async {
-    expect(SettingsService.backingStyleFor('a'), isNull);
-    await SettingsService.setBackingStyleFor('a', 'rock8');
-    expect(SettingsService.backingStyleFor('a'), 'rock8');
-    expect(SettingsService.backingStyleFor('b'), isNull);
-    await SettingsService.setBackingStyleFor('a', backingOff);
-    expect(SettingsService.backingStyleFor('a'), backingOff);
-    await SettingsService.setBackingStyleFor('a', null);
-    expect(SettingsService.backingStyleFor('a'), isNull);
+  test('backing is on by default and the switch round-trips', () async {
+    expect(SettingsService.backingEnabled, isTrue);
+    await SettingsService.setBackingEnabled(false);
+    expect(SettingsService.backingEnabled, isFalse);
+    await SettingsService.setBackingEnabled(true);
+    expect(SettingsService.backingEnabled, isTrue);
   });
   test('backing level defaults to 0.7 and clamps', () async {
     expect(SettingsService.backingLevel, 0.7);

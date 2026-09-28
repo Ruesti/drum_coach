@@ -29,27 +29,6 @@ void main() {
       expect(backingStyleById('rock8')!.label, 'Rock 8ths');
       expect(backingStyleById(null), isNull);
       expect(backingStyleById('bossa'), isNull);
-      expect(backingStyleById(backingOff), isNull);
-    });
-  });
-
-  group('resolveBackingStyle', () {
-    test('nothing stored → exercise default', () {
-      expect(resolveBackingStyle(stored: null, exerciseDefault: 'rock8'),
-          'rock8');
-      expect(resolveBackingStyle(stored: null, exerciseDefault: null), isNull);
-    });
-    test('stored choice wins, explicit off stays off', () {
-      expect(resolveBackingStyle(stored: 'swing', exerciseDefault: 'rock8'),
-          'swing');
-      expect(resolveBackingStyle(stored: backingOff, exerciseDefault: 'rock8'),
-          isNull);
-    });
-    test('unknown ids fall back to off, never throw', () {
-      expect(resolveBackingStyle(stored: 'bossa', exerciseDefault: 'rock8'),
-          isNull);
-      expect(resolveBackingStyle(stored: null, exerciseDefault: 'bossa'),
-          isNull);
     });
   });
 

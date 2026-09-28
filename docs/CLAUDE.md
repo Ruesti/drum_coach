@@ -228,8 +228,9 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
   (running marker + volume pulses; the click track is a second voice in the
   loop, off in analysis mode), `TempoRow` (±4 BPM, tap the number for exact
   entry), one primary button Start/Stop/Resume with the time, Finish on its
-  own row while paused, options (duration, sound, backing style + level,
-  click track, about) behind "⋯".
+  own row while paused, options (duration, sound, backing on/off + level —
+  the style is automatic, `autoBackingStyle`, click track, about) behind
+  "⋯". Backdrop photo dimmed 30/60/88 % top→bottom.
 - Result (K2 step 3): one light `ResultSheet` after the session — verdict
   banner, rating chips (save on tap, once), three plain-language `coreValues`
   (hits, timing, hands/evenness), details folded, Done. Ladder dialog and

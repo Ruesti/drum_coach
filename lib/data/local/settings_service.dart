@@ -64,14 +64,11 @@ class SettingsService {
   static Future<void> setClickTrackEnabled(bool v) =>
       _prefs.setBool('click_track_enabled', v);
 
-  /// Backing loop (Engine part 1): the style chosen for one exercise —
-  /// null = never chosen (exercise default applies), 'off' = chosen off.
-  static String? backingStyleFor(String exerciseId) =>
-      _prefs.getString('backing_style_$exerciseId');
-  static Future<void> setBackingStyleFor(String exerciseId, String? id) =>
-      id == null
-          ? _prefs.remove('backing_style_$exerciseId')
-          : _prefs.setString('backing_style_$exerciseId', id);
+  /// Backing loop (Engine part 1): on by default; the style itself is
+  /// automatic (`autoBackingStyle`), the user only switches the band on/off.
+  static bool get backingEnabled => _prefs.getBool('backing_enabled') ?? true;
+  static Future<void> setBackingEnabled(bool v) =>
+      _prefs.setBool('backing_enabled', v);
 
   /// The backing track's own level, global. Default 0.7.
   static double get backingLevel => _prefs.getDouble('backing_level') ?? 0.7;
