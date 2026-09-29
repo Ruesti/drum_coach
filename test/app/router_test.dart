@@ -48,7 +48,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Library'));
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'Library'), findsOneWidget);
+    // Since 29.09. the title sits on the photo header, not in an AppBar:
+    // the tab label plus the header title.
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.text('Library'), findsNWidgets(2));
+    expect(find.text('Single Stroke Roll'), findsOneWidget);
   });
 
   testWidgets('legacy /lessons redirects to /library', (tester) async {

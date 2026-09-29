@@ -1,4 +1,5 @@
 import 'package:drum_coach/app/theme.dart';
+import 'package:drum_coach/features/practice/backdrop.dart';
 import 'package:drum_coach/features/stats/stats_provider.dart';
 import 'package:drum_coach/features/today/next_step.dart';
 import 'package:drum_coach/features/today/next_step_provider.dart';
@@ -127,15 +128,15 @@ void main() {
     expect(find.byType(ElevatedButton), findsNothing);
   });
 
-  testWidgets('status bar icons are dark on the light Today screen',
+  testWidgets('status bar icons are light over the full-screen photo',
       (tester) async {
-    // Coming back from the dark practice screen left the system icons
-    // light; Today has no AppBar, so it must set the overlay style itself.
+    // 29.09. (Uli): the photo fills the screen up behind the status bar, so
+    // the system icons must be light; Today has no AppBar and sets it itself.
     await tester.pumpWidget(_app(step: _exercise));
     await tester.pumpAndSettle();
     final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
         find.byType(AnnotatedRegion<SystemUiOverlayStyle>));
-    expect(region.value.statusBarIconBrightness, Brightness.dark);
+    expect(region.value.statusBarIconBrightness, Brightness.light);
   });
 
   String? assetOf(WidgetTester tester) {
@@ -147,42 +148,20 @@ void main() {
     return null;
   }
 
-  testWidgets('shows the illustration of the current program phase',
+  testWidgets('the backdrop photo fills the screen and comes from the pool',
       (tester) async {
-    const step = PathStep(
-      kind: PathStepKind.exercise,
-      title: 'Single Paradiddle',
-      detail: 'Day 9 · Step 2 of 3 · 84 BPM',
-      minutes: 8,
-      route: '/practice/single_paradiddle?bpm=84&min=8',
-      phase: 3,
-    );
-    await tester.pumpWidget(_app(step: step));
+    // 29.09. (Uli): "Die Startseite hat noch kein Fullscreen-Bild" — a random
+    // portrait photo from the practice pool behind the whole screen; the
+    // program phase no longer picks a picture.
+    await tester.pumpWidget(_app(step: _exercise));
     await tester.pumpAndSettle();
-    expect(assetOf(tester), 'assets/illustrations/today/phase3.jpg');
-    // Decided 23.09.: the banner is 16:9, not the old 2.4:1 strip — tight
-    // action shots need the height.
-    final ratio = tester.widget<AspectRatio>(
-      find.ancestor(of: find.byType(Image), matching: find.byType(AspectRatio)).first,
-    );
-    expect(ratio.aspectRatio, closeTo(16 / 9, 0.001));
-  });
-
-  testWidgets('rest day, done and setup have their own pictures',
-      (tester) async {
-    const rest = PathStep(kind: PathStepKind.restDay, title: 'Rest day', detail: '', phase: 2);
-    await tester.pumpWidget(_app(step: rest));
-    await tester.pumpAndSettle();
-    expect(assetOf(tester), 'assets/illustrations/today/rest.jpg');
-
-    const done = PathStep(kind: PathStepKind.dayDone, title: 'Day 9 done', detail: '', route: '/program');
-    await tester.pumpWidget(_app(step: done));
-    await tester.pumpAndSettle();
-    expect(assetOf(tester), 'assets/illustrations/today/done.jpg');
-
-    const setup = PathStep(kind: PathStepKind.setup, title: 'Set up your path', detail: '', route: '/program/setup');
-    await tester.pumpWidget(_app(step: setup));
-    await tester.pumpAndSettle();
-    expect(assetOf(tester), 'assets/illustrations/today/setup.jpg');
+    expect(practiceBackdrops, contains(assetOf(tester)));
+    final rect = tester.getRect(find.byType(Image).first);
+    expect(rect.width, 360);
+    expect(rect.height, 780);
+    expect(find.byType(AspectRatio), findsNothing);
+    // The doors still sit on paper below the photo.
+    expect(find.text('CONTINUE THE PATH'), findsOneWidget);
+    expect(find.text('Open library'), findsOneWidget);
   });
 }

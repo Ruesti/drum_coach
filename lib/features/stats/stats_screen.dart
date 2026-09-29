@@ -1,9 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/theme.dart';
 import '../../shared/widgets/app_card.dart';
 import '../../shared/widgets/error_state.dart';
 import '../lessons/lessons_provider.dart';
@@ -31,7 +33,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
     _selectedRudimentId ??= rudiments.firstOrNull?.id;
 
-    return Scaffold(
+    // Dark like the practice screen (29.09., Uli: "Die Stats-Seite müsste
+    // dunkel"); the bottom bar follows this tab in the router.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light
+          .copyWith(statusBarColor: Colors.transparent),
+      child: Theme(
+      data: drumCoachPracticeTheme,
+      child: Scaffold(
       appBar: AppBar(title: const Text('Progress')),
       body: sessionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -108,6 +117,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           );
         },
       ),
+      ),
+      ),
     );
   }
 }
@@ -138,7 +149,7 @@ class _StreakCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style:
-                        const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                        const TextStyle(color: PracticeColors.textMuted, fontSize: 13)),
               ],
             ),
           ),
@@ -158,10 +169,10 @@ class _TodayBadge extends StatelessWidget {
     final done = status.goalMet;
     final practiced = status.practiced;
     final color = done
-        ? AppColors.solidStreak
+        ? PracticeColors.solidStreak
         : practiced
-            ? AppColors.ok
-            : AppColors.textFaint;
+            ? PracticeColors.ok
+            : PracticeColors.textFaint;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -170,7 +181,7 @@ class _TodayBadge extends StatelessWidget {
         const SizedBox(height: 4),
         Text('Today', style: TextStyle(color: color, fontSize: 11)),
         Text('${status.minutes}/${status.goalMinutes}m',
-            style: const TextStyle(color: AppColors.textFaint, fontSize: 10)),
+            style: const TextStyle(color: PracticeColors.textFaint, fontSize: 10)),
       ],
     );
   }
@@ -184,11 +195,11 @@ class _CalendarHeatmap extends StatelessWidget {
   static const _gap = 3.0;
 
   Color _colorFor(int minutes) {
-    if (minutes <= 0) return AppColors.textPrimary.withValues(alpha: 0.06);
-    if (minutes < 10) return AppColors.accent.withValues(alpha: 0.30);
-    if (minutes < 20) return AppColors.accent.withValues(alpha: 0.55);
-    if (minutes < 40) return AppColors.accent.withValues(alpha: 0.80);
-    return AppColors.accent;
+    if (minutes <= 0) return PracticeColors.textPrimary.withValues(alpha: 0.06);
+    if (minutes < 10) return PracticeColors.accent.withValues(alpha: 0.30);
+    if (minutes < 20) return PracticeColors.accent.withValues(alpha: 0.55);
+    if (minutes < 40) return PracticeColors.accent.withValues(alpha: 0.80);
+    return PracticeColors.accent;
   }
 
   @override
@@ -250,7 +261,7 @@ class _SectionLabel extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.accent,
+            color: PracticeColors.accent,
             letterSpacing: 2,
             fontWeight: FontWeight.bold,
           ),
@@ -282,7 +293,7 @@ class _BarChartCard extends ConsumerWidget {
                   BarChartRodData(
                     toY: e.value.minutes.toDouble(),
                     width: 14,
-                    color: isToday ? AppColors.accent : AppColors.textFaint,
+                    color: isToday ? PracticeColors.accent : PracticeColors.textFaint,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ],
@@ -304,7 +315,7 @@ class _BarChartCard extends ConsumerWidget {
                     if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
                     return Text(
                       DateFormat('d/M').format(data[idx].date),
-                      style: const TextStyle(color: AppColors.textFaint, fontSize: 10),
+                      style: const TextStyle(color: PracticeColors.textFaint, fontSize: 10),
                     );
                   },
                 ),
@@ -333,13 +344,13 @@ class _RudimentPicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: PracticeColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.chip),
       ),
       child: DropdownButton<String>(
         value: selected,
         isExpanded: true,
-        dropdownColor: AppColors.raised,
+        dropdownColor: PracticeColors.raised,
         underline: const SizedBox.shrink(),
         items: rudiments
             .map((r) => DropdownMenuItem(
@@ -383,7 +394,7 @@ class _BpmLineChart extends ConsumerWidget {
                 child: Text('No sessions yet for this rudiment',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textFaint)),
+                    style: const TextStyle(color: PracticeColors.textFaint)),
               ),
             ),
           );
@@ -400,12 +411,12 @@ class _BpmLineChart extends ConsumerWidget {
                 LineChartBarData(
                   spots: spots,
                   isCurved: true,
-                  color: AppColors.accent,
+                  color: PracticeColors.accent,
                   barWidth: 2,
                   dotData: const FlDotData(show: true),
                   belowBarData: BarAreaData(
                     show: true,
-                    color: AppColors.accent.withValues(alpha: 0.08),
+                    color: PracticeColors.accent.withValues(alpha: 0.08),
                   ),
                 ),
               ],
@@ -417,7 +428,7 @@ class _BpmLineChart extends ConsumerWidget {
                     showTitles: true,
                     reservedSize: 32,
                     getTitlesWidget: (v, _) => Text('${v.toInt()}',
-                        style: const TextStyle(color: AppColors.textFaint, fontSize: 10)),
+                        style: const TextStyle(color: PracticeColors.textFaint, fontSize: 10)),
                   ),
                 ),
                 rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -457,7 +468,7 @@ class _SessionTile extends StatelessWidget {
         DateFormat('dd MMM yyyy').format(session.date as DateTime),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: AppColors.textFaint, fontSize: 12),
+        style: const TextStyle(color: PracticeColors.textFaint, fontSize: 12),
       ),
       trailing: Column(
         mainAxisSize: MainAxisSize.min,
@@ -466,7 +477,7 @@ class _SessionTile extends StatelessWidget {
           Text('$emoji  ${session.achievedBpm} BPM',
               style: const TextStyle(fontSize: 13)),
           Text('${m}m ${s}s',
-              style: const TextStyle(color: AppColors.textFaint, fontSize: 11)),
+              style: const TextStyle(color: PracticeColors.textFaint, fontSize: 11)),
         ],
       ),
     );
@@ -490,7 +501,7 @@ class _EmptyStats extends StatelessWidget {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             Text('Complete your first practice session\nto see stats here.',
-                style: TextStyle(color: AppColors.textMuted),
+                style: TextStyle(color: PracticeColors.textMuted),
                 textAlign: TextAlign.center),
           ],
         ),

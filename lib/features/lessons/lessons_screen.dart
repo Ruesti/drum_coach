@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
 import '../../shared/widgets/app_badge.dart';
 import '../learning/suggested_bpm_provider.dart';
+import '../practice/backdrop.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
 import 'rudiment_filter.dart';
@@ -17,6 +19,8 @@ class LessonsScreen extends ConsumerStatefulWidget {
 }
 
 class _LessonsScreenState extends ConsumerState<LessonsScreen> {
+  /// Header photo, chosen once per screen instance (29.09., Uli).
+  late final String _hero = nextBackdrop();
   Set<Skill> _selectedSkills = {};
   Set<Genre> _selectedGenres = {};
   Set<Limb> _selectedLimbs = {};
@@ -38,10 +42,14 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
     final presentGenres = all.expand((r) => r.genres).toSet();
     final presentSubdivisions = all.map((r) => r.gridUnit).toSet();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Library')),
+    // The photo header runs up behind the status bar: light system icons.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light
+          .copyWith(statusBarColor: Colors.transparent),
+      child: Scaffold(
       body: Column(
         children: [
+          _LibraryHero(asset: _hero),
           _FilterAxisRow<Skill>(
             label: 'Skill',
             values: Skill.values,
@@ -84,6 +92,65 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
                         _RudimentTile(rudiment: rudiment),
                     ],
                   ),
+          ),
+        ],
+      ),
+      ),
+    );
+  }
+}
+
+/// Borderless photo header, about a third of the screen, with the title on
+/// it (29.09., Uli: "die Library-Seite braucht Bild"). The bottom darkens
+/// so the white title reads on every photo; the filters start right below.
+class _LibraryHero extends StatelessWidget {
+  const _LibraryHero({required this.asset});
+  final String asset;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.32,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            asset,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) =>
+                const ColoredBox(color: AppColors.raised),
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x40101010),
+                  Color(0x00101010),
+                  Color(0xA6101010),
+                ],
+                stops: [0.0, 0.35, 1.0],
+              ),
+            ),
+          ),
+          Positioned(
+            left: AppSpacing.screenPadding,
+            right: AppSpacing.screenPadding,
+            bottom: AppSpacing.md,
+            child: Text(
+              'Library',
+              style: AppTypography.display.copyWith(
+                color: Colors.white,
+                shadows: const [
+                  Shadow(
+                      color: Color(0x99000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 1)),
+                ],
+              ),
+            ),
           ),
         ],
       ),
