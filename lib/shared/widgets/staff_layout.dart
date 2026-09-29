@@ -47,6 +47,11 @@ class StaffLayout {
   final int barsPerRow;
   final List<NotePlacement> placements;
   final List<BeamGroup> beams;
+
+  /// Horizontal shift that centres a single short row in the available
+  /// width (0 for multi-row pieces and rows that fill the width). The
+  /// painter translates the whole row by it; placements stay unshifted.
+  final double xOffset;
   const StaffLayout({
     required this.rowCount,
     required this.pxPerQuarter,
@@ -54,6 +59,7 @@ class StaffLayout {
     required this.barsPerRow,
     required this.placements,
     required this.beams,
+    this.xOffset = 0,
   });
 }
 
@@ -102,9 +108,19 @@ StaffLayout computeStaffLayout({
   // fit, rather than note width staying fixed and the bar count per row
   // flexing. Matches printed sheet music: a consistent line length instead
   // of "however many bars happen to fit at a comfortable size".
-  var barsPerRow = targetBarsPerRow;
+  // Short pieces (fewer bars than a full row — most rudiments are one bar)
+  // take the whole row instead of sitting in its left half (Uli 29.09.),
+  // spreading up to 1.5× the two-bar comfort size.
+  var totalTicksAll = 0;
+  for (final b in beats) {
+    totalTicksAll += (resolveNote(b, grid).quarters * _ticksPerQuarter).round();
+  }
+  final totalBarsAll = (totalTicksAll / ticksPerBar).ceil().clamp(1, 1 << 30);
+  final shortPiece = totalBarsAll < targetBarsPerRow;
+  final cap = shortPiece ? preferredPxPerQuarter * 1.5 : preferredPxPerQuarter;
+  var barsPerRow = shortPiece ? totalBarsAll : targetBarsPerRow;
   var pxPerQuarter = (usable / barsPerRow - barGap) / beatsPerBar;
-  if (pxPerQuarter > preferredPxPerQuarter) pxPerQuarter = preferredPxPerQuarter;
+  if (pxPerQuarter > cap) pxPerQuarter = cap;
   if (pxPerQuarter < minPxPerQuarter) {
     // Even at the preferred size, [targetBarsPerRow] bars don't comfortably
     // fit this piece's note density — fall back to one bar per row.
@@ -182,6 +198,12 @@ StaffLayout computeStaffLayout({
     p = q;
   }
 
+  // A lone row narrower than the width is centred; multi-row pieces keep
+  // their last, shorter row left-aligned like printed music.
+  final rowWidth = barsPerRow * barWidthAt(pxPerQuarter);
+  final xOffset =
+      rowCount == 1 && rowWidth < usable ? (usable - rowWidth) / 2 : 0.0;
+
   return StaffLayout(
     rowCount: rowCount,
     pxPerQuarter: pxPerQuarter,
@@ -189,6 +211,7 @@ StaffLayout computeStaffLayout({
     barsPerRow: barsPerRow,
     placements: placements,
     beams: beams,
+    xOffset: xOffset,
   );
 }
 

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -157,9 +156,6 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   @override
   void initState() {
     super.initState();
-    // Draw this screen's photo now and remember it, so the next exercise
-    // gets a different one.
-    _lastBackdrop = _backdrop;
     WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
@@ -937,12 +933,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     );
   }
 
-  /// Backdrop: a random photo from the practice pool each time the screen
-  /// opens (28.09., Uli), never the one shown last time. The program phase
-  /// from Today no longer picks it.
-  static String? _lastBackdrop;
-  late final String _backdrop =
-      pickBackdrop(Random(), avoid: _lastBackdrop);
+  /// Backdrop: a random photo from the pool each time the screen opens
+  /// (28.09., Uli), never the one shown last on any screen. The program
+  /// phase from Today no longer picks it.
+  late final String _backdrop = nextBackdrop();
 }
 
 // ── Ladder step row ────────────────────────────────────────────────────────────

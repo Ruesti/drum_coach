@@ -41,4 +41,14 @@ void main() {
     }
     expect(seen, practiceBackdrops.toSet());
   });
+
+  test('nextBackdrop hands every screen a photo and never the previous one', () {
+    var last = nextBackdrop();
+    for (var i = 0; i < 200; i++) {
+      final next = nextBackdrop();
+      expect(practiceBackdrops, contains(next));
+      expect(next, isNot(last));
+      last = next;
+    }
+  });
 }

@@ -6,17 +6,33 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../app/design_tokens.dart';
 import '../../shared/widgets/error_state.dart';
+import '../practice/backdrop.dart';
 import '../stats/stats_provider.dart';
 import 'next_step.dart';
 import 'next_step_provider.dart';
 
+/// Light shadow behind white text on the photo.
+const _photoShadow = [
+  Shadow(color: Color(0x99000000), blurRadius: 8, offset: Offset(0, 1)),
+];
+
 /// Start screen (K2): two doors — continue the path, or practice freely —
 /// then streak and minutes, compact. Replaces the dashboard card stack.
-class TodayScreen extends ConsumerWidget {
+/// Since 29.09. (Uli) a random photo fills the whole screen; the greeting
+/// sits on it, the doors on paper below.
+class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends ConsumerState<TodayScreen> {
+  /// Chosen once per screen instance — a rebuild must not swap the photo.
+  late final String _backdrop = nextBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
     final step = ref.watch(nextStepProvider);
     final streak = ref.watch(streakDaysProvider);
     final today = ref.watch(todayStatusProvider);
@@ -27,63 +43,89 @@ class TodayScreen extends ConsumerWidget {
             ? 'Good afternoon.'
             : 'Good evening.';
 
-    // No AppBar here, so set the system icons ourselves — otherwise they
-    // stay light after returning from the dark practice screen.
+    // The photo runs up behind the status bar, so the system icons are
+    // light; there is no AppBar to set them.
+    final screenHeight = MediaQuery.sizeOf(context).height;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark
+      value: SystemUiOverlayStyle.light
           .copyWith(statusBarColor: Colors.transparent),
       child: Scaffold(
-        body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.screenPadding,
-              AppSpacing.lg,
-              AppSpacing.screenPadding,
-              AppSpacing.xl,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              _backdrop,
+              fit: BoxFit.cover,
+              // A missing file must never break the start screen.
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
-            children: [
-              Row(
+            // A light veil at the top for the white greeting; from the
+            // middle down the photo fades into paper, where the doors sit.
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x66101010),
+                    Color(0x00101010),
+                    Color(0x00FAF8F3),
+                    AppColors.base,
+                    AppColors.base,
+                  ],
+                  stops: [0.0, 0.30, 0.40, 0.60, 1.0],
+                ),
+              ),
+            ),
+            SafeArea(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.lg,
+                  AppSpacing.screenPadding,
+                  AppSpacing.xl,
+                ),
                 children: [
-                  const _Eyebrow('Today'),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.settings_outlined),
-                    color: AppColors.textMuted,
-                    tooltip: 'Settings',
-                    onPressed: () => context.push('/settings'),
+                  Row(
+                    children: [
+                      const _Eyebrow('Today', color: Colors.white70),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.settings_outlined),
+                        color: Colors.white,
+                        tooltip: 'Settings',
+                        onPressed: () => context.push('/settings'),
+                      ),
+                    ],
+                  ),
+                  Text(greeting,
+                      style: AppTypography.display.copyWith(
+                          color: Colors.white, shadows: _photoShadow)),
+                  // Leaves the photo room; the doors start on paper.
+                  SizedBox(height: screenHeight * 0.30),
+                  step.when(
+                    data: (s) => _PathDoor(step: s),
+                    loading: () => const SizedBox(height: 140),
+                    error: (e, _) => ErrorStateWidget(
+                      message: 'Could not load your next step.',
+                      onRetry: () => ref.invalidate(nextStepProvider),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  const Divider(),
+                  const SizedBox(height: AppSpacing.lg),
+                  const _FreeDoor(),
+                  const SizedBox(height: AppSpacing.xl),
+                  const Divider(),
+                  const SizedBox(height: AppSpacing.lg),
+                  _StatsRow(
+                    streak: streak.valueOrNull ?? 0,
+                    today: today.valueOrNull,
                   ),
                 ],
               ),
-              Text(greeting, style: AppTypography.display),
-              const SizedBox(height: AppSpacing.xl),
-              step.when(
-                data: (s) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _PathIllustration(step: s),
-                    const SizedBox(height: AppSpacing.lg),
-                    _PathDoor(step: s),
-                  ],
-                ),
-                loading: () => const SizedBox(height: 140),
-                error: (e, _) => ErrorStateWidget(
-                  message: 'Could not load your next step.',
-                  onRetry: () => ref.invalidate(nextStepProvider),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              const Divider(),
-              const SizedBox(height: AppSpacing.lg),
-              const _FreeDoor(),
-              const SizedBox(height: AppSpacing.xl),
-              const Divider(),
-              const SizedBox(height: AppSpacing.lg),
-              _StatsRow(
-                streak: streak.valueOrNull ?? 0,
-                today: today.valueOrNull,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -100,41 +142,6 @@ class _Eyebrow extends StatelessWidget {
         text.toUpperCase(),
         style: AppTypography.label.copyWith(color: color, letterSpacing: 1.0),
       );
-}
-
-/// Which picture goes with the step — one per program phase, plus the three
-/// non-exercise states. Files live in assets/illustrations/today/.
-String illustrationFor(PathStep step) => switch (step.kind) {
-      PathStepKind.exercise =>
-        'assets/illustrations/today/phase${(step.phase ?? 3).clamp(1, 4)}.jpg',
-      PathStepKind.restDay => 'assets/illustrations/today/rest.jpg',
-      PathStepKind.dayDone ||
-      PathStepKind.programComplete =>
-        'assets/illustrations/today/done.jpg',
-      PathStepKind.setup => 'assets/illustrations/today/setup.jpg',
-    };
-
-class _PathIllustration extends StatelessWidget {
-  const _PathIllustration({required this.step});
-  final PathStep step;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      child: AspectRatio(
-        // 16:9 since 23.09.: the tight action shots need the height; the old
-        // 2.4:1 strip cut off hair and sticks.
-        aspectRatio: 16 / 9,
-        child: Image.asset(
-          illustrationFor(step),
-          fit: BoxFit.cover,
-          // A missing file must never break the start screen.
-          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-        ),
-      ),
-    );
-  }
 }
 
 class _PathDoor extends StatelessWidget {

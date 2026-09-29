@@ -36,3 +36,13 @@ String pickBackdrop(Random rng, {String? avoid}) {
       : practiceBackdrops;
   return pool[rng.nextInt(pool.length)];
 }
+
+String? _lastShown;
+
+/// The next photo for any screen (practice, Today, Library — 29.09.):
+/// random, never the one shown last, wherever that was.
+String nextBackdrop({Random? rng}) {
+  final next = pickBackdrop(rng ?? Random(), avoid: _lastShown);
+  _lastShown = next;
+  return next;
+}

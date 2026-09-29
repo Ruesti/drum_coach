@@ -150,4 +150,44 @@ void main() {
       expect(runs.first.endIndex, 3);
     });
   });
+
+  group('computeStaffLayout — short pieces fill the row (Uli 29.09.)', () {
+    // One 4/4 bar of eighths — most rudiments look like this.
+    final oneBar =
+        List.generate(8, (_) => const StrokeBeat(hand: Hand.right));
+
+    test('a one-bar piece takes the whole row, not half of it', () {
+      final l = computeStaffLayout(
+          beats: oneBar, grid: NoteGrid.eighth, beatsPerBar: 4, maxWidth: 330);
+      expect(l.barsPerRow, 1);
+      expect(l.rowCount, 1);
+      // Spreads beyond the two-bar comfort size (56 px per quarter)…
+      expect(l.pxPerQuarter, greaterThan(56));
+      // …so the last note sits near the right edge (usable ≈ 284 px).
+      expect(l.placements.last.xCenter, greaterThan(250));
+      expect(l.xOffset, 0);
+    });
+
+    test('a one-bar piece narrower than a wide row is centred', () {
+      final l = computeStaffLayout(
+          beats: oneBar, grid: NoteGrid.eighth, beatsPerBar: 4, maxWidth: 800);
+      // Cap for short pieces 84 px/quarter → row 4·84 + 12 gap = 348 px of
+      // 754 usable, centred.
+      expect(l.pxPerQuarter, closeTo(84, 0.001));
+      expect(l.xOffset, closeTo((800 - 8 - 12 - 26 - 348) / 2, 0.5));
+    });
+
+    test('three bars: two per row, the short last row stays left-aligned', () {
+      final threeBars =
+          List.generate(24, (_) => const StrokeBeat(hand: Hand.right));
+      final l = computeStaffLayout(
+          beats: threeBars,
+          grid: NoteGrid.eighth,
+          beatsPerBar: 4,
+          maxWidth: 330);
+      expect(l.barsPerRow, 2);
+      expect(l.rowCount, 2);
+      expect(l.xOffset, 0);
+    });
+  });
 }

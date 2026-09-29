@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/local/settings_service.dart';
+import 'design_tokens.dart';
 import '../features/learning/daily_routine_screen.dart';
 import '../features/lessons/collection_screen.dart';
 import '../features/lessons/lesson_detail_screen.dart';
@@ -177,6 +178,14 @@ class _ScaffoldWithNavBar extends ConsumerWidget {
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
+        // Progress is dark (29.09., Uli); the bar follows that tab so there
+        // is no hard seam above it.
+        backgroundColor:
+            navigationShell.currentIndex == 2 ? PracticeColors.base : null,
+        selectedItemColor:
+            navigationShell.currentIndex == 2 ? PracticeColors.accent : null,
+        unselectedItemColor:
+            navigationShell.currentIndex == 2 ? PracticeColors.textMuted : null,
         onTap: (index) {
           // Returning to Today ends the current training session —
           // reset the cross-exercise session timer so the next one starts

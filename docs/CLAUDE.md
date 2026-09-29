@@ -213,14 +213,21 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
 ```
 
 ### Today shows
+- A random portrait photo (`nextBackdrop()`, the practice pool) filling the
+  whole screen; "TODAY" and the greeting in white on it, the doors on paper
+  below a fade (29.09.). Status bar icons light.
 - "Continue the path": the next step — first open block of today's program
   day, or the first routine item without a program — with one Start button
 - "Practice freely": one button into the Library
 - Streak and minutes today, compact
+- Library: borderless photo header (a third of the screen, title on it),
+  filters and list below. Progress: dark (`drumCoachPracticeTheme`), the
+  bottom bar follows that tab (`_ScaffoldWithNavBar`).
 
 ### Theme (K2)
-- App is light ("paper", `AppColors`); only `PracticeSessionScreen` is dark
-  (`PracticeColors`, wrapped in `drumCoachPracticeTheme`). Shared widgets
+- App is light ("paper", `AppColors`); `PracticeSessionScreen` and (since
+  29.09.) `StatsScreen` are dark (`PracticeColors`, wrapped in
+  `drumCoachPracticeTheme`). Shared widgets
   read `AppPalette.of(context)`. Fonts are bundled under `assets/google_fonts/`
   — never rely on runtime fetching (tests would break).
 - `PracticeSessionScreen` (K2 step 2): no AppBar — header row (back, name,
