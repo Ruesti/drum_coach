@@ -232,7 +232,12 @@ class _StaffPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (var row = 0; row < _layout.rowCount; row++) {
+      // A lone short row is centred in the card (layout.xOffset); the row
+      // is drawn unshifted and moved as a whole, clef and barlines included.
+      canvas.save();
+      canvas.translate(_layout.xOffset, 0);
       _paintRow(canvas, row);
+      canvas.restore();
     }
   }
 
