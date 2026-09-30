@@ -25,6 +25,10 @@ Form braucht.
 4. Bleibt aus dem Brief: Pad einstimmig; Vorbilder liefern Prinzipien, keine
    Zeilen; Katalog-Vorgabe vom 28.09. „wenn kein reines Rudiment, länger und
    abwechslungsreicher".
+5. **Nachtrag zur Spec (30.09. abends):** „In längeren Übungen sollen vier
+   Notenreihen angezeigt werden. Wenn eine Reihe zu Ende ist, rutschen die
+   Noten eine Reihe nach oben. Gespielt wird immer in der obersten Reihe."
+   → Notenfenster (§4c).
 
 Folgen für das Design: **eine** Blattform für alle Übungstypen (keine
 Zellen-Form neben einer Lektionsform), das Lektions-Material lebt auf der
@@ -39,7 +43,10 @@ Blätter werden musikalische Phrasen (§9).
 eine Phrase von ein bis acht Takten mit oder ohne Wiederholungszeichen. Der
 Übungs-Screen zeigt das ganze Blatt als Noten, spielt wahlweise **eine Zeile
 im Kreis** oder **das ganze Blatt der Reihe nach** und lässt mit einem Tipp
-zur nächsten Zeile springen. Die Notation bekommt dafür Nummern-Kästchen,
+zur nächsten Zeile springen. Im Lauf sieht man ein Fenster von vier
+Notenreihen: gespielt wird immer oben, die nächsten drei Reihen warten
+darunter, am Reihenende rutscht alles eine Reihe hoch (§4c). Die Notation
+bekommt dafür Nummern-Kästchen,
 Wiederholungszeichen, Schlussstrich, optionale Zeilen-Überschrift und
 optionale Zählhilfe. Alle 127 vorhandenen Übungen laufen unverändert als
 Ein-Zeilen-Blätter. Das Lektions-Material (§7) ist auf Abruf da.
@@ -144,9 +151,15 @@ SheetStaffWidget({
 ```
 
 Es stapelt je Zeile einen `_StaffPainter` (heutiger Maler, um Zeilen-Wissen
-erweitert), Zeilenabstand 12 px, Reihenhöhe wie heute 104 px (mit Zählhilfe
-+14 px). `NotationStaffWidget` bleibt als dünne Hülle für Ein-Zeilen-Aufrufer
-(Generator-Vorschau) und delegiert an das neue Widget.
+erweitert). **Alle Reihen haben dieselbe Höhe** (`rowPitch`: 104 px wie
+heute, 118 px wenn irgendeine Zeile des Blatts eine Zählhilfe trägt), damit
+das Notenfenster (§4c) reihenweise verschieben kann; der Abstand zwischen
+zwei Zeilen und die Überschrift liegen innerhalb der Reihe (oberer Rand 12 px,
+Überschrift darin), nicht als Extra-Lücke. `NotationStaffWidget` bleibt als
+dünne Hülle für Ein-Zeilen-Aufrufer (Generator-Vorschau) und delegiert an das
+neue Widget. Das Widget kennt seine **Reihenfolge der Reihen**: `rows` =
+Liste aus (Zeile, Reihe in der Zeile) über das ganze Blatt; `rowOfNote(line,
+index)` liefert die Reihe einer Note.
 
 Der Maler bekommt je Zeile: `lineNumber`, `repeat`, `isLastLine`, `title`,
 `countLabels` (`List<String?>` je Note oder null), `dimmed`.
@@ -159,7 +172,7 @@ Der Maler bekommt je Zeile: `lineNumber`, `repeat`, `isLastLine`, `title`,
 | Zeile ohne Wiederholung | einfacher Taktstrich am Ende der letzten Reihe; letzte Zeile des Blatts: Schlussstrich (dünn + dick) |
 | Reihenende innerhalb einer Zeile | einfacher Taktstrich (der heutige Doppelstrich an jedem Reihenende entfällt; er stand für den Loop, das sagt jetzt das Wiederholungszeichen) |
 | Überschrift | `title` in der Label-Schrift 11 px, halbfett, über der ersten Reihe links, in Tinte |
-| Zählhilfe | zweite Textreihe 14 px unter dem Handsatz, Label-Schrift 10 px, gedämpft; Text je Note aus §4c; nur wenn `counts` und `showCounts` |
+| Zählhilfe | zweite Textreihe 14 px unter dem Handsatz, Label-Schrift 10 px, gedämpft; Text je Note aus §4d; nur wenn `counts` und `showCounts` |
 | Handsatz | wie heute, aber in der Label-Schrift statt Systemschrift (heute `TextStyle` ohne `fontFamily`; im Test-Renderer erschienen deshalb Kästchen) |
 | inaktive Zeile | ganze Zeile auf 45 % (heute: inaktive Takte); innerhalb der aktiven Zeile bleibt alles hell |
 | Notenschlüssel, Taktart | Schlüssel auf jeder Reihe wie heute; Taktart nur auf der ersten Reihe des Blatts |
@@ -167,7 +180,54 @@ Der Maler bekommt je Zeile: `lineNumber`, `repeat`, `isLastLine`, `title`,
 Tippen auf eine Zeile ruft `onLineTap(lineIndex)` (Treffer-Fläche = die
 ganze Zeile inklusive Kästchen).
 
-### 4c. Zählhilfe — `lib/shared/widgets/count_labels.dart` (neu, rein)
+### 4c. Notenfenster — `lib/features/practice/widgets/sheet_window.dart` (neu)
+
+Auf dem Übungs-Screen steckt das Blatt in einem Fenster fester Höhe:
+
+```dart
+SheetWindow({
+  required Rudiment rudiment,
+  required int topRow,        // Reihe, die oben liegt = die gespielte
+  int? activeLine, int? activeIndex,
+  int visibleRows = 4,
+  … showSticking, showCounts, onLineTap
+});
+```
+
+- **Höhe** = `visibleRows × rowPitch`; `visibleRows` ist 4, oder weniger,
+  wenn das Blatt weniger Reihen hat (dann so hoch wie das Blatt) oder der
+  Bildschirm keine vier Reihen hergibt (mindestens 2; die Zahl bestimmt der
+  Screen aus der verfügbaren Höhe zwischen Kopfzeile und Zeilenleiste).
+- **Oben wird gespielt.** Das Fenster zeigt die Reihen `topRow …
+  topRow + visibleRows − 1`. Die aktive Note liegt immer in der obersten
+  Reihe. Die Reihen darunter sind Vorschau (gedämpft 45 %), in der
+  Reihenfolge, in der sie drankommen: im Blatt-Modus die folgenden Reihen
+  des Blatts, nach der letzten wieder die erste (der Loop geht ja weiter);
+  im Zeilen-Modus die folgenden Reihen derselben Zeile und dann die
+  folgenden Zeilen als Ausblick, nach der letzten Zeile nichts (Leerraum).
+- **Rutschen.** Wandert der Cursor von der obersten Reihe in die nächste,
+  fährt der Inhalt um eine `rowPitch` nach oben (`AnimatedSlide`/Offset,
+  180 ms, `easeOutCubic`), so dass die neue Reihe oben liegt. Das passiert
+  bei jeder Reihengrenze, auch mitten in einer Zeile (Challenge, 8 Takte =
+  4 Reihen) und beim Zeilenwechsel im Blatt-Modus.
+- **Zurück auf Anfang.** Springt der Cursor an den Anfang der Einheit
+  (Loop beginnt neu) oder der Nutzer wechselt die Zeile (‹ ›, Tipp,
+  Modus), springt das Fenster **ohne Animation** auf die erste Reihe der
+  Einheit — die Eins ist eine neue Seite. Eine Ein-Reihen-Zeile im Kreis
+  bewegt sich also nie.
+- **Vor dem Start** liegt die erste Reihe der gewählten Einheit oben; das
+  Fenster ist wie heute 60 % durchsichtig über dem Foto.
+- **Tippen** auf eine sichtbare Reihe wählt deren Zeile (nur im
+  Zeilen-Modus; im Blatt-Modus hat Tippen keine Wirkung).
+- Umsetzung: das ganze Blatt wird einmal als `SheetStaffWidget` gezeichnet,
+  in einem `ClipRect` mit animiertem vertikalen Versatz `−topRow ×
+  rowPitch`; für die Vorschau mit Umlauf im Blatt-Modus wird das Blatt ein
+  zweites Mal darunter gezeichnet (nur die ersten `visibleRows − 1` Reihen).
+  Rein und testbar: `int topRowFor(SheetPlan plan, StaffRows rows, int
+  noteIndex)`.
+- Die Info-Seite (§7) benutzt kein Fenster, sondern das ganze Blatt.
+
+### 4d. Zählhilfe — `lib/shared/widgets/count_labels.dart` (neu, rein)
 
 `List<String?> countLabelsFor(List<StrokeBeat> beats, NoteGrid grid, int
 beatsPerBar)`: Position jeder Note auf dem 24er-Raster (wie
@@ -222,9 +282,11 @@ einer Zeile:
 
 ‹ › wechseln die Zeile (am Rand gesperrt), die Mitte in der Label-Schrift,
 rechts ein zweiteiliger Umschalter. Im Blatt-Modus zeigt die Mitte „Sheet ·
-28 bars" und ‹ › sind ausgeblendet. Das Notenblatt scrollt zur aktiven Zeile
-(`autoScroll`), inaktive Zeilen gedämpft. Vor dem Start ist das Blatt wie
-heute 60 % durchsichtig über dem Foto.
+28 bars" und ‹ › sind ausgeblendet. Das Notenblatt ist das Notenfenster aus
+§4c (vier Reihen, oben wird gespielt, am Reihenende rutscht es hoch); das
+heutige `autoScroll` entfällt auf diesem Screen. Der Screen leitet `topRow`
+aus dem Cursor ab (`topRowFor`) und setzt es beim Zeilenwechsel und beim
+Loop-Anfang ohne Animation auf die erste Reihe der Einheit.
 
 **⋯-Blatt:** unter `SHEET` zwei Schalter „Sticking letters" (global,
 Standard an, `SettingsService.showSticking`) und „Count hints" (global,
@@ -319,12 +381,18 @@ und ersetzt das Probestück; die 86 alten Étüden gehen erst dann (Brief §7.4)
 - `test/lessons/etude_dsl_test.dart`: `line(...)`.
 - `test/lessons/etudes_integrity_test.dart`: alle Zeilen aller Übungen sind
   ganze Takte, 1..8 Takte, Blatt ≤ 64 Takte.
-- `test/shared/count_labels_test.dart` (neu): die vier Fälle aus §4c.
+- `test/shared/count_labels_test.dart` (neu): die vier Fälle aus §4d.
 - `test/notation_staff_test.dart`: `SheetStaffWidget` zeichnet ein
   Drei-Zeilen-Blatt (mit Challenge ohne Wiederholung, Titel, Zählhilfe)
   ohne Fehler; Ein-Zeilen-Altdaten zeichnen weiter; `onLineTap` liefert die
   Zeile; Golden für ein Zwei-Zeilen-Blatt (Kästchen, Wiederholungszeichen,
   Schlussstrich).
+- `test/features/practice/sheet_window_test.dart` (neu): `topRowFor` —
+  Note in Reihe 2 → 2, Loop-Anfang → 0; Fenster zeigt höchstens vier
+  Reihen, ein Ein-Reihen-Blatt ist eine Reihe hoch; Cursor von Reihe 0 auf 1
+  → Versatz eine `rowPitch` (animiert), Sprung auf Reihe 0 → sofort; Blatt-
+  Modus: unter der letzten Reihe folgt die erste; Zeilen-Modus: nach der
+  letzten Zeile Leerraum; Tipp auf sichtbare Reihe → `onLineTap`.
 - `test/features/practice/practice_session_screen_test.dart`: Ein-Zeilen-
   Blatt → keine Zeilenleiste; Mehrzeilen-Blatt → „Line 1 / 11", › ruft
   `setPatternVolumes` mit den Lautstärken der Zeile 2; Umschalter „Sheet" →
@@ -337,8 +405,10 @@ und ersetzt das Probestück; die 86 alten Étüden gehen erst dann (Brief §7.4)
   Zeile und Modus, `showSticking`, `showCounts`.
 - Gerätetest S23: Blatt Single Paradiddle — Zeile im Kreis mit Backing,
   Wechsel im Lauf (Eins sitzt), Blatt-Modus bei 60 und 140 BPM (Zeit bis zum
-  ersten Klick, Cursor über Zeilen und Reihen), Mikro-Messung auf einer
-  Zwei-Takt-Zeile, Info-Seite mit Blatt, Alt-Übung unverändert.
+  ersten Klick, Fenster rutscht an jeder Reihengrenze sauber hoch, Challenge
+  über vier Reihen, Umlauf springt auf Anfang), vier Reihen passen zwischen
+  Kopfzeile und Zeilenleiste, Mikro-Messung auf einer Zwei-Takt-Zeile,
+  Info-Seite mit Blatt, Alt-Übung unverändert.
 
 ## 12. Offen / spätere Schritte
 
@@ -353,7 +423,8 @@ und ersetzt das Probestück; die 86 alten Étüden gehen erst dann (Brief §7.4)
 ## 13. Dateien
 
 - Neu: `lib/features/lessons/models/sheet_plan.dart`,
-  `lib/shared/widgets/count_labels.dart`, Tests wie in §11.
+  `lib/shared/widgets/count_labels.dart`,
+  `lib/features/practice/widgets/sheet_window.dart`, Tests wie in §11.
 - Ändern: `rudiment.dart` (`ExerciseLine`, `lines`, `sheet`, `withSticking`),
   `etude_dsl.dart` (`line`), `rudiments_seed.dart` (Probestück),
   `notation_staff_widget.dart` (`SheetStaffWidget`, Maler), `staff_layout.dart`
