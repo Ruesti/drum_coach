@@ -85,11 +85,40 @@ zeigte sich nebenbei (Paradiddle öffnete im zuletzt gewählten Blatt-Modus).
 
 https://claude.ai/artifact/NZVEgAHrXywaxgx3v2APeK
 
-## 6. Stand
+## 6. Review (01.10., frischer Reviewer) und Fixes
 
-Wird nach Suite, Review und Sichtprüfung ergänzt.
+- **Important — Mikro nach Zeilenwechsel:** die Aufnahme lief über den
+  Wechsel hinweg weiter, alle Schläge davor wären Extraschläge gegen die
+  neue Einheit gewesen (Hand-Werte gesperrt). Fix: Aufnahme bei laufendem
+  Mikro neu starten (frischer Detektor + Uhr).
+- **Alte Loop-Ticks nach dem Wechsel** (bis zum Neuaufbau: 150 ms
+  Entprellung + Render) zählten für Cursor und Beat-Log. Fix: reine Regel
+  `staleTickAfterUnitChange` — bis zur ersten Eins nach der Entprellung wird
+  nichts gezählt, der Cursor bleibt aus.
+- Papier-Bänder des Fensters ließen Tipps an verborgene Zeilen durch →
+  `AbsorbPointer`.
+- Jede Zählhilfe-Zeile wurde je Note neu gezeichnet, Geometrie bis zu
+  dreimal je Note gerechnet → Geometrie im Fenster gecacht und durchgereicht,
+  `shouldRepaint` vergleicht die Silben per Inhalt.
+- `|:` kollidierte mit Flam-Vorschlägen auf der ersten Note → Zeichen fest
+  hinter der Taktart, Zeilen mit Vorschlag am Anfang bekommen 14 px mehr.
+- Das Titelband kostete 14 px auf jeder Reihe (weniger sichtbare Reihen) →
+  Titel sitzt jetzt unter dem System links im freien Streifen, kein Band.
+- Info-Seite aus dem Übungs-Screen stapelte einen zweiten Übungs-Screen →
+  `onLineTap` wählt die Zeile im laufenden Screen.
+- Nits: `_rowFor` verträgt leere Zeilen, totes `autoScroll` entfernt
+  (`NotationStaffWidget` ist stateless), Golden lädt auch die Label-Schrift,
+  Spec §10 präzisiert (`?line=` nicht numerisch → gemerkte Position).
+- Verifiziert ohne Befund: keine veralteten Muster-Nutzungen, Altdaten
+  unverändert, Fenster-Animation ohne setState-im-Build, Klammern/Pads,
+  Einstellungen/Log/Isar-Migration.
 
-## 7. Offen (Spec §12)
+## 7. Stand
+
+Tasks 1–10 fertig, Draft-PR #29 offen; ausstehend: Ulis Abnahme der
+Sichtprüfung und der Gerätetest S23 (§9).
+
+## 8. Offen (Spec §12)
 
 - Automatisches Weiterschalten nach n Durchläufen, lückenloser Zeilenwechsel
   (Vorab-Render je Zeile).
@@ -98,7 +127,7 @@ Wird nach Suite, Review und Sichtprüfung ergänzt.
 - Katalog Schritt 3 nach der Regel „so abwechslungsreich und groovy wie
   möglich" (6–10 Zeilen à 2 Takte + Challenge); Probestück ersetzen.
 
-## 8. Gerätetest S23 (ausstehend)
+## 9. Gerätetest S23 (ausstehend)
 
 Zeile im Kreis mit Backing; ‹ › im Lauf; Blatt-Modus bei 60 BPM — Zeit bis
 zum ersten Klick (Grenze 1 s) und bei 140 BPM; Fenster rutscht an jeder

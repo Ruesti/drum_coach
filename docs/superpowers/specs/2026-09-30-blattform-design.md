@@ -364,7 +364,9 @@ und ersetzt das Probestück; die 86 alten Étüden gehen erst dann (Brief §7.4)
 
 ## 10. Fehlerpfade
 
-- `?line=` außerhalb 1..n oder nicht numerisch → Zeile 1, kein Fehler.
+- `?line=` außerhalb 1..n → Zeile 1, kein Fehler. Nicht numerisch → wie
+  nicht gesetzt (gemerkte Position). `?mode=` ohne `?line=` → Zeile 1 im
+  genannten Modus. (Präzisiert nach Review 01.10.)
 - Gemerkte Zeile größer als das Blatt (Katalog geändert) → Zeile 1.
 - Blatt mit mehr als 64 Takten → Integritätstest schlägt fehl; zur Laufzeit
   läuft der Blatt-Modus ohne Band (heutiges Engine-Verhalten).
