@@ -127,10 +127,27 @@ Sichtprüfung und der Gerätetest S23 (§9).
 - Katalog Schritt 3 nach der Regel „so abwechslungsreich und groovy wie
   möglich" (6–10 Zeilen à 2 Takte + Challenge); Probestück ersetzen.
 
-## 9. Gerätetest S23 (ausstehend)
+## 9. Gerätetest S23 (01.10., Release-Build a1b3f4e, Laptop-Build)
 
-Zeile im Kreis mit Backing; ‹ › im Lauf; Blatt-Modus bei 60 BPM — Zeit bis
-zum ersten Klick (Grenze 1 s) und bei 140 BPM; Fenster rutscht an jeder
-Reihengrenze, Challenge über vier Reihen, Umlauf springt; vier Reihen zwischen
-Kopfzeile und Zeilenleiste; Mikro-Messung auf einer Zwei-Takt-Zeile; Info-
-Seite; Alt-Übung unverändert.
+Seite mit Bildern und Messtabelle:
+
+https://claude.ai/artifact/MfKYx8ZMgTDHbHX3maXoYj
+
+- **Fenster:** auf dem S23 (772 dp hoch) passen **drei** Reihen zwischen
+  Kopfzeile und Zeilenleiste, nicht vier — vier Reihen (≥ 504 dp mit
+  Zählhilfe) brauchten den Platz des Pulsbalkens und der Tempozeile.
+  Gespielt wird oben, die Vorschau darunter gedämpft; im Blatt-Modus rutscht
+  das Fenster reihenweise (bei 1:08 lag Zeile 9, Takt 2 oben).
+- **Renderzeit (Bildschirmaufnahme, Cursor-Lücke beim Wechsel im Lauf, 60
+  BPM):** Zeile → ganzes Blatt (28 Takte, ≈ 10 MB Loop) **440 ms**; Zeile →
+  nächste Zeile (›) **280 ms**. Start nach dem Einstellen: sofort — der Loop
+  wird schon beim Einstellen gerendert. Grenze 1 s eingehalten; ein
+  Vorab-Render je Zeile (Spec §12) ist damit nicht nötig.
+- Zeilenwechsel im Lauf: neue Zeile beginnt auf der Eins, Cursor bleibt in
+  der Lücke aus (Review-Fix wirkt).
+- Info-Seite (PATTERN · THE SHEET · LESSON), Optionen mit SHEET-Schaltern,
+  alte Ein-Zeilen-Übung (Kästchen 1, `|: :|`, keine Leiste, Ulis 200 BPM):
+  wie vorgesehen.
+- **Offen (braucht Uli am Pad):** Mikro-Messung auf einer Zwei-Takt-Zeile mit
+  Kopfhörern; Umlauf-Sprung im Blatt-Modus nach 28 Takten nur im
+  Widget-Test gesehen (auf dem Gerät 112 s je Zyklus, nicht abgewartet).
