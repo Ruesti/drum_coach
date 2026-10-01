@@ -75,8 +75,15 @@ Neu: `sheet_plan_test` (5), `count_labels_test` (6), `sheet_geometry_test`
 
 ## 5. Sichtprüfung
 
-Emulator-Screens (Probestück vor dem Start, im Lauf, Blatt-Modus in der
-Challenge, Info-Seite, Alt-Übung, Optionen): Link folgt in §6.
+Emulator-Screens (Debug-Build, S23-Profil 1080×2340): Probestück vor dem
+Start (Fenster mit drei Reihen — so viele passen auf 780 dp — Zeile 1 oben,
+Zeilen 2/3 gedämpft, Zeilenleiste), Zeile 2 im Lauf, Blatt-Modus im Lauf
+(Fenster hochgerutscht, „Sheet · 28 bars"), Optionen mit SHEET, Info-Seite
+(PATTERN · THE SHEET · LESSON), alte Ein-Zeilen-Übung (Kästchen 1, `|: :|`,
+keine Leiste), Library-Kachel mit Zeilen/Takten; das Gedächtnis je Übung
+zeigte sich nebenbei (Paradiddle öffnete im zuletzt gewählten Blatt-Modus).
+
+https://claude.ai/artifact/NZVEgAHrXywaxgx3v2APeK
 
 ## 6. Stand
 
