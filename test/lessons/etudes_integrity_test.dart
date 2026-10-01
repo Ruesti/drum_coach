@@ -2,6 +2,7 @@ import 'package:drum_coach/features/lessons/data/etude_dsl.dart';
 import 'package:drum_coach/features/lessons/data/etudes.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
+import 'package:drum_coach/features/lessons/models/sheet_plan.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -35,6 +36,42 @@ void main() {
             reason: '${r.id} note $i = $ticks ticks not integer');
       }
     }
+  });
+
+  group('sheets (Blattform)', () {
+    final all = [...rudimentsSeedData, ...allEtudes];
+    test('every authored line is 1..8 whole bars; every sheet ≤ 64 bars', () {
+      // Legacy one-line sheets (the plain sticking) may be shorter than a
+      // bar — 19 basic rudiments are, and the loop tiles them — so the
+      // whole-bars rule binds authored lines only.
+      for (final r in all) {
+        for (var i = 0; i < r.lines.length; i++) {
+          final l = r.lines[i];
+          expect(l.beats, isNotEmpty, reason: '${r.id} line ${i + 1} empty');
+          final bars = barCountOrThrow(l.beats,
+              beatsPerBar: r.beatsPerBar, grid: r.gridUnit);
+          expect(bars, inInclusiveRange(1, 8),
+              reason: '${r.id} line ${i + 1} has $bars bars');
+        }
+        expect(r.sheet.every((l) => l.beats.isNotEmpty), isTrue,
+            reason: '${r.id} has an empty line');
+        expect(sheetBars(r), lessThanOrEqualTo(64),
+            reason: '${r.id} sheet too long');
+      }
+    });
+    test('the sample sheet: 11 lines, challenge last without repeat', () {
+      final r =
+          rudimentsSeedData.firstWhere((r) => r.id == 'single_paradiddle');
+      expect(r.sheet.length, 11);
+      expect(r.sheet.take(10).every((l) => l.repeat), isTrue);
+      expect(r.sheet.last.repeat, isFalse);
+      expect(r.sheet.last.title, 'Challenge');
+      expect(r.sheet.first.counts, isTrue);
+      expect(r.sticking.length, 8,
+          reason: 'the plain pattern stays for the How box');
+      expect(r.technique.map((s) => s.title),
+          ['Why it matters', 'How to play it', 'Practice tips', 'Song examples']);
+    });
   });
 
   test('every étude renders without throwing', () {
