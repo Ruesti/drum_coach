@@ -11,7 +11,6 @@ import '../../app/design_tokens.dart';
 import '../../app/theme.dart';
 import '../../data/local/settings_service.dart';
 import '../../shared/widgets/app_badge.dart';
-import '../../shared/widgets/notation_staff_widget.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../data/local/models/session_log.dart';
@@ -37,6 +36,7 @@ import 'practice_provider.dart';
 import 'session_timer_provider.dart';
 import 'widgets/pulse_bar.dart';
 import 'widgets/result_sheet.dart';
+import 'widgets/sheet_window.dart';
 import 'widgets/tempo_row.dart';
 
 String _formatDuration(int seconds) {
@@ -528,6 +528,16 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 await SettingsService.setClickTrackEnabled(on);
                 _applyExtras();
               },
+              showSticking: SettingsService.showSticking,
+              showCounts: SettingsService.showCounts,
+              onShowSticking: (on) async {
+                await SettingsService.setShowSticking(on);
+                if (mounted) setState(() {});
+              },
+              onShowCounts: (on) async {
+                await SettingsService.setShowCounts(on);
+                if (mounted) setState(() {});
+              },
               onAbout: () {
                 Navigator.of(sheetContext).pop();
                 // A plain Navigator push, not context.push('/library/...') —
@@ -841,6 +851,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             ? _playback
                 .noteIndexAtTick(s.currentBeatIndex % _playback.totalTicks)
             : null));
+    // Which sheet line and note the cursor is on (null before the start).
+    final loc = activeBeat == null ? null : _plan.locate(activeBeat);
     final isPlaying =
         ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
     final bpm = ref.watch(metronomeNotifierProvider.select((s) => s.bpm));
@@ -934,6 +946,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 // Translucent while configuring so the backdrop photo reads
                 // (Uli 28.09.: the sheet hid it), solid once the session has
                 // started and the notes are what matters.
+                // The sheet window (Blattform, 30.09.): up to four rows, the
+                // played row on top, the next rows waiting below.
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
@@ -942,15 +956,32 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                         opacity: isPlaying || _elapsedSeconds > 0 ? 1.0 : 0.6,
                         duration: const Duration(milliseconds: 350),
                         curve: Curves.easeOut,
-                        child: NotationStaffWidget(
+                        child: SheetWindow(
                           rudiment: rudiment,
-                          activeIndex: activeBeat,
-                          autoScroll: true,
+                          activeLine: loc?.line ?? _plan.lineIndex,
+                          activeIndex: loc?.index,
+                          sheetMode: _sheetMode,
+                          showSticking: SettingsService.showSticking,
+                          showCounts: SettingsService.showCounts,
+                          onLineTap: _sheetMode ? null : _selectLine,
                         ),
                       ),
                     ),
                   ),
                 ),
+                if (rudiment.sheet.length > 1)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                    child: _LineBar(
+                      lineIndex: _lineIndex,
+                      lineCount: rudiment.sheet.length,
+                      sheetMode: _sheetMode,
+                      sheetBars: sheetBars(rudiment),
+                      onPrev: () => _selectLine(_lineIndex - 1),
+                      onNext: () => _selectLine(_lineIndex + 1),
+                      onMode: _setSheetMode,
+                    ),
+                  ),
                 // The pulse bar (decided 27.09., instead of the digit
                 // counter): the marker runs through the loop, each onset
                 // flashes a pulse sized by its volume.
@@ -1026,6 +1057,82 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// (28.09., Uli), never the one shown last on any screen. The program
   /// phase from Today no longer picks it.
   late final String _backdrop = nextBackdrop();
+}
+
+// ── Line bar (Blattform) ───────────────────────────────────────────────────────
+
+/// Under the sheet window: ‹ Line 3 / 11 › and the Line | Sheet switch. In
+/// sheet mode the arrows go away and the middle shows the sheet's length.
+class _LineBar extends StatelessWidget {
+  final int lineIndex;
+  final int lineCount;
+  final bool sheetMode;
+  final int sheetBars;
+  final VoidCallback onPrev;
+  final VoidCallback onNext;
+  final ValueChanged<bool> onMode;
+
+  const _LineBar({
+    required this.lineIndex,
+    required this.lineCount,
+    required this.sheetMode,
+    required this.sheetBars,
+    required this.onPrev,
+    required this.onNext,
+    required this.onMode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final label = sheetMode
+        ? 'Sheet · $sheetBars bars'
+        : 'Line ${lineIndex + 1} / $lineCount';
+    return SizedBox(
+      key: const ValueKey('line-bar'),
+      height: 44,
+      child: Row(
+        children: [
+          if (!sheetMode)
+            IconButton(
+              key: const ValueKey('line-prev'),
+              icon: const Icon(Icons.chevron_left),
+              color: PracticeColors.textPrimary,
+              disabledColor: PracticeColors.textFaint,
+              onPressed: lineIndex > 0 ? onPrev : null,
+            ),
+          Expanded(
+            child: Center(
+              child: Text(label,
+                  style: PracticeTypography.label
+                      .copyWith(color: PracticeColors.textPrimary)),
+            ),
+          ),
+          if (!sheetMode)
+            IconButton(
+              key: const ValueKey('line-next'),
+              icon: const Icon(Icons.chevron_right),
+              color: PracticeColors.textPrimary,
+              disabledColor: PracticeColors.textFaint,
+              onPressed: lineIndex < lineCount - 1 ? onNext : null,
+            ),
+          const SizedBox(width: 6),
+          AppSelectableChip(
+            key: const ValueKey('mode-line'),
+            label: 'Line',
+            selected: !sheetMode,
+            onTap: () => onMode(false),
+          ),
+          const SizedBox(width: 6),
+          AppSelectableChip(
+            key: const ValueKey('mode-sheet'),
+            label: 'Sheet',
+            selected: sheetMode,
+            onTap: () => onMode(true),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Ladder step row ────────────────────────────────────────────────────────────
@@ -1349,8 +1456,18 @@ class _OptionsSheet extends StatefulWidget {
     required this.onBackingEnabled,
     required this.onBackingLevel,
     required this.onClickTrack,
+    required this.showSticking,
+    required this.showCounts,
+    required this.onShowSticking,
+    required this.onShowCounts,
     required this.onAbout,
   });
+
+  /// Sheet switches (Blattform): sticking letters and count hints, global.
+  final bool showSticking;
+  final bool showCounts;
+  final ValueChanged<bool> onShowSticking;
+  final ValueChanged<bool> onShowCounts;
 
   final int? goalSeconds;
   final int? suggestedMinutes;
@@ -1389,6 +1506,8 @@ class _OptionsSheetState extends State<_OptionsSheet> {
   late bool _clickTrack = widget.clickTrack;
   late bool _backingOn = widget.backingEnabled;
   late double _level = widget.backingLevel;
+  late bool _sticking = widget.showSticking;
+  late bool _counts = widget.showCounts;
 
   @override
   Widget build(BuildContext context) {
@@ -1475,6 +1594,7 @@ class _OptionsSheetState extends State<_OptionsSheet> {
               ],
             ),
             SwitchListTile(
+              key: const ValueKey('opt-click'),
               contentPadding: EdgeInsets.zero,
               title: Text('Click track', style: PracticeTypography.body),
               subtitle: Text(
@@ -1491,6 +1611,34 @@ class _OptionsSheetState extends State<_OptionsSheet> {
                       setState(() => _clickTrack = on);
                       widget.onClickTrack(on);
                     },
+            ),
+            const SizedBox(height: 12),
+            const _SectionLabel('SHEET'),
+            SwitchListTile(
+              key: const ValueKey('opt-sticking'),
+              contentPadding: EdgeInsets.zero,
+              title: Text('Sticking letters', style: PracticeTypography.body),
+              subtitle: Text('R and L under every note',
+                  style: PracticeTypography.body
+                      .copyWith(fontSize: 13, color: PracticeColors.textMuted)),
+              value: _sticking,
+              onChanged: (on) {
+                setState(() => _sticking = on);
+                widget.onShowSticking(on);
+              },
+            ),
+            SwitchListTile(
+              key: const ValueKey('opt-counts'),
+              contentPadding: EdgeInsets.zero,
+              title: Text('Count hints', style: PracticeTypography.body),
+              subtitle: Text('1 e + a under lines that carry them',
+                  style: PracticeTypography.body
+                      .copyWith(fontSize: 13, color: PracticeColors.textMuted)),
+              value: _counts,
+              onChanged: (on) {
+                setState(() => _counts = on);
+                widget.onShowCounts(on);
+              },
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,

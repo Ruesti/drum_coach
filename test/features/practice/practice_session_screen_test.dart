@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
+import 'package:drum_coach/features/lessons/models/pattern_playback.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
+import 'package:drum_coach/features/lessons/models/sheet_plan.dart';
 import 'package:drum_coach/features/metronome/backing_styles.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
@@ -10,9 +12,10 @@ import 'package:drum_coach/features/practice/backdrop.dart';
 import 'package:drum_coach/features/practice/practice_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:drum_coach/features/practice/widgets/pulse_bar.dart';
+import 'package:drum_coach/features/practice/widgets/sheet_window.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:drum_coach/shared/widgets/app_badge.dart';
-import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
+import 'package:drum_coach/shared/widgets/sheet_geometry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +38,26 @@ class _AlreadyPlayingMetronomeNotifier extends MetronomeNotifier {
 class _IdleMetronomeNotifier extends MetronomeNotifier {
   @override
   MetronomeState build() => const MetronomeState();
+}
+
+/// Idle metronome that records the length of every pattern handed to it —
+/// the sheet tests read which unit the screen loaded.
+class _RecordingMetronomeNotifier extends MetronomeNotifier {
+  final volumes = <int?>[];
+  @override
+  MetronomeState build() => const MetronomeState();
+  @override
+  void setPatternVolumes(List<double>? v) {
+    volumes.add(v?.length);
+    super.setPatternVolumes(v);
+  }
+}
+
+/// Same, but already playing on first build (a line change mid-session).
+class _RecordingPlayingMetronomeNotifier extends _RecordingMetronomeNotifier {
+  @override
+  MetronomeState build() =>
+      const MetronomeState(isPlaying: true, currentBeatIndex: 0);
 }
 
 /// Records saves instead of writing to Isar (no database in widget tests).
@@ -80,20 +103,25 @@ Future<ProviderContainer> _pumpScreen(
 }
 
 PracticeSessionScreen _screen({
+  String? id,
   int? targetBpm,
   int? targetMinutes,
   bool isLadder = false,
   String? contextLine,
   int? phase,
+  int? line,
+  String? mode,
 }) =>
     PracticeSessionScreen(
-      rudimentId: rudimentsSeedData.first.id,
+      rudimentId: id ?? rudimentsSeedData.first.id,
       isFromRoutine: false,
       targetBpm: targetBpm,
       targetMinutes: targetMinutes,
       isLadder: isLadder,
       contextLine: contextLine,
       phase: phase,
+      line: line,
+      mode: mode,
     );
 
 String _backdropOf(WidgetTester tester) => (tester
@@ -161,6 +189,109 @@ void main() {
               paramMode: null,
               remembered: (line: 7, sheet: true)),
           (line: 0, sheet: true));
+    });
+  });
+
+  group('sheet (Blattform)', () {
+    const sheetId = 'single_paradiddle';
+    Rudiment sheetRudiment() =>
+        rudimentsSeedData.firstWhere((r) => r.id == sheetId);
+
+    testWidgets('a one-line exercise shows no line bar', (tester) async {
+      await _pumpScreen(tester, screen: _screen());
+      expect(find.byKey(const ValueKey('line-bar')), findsNothing);
+      expect(find.byType(SheetWindow), findsOneWidget);
+    });
+
+    testWidgets(
+        'a sheet opens on line 1 with the line bar; › moves to line 2 and '
+        'reloads the loop', (tester) async {
+      final rec = _RecordingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: sheetId), metronome: () => rec);
+      expect(find.text('Line 1 / 11'), findsOneWidget);
+      final line2 = SheetPlan.line(sheetRudiment(), 1);
+      await tester.tap(find.byKey(const ValueKey('line-next')));
+      await tester.pump();
+      expect(find.text('Line 2 / 11'), findsOneWidget);
+      expect(
+          rec.volumes.last,
+          PatternPlayback.forRudiment(sheetRudiment().withSticking(line2.beats))
+              .totalTicks);
+      expect(SettingsService.sheetPositionFor(sheetId),
+          (line: 1, sheet: false));
+    });
+
+    testWidgets('Sheet mode plays every line once and shows the bar count',
+        (tester) async {
+      final rec = _RecordingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: sheetId), metronome: () => rec);
+      await tester.tap(find.byKey(const ValueKey('mode-sheet')));
+      await tester.pump();
+      expect(find.text('Sheet · 28 bars'), findsOneWidget);
+      expect(find.byKey(const ValueKey('line-next')), findsNothing);
+      expect(rec.volumes.last, 28 * 96);
+      expect(
+          SettingsService.sheetPositionFor(sheetId), (line: 0, sheet: true));
+    });
+
+    testWidgets('?line=3 opens line 3; out of range opens line 1',
+        (tester) async {
+      final a =
+          await _pumpScreen(tester, screen: _screen(id: sheetId, line: 3));
+      expect(find.text('Line 3 / 11'), findsOneWidget);
+      a.dispose();
+      // A fresh State: the same widget type in the same place would keep
+      // the old one (and its line) alive.
+      await tester.pumpWidget(const SizedBox());
+      final b =
+          await _pumpScreen(tester, screen: _screen(id: sheetId, line: 40));
+      expect(find.text('Line 1 / 11'), findsOneWidget);
+      b.dispose();
+    });
+
+    testWidgets('the remembered position is restored', (tester) async {
+      await SettingsService.setSheetPosition(sheetId, line: 4, sheet: false);
+      await _pumpScreen(tester, screen: _screen(id: sheetId));
+      expect(find.text('Line 5 / 11'), findsOneWidget);
+    });
+
+    testWidgets('tapping a line in the window selects it', (tester) async {
+      await _pumpScreen(tester, screen: _screen(id: sheetId));
+      final clip = tester.getRect(find.byType(ClipRect).first);
+      // Row 1 of the window = line 2 (line 1 is one row).
+      await tester.tapAt(Offset(clip.center.dx,
+          clip.top + sheetWindowPad + 1.5 * sheetRowPitchWithCounts));
+      await tester.pump();
+      expect(find.text('Line 2 / 11'), findsOneWidget);
+    });
+
+    testWidgets('switching lines while playing reloads the loop at once',
+        (tester) async {
+      final rec = _RecordingPlayingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: sheetId), metronome: () => rec);
+      final before = rec.volumes.length;
+      await tester.tap(find.byKey(const ValueKey('line-next')));
+      await tester.pump();
+      expect(rec.volumes.length, before + 1);
+      expect(find.text('Stop'), findsOneWidget);
+      expect(find.text('Line 2 / 11'), findsOneWidget);
+    });
+
+    testWidgets('options: sticking letters and count hints switches',
+        (tester) async {
+      await _pumpScreen(tester, screen: _screen(id: sheetId));
+      await tester.tap(find.byIcon(Icons.more_horiz));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const ValueKey('opt-counts')));
+      await tester.tap(find.byKey(const ValueKey('opt-sticking')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('opt-counts')));
+      await tester.pump();
+      expect(SettingsService.showSticking, isFalse);
+      expect(SettingsService.showCounts, isFalse);
     });
   });
 
@@ -284,12 +415,10 @@ void main() {
         tester,
         screen: const PracticeSessionScreen(
             rudimentId: 'six_stroke_roll', isFromRoutine: false));
-    // The widget's scroll view fills the area; the painted card inside it is
-    // what the eye sees.
+    // The window's clipped paper card is what the eye sees.
     final sheet = tester.getRect(find
         .descendant(
-            of: find.byType(NotationStaffWidget),
-            matching: find.byType(CustomPaint))
+            of: find.byType(SheetWindow), matching: find.byType(ClipRect))
         .first);
     final header = tester.getRect(find.text('Six Stroke Roll'));
     final tempo = tester.getRect(find.byType(TempoRow));
@@ -549,9 +678,10 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_horiz));
     await tester.pumpAndSettle();
     expect(find.text('Click track'), findsOneWidget);
-    // Two switches since Engine part 1: Backing first, Click track second.
-    await tester.ensureVisible(find.byType(Switch).last);
-    await tester.tap(find.byType(Switch).last);
+    // Several switches since Engine part 1 and the sheet options: pick the
+    // click track by key.
+    await tester.ensureVisible(find.byKey(const ValueKey('opt-click')));
+    await tester.tap(find.byKey(const ValueKey('opt-click')));
     await tester.pump();
     expect(container.read(metronomeNotifierProvider).clickTrack, isFalse);
     expect(SettingsService.clickTrackEnabled, isFalse);
@@ -776,7 +906,7 @@ void main() {
     await _pumpScreen(tester, screen: _screen());
     AnimatedOpacity sheet() => tester.widget<AnimatedOpacity>(find
         .ancestor(
-            of: find.byType(NotationStaffWidget),
+            of: find.byType(SheetWindow),
             matching: find.byType(AnimatedOpacity))
         .first);
     expect(sheet().opacity, 0.6);
