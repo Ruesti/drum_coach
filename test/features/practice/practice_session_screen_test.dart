@@ -129,6 +129,41 @@ void _mockMicPermission(WidgetTester tester) {
 }
 
 void main() {
+  group('initialSheetPosition', () {
+    const none = (line: 0, sheet: false);
+    test('route params win, clamped and parsed leniently', () {
+      expect(
+          initialSheetPosition(
+              lineCount: 11, paramLine: 3, paramMode: 'sheet', remembered: none),
+          (line: 2, sheet: true));
+      expect(
+          initialSheetPosition(
+                  lineCount: 11, paramLine: 99, paramMode: null, remembered: none)
+              .line,
+          0);
+      expect(
+          initialSheetPosition(
+              lineCount: 11, paramLine: 0, paramMode: 'bogus', remembered: none),
+          (line: 0, sheet: false));
+    });
+    test('else the remembered position, clamped into the sheet', () {
+      expect(
+          initialSheetPosition(
+              lineCount: 11,
+              paramLine: null,
+              paramMode: null,
+              remembered: (line: 4, sheet: false)),
+          (line: 4, sheet: false));
+      expect(
+          initialSheetPosition(
+              lineCount: 3,
+              paramLine: null,
+              paramMode: null,
+              remembered: (line: 7, sheet: true)),
+          (line: 0, sheet: true));
+    });
+  });
+
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await SettingsService.init();

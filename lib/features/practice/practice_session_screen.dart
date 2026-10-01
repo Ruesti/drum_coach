@@ -26,6 +26,8 @@ import '../coaching/services/mic_analysis_service.dart';
 import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
+import '../lessons/models/rudiment.dart';
+import '../lessons/models/sheet_plan.dart';
 import '../metronome/backing_styles.dart';
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
@@ -68,6 +70,11 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   /// Null (free practice) picks it by the exercise's difficulty.
   final int? phase;
 
+  /// Sheet line to open (1-based, `?line=`) and mode (`?mode=line|sheet`).
+  /// Null both: the remembered position of this exercise, else line 1.
+  final int? line;
+  final String? mode;
+
   const PracticeSessionScreen({
     super.key,
     required this.rudimentId,
@@ -77,11 +84,32 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
     this.isLadder = false,
     this.contextLine,
     this.phase,
+    this.line,
+    this.mode,
   });
 
   @override
   ConsumerState<PracticeSessionScreen> createState() =>
       _PracticeSessionScreenState();
+}
+
+/// Where a sheet opens: route params (`?line=` 1-based, `?mode=`) win, else
+/// the remembered position, else line 1 in line mode. Anything outside the
+/// sheet falls back to line 1 — never an error (spec §10).
+({int line, bool sheet}) initialSheetPosition({
+  required int lineCount,
+  required int? paramLine,
+  required String? paramMode,
+  required ({int line, bool sheet}) remembered,
+}) {
+  int clampLine(int l) => (l >= 0 && l < lineCount) ? l : 0;
+  if (paramLine != null || paramMode != null) {
+    return (
+      line: clampLine((paramLine ?? 1) - 1),
+      sheet: paramMode == 'sheet',
+    );
+  }
+  return (line: clampLine(remembered.line), sheet: remembered.sheet);
 }
 
 class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
@@ -142,9 +170,55 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   int _headphoneQuerySeq = 0;
   late final SessionTimerNotifier _sessionTimerNotifier;
 
-  /// Fine-grid (24 ticks/quarter) expansion of the exercise, used to drive the
-  /// metronome's per-tick volumes and map the playback cursor to a note.
+  /// Fine-grid (24 ticks/quarter) expansion of the played unit, used to drive
+  /// the metronome's per-tick volumes and map the playback cursor to a note.
   late PatternPlayback _playback;
+
+  // Sheet (Blattform, 30.09.): which line is selected, whether the whole
+  // sheet plays, and the resulting unit.
+  late int _lineIndex;
+  late bool _sheetMode;
+  late SheetPlan _plan;
+
+  /// The played unit as an ordinary exercise: playback, backing choice and
+  /// analysis see only this (spec §2).
+  late Rudiment _unit;
+
+  void _buildUnit(Rudiment rudiment) {
+    _plan = _sheetMode
+        ? SheetPlan.wholeSheet(rudiment)
+        : SheetPlan.line(rudiment, _lineIndex);
+    _unit = rudiment.withSticking(_plan.beats);
+    _playback = PatternPlayback.forRudiment(_unit);
+  }
+
+  /// Line or mode change: new unit, new loop, fresh beat log, position
+  /// remembered. While playing the engine rebuilds and the new unit starts
+  /// on its "1" (spec §5).
+  void _applyUnitChange() {
+    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    setState(() => _buildUnit(rudiment));
+    _beatLog.clear();
+    _metronomeNotifier.setPatternVolumes(_playback.tickVolumes);
+    _applyExtras();
+    SettingsService.setSheetPosition(widget.rudimentId,
+        line: _lineIndex, sheet: _sheetMode);
+  }
+
+  void _selectLine(int i) {
+    final count =
+        ref.read(rudimentByIdProvider(widget.rudimentId)).sheet.length;
+    if (i < 0 || i >= count || (i == _lineIndex && !_sheetMode)) return;
+    _lineIndex = i;
+    _sheetMode = false;
+    _applyUnitChange();
+  }
+
+  void _setSheetMode(bool on) {
+    if (on == _sheetMode) return;
+    _sheetMode = on;
+    _applyUnitChange();
+  }
 
   // Result sheet inputs that arrive after it opened (K2 step 3).
   final _ladderResult = ValueNotifier<String?>(null);
@@ -160,8 +234,15 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     WakelockPlus.enable();
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
     _sessionTimerNotifier = ref.read(sessionTimerNotifierProvider.notifier);
-    _playback = PatternPlayback.forRudiment(
-        ref.read(rudimentByIdProvider(widget.rudimentId)));
+    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    final pos = initialSheetPosition(
+        lineCount: rudiment.sheet.length,
+        paramLine: widget.line,
+        paramMode: widget.mode,
+        remembered: SettingsService.sheetPositionFor(widget.rudimentId));
+    _lineIndex = pos.line;
+    _sheetMode = pos.sheet;
+    _buildUnit(rudiment);
 
     if (widget.targetMinutes != null) {
       _goalSeconds = widget.targetMinutes! * 60;
@@ -178,6 +259,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     if (snap != null) {
       _elapsedSeconds = snap.elapsedSeconds;
       _goalSeconds = snap.goalSeconds ?? _goalSeconds;
+      // Resume on the same line and in the same mode.
+      _lineIndex = snap.line.clamp(0, rudiment.sheet.length - 1);
+      _sheetMode = snap.sheet;
+      _buildUnit(rudiment);
       SettingsService.clearPracticeSnapshot();
     }
 
@@ -232,6 +317,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         elapsedSeconds: _elapsedSeconds,
         goalSeconds: _goalSeconds,
         sessionSeconds: ref.read(sessionTimerNotifierProvider),
+        line: _lineIndex,
+        sheet: _sheetMode,
       );
     }
   }
@@ -352,14 +439,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// analysis-mode rule (spec §6): both silent while analysing without
   /// headphones, the mic would hear them.
   void _applyExtras() {
-    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    // The style follows the played unit (a triplet challenge gets shuffle).
     final bpm = ref.read(metronomeNotifierProvider).bpm;
-    _backingStyleId = autoBackingStyle(rudiment, bpm: bpm);
+    _backingStyleId = autoBackingStyle(_unit, bpm: bpm);
     final backingOn = SettingsService.backingEnabled && _backingAllowed;
     _metronomeNotifier
       ..setClickTrack(SettingsService.clickTrackEnabled && _extrasAllowed)
       ..setBacking(backingOn ? _backingStyleId : null,
-          beatsPerBar: rudiment.beatsPerBar);
+          beatsPerBar: _unit.beatsPerBar);
   }
 
   /// Ask the platform for headphones, then re-apply the extras. Failure
@@ -483,7 +570,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       try {
         analysis = _micService!.analyze(
           beatLog: _beatLog,
-          sticking: rudiment.sticking,
+          sticking: _unit.sticking,
           latencyOffsetMs: SettingsService.latencyOffsetMs ?? 0,
           analysisMode: _analysisMode,
         );
@@ -617,6 +704,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         device: await AudioCapabilities.deviceInfo(),
         latencyOffsetMs: SettingsService.latencyOffsetMs,
         mode: _analysisMode ? 'analysis' : 'learn',
+        sheetLine: _sheetMode ? null : _lineIndex + 1,
+        sheetMode: _sheetMode ? 'sheet' : 'line',
       );
       await SessionLogService.save(log);
       if (!mounted) return;
