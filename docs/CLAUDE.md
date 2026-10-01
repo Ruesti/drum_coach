@@ -132,6 +132,37 @@ enum Hand { right, left }
 // R● = StrokeBeat(hand: right, isAccent: true)
 ```
 
+### Sheets (Blattform, 2026-09-30)
+- An exercise is a **sheet** of numbered lines: `Rudiment.lines`
+  (`ExerciseLine(beats, {repeat, title, counts})`, each 1–8 whole bars);
+  `Rudiment.sheet` never is empty — legacy exercises are one-line sheets
+  made of their plain `sticking`. A sheet stays ≤ 64 bars
+  (`maxBackingCycleBars`; integrity test). Author lines with the étude DSL
+  (`line(...)`), e.g. `data/sheets/single_paradiddle_sheet.dart`.
+- `SheetPlan` (`models/sheet_plan.dart`, pure) turns the sheet into the
+  **unit** the practice screen plays: one line or the whole sheet (each
+  line once), a flat note list plus `locate(noteIndex)` for the cursor.
+  `Rudiment.withSticking(unit.beats)` hands that unit to playback, backing
+  choice and analysis as an ordinary exercise — engine and analysis know
+  nothing about lines.
+- Notation: `SheetStaffWidget` (one `CustomPaint` per line, uniform row
+  pitch from `computeSheetGeometry`) draws number boxes, `|: :|`, a final
+  barline, titles above and count syllables (`countLabelsFor`) below;
+  letters/numbers/counts use the label font (IBM Plex Mono).
+  `NotationStaffWidget` stays the plain one-line box for the pattern.
+- Practice screen: `SheetWindow` shows up to four rows, the played row
+  always on top, slides up one row at every row boundary (180 ms), jumps
+  on loop restart and line changes; sheet mode wraps the preview. Line bar
+  `‹ Line n / m ›` + `Line | Sheet` on multi-line sheets; `?line=` (1-based)
+  and `?mode=line|sheet` route params; position remembered per exercise
+  (`SettingsService.sheetPositionFor`); switches "Sticking letters" /
+  "Count hints" in the ⋯ sheet. `SessionLog.sheetLine/sheetMode` record it.
+- The lesson text (`technique` sections: Why it matters / How to play it /
+  Practice tips / Song examples) appears only on the Library info page
+  (PATTERN · THE SHEET · LESSON) and behind "About this exercise" — never on
+  the practice screen (Uli, 30.09.: "Lektion nur auf Abruf, als Übung nur
+  Noten"). Catalog rule: every exercise as varied and groovy as possible.
+
 ## Rudiment Tag Axes & Seed Data
 Rudiments are no longer organized in a single category tree — a rudiment can
 carry multiple tags across independent axes (see
@@ -231,7 +262,9 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
   read `AppPalette.of(context)`. Fonts are bundled under `assets/google_fonts/`
   — never rely on runtime fetching (tests would break).
 - `PracticeSessionScreen` (K2 step 2): no AppBar — header row (back, name,
-  context line from `?ctx=`, mode chip), the notation sheet, the `PulseBar`
+  context line from `?ctx=`, mode chip), the sheet window (`SheetWindow`,
+  up to four rows, the played row on top; line bar below it on multi-line
+  sheets), the `PulseBar`
   (running marker + volume pulses; the click track is a second voice in the
   loop, off in analysis mode), `TempoRow` (±4 BPM, tap the number for exact
   entry), one primary button Start/Stop/Resume with the time, Finish on its
