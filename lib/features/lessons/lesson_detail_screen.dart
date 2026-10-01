@@ -38,29 +38,29 @@ class LessonDetailScreen extends ConsumerWidget {
               rudiment.description,
               style: AppTypography.body.copyWith(color: AppColors.textSecondary),
             ),
+            // Sheets (Blattform, 30.09.): the plain pattern as a box when the
+            // exercise has authored lines, then the whole sheet — a tap on a
+            // line starts practice right there. The lesson text lives here
+            // and only here; the practice screen shows notes alone.
+            if (rudiment.lines.isNotEmpty) ...[
+              const SizedBox(height: 32),
+              const _Label('PATTERN'),
+              const SizedBox(height: 12),
+              NotationStaffWidget(rudiment: rudiment),
+            ],
             const SizedBox(height: 32),
-            Text(
-              'STICKING PATTERN',
-              style: AppTypography.label.copyWith(
-                color: AppColors.accent,
-                letterSpacing: 2,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            const _Label('THE SHEET'),
             const SizedBox(height: 12),
-            NotationStaffWidget(rudiment: rudiment),
+            SheetStaffWidget(
+              rudiment: rudiment,
+              onLineTap: (i) =>
+                  context.push('/practice/${rudiment.id}?line=${i + 1}'),
+            ),
             const SizedBox(height: 12),
             _Legend(),
             if (rudiment.technique.isNotEmpty) ...[
               const SizedBox(height: 32),
-              Text(
-                'TECHNIQUE',
-                style: AppTypography.label.copyWith(
-                  color: AppColors.accent,
-                  letterSpacing: 2,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const _Label('LESSON'),
               const SizedBox(height: 12),
               ...rudiment.technique.map(
                 (s) => _TechniqueCard(section: s),
@@ -84,6 +84,22 @@ class LessonDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Section label in the accent colour, spaced capitals.
+class _Label extends StatelessWidget {
+  final String text;
+  const _Label(this.text);
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text,
+        style: AppTypography.label.copyWith(
+          color: AppColors.accent,
+          letterSpacing: 2,
+          fontWeight: FontWeight.bold,
+        ),
+      );
 }
 
 class _MetaRow extends StatelessWidget {
