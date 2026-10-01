@@ -49,10 +49,9 @@ void main() {
   test('height is rows × pitch', () {
     final g = computeSheetGeometry(r, 360, showCounts: false);
     expect(g.height, 6 * sheetRowPitch);
-    expect(g.topInset, 0);
   });
 
-  test('a title adds a band above every row of the sheet', () {
+  test('a title costs no height (it sits inside the staff band)', () {
     final titled = Rudiment(
         id: 't',
         name: 'T',
@@ -62,9 +61,18 @@ void main() {
         difficulty: Difficulty.beginner,
         sticking: bar(),
         lines: [line(bar()), line(bar(), title: 'Challenge')]);
-    final g = computeSheetGeometry(titled, 360, showCounts: true);
-    expect(g.rowPitch, sheetRowPitch + sheetTitleBand);
-    expect(g.topInset, sheetTitleBand);
+    expect(computeSheetGeometry(titled, 360, showCounts: true).rowPitch,
+        sheetRowPitch);
+  });
+
+  test('a line opening with a flam gets extra room after the start repeat',
+      () {
+    expect(systemPadFor(repeat: true, graces: true),
+        sheetSystemPad + sheetRepeatSystemPad + sheetGraceSystemPad);
+    expect(systemPadFor(repeat: false, graces: true), sheetSystemPad);
+    expect(leadsWithGraces([flam(R, NoteValue.eighth)]), isTrue);
+    expect(leadsWithGraces(bar()), isFalse);
+    expect(leadsWithGraces(const []), isFalse);
   });
 
   test('pads leave room for the number box and the repeat signs', () {

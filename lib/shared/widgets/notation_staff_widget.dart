@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 import '../../app/design_tokens.dart';
@@ -32,73 +33,18 @@ import 'staff_layout.dart';
 /// Geometry is duration-proportional: horizontal positions, beam runs and
 /// tuplet groups come from [computeStaffLayout] so mixed note values
 /// (quarters next to sixteenths, triplets, dotted notes) space correctly.
-///
-/// When [autoScroll] is true, the widget owns its own vertical scrolling and
-/// keeps the active row in view as [activeIndex] moves to a new row.
-class NotationStaffWidget extends StatefulWidget {
+class NotationStaffWidget extends StatelessWidget {
   final Rudiment rudiment;
   final int? activeIndex;
-  final bool autoScroll;
 
   const NotationStaffWidget({
     super.key,
     required this.rudiment,
     this.activeIndex,
-    this.autoScroll = false,
   });
 
-  @override
-  State<NotationStaffWidget> createState() => _NotationStaffWidgetState();
-}
-
-class _NotationStaffWidgetState extends State<NotationStaffWidget> {
   static const _hPad = 4.0;
   static const _vPad = 16.0;
-
-  final _scrollController = ScrollController();
-  _StaffPainter? _lastPainter;
-
-  @override
-  void didUpdateWidget(covariant NotationStaffWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.autoScroll &&
-        widget.activeIndex != null &&
-        widget.activeIndex != oldWidget.activeIndex) {
-      _scrollToActive();
-    }
-  }
-
-  void _scrollToActive() {
-    final painter = _lastPainter;
-    final index = widget.activeIndex;
-    if (painter == null ||
-        index == null ||
-        index >= painter._layout.placements.length) {
-      return;
-    }
-    final row = painter._layout.placements[index].row;
-    final rowTop = row * painter.rowPitch;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      final viewport = _scrollController.position.viewportDimension;
-      // Keep the active row roughly a quarter of the way down the visible
-      // area, so upcoming bars stay in view below it.
-      final target = (_vPad + rowTop - viewport * 0.25)
-          .clamp(0.0, _scrollController.position.maxScrollExtent);
-      _scrollController.animateTo(
-        target,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,18 +54,15 @@ class _NotationStaffWidgetState extends State<NotationStaffWidget> {
             ? constraints.maxWidth
             : MediaQuery.of(context).size.width;
         final contentWidth = width - 2 * _hPad;
-        final r = widget.rudiment;
         final painter = _StaffPainter(
-          beats: r.sticking,
-          grid: r.gridUnit,
-          beatsPerBar: r.beatsPerBar,
+          beats: rudiment.sticking,
+          grid: rudiment.gridUnit,
+          beatsPerBar: rudiment.beatsPerBar,
           maxWidth: contentWidth,
           rowPitch: sheetRowPitch,
-          activeIndex: widget.activeIndex,
+          activeIndex: activeIndex,
         );
-        _lastPainter = painter;
-
-        final sheet = Container(
+        return Container(
           width: double.infinity,
           padding:
               const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
@@ -131,12 +74,6 @@ class _NotationStaffWidgetState extends State<NotationStaffWidget> {
             size: Size(contentWidth, painter.computeHeight()),
             painter: painter,
           ),
-        );
-
-        if (!widget.autoScroll) return sheet;
-        return SingleChildScrollView(
-          controller: _scrollController,
-          child: sheet,
         );
       },
     );
@@ -160,6 +97,10 @@ class SheetStaffWidget extends StatelessWidget {
   final bool showCounts;
   final ValueChanged<int>? onLineTap;
 
+  /// Geometry computed by the caller for this content width (the practice
+  /// window caches it across the per-note rebuilds); null computes it here.
+  final SheetGeometry? geometry;
+
   const SheetStaffWidget({
     super.key,
     required this.rudiment,
@@ -168,6 +109,7 @@ class SheetStaffWidget extends StatelessWidget {
     this.showSticking = true,
     this.showCounts = true,
     this.onLineTap,
+    this.geometry,
   });
 
   static const hPad = 4.0;
@@ -180,7 +122,7 @@ class SheetStaffWidget extends StatelessWidget {
           ? constraints.maxWidth
           : MediaQuery.of(context).size.width;
       final contentWidth = width - 2 * hPad;
-      final geo =
+      final geo = geometry ??
           computeSheetGeometry(rudiment, contentWidth, showCounts: showCounts);
       final sheet = rudiment.sheet;
       return Container(
@@ -205,7 +147,6 @@ class SheetStaffWidget extends StatelessWidget {
                     beatsPerBar: rudiment.beatsPerBar,
                     maxWidth: contentWidth,
                     rowPitch: geo.rowPitch,
-                    topInset: geo.topInset,
                     activeIndex: activeLine == i ? activeIndex : null,
                     lineNumber: i + 1,
                     repeat: sheet[i].repeat,
@@ -256,11 +197,8 @@ class _StaffPainter extends CustomPainter {
   final double maxWidth;
 
   /// Height of one row; the staff band itself is always [_staffBandH] high,
-  /// extra pitch is the title band above and the count band below.
+  /// extra pitch is the count band below.
   final double rowPitch;
-
-  /// Space above the staff band reserved for titles (0 or [sheetTitleBand]).
-  final double topInset;
   final int? activeIndex;
 
   /// Number in the box at the left of the first row; null = no box.
@@ -286,7 +224,6 @@ class _StaffPainter extends CustomPainter {
     required this.beatsPerBar,
     required this.maxWidth,
     required this.rowPitch,
-    this.topInset = 0,
     this.activeIndex,
     this.lineNumber,
     this.repeat = false,
@@ -300,7 +237,8 @@ class _StaffPainter extends CustomPainter {
 
   late final double _leftPad = leftPadFor(numbered: lineNumber != null);
   late final double _rightPad = rightPadFor(repeat: repeat);
-  late final double _systemPad = systemPadFor(repeat: repeat);
+  late final double _systemPad =
+      systemPadFor(repeat: repeat, graces: leadsWithGraces(beats));
 
   /// Duration-proportional layout — the single source of horizontal geometry,
   /// beam runs and tuplet groups. Computed once, lazily.
@@ -328,6 +266,8 @@ class _StaffPainter extends CustomPainter {
   static const double _midY = 54; // middle staff line / notehead center
   static const double _letterY = 90; // R/L letters (below the bottom line)
   static const double _countY = 104; // count syllables (in the count band)
+  static const double _titleY = 69; // line title: under the staff, left,
+  // in the free strip between the bottom line (66) and the letters (84)
 
   static const double _headRx = 6;
   static const double _headRy = 4.6;
@@ -372,7 +312,7 @@ class _StaffPainter extends CustomPainter {
   }
 
   void _paintRow(Canvas canvas, int row) {
-    final y0 = row * rowPitch + topInset; // top of the staff band
+    final y0 = row * rowPitch; // top of the staff band
     final staffY = y0 + _midY; // middle line = snare = notehead center
     final topLineY = staffY - 2 * _lineGap;
     final bottomLineY = staffY + 2 * _lineGap;
@@ -406,8 +346,11 @@ class _StaffPainter extends CustomPainter {
     if (row == 0) {
       if (lineNumber != null) _drawNumberBox(canvas, staffY);
       if (title != null) {
-        _drawTextLeft(canvas, title!, Offset(_leftPad, y0 - topInset + 2),
-            _dim(_inkColor), 11,
+        // Under the staff at the left, where nothing else is drawn — above
+        // the staff it would sit on the first note's accent.
+        _drawTextLeft(canvas, title!,
+            Offset(_leftPad - sheetLeftPad / 2, y0 + _titleY), _dim(_inkColor),
+            10,
             bold: true);
       }
     }
@@ -417,10 +360,11 @@ class _StaffPainter extends CustomPainter {
     _drawClef(canvas, staffY);
     if (row == 0 && showTimeSig) _drawTimeSignature(canvas, staffY);
 
-    // Start repeat right before the first note of the line.
+    // Start repeat right after the time signature; the system pad keeps the
+    // first note (and its grace notes) clear of the dots.
     if (row == 0 && repeat) {
-      _drawStartRepeat(
-          canvas, _leftPad + _systemPad - 15, topLineY, bottomLineY, staffY);
+      _drawStartRepeat(canvas, _leftPad + sheetSystemPad + 5, topLineY,
+          bottomLineY, staffY);
     }
 
     // Barlines (full staff height) at each internal bar boundary in the row.
@@ -847,13 +791,14 @@ class _StaffPainter extends CustomPainter {
       old.activeIndex != activeIndex ||
       old.maxWidth != maxWidth ||
       old.rowPitch != rowPitch ||
-      old.topInset != topInset ||
       old.lineNumber != lineNumber ||
       old.repeat != repeat ||
       old.finalBar != finalBar ||
       old.showTimeSig != showTimeSig ||
       old.title != title ||
-      old.countLabels != countLabels ||
+      // The label list is rebuilt per build; compare by content so a line
+      // with counts does not repaint on every note of another line.
+      !listEquals(old.countLabels, countLabels) ||
       old.dimmed != dimmed ||
       old.showSticking != showSticking;
 }

@@ -192,6 +192,32 @@ void main() {
     });
   });
 
+  group('staleTickAfterUnitChange', () {
+    final changed = DateTime(2026, 10, 1, 12, 0, 0);
+    test('every tick of the old loop is stale until a downbeat after the '
+        'engine rebuild', () {
+      final soon = changed.add(const Duration(milliseconds: 40));
+      final later = changed.add(const Duration(milliseconds: 400));
+      expect(
+          staleTickAfterUnitChange(tick: 0, changedAt: changed, plannedAt: soon),
+          isTrue);
+      expect(
+          staleTickAfterUnitChange(
+              tick: 12, changedAt: changed, plannedAt: later),
+          isTrue);
+      expect(
+          staleTickAfterUnitChange(tick: 0, changedAt: changed, plannedAt: later),
+          isFalse);
+      expect(
+          staleTickAfterUnitChange(
+              tick: 0,
+              changedAt: changed,
+              plannedAt:
+                  changed.add(const Duration(milliseconds: engineRebuildMs))),
+          isFalse);
+    });
+  });
+
   group('sheet (Blattform)', () {
     const sheetId = 'single_paradiddle';
     Rudiment sheetRudiment() =>

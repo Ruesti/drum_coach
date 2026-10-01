@@ -112,6 +112,20 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   return (line: clampLine(remembered.line), sheet: remembered.sheet);
 }
 
+/// The engine's loop-rebuild debounce (`metronome_engine.dart`).
+const int engineRebuildMs = 150;
+
+/// Whether a tick still belongs to the loop of the unit played before a
+/// line/mode change: everything until the first downbeat ([tick] 0 of the
+/// new unit) planned at least [engineRebuildMs] after the change. Pure.
+bool staleTickAfterUnitChange({
+  required int tick,
+  required DateTime changedAt,
+  required DateTime plannedAt,
+}) =>
+    !(tick == 0 &&
+        plannedAt.difference(changedAt).inMilliseconds >= engineRebuildMs);
+
 class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     with WidgetsBindingObserver {
   int _elapsedSeconds = 0;
@@ -197,12 +211,47 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// on its "1" (spec §5).
   void _applyUnitChange() {
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    final playing = ref.read(metronomeNotifierProvider).isPlaying;
     setState(() => _buildUnit(rudiment));
     _beatLog.clear();
     _metronomeNotifier.setPatternVolumes(_playback.tickVolumes);
     _applyExtras();
+    if (playing) {
+      // The old loop keeps ticking until the engine has rebuilt; those
+      // ticks mean nothing to the new unit (review 01.10.).
+      _unitChangedAt = DateTime.now();
+      // Re-anchor the mic (spec §5): onsets before the switch belong to the
+      // old unit and would count as extra strokes against the new one.
+      if (_micRecording) unawaited(_restartMicRecording());
+    }
     SettingsService.setSheetPosition(widget.rudimentId,
         line: _lineIndex, sheet: _sheetMode);
+  }
+
+  /// Set by [_applyUnitChange] while playing; cleared by the first tick of
+  /// the new unit's loop (see [_consumeStaleTick]) or by a stop.
+  DateTime? _unitChangedAt;
+
+  /// Whether this tick still comes from the previous unit's loop. The first
+  /// downbeat planned after the engine's rebuild is the new start: from
+  /// then on ticks count again (and the beat log starts clean).
+  bool _consumeStaleTick(int globalTick, DateTime? plannedAt) {
+    final changedAt = _unitChangedAt;
+    if (changedAt == null) return false;
+    if (staleTickAfterUnitChange(
+        tick: globalTick % _playback.totalTicks,
+        changedAt: changedAt,
+        plannedAt: plannedAt ?? DateTime.now())) {
+      return true;
+    }
+    _unitChangedAt = null;
+    _beatLog.clear();
+    return false;
+  }
+
+  Future<void> _restartMicRecording() async {
+    await _stopMicRecording();
+    await _startMicRecording();
   }
 
   void _selectLine(int i) {
@@ -545,8 +594,15 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 // the bottom-nav shell), and pushing a shell-branch route from
                 // there caused a duplicate-page-key crash.
                 Navigator.of(screenContext).push(MaterialPageRoute(
-                  builder: (_) =>
-                      LessonDetailScreen(rudimentId: widget.rudimentId),
+                  builder: (_) => LessonDetailScreen(
+                    rudimentId: widget.rudimentId,
+                    // A line tapped on the sheet there selects it here
+                    // instead of stacking a second practice screen.
+                    onLineTap: (i) {
+                      Navigator.of(screenContext).pop();
+                      _selectLine(i);
+                    },
+                  ),
                 ));
               },
             );
@@ -812,13 +868,17 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     });
 
     ref.listen<MetronomeState>(metronomeNotifierProvider, (prev, next) {
+      final newTick = next.isPlaying &&
+          next.currentBeatIndex >= 0 &&
+          next.currentBeatIndex != (prev?.currentBeatIndex ?? -2);
+      // Ticks of the previous unit's loop after a line change count for
+      // nothing — neither the beat log nor (via _unitChangedAt) the cursor.
+      final stale = newTick &&
+          _consumeStaleTick(next.currentBeatIndex, next.lastBeatPlannedAt);
       // Record beat timestamps for mic correlation — only main-note onsets
       // (silent grid ticks and flam/drag grace ticks are not expected
       // strokes), logged as note index so the sticking maps hits to hands.
-      if (_micRecording &&
-          next.isPlaying &&
-          next.currentBeatIndex >= 0 &&
-          next.currentBeatIndex != (prev?.currentBeatIndex ?? -2)) {
+      if (_micRecording && newTick && !stale) {
         final tick = next.currentBeatIndex % _playback.totalTicks;
         if (_playback.isOnsetTick(tick)) {
           _beatLog.add((
@@ -836,6 +896,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         _startMicRecording();
         _sessionTimerNotifier.resume();
       } else if (!next.isPlaying && (prev?.isPlaying ?? false)) {
+        _unitChangedAt = null;
         _stopTicker();
         _sessionTimerNotifier.pause();
       }
@@ -847,7 +908,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     // the main-isolate queue the click playback runs through (measured
     // 20-30 ms click-fire spikes every few seconds, §Wiedergabe-Diagnose).
     final activeBeat = ref.watch(metronomeNotifierProvider.select((s) =>
-        s.isPlaying && s.currentBeatIndex >= 0
+        s.isPlaying && s.currentBeatIndex >= 0 && _unitChangedAt == null
             ? _playback
                 .noteIndexAtTick(s.currentBeatIndex % _playback.totalTicks)
             : null));

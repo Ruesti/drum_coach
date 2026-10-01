@@ -67,11 +67,35 @@ class _SheetWindowState extends State<SheetWindow>
   /// Row on top (the played one) and the row a running slide started from.
   int _topRow = 0;
   double _fromRow = 0;
+
+  // Geometry is recomputed only when sheet, width or counts change — the
+  // screen rebuilds this widget on every note (review 01.10.).
   SheetGeometry? _geo;
+  Rudiment? _geoRudiment;
+  double _geoWidth = -1;
+  bool _geoCounts = true;
+
+  SheetGeometry _geometryFor(double contentWidth) {
+    final cached = _geo;
+    if (cached != null &&
+        identical(_geoRudiment, widget.rudiment) &&
+        _geoWidth == contentWidth &&
+        _geoCounts == widget.showCounts) {
+      return cached;
+    }
+    final geo = computeSheetGeometry(widget.rudiment, contentWidth,
+        showCounts: widget.showCounts);
+    _geo = geo;
+    _geoRudiment = widget.rudiment;
+    _geoWidth = contentWidth;
+    _geoCounts = widget.showCounts;
+    return geo;
+  }
 
   int _rowFor(SheetGeometry geo) {
     final line = widget.activeLine.clamp(0, geo.layouts.length - 1);
     final notes = geo.layouts[line].placements.length;
+    if (notes == 0) return geo.rowStart[line];
     final index = (widget.activeIndex ?? 0).clamp(0, notes - 1);
     return geo.rowOf(line, index);
   }
@@ -81,7 +105,7 @@ class _SheetWindowState extends State<SheetWindow>
     super.didUpdateWidget(old);
     final geo = _geo;
     if (geo == null ||
-        old.rudiment != widget.rudiment ||
+        !identical(old.rudiment, widget.rudiment) ||
         old.showCounts != widget.showCounts) {
       return; // build recomputes the geometry and jumps
     }
@@ -109,10 +133,7 @@ class _SheetWindowState extends State<SheetWindow>
       final width = c.maxWidth.isFinite
           ? c.maxWidth
           : MediaQuery.of(context).size.width;
-      final geo = computeSheetGeometry(
-          widget.rudiment, width - 2 * SheetStaffWidget.hPad,
-          showCounts: widget.showCounts);
-      _geo = geo;
+      final geo = _geometryFor(width - 2 * SheetStaffWidget.hPad);
       // Anything didUpdateWidget did not animate (first build, a changed
       // sheet or width) lands on its row at once.
       final next = _rowFor(geo);
@@ -128,6 +149,7 @@ class _SheetWindowState extends State<SheetWindow>
       final height = rows * geo.rowPitch + 2 * sheetWindowPad;
       final sheet = SheetStaffWidget(
         rudiment: widget.rudiment,
+        geometry: geo,
         activeLine: widget.activeLine,
         activeIndex: widget.activeIndex,
         showSticking: widget.showSticking,
@@ -157,13 +179,15 @@ class _SheetWindowState extends State<SheetWindow>
                         right: 0,
                         child: SheetStaffWidget(
                           rudiment: widget.rudiment,
+                          geometry: geo,
                           activeLine: -1, // preview: every line dimmed
                           showSticking: widget.showSticking,
                           showCounts: widget.showCounts,
                         ),
                       ),
                     // Paper bands hide the slivers of the rows above and
-                    // below the window while the content slides.
+                    // below the window while the content slides — and
+                    // swallow taps there, so no hidden line gets selected.
                     const Positioned(
                         top: 0, left: 0, right: 0, child: _PaperBand()),
                     const Positioned(
@@ -183,7 +207,7 @@ class _PaperBand extends StatelessWidget {
   const _PaperBand();
 
   @override
-  Widget build(BuildContext context) => IgnorePointer(
+  Widget build(BuildContext context) => AbsorbPointer(
         child: Container(height: sheetWindowPad, color: AppColors.paper),
       );
 }

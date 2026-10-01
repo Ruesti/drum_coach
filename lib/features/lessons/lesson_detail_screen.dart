@@ -13,7 +13,14 @@ import 'models/rudiment.dart';
 class LessonDetailScreen extends ConsumerWidget {
   final String rudimentId;
 
-  const LessonDetailScreen({super.key, required this.rudimentId});
+  /// Called with the index of a tapped sheet line. Default: push the
+  /// practice route on that line. The practice screen passes its own
+  /// handler so a tap selects the line there instead of stacking a second
+  /// practice screen over the running one.
+  final ValueChanged<int>? onLineTap;
+
+  const LessonDetailScreen(
+      {super.key, required this.rudimentId, this.onLineTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,8 +60,9 @@ class LessonDetailScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             SheetStaffWidget(
               rudiment: rudiment,
-              onLineTap: (i) =>
-                  context.push('/practice/${rudiment.id}?line=${i + 1}'),
+              onLineTap: (i) => onLineTap != null
+                  ? onLineTap!(i)
+                  : context.push('/practice/${rudiment.id}?line=${i + 1}'),
             ),
             const SizedBox(height: 12),
             _Legend(),

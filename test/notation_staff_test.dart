@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+import 'package:drum_coach/app/design_tokens.dart';
 import 'package:drum_coach/features/lessons/data/etude_dsl.dart';
 import 'package:drum_coach/features/lessons/data/etudes.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
@@ -19,6 +21,10 @@ void main() {
     final loader = FontLoader('Bravura')
       ..addFont(Future.value(ByteData.sublistView(bytes)));
     await loader.load();
+    // The label font (letters, numbers, counts) loads lazily on first use —
+    // request it now and wait, so the golden never catches the fallback.
+    AppTypography.label;
+    await GoogleFonts.pendingFonts();
   });
 
   group('SheetStaffWidget (Blattform)', () {
@@ -54,8 +60,8 @@ void main() {
         for (final e in paints().evaluate())
           (e.widget as CustomPaint).size.height
       ];
-      // Counts and titles each add a band to EVERY row of the sheet.
-      const pitch = sheetRowPitch + sheetCountBand + sheetTitleBand;
+      // Counts add a band to EVERY row of the sheet; titles cost nothing.
+      const pitch = sheetRowPitch + sheetCountBand;
       expect(h[0], pitch);
       expect(h[1], pitch);
       expect(h[2], 2 * pitch);
@@ -112,8 +118,8 @@ void main() {
         for (final e in paints().evaluate())
           (e.widget as CustomPaint).size.height
       ];
-      // No count band without counts; the title band stays (titles exist).
-      expect(h[0], sheetRowPitch + sheetTitleBand);
+      // No count band without counts.
+      expect(h[0], sheetRowPitch);
     });
 
     testWidgets(
