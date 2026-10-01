@@ -41,6 +41,13 @@ class SessionLog {
   double? latencyOffsetMs;
   int? rating;
 
+  /// Sheet line played (1-based) or null for the whole sheet / legacy
+  /// sessions (Blattform, 30.09.).
+  int? sheetLine;
+
+  /// `line` | `sheet` | null (legacy).
+  String? sheetMode;
+
   /// Planned click instants (epoch ms, shared time axis §1.3) and the note
   /// index each click belongs to.
   late List<double> clickTimesMs;

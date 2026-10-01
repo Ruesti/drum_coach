@@ -1,6 +1,9 @@
 import '../models/rudiment.dart';
+import 'sheets/single_paradiddle_sheet.dart';
 
-const rudimentsSeedData = <Rudiment>[
+// A plain list (not const) since 30.09.: the sample sheet is built with the
+// étude DSL, which is not const-constructible.
+final List<Rudiment> rudimentsSeedData = <Rudiment>[
   // ─── ROLLS ────────────────────────────────────────────────────────────────
 
   Rudiment(
@@ -177,37 +180,8 @@ const rudimentsSeedData = <Rudiment>[
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.left),
     ],
-    technique: [
-      TechniqueSection(
-        title: 'Motion',
-        body:
-            'Accent on beat 1 of each group (alternating R and L). '
-            'The double strokes at the end of each group (RR / LL) '
-            'automatically switch the leading hand on the next pass. '
-            'Say the pattern out loud: "Para-did-dle, para-did-dle".',
-      ),
-      TechniqueSection(
-        title: 'Common Mistakes',
-        body:
-            '• Accenting only with the right hand\n'
-            '• Uneven double strokes (second stroke too quiet)\n'
-            '• Unstable tempo when the leading hand switches',
-      ),
-      TechniqueSection(
-        title: 'Practice Plan',
-        body:
-            'First practice only R–L–R–R, then only L–R–L–L. '
-            'Then connect the two. Variation: accent the doubles (RL**RR** / LR**LL**) '
-            'for a different groove character.',
-      ),
-      TechniqueSection(
-        title: 'Musical Application',
-        body:
-            'One of the most versatile rudiments. Fills, grooves, solo patterns. '
-            'Spread around the kit, every stroke gets a different sound. '
-            'One of the 40 PAS rudiments every drummer needs to know.',
-      ),
-    ],
+    technique: singleParadiddleLesson,
+    lines: singleParadiddleSheet,
   ),
 
   Rudiment(

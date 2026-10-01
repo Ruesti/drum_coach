@@ -84,6 +84,75 @@ void main() {
     });
   });
 
+  group('sheet (Blattform)', () {
+    const a = StrokeBeat(hand: Hand.right);
+    const b = StrokeBeat(hand: Hand.left);
+    const plain = Rudiment(
+        id: 'p',
+        name: 'P',
+        description: '',
+        minBpm: 60,
+        targetBpm: 100,
+        difficulty: Difficulty.beginner,
+        sticking: [a, b]);
+    test('without lines the sheet is one repeating line made of the sticking',
+        () {
+      expect(plain.lines, isEmpty);
+      expect(plain.sheet.length, 1);
+      expect(plain.sheet.first.beats, same(plain.sticking));
+      expect(plain.sheet.first.repeat, isTrue);
+      expect(plain.sheet.first.title, isNull);
+      expect(plain.sheet.first.counts, isFalse);
+    });
+    test('with lines the sheet is exactly those lines', () {
+      const r = Rudiment(
+          id: 's',
+          name: 'S',
+          description: '',
+          minBpm: 60,
+          targetBpm: 100,
+          difficulty: Difficulty.beginner,
+          sticking: [a, b],
+          lines: [
+            ExerciseLine([a, b]),
+            ExerciseLine([b, a],
+                repeat: false, title: 'Challenge', counts: true),
+          ]);
+      expect(r.sheet.length, 2);
+      expect(r.sheet[1].repeat, isFalse);
+      expect(r.sheet[1].title, 'Challenge');
+      expect(r.sheet[1].counts, isTrue);
+    });
+    test('withSticking swaps only the notes and drops the lines', () {
+      const r = Rudiment(
+          id: 's',
+          name: 'S',
+          description: 'd',
+          minBpm: 60,
+          targetBpm: 100,
+          difficulty: Difficulty.advanced,
+          sticking: [a, b],
+          gridUnit: NoteGrid.sixteenth,
+          beatsPerBar: 2,
+          backing: 'swing',
+          skills: {Skill.fill},
+          lines: [
+            ExerciseLine([a]),
+            ExerciseLine([b]),
+          ]);
+      final u = r.withSticking(const [b, b, b]);
+      expect(u.sticking.length, 3);
+      expect(u.id, 's');
+      expect(u.gridUnit, NoteGrid.sixteenth);
+      expect(u.beatsPerBar, 2);
+      expect(u.backing, 'swing');
+      expect(u.skills, {Skill.fill});
+      expect(u.difficulty, Difficulty.advanced);
+      expect(u.lines, isEmpty);
+      expect(u.sheet.first.beats.length, 3);
+    });
+  });
+
   group('NoteGrid.label', () {
     test('labels every subdivision value', () {
       expect(NoteGrid.eighth.label, '8ths');

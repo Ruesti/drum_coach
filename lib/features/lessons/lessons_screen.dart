@@ -9,6 +9,7 @@ import '../learning/suggested_bpm_provider.dart';
 import '../practice/backdrop.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
+import 'models/sheet_plan.dart';
 import 'rudiment_filter.dart';
 
 class LessonsScreen extends ConsumerStatefulWidget {
@@ -239,7 +240,10 @@ class _RudimentTile extends ConsumerWidget {
         style: AppTypography.subtitle,
       ),
       subtitle: Text(
-        '${rudiment.minBpm}–${rudiment.targetBpm} BPM',
+        rudiment.sheet.length > 1
+            ? '${rudiment.minBpm}–${rudiment.targetBpm} BPM · '
+                '${rudiment.sheet.length} lines · ${sheetBars(rudiment)} bars'
+            : '${rudiment.minBpm}–${rudiment.targetBpm} BPM',
         style: AppTypography.label.copyWith(color: AppColors.textMuted),
       ),
       trailing: Row(

@@ -25,6 +25,8 @@ SessionLog buildSessionLog({
   required DeviceInfo device,
   required double? latencyOffsetMs,
   String mode = 'learn',
+  int? sheetLine,
+  String? sheetMode,
 }) {
   final setup = analysis?.recordingSetup;
   return SessionLog()
@@ -45,6 +47,8 @@ SessionLog buildSessionLog({
     ..headphones = headphones
     ..latencyOffsetMs = latencyOffsetMs
     ..rating = rating
+    ..sheetLine = sheetLine
+    ..sheetMode = sheetMode
     ..clickTimesMs = [
       for (final b in beatLog) b.timestamp.microsecondsSinceEpoch / 1000.0,
     ]

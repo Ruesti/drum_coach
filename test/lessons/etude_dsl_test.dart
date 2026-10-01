@@ -30,6 +30,18 @@ void main() {
     final oneBar = [...eighths([R, L, R, L, R, L, R, L])]; // 8×0.5 = 4q
     expect(barCountOrThrow(oneBar, beatsPerBar: 4, grid: NoteGrid.eighth), 1);
   });
+  test('line() wraps beats with repeat by default', () {
+    final l = line(eighths([R, L, R, L]));
+    expect(l.beats.length, 4);
+    expect(l.repeat, isTrue);
+    expect(l.title, isNull);
+    expect(l.counts, isFalse);
+    final c = line(eighths([R, L]),
+        repeat: false, title: 'Challenge', counts: true);
+    expect(c.repeat, isFalse);
+    expect(c.title, 'Challenge');
+    expect(c.counts, isTrue);
+  });
   test('barCountOrThrow throws on a partial bar', () {
     final partial = eighths([R, L, R]); // 1.5q
     expect(() => barCountOrThrow(partial, beatsPerBar: 4, grid: NoteGrid.eighth),
