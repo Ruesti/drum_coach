@@ -1,3 +1,4 @@
+import 'package:drum_coach/data/local/session_log_codec.dart';
 import 'package:drum_coach/data/local/session_log_service.dart';
 import 'package:drum_coach/features/coaching/models/session_analysis.dart';
 import 'package:drum_coach/features/coaching/services/mic_analysis_service.dart';
@@ -87,5 +88,30 @@ void main() {
     expect(log.clickTimesMs, isEmpty);
     expect(log.unprocessedSupported, isNull);
     expect(log.latencyOffsetMs, isNull);
+    // Legacy / whole-sheet sessions carry no sheet position.
+    expect(log.sheetLine, isNull);
+    expect(log.sheetMode, isNull);
+  });
+
+  test('records the sheet line and mode (Blattform)', () {
+    final log = buildSessionLog(
+      analysis: null,
+      beatLog: const [],
+      exerciseId: 'single_paradiddle',
+      bpm: 90,
+      durationSeconds: 60,
+      rating: 3,
+      startedAt: started,
+      headphones: 'none',
+      device: const DeviceInfo(model: 'SM-S918B', androidVersion: '14'),
+      latencyOffsetMs: null,
+      sheetLine: 3,
+      sheetMode: 'line',
+    );
+    expect(log.sheetLine, 3);
+    expect(log.sheetMode, 'line');
+    final jsonl = sessionLogToJsonl(log);
+    expect(jsonl, contains('"sheetLine":3'));
+    expect(jsonl, contains('"sheetMode":"line"'));
   });
 }

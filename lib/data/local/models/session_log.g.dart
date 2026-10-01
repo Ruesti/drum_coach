@@ -108,13 +108,23 @@ const SessionLogSchema = CollectionSchema(
       name: r'sessionUid',
       type: IsarType.string,
     ),
-    r'startedAt': PropertySchema(
+    r'sheetLine': PropertySchema(
       id: 18,
+      name: r'sheetLine',
+      type: IsarType.long,
+    ),
+    r'sheetMode': PropertySchema(
+      id: 19,
+      name: r'sheetMode',
+      type: IsarType.string,
+    ),
+    r'startedAt': PropertySchema(
+      id: 20,
       name: r'startedAt',
       type: IsarType.dateTime,
     ),
     r'unprocessedSupported': PropertySchema(
-      id: 19,
+      id: 21,
       name: r'unprocessedSupported',
       type: IsarType.bool,
     )
@@ -170,6 +180,12 @@ int _sessionLogEstimateSize(
   bytesCount += 3 + object.headphones.length * 3;
   bytesCount += 3 + object.mode.length * 3;
   bytesCount += 3 + object.sessionUid.length * 3;
+  {
+    final value = object.sheetMode;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -202,8 +218,10 @@ void _sessionLogSerialize(
   writer.writeLong(offsets[15], object.rating);
   writer.writeLong(offsets[16], object.sampleRate);
   writer.writeString(offsets[17], object.sessionUid);
-  writer.writeDateTime(offsets[18], object.startedAt);
-  writer.writeBool(offsets[19], object.unprocessedSupported);
+  writer.writeLong(offsets[18], object.sheetLine);
+  writer.writeString(offsets[19], object.sheetMode);
+  writer.writeDateTime(offsets[20], object.startedAt);
+  writer.writeBool(offsets[21], object.unprocessedSupported);
 }
 
 SessionLog _sessionLogDeserialize(
@@ -238,8 +256,10 @@ SessionLog _sessionLogDeserialize(
   object.rating = reader.readLongOrNull(offsets[15]);
   object.sampleRate = reader.readLong(offsets[16]);
   object.sessionUid = reader.readString(offsets[17]);
-  object.startedAt = reader.readDateTime(offsets[18]);
-  object.unprocessedSupported = reader.readBoolOrNull(offsets[19]);
+  object.sheetLine = reader.readLongOrNull(offsets[18]);
+  object.sheetMode = reader.readStringOrNull(offsets[19]);
+  object.startedAt = reader.readDateTime(offsets[20]);
+  object.unprocessedSupported = reader.readBoolOrNull(offsets[21]);
   return object;
 }
 
@@ -293,8 +313,12 @@ P _sessionLogDeserializeProp<P>(
     case 17:
       return (reader.readString(offset)) as P;
     case 18:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 19:
+      return (reader.readStringOrNull(offset)) as P;
+    case 20:
+      return (reader.readDateTime(offset)) as P;
+    case 21:
       return (reader.readBoolOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2224,6 +2248,230 @@ extension SessionLogQueryFilter
     });
   }
 
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sheetLineIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'sheetLine',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sheetLineIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'sheetLine',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sheetLineEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sheetLine',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sheetLineGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sheetLine',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sheetLineLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sheetLine',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sheetLineBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sheetLine',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sheetModeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'sheetMode',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sheetModeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'sheetMode',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sheetModeEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sheetMode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sheetModeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sheetMode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sheetModeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sheetMode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sheetModeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sheetMode',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sheetModeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'sheetMode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sheetModeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'sheetMode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sheetModeContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'sheetMode',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sheetModeMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'sheetMode',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sheetModeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sheetMode',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sheetModeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'sheetMode',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> startedAtEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -2505,6 +2753,30 @@ extension SessionLogQuerySortBy
     });
   }
 
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortBySheetLine() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sheetLine', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortBySheetLineDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sheetLine', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortBySheetMode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sheetMode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortBySheetModeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sheetMode', Sort.desc);
+    });
+  }
+
   QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortByStartedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startedAt', Sort.asc);
@@ -2729,6 +3001,30 @@ extension SessionLogQuerySortThenBy
     });
   }
 
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenBySheetLine() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sheetLine', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenBySheetLineDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sheetLine', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenBySheetMode() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sheetMode', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenBySheetModeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sheetMode', Sort.desc);
+    });
+  }
+
   QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenByStartedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'startedAt', Sort.asc);
@@ -2868,6 +3164,19 @@ extension SessionLogQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SessionLog, SessionLog, QDistinct> distinctBySheetLine() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sheetLine');
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QDistinct> distinctBySheetMode(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sheetMode', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SessionLog, SessionLog, QDistinct> distinctByStartedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'startedAt');
@@ -2999,6 +3308,18 @@ extension SessionLogQueryProperty
   QueryBuilder<SessionLog, String, QQueryOperations> sessionUidProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'sessionUid');
+    });
+  }
+
+  QueryBuilder<SessionLog, int?, QQueryOperations> sheetLineProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sheetLine');
+    });
+  }
+
+  QueryBuilder<SessionLog, String?, QQueryOperations> sheetModeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sheetMode');
     });
   }
 
