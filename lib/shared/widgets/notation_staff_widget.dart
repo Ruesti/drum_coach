@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 import '../../app/design_tokens.dart';
 import '../../features/lessons/models/rudiment.dart';
+import 'count_labels.dart';
+import 'sheet_geometry.dart';
 import 'staff_layout.dart';
 
 /// Renders a pattern as an engraved five-line drum staff on warm off-white
@@ -15,86 +18,33 @@ import 'staff_layout.dart';
 /// hand-drawn Canvas primitives — that's what separates "looks like a real
 /// sheet of music" from "looks hand-sketched". Ghost-note heads, grace
 /// notes and the augmentation dot stay hand-drawn (simple shapes with no
-/// natural glyph substitute at this scale).
+/// natural glyph substitute at this scale). Letters, line numbers and count
+/// syllables use the app's label font (IBM Plex Mono), never the system font.
+///
+/// This widget draws ONE plain line — the exercise's [Rudiment.sticking] —
+/// without a number box or repeat signs, ending in a final barline: the
+/// "pattern" box on the info page and the generator preview. Whole sheets
+/// (numbered lines, repeats, titles, counts) are [SheetStaffWidget].
 ///
 /// When [activeIndex] is set (during playback), the cursor logic inverts
 /// from the rest of the (dark) app: the *field* behind the active note turns
-/// amber, the ink stays black. The bar that isn't currently playing is
-/// dimmed to 45% — only the running bar stays fully bright, and the jump
-/// between bars/notes is a hard cut, never a fade (timing is information).
+/// amber, the ink stays black.
 ///
 /// Geometry is duration-proportional: horizontal positions, beam runs and
 /// tuplet groups come from [computeStaffLayout] so mixed note values
 /// (quarters next to sixteenths, triplets, dotted notes) space correctly.
-///
-/// When [autoScroll] is true (practice playback), the widget owns its own
-/// vertical scrolling and keeps the active row in view as [activeIndex]
-/// moves to a new row — the page-length pieces run many rows long, so
-/// without this the player would have to scroll manually while playing.
-/// Static call sites (lesson detail, generated-pattern preview) leave it
-/// false and stay sized to their full content height, as before.
-class NotationStaffWidget extends StatefulWidget {
+class NotationStaffWidget extends StatelessWidget {
   final Rudiment rudiment;
   final int? activeIndex;
-  final bool autoScroll;
 
   const NotationStaffWidget({
     super.key,
     required this.rudiment,
     this.activeIndex,
-    this.autoScroll = false,
   });
 
-  @override
-  State<NotationStaffWidget> createState() => _NotationStaffWidgetState();
-}
-
-class _NotationStaffWidgetState extends State<NotationStaffWidget> {
   static const _hPad = 4.0;
   static const _vPad = 16.0;
-
-  final _scrollController = ScrollController();
-  _StaffPainter? _lastPainter;
-
-  @override
-  void didUpdateWidget(covariant NotationStaffWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.autoScroll &&
-        widget.activeIndex != null &&
-        widget.activeIndex != oldWidget.activeIndex) {
-      _scrollToActive();
-    }
-  }
-
-  void _scrollToActive() {
-    final painter = _lastPainter;
-    final index = widget.activeIndex;
-    if (painter == null || index == null || index >= painter._layout.placements.length) {
-      return;
-    }
-    final row = painter._layout.placements[index].row;
-    final rowTop = row * _StaffPainter._rowH;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      final viewport = _scrollController.position.viewportDimension;
-      // Keep the active row roughly a quarter of the way down the visible
-      // area, so upcoming bars stay in view below it.
-      final target = (_vPad + rowTop - viewport * 0.25)
-          .clamp(0.0, _scrollController.position.maxScrollExtent);
-      _scrollController.animateTo(
-        target,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,15 +55,17 @@ class _NotationStaffWidgetState extends State<NotationStaffWidget> {
             : MediaQuery.of(context).size.width;
         final contentWidth = width - 2 * _hPad;
         final painter = _StaffPainter(
-          rudiment: widget.rudiment,
-          activeIndex: widget.activeIndex,
+          beats: rudiment.sticking,
+          grid: rudiment.gridUnit,
+          beatsPerBar: rudiment.beatsPerBar,
           maxWidth: contentWidth,
+          rowPitch: sheetRowPitch,
+          activeIndex: activeIndex,
         );
-        _lastPainter = painter;
-
-        final sheet = Container(
+        return Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
+          padding:
+              const EdgeInsets.symmetric(horizontal: _hPad, vertical: _vPad),
           decoration: BoxDecoration(
             color: AppColors.paper,
             borderRadius: BorderRadius.circular(AppRadius.card),
@@ -123,14 +75,97 @@ class _NotationStaffWidgetState extends State<NotationStaffWidget> {
             painter: painter,
           ),
         );
-
-        if (!widget.autoScroll) return sheet;
-        return SingleChildScrollView(
-          controller: _scrollController,
-          child: sheet,
-        );
       },
     );
+  }
+}
+
+/// A whole sheet (Blattform, spec §4b): one [CustomPaint] per line, stacked
+/// on one paper card, every row the same height ([SheetGeometry.rowPitch])
+/// so the practice window can slide by whole rows. Each line gets its
+/// number box, repeat signs when it repeats, a final barline on the last
+/// line, an optional title above and count syllables below.
+///
+/// [activeLine] / [activeIndex] place the cursor; every other line dims to
+/// 45 % (null = nothing dims, the info page). [onLineTap] reports the index
+/// of a tapped line.
+class SheetStaffWidget extends StatelessWidget {
+  final Rudiment rudiment;
+  final int? activeLine;
+  final int? activeIndex;
+  final bool showSticking;
+  final bool showCounts;
+  final ValueChanged<int>? onLineTap;
+
+  /// Geometry computed by the caller for this content width (the practice
+  /// window caches it across the per-note rebuilds); null computes it here.
+  final SheetGeometry? geometry;
+
+  const SheetStaffWidget({
+    super.key,
+    required this.rudiment,
+    this.activeLine,
+    this.activeIndex,
+    this.showSticking = true,
+    this.showCounts = true,
+    this.onLineTap,
+    this.geometry,
+  });
+
+  static const hPad = 4.0;
+  static const vPad = 16.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final width = constraints.maxWidth.isFinite
+          ? constraints.maxWidth
+          : MediaQuery.of(context).size.width;
+      final contentWidth = width - 2 * hPad;
+      final geo = geometry ??
+          computeSheetGeometry(rudiment, contentWidth, showCounts: showCounts);
+      final sheet = rudiment.sheet;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
+        decoration: BoxDecoration(
+          color: AppColors.paper,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        child: Column(
+          children: [
+            for (var i = 0; i < sheet.length; i++)
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onLineTap == null ? null : () => onLineTap!(i),
+                child: CustomPaint(
+                  size: Size(
+                      contentWidth, geo.layouts[i].rowCount * geo.rowPitch),
+                  painter: _StaffPainter(
+                    beats: sheet[i].beats,
+                    grid: rudiment.gridUnit,
+                    beatsPerBar: rudiment.beatsPerBar,
+                    maxWidth: contentWidth,
+                    rowPitch: geo.rowPitch,
+                    activeIndex: activeLine == i ? activeIndex : null,
+                    lineNumber: i + 1,
+                    repeat: sheet[i].repeat,
+                    finalBar: i == sheet.length - 1,
+                    showTimeSig: i == 0,
+                    title: sheet[i].title,
+                    countLabels: showCounts && sheet[i].counts
+                        ? countLabelsFor(sheet[i].beats, rudiment.gridUnit,
+                            rudiment.beatsPerBar)
+                        : null,
+                    dimmed: activeLine != null && activeLine != i,
+                    showSticking: showSticking,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -153,53 +188,86 @@ class _Smufl {
   static String timeSig(int digit) => String.fromCharCode(0xE080 + digit);
 }
 
+/// Paints one line of notation (one or more rows). Knows its place in a
+/// sheet: number box, repeat signs, final barline, title, counts, dimming.
 class _StaffPainter extends CustomPainter {
-  final Rudiment rudiment;
-  final int? activeIndex;
+  final List<StrokeBeat> beats;
+  final NoteGrid grid;
+  final int beatsPerBar;
   final double maxWidth;
 
+  /// Height of one row; the staff band itself is always [_staffBandH] high,
+  /// extra pitch is the count band below.
+  final double rowPitch;
+  final int? activeIndex;
+
+  /// Number in the box at the left of the first row; null = no box.
+  final int? lineNumber;
+  final bool repeat;
+
+  /// Thin + thick barline at the very end (last line of a sheet, or a plain
+  /// pattern). Otherwise the line ends in a single barline — or in ":|".
+  final bool finalBar;
+  final bool showTimeSig;
+  final String? title;
+
+  /// Count syllable per note (null entries = none); null = no count row.
+  final List<String?>? countLabels;
+
+  /// Whole line at 45 % — it is not the one being played.
+  final bool dimmed;
+  final bool showSticking;
+
   _StaffPainter({
-    required this.rudiment,
-    required this.activeIndex,
+    required this.beats,
+    required this.grid,
+    required this.beatsPerBar,
     required this.maxWidth,
+    required this.rowPitch,
+    this.activeIndex,
+    this.lineNumber,
+    this.repeat = false,
+    this.finalBar = true,
+    this.showTimeSig = true,
+    this.title,
+    this.countLabels,
+    this.dimmed = false,
+    this.showSticking = true,
   });
+
+  late final double _leftPad = leftPadFor(numbered: lineNumber != null);
+  late final double _rightPad = rightPadFor(repeat: repeat);
+  late final double _systemPad =
+      systemPadFor(repeat: repeat, graces: leadsWithGraces(beats));
 
   /// Duration-proportional layout — the single source of horizontal geometry,
   /// beam runs and tuplet groups. Computed once, lazily.
   late final StaffLayout _layout = computeStaffLayout(
-    beats: rudiment.sticking,
-    grid: rudiment.gridUnit,
-    beatsPerBar: rudiment.beatsPerBar,
+    beats: beats,
+    grid: grid,
+    beatsPerBar: beatsPerBar,
     maxWidth: maxWidth,
     leftPad: _leftPad,
     rightPad: _rightPad,
     systemPad: _systemPad,
-    barGap: _barGap,
+    barGap: sheetBarGap,
   );
 
-  /// The bar currently under the cursor. Every other bar dims to 45% — only
-  /// the running bar stays fully bright.
-  late final int? _activeBar =
-      activeIndex == null ? null : _layout.placements[activeIndex!].bar;
-
   // ── Layout metrics ────────────────────────────────────────────────────────
-  static const double _leftPad = 8;
-  static const double _rightPad = 12;
-  static const double _barGap = 12; // extra space after a barline
-  static const double _rowH = 104;
-
-  // Space reserved at the left of each system for the clef (+ time signature).
-  static const double _systemPad = 26;
+  static const double _staffBandH = sheetRowPitch;
 
   // Five-line staff geometry.
   static const double _lineGap = 6; // vertical gap between adjacent staff lines
   // Middle (3rd) line = snare = notehead center.
 
-  // Vertical positions within a row.
+  // Vertical positions within the staff band.
   static const double _accentY = 8; // accents / triplet marks / grace tops
   static const double _stemTopY = 18;
   static const double _midY = 54; // middle staff line / notehead center
   static const double _letterY = 90; // R/L letters (below the bottom line)
+  static const double _countY = 104; // count syllables (in the count band)
+  static const double _titleY = 69; // line title: under the staff, left,
+  // in the free strip between the bottom line (66) and the letters (84)
 
   static const double _headRx = 6;
   static const double _headRy = 4.6;
@@ -210,6 +278,9 @@ class _StaffPainter extends CustomPainter {
   // Right margin added past the last note when drawing a row's staff lines.
   static const double _lineEndMargin = 14;
 
+  // Number box: square at the far left, centred on the middle line.
+  static const double _boxSize = 22;
+
   // ── Colors — black ink on warm off-white paper ──────────────────────────
   static const _staffColor = Color(0x2E17181A); // ink @ 18%
   static const _inkColor = AppColors.ink;
@@ -219,15 +290,14 @@ class _StaffPainter extends CustomPainter {
   static const _ghostColor = Color(0x7317181A); // ink @ 45%
   static const _letterColor = Color(0x9917181A); // ink @ 60%
 
-  double computeHeight() => _layout.rowCount * _rowH + 8;
+  /// The app's label font (IBM Plex Mono) for letters, numbers and counts.
+  static final TextStyle _labelStyle = AppTypography.label;
 
-  /// Dims [color] to 45% when [bar] isn't the currently playing bar. No
-  /// dimming while idle (activeIndex == null) — dimming only means anything
-  /// relative to a running cursor.
-  Color _forBar(Color color, int bar) {
-    if (_activeBar == null || bar == _activeBar) return color;
-    return color.withValues(alpha: color.a * 0.45);
-  }
+  double computeHeight() => _layout.rowCount * rowPitch;
+
+  /// Dims [color] to 45 % when this whole line is not the one playing.
+  Color _dim(Color color) =>
+      dimmed ? color.withValues(alpha: color.a * 0.45) : color;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -242,10 +312,11 @@ class _StaffPainter extends CustomPainter {
   }
 
   void _paintRow(Canvas canvas, int row) {
-    final baseY = row * _rowH;
-    final staffY = baseY + _midY; // middle line = snare = notehead center
+    final y0 = row * rowPitch; // top of the staff band
+    final staffY = y0 + _midY; // middle line = snare = notehead center
     final topLineY = staffY - 2 * _lineGap;
     final bottomLineY = staffY + 2 * _lineGap;
+    final isLastRow = row == _layout.rowCount - 1;
 
     final rowPlacements =
         _layout.placements.where((p) => p.row == row).toList(growable: false);
@@ -260,32 +331,61 @@ class _StaffPainter extends CustomPainter {
     }
     final lineEndX = maxX + _lineEndMargin;
 
-    // Five staff lines spanning this row's used width.
+    // Five staff lines spanning this row's used width (they start right
+    // after the number box, or near the card edge without one).
     final staffPaint = Paint()
-      ..color = _staffColor
+      ..color = _dim(_staffColor)
       ..strokeWidth = 1.0;
-    const lineStartX = _leftPad / 2;
+    final lineStartX = _leftPad - sheetLeftPad / 2;
     for (var l = 0; l < 5; l++) {
       final y = topLineY + l * _lineGap;
       canvas.drawLine(Offset(lineStartX, y), Offset(lineEndX, y), staffPaint);
     }
 
-    // Percussion clef + time signature (time signature only on the first row).
+    // Number box, title and time signature belong to the first row only.
+    if (row == 0) {
+      if (lineNumber != null) _drawNumberBox(canvas, staffY);
+      if (title != null) {
+        // Under the staff at the left, where nothing else is drawn — above
+        // the staff it would sit on the first note's accent.
+        _drawTextLeft(canvas, title!,
+            Offset(_leftPad - sheetLeftPad / 2, y0 + _titleY), _dim(_inkColor),
+            10,
+            bold: true);
+      }
+    }
+
+    // Percussion clef + time signature (time signature only on the first row
+    // of the sheet).
     _drawClef(canvas, staffY);
-    if (row == 0) _drawTimeSignature(canvas, staffY);
+    if (row == 0 && showTimeSig) _drawTimeSignature(canvas, staffY);
+
+    // Start repeat right after the time signature; the system pad keeps the
+    // first note (and its grace notes) clear of the dots.
+    if (row == 0 && repeat) {
+      _drawStartRepeat(canvas, _leftPad + sheetSystemPad + 5, topLineY,
+          bottomLineY, staffY);
+    }
 
     // Barlines (full staff height) at each internal bar boundary in the row.
     final barPaint = Paint()
-      ..color = _staffColor
+      ..color = _dim(_staffColor)
       ..strokeWidth = 1.0;
-    final barWidth = _layout.beatsPerBar * _layout.pxPerQuarter + _barGap;
+    final barWidth = _layout.beatsPerBar * _layout.pxPerQuarter + sheetBarGap;
     for (var barInRow = 1; barInRow <= maxBarInRow; barInRow++) {
-      final x = _leftPad + _systemPad + barInRow * barWidth - _barGap / 2;
+      final x = _leftPad + _systemPad + barInRow * barWidth - sheetBarGap / 2;
       canvas.drawLine(Offset(x, topLineY), Offset(x, bottomLineY), barPaint);
     }
 
-    // Double barline at the end of the row — marks the phrase repeat.
-    _drawDoubleBarline(canvas, lineEndX, topLineY, bottomLineY);
+    // End of the row: ":|" on the last row of a repeating line, the final
+    // barline on the last row of a closing line, a single barline otherwise.
+    if (isLastRow && repeat) {
+      _drawEndRepeat(canvas, lineEndX, topLineY, bottomLineY, staffY);
+    } else if (isLastRow && finalBar) {
+      _drawFinalBarline(canvas, lineEndX, topLineY, bottomLineY);
+    } else {
+      _drawSingleBarline(canvas, lineEndX, topLineY, bottomLineY);
+    }
 
     // Cursor field: the active note's slot turns amber; ink stays black.
     if (activeIndex != null) {
@@ -295,9 +395,9 @@ class _StaffPainter extends CustomPainter {
         canvas.drawRRect(
           RRect.fromRectAndRadius(
             Rect.fromCenter(
-                center: Offset(cx, baseY + _rowH / 2),
+                center: Offset(cx, y0 + _staffBandH / 2),
                 width: _cursorW,
-                height: _rowH - 16),
+                height: _staffBandH - 16),
             const Radius.circular(8),
           ),
           Paint()..color = _cursorField,
@@ -305,19 +405,19 @@ class _StaffPainter extends CustomPainter {
         final linePaint = Paint()
           ..color = _cursorLine
           ..strokeWidth = 3;
-        canvas.drawLine(Offset(cx, baseY + 10),
-            Offset(cx, baseY + _rowH - 10), linePaint);
+        canvas.drawLine(
+            Offset(cx, y0 + 10), Offset(cx, y0 + _staffBandH - 10), linePaint);
         break;
       }
     }
 
     // Beams / tuplet brackets, then individual note heads / flags / letters.
-    _paintBeamsAndNotes(canvas, row, rowPlacements, baseY, staffY);
+    _paintBeamsAndNotes(canvas, row, rowPlacements, y0, staffY);
   }
 
   void _paintBeamsAndNotes(Canvas canvas, int row,
-      List<NotePlacement> rowPlacements, double baseY, double staffY) {
-    final stemTopY = baseY + _stemTopY;
+      List<NotePlacement> rowPlacements, double y0, double staffY) {
+    final stemTopY = y0 + _stemTopY;
 
     // Draw beam runs and record which placement indices belong to one, so a
     // beamed note draws a beam rather than an individual flag.
@@ -327,7 +427,7 @@ class _StaffPainter extends CustomPainter {
       final x0 = _placementAt(bg.startIndex).xCenter + _headRx - 0.5;
       final x1 = _placementAt(bg.endIndex).xCenter + _headRx - 0.5;
       final beamPaint = Paint()
-        ..color = _forBar(_inkColor, _placementAt(bg.startIndex).bar)
+        ..color = _dim(_inkColor)
         ..strokeWidth = 3.0;
       for (var b = 0; b < bg.beamCount; b++) {
         final y = stemTopY + b * 5.0;
@@ -344,28 +444,25 @@ class _StaffPainter extends CustomPainter {
       final x0 = _placementAt(bg.startIndex).xCenter;
       final x1 = _placementAt(bg.endIndex).xCenter;
       final label = bg.tuplet == Tuplet.sextuplet ? '6' : '3';
-      final bar = _placementAt(bg.startIndex).bar;
       _drawTupletBracket(
-          canvas, x0, x1, baseY + _accentY, label, _forBar(_inkColor, bar));
+          canvas, x0, x1, y0 + _accentY, label, _dim(_inkColor));
     }
 
-    // Heads, stems, flags, accents, graces, rests, dots, letters.
+    // Heads, stems, flags, accents, graces, rests, dots, letters, counts.
     for (final p in rowPlacements) {
-      final beat = rudiment.sticking[p.index];
+      final beat = beats[p.index];
       final resolved = p.resolved;
       final x = p.xCenter;
       final isActive = p.index == activeIndex;
 
-      Color dim(Color c) => _forBar(c, p.bar);
-
       final noteBeamCount = beamCountFor(resolved.value);
 
       if (p.isRest) {
-        _drawRest(canvas, Offset(x, staffY), resolved.value, dim(_ghostColor));
+        _drawRest(canvas, Offset(x, staffY), resolved.value, _dim(_ghostColor));
         continue;
       }
 
-      final headColor = dim(beat.isAccent
+      final headColor = _dim(beat.isAccent
           ? _accentColor
           : beat.isGhost
               ? _ghostColor
@@ -374,7 +471,7 @@ class _StaffPainter extends CustomPainter {
       // Grace notes (drawn small, to the left).
       if (beat.graces.isNotEmpty) {
         _drawGraces(
-            canvas, beat.graces, x, staffY, stemTopY, dim(_ghostColor));
+            canvas, beat.graces, x, staffY, stemTopY, _dim(_ghostColor));
       }
 
       // Notehead — Bravura glyph for filled/whole/half, hand-drawn hollow
@@ -399,12 +496,12 @@ class _StaffPainter extends CustomPainter {
 
       // Accent mark.
       if (beat.isAccent) {
-        _drawAccent(canvas, Offset(x, baseY + _accentY), dim(_accentColor));
+        _drawAccent(canvas, Offset(x, y0 + _accentY), _dim(_accentColor));
       }
 
       // Ghost parentheses.
       if (beat.isGhost) {
-        final ghostInk = dim(_ghostColor);
+        final ghostInk = _dim(_ghostColor);
         _drawText(canvas, '(', Offset(x - _headRx - 4, staffY), ghostInk, 14);
         _drawText(canvas, ')', Offset(x + _headRx + 4, staffY), ghostInk, 14);
       }
@@ -415,10 +512,19 @@ class _StaffPainter extends CustomPainter {
       }
 
       // R/L letter.
-      final letter = beat.hand == Hand.right ? 'R' : 'L';
-      _drawText(canvas, letter, Offset(x, baseY + _letterY),
-          dim(_letterColor), 12,
-          bold: true);
+      if (showSticking) {
+        final letter = beat.hand == Hand.right ? 'R' : 'L';
+        _drawText(canvas, letter, Offset(x, y0 + _letterY), _dim(_letterColor),
+            12,
+            bold: true);
+      }
+
+      // Count syllable under the letter.
+      final count = countLabels == null ? null : countLabels![p.index];
+      if (count != null) {
+        _drawText(
+            canvas, count, Offset(x, y0 + _countY), _dim(_letterColor), 10);
+      }
     }
   }
 
@@ -458,16 +564,32 @@ class _StaffPainter extends CustomPainter {
   /// Neutral percussion clef (Bravura glyph, registered on the staff center).
   void _drawClef(Canvas canvas, double staffY) {
     _drawGlyph(canvas, _Smufl.clefPerc, Offset(_leftPad + 10, staffY),
-        _inkColor.withValues(alpha: 0.9));
+        _dim(_inkColor.withValues(alpha: 0.9)));
   }
 
-  /// Time signature: [Rudiment.beatsPerBar] over 4 (quarter-note pulse),
-  /// stacked digit glyphs.
+  /// Time signature: [beatsPerBar] over 4 (quarter-note pulse), stacked
+  /// digit glyphs.
   void _drawTimeSignature(Canvas canvas, double staffY) {
-    const x = _leftPad + 20.0;
-    _drawGlyph(canvas, _Smufl.timeSig(rudiment.beatsPerBar),
-        Offset(x, staffY - _lineGap), _inkColor);
-    _drawGlyph(canvas, _Smufl.timeSig(4), Offset(x, staffY + _lineGap), _inkColor);
+    final x = _leftPad + 20.0;
+    _drawGlyph(canvas, _Smufl.timeSig(beatsPerBar),
+        Offset(x, staffY - _lineGap), _dim(_inkColor));
+    _drawGlyph(canvas, _Smufl.timeSig(4), Offset(x, staffY + _lineGap),
+        _dim(_inkColor));
+  }
+
+  /// Line number in a square box at the far left, centred on the middle
+  /// line — like the numbered cells of a printed exercise sheet.
+  void _drawNumberBox(Canvas canvas, double staffY) {
+    final rect = Rect.fromLTWH(
+        sheetLeftPad / 2, staffY - _boxSize / 2, _boxSize, _boxSize);
+    canvas.drawRect(
+        rect,
+        Paint()
+          ..color = _dim(_inkColor.withValues(alpha: 0.8))
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0);
+    _drawText(canvas, '$lineNumber', rect.center, _dim(_inkColor), 12,
+        bold: true);
   }
 
   void _drawHead(Canvas canvas, Offset c, Color color,
@@ -532,7 +654,8 @@ class _StaffPainter extends CustomPainter {
       final p = Paint()
         ..color = color
         ..strokeWidth = 1.1;
-      canvas.drawLine(Offset(gx + 2.6, staffY), Offset(gx + 2.6, stemTopY + 4), p);
+      canvas.drawLine(
+          Offset(gx + 2.6, staffY), Offset(gx + 2.6, stemTopY + 4), p);
     }
     // Slash through grace stems (flam/drag marker).
     final slash = Paint()
@@ -584,40 +707,98 @@ class _StaffPainter extends CustomPainter {
     _drawText(canvas, label, Offset(mid, y), color, 11, italic: true);
   }
 
-  /// Double barline at the end of a row — marks that the phrase repeats.
-  void _drawDoubleBarline(
-      Canvas canvas, double x, double topLineY, double bottomLineY) {
-    final paint = Paint()
-      ..color = _inkColor.withValues(alpha: 0.6)
-      ..strokeWidth = 1.0;
-    canvas.drawLine(Offset(x - 4, topLineY), Offset(x - 4, bottomLineY), paint);
-    final thick = Paint()
-      ..color = _inkColor.withValues(alpha: 0.85)
-      ..strokeWidth = 2.2;
-    canvas.drawLine(Offset(x, topLineY), Offset(x, bottomLineY), thick);
+  // ── Barlines ──────────────────────────────────────────────────────────────
+  Paint get _thinBar => Paint()
+    ..color = _dim(_inkColor.withValues(alpha: 0.6))
+    ..strokeWidth = 1.0;
+  Paint get _thickBar => Paint()
+    ..color = _dim(_inkColor.withValues(alpha: 0.85))
+    ..strokeWidth = 2.2;
+
+  void _drawSingleBarline(Canvas canvas, double x, double top, double bottom) {
+    canvas.drawLine(Offset(x, top), Offset(x, bottom), _thinBar);
   }
 
-  void _drawText(Canvas canvas, String text, Offset center, Color color,
-      double size,
+  /// Final barline: thin + thick — the sheet (or the plain pattern) ends.
+  void _drawFinalBarline(Canvas canvas, double x, double top, double bottom) {
+    canvas.drawLine(Offset(x - 4, top), Offset(x - 4, bottom), _thinBar);
+    canvas.drawLine(Offset(x, top), Offset(x, bottom), _thickBar);
+  }
+
+  void _drawRepeatDots(Canvas canvas, double x, double staffY) {
+    final paint = Paint()..color = _dim(_inkColor.withValues(alpha: 0.85));
+    canvas.drawCircle(Offset(x, staffY - _lineGap / 2), 1.6, paint);
+    canvas.drawCircle(Offset(x, staffY + _lineGap / 2), 1.6, paint);
+  }
+
+  /// "|:" — thick, thin, dots (dots towards the music).
+  void _drawStartRepeat(
+      Canvas canvas, double x, double top, double bottom, double staffY) {
+    canvas.drawLine(Offset(x - 3, top), Offset(x - 3, bottom), _thickBar);
+    canvas.drawLine(Offset(x + 1, top), Offset(x + 1, bottom), _thinBar);
+    _drawRepeatDots(canvas, x + 6, staffY);
+  }
+
+  /// ":|" — dots, thin, thick at the row end.
+  void _drawEndRepeat(
+      Canvas canvas, double x, double top, double bottom, double staffY) {
+    _drawRepeatDots(canvas, x - 7, staffY);
+    canvas.drawLine(Offset(x - 3, top), Offset(x - 3, bottom), _thinBar);
+    canvas.drawLine(Offset(x, top), Offset(x, bottom), _thickBar);
+  }
+
+  // ── Text ──────────────────────────────────────────────────────────────────
+  TextPainter _textPainter(String text, Color color, double size,
       {bool bold = false, bool italic = false}) {
-    final tp = TextPainter(
+    return TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(
+        style: _labelStyle.copyWith(
           color: color,
           fontSize: size,
-          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
           fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+          letterSpacing: 0,
+          height: 1.0,
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    tp.paint(canvas, Offset(center.dx - tp.width / 2, center.dy - tp.height / 2));
+  }
+
+  /// Text centred on [center].
+  void _drawText(Canvas canvas, String text, Offset center, Color color,
+      double size,
+      {bool bold = false, bool italic = false}) {
+    final tp = _textPainter(text, color, size, bold: bold, italic: italic);
+    tp.paint(
+        canvas, Offset(center.dx - tp.width / 2, center.dy - tp.height / 2));
+  }
+
+  /// Text with its top-left corner at [topLeft].
+  void _drawTextLeft(Canvas canvas, String text, Offset topLeft, Color color,
+      double size,
+      {bool bold = false}) {
+    final tp = _textPainter(text, color, size, bold: bold);
+    tp.paint(canvas, topLeft);
   }
 
   @override
   bool shouldRepaint(_StaffPainter old) =>
-      old.rudiment != rudiment ||
+      old.beats != beats ||
+      old.grid != grid ||
+      old.beatsPerBar != beatsPerBar ||
       old.activeIndex != activeIndex ||
-      old.maxWidth != maxWidth;
+      old.maxWidth != maxWidth ||
+      old.rowPitch != rowPitch ||
+      old.lineNumber != lineNumber ||
+      old.repeat != repeat ||
+      old.finalBar != finalBar ||
+      old.showTimeSig != showTimeSig ||
+      old.title != title ||
+      // The label list is rebuilt per build; compare by content so a line
+      // with counts does not repaint on every note of another line.
+      !listEquals(old.countLabels, countLabels) ||
+      old.dimmed != dimmed ||
+      old.showSticking != showSticking;
 }

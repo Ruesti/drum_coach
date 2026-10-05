@@ -94,6 +94,8 @@ final router = GoRouter(
             rudimentId: state.pathParameters['rudimentId']!,
             isFromRoutine: true,
             targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
+            line: int.tryParse(state.uri.queryParameters['line'] ?? ''),
+            mode: state.uri.queryParameters['mode'],
           ),
         ),
       ],
@@ -142,6 +144,8 @@ final router = GoRouter(
         isLadder: state.uri.queryParameters['ladder'] == '1',
         contextLine: state.uri.queryParameters['ctx'],
         phase: int.tryParse(state.uri.queryParameters['phase'] ?? ''),
+        line: int.tryParse(state.uri.queryParameters['line'] ?? ''),
+        mode: state.uri.queryParameters['mode'],
       ),
     ),
     GoRoute(

@@ -26,6 +26,8 @@ String sessionLogToJsonl(SessionLog log) {
       'headphones': log.headphones,
       'latencyOffsetMs': log.latencyOffsetMs,
       'rating': log.rating,
+      'sheetLine': log.sheetLine,
+      'sheetMode': log.sheetMode,
       'clickTimesMs': log.clickTimesMs,
       'clickNoteIndices': log.clickNoteIndices,
     }));

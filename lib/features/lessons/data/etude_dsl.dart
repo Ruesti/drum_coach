@@ -45,6 +45,12 @@ List<StrokeBeat> triplet8(List<Hand> h, {Set<int> accents = const {}}) =>
 List<StrokeBeat> sextuplet16(List<Hand> h, {Set<int> accents = const {}}) =>
     run(h, NoteValue.sixteenth, tuplet: Tuplet.sextuplet, accents: accents);
 
+/// One sheet line (Blattform). Whole bars — `barCountOrThrow` guards it in
+/// the integrity test.
+ExerciseLine line(List<StrokeBeat> beats,
+        {bool repeat = true, String? title, bool counts = false}) =>
+    ExerciseLine(beats, repeat: repeat, title: title, counts: counts);
+
 /// Sum note durations; throw if not a positive whole number of [beatsPerBar]
 /// bars, else return the bar count. Guards new étude content.
 int barCountOrThrow(List<StrokeBeat> beats,

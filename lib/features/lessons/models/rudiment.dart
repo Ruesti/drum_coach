@@ -202,6 +202,19 @@ class TechniqueSection {
   const TechniqueSection({required this.title, required this.body});
 }
 
+/// One line of a sheet (Blattform, 30.09.): a phrase of whole bars, drawn
+/// with a number box, repeat signs when [repeat], an optional [title] above
+/// the staff ("Challenge") and, when [counts], the count syllables under the
+/// sticking letters.
+class ExerciseLine {
+  final List<StrokeBeat> beats;
+  final bool repeat;
+  final String? title;
+  final bool counts;
+  const ExerciseLine(this.beats,
+      {this.repeat = true, this.title, this.counts = false});
+}
+
 class Rudiment {
   final String id;
   final String name;
@@ -248,6 +261,10 @@ class Rudiment {
   /// user's own choice per exercise overrides it.
   final String? backing;
 
+  /// The sheet's lines (Blattform). Empty for legacy exercises, whose plain
+  /// [sticking] then is the one and only line — see [sheet].
+  final List<ExerciseLine> lines;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -268,5 +285,36 @@ class Rudiment {
     this.collection,
     this.collectionGroup,
     this.backing,
+    this.lines = const [],
   });
+
+  /// The sheet: [lines] when authored, else the plain [sticking] as one
+  /// repeating line — every legacy exercise is a one-line sheet.
+  List<ExerciseLine> get sheet =>
+      lines.isNotEmpty ? lines : [ExerciseLine(sticking)];
+
+  /// A copy carrying [beats] as its sticking and no lines: the practice
+  /// screen hands the currently played unit (one line or the whole sheet) to
+  /// playback, backing choice and analysis as an ordinary exercise.
+  Rudiment withSticking(List<StrokeBeat> beats) => Rudiment(
+        id: id,
+        name: name,
+        description: description,
+        minBpm: minBpm,
+        targetBpm: targetBpm,
+        difficulty: difficulty,
+        sticking: beats,
+        gridUnit: gridUnit,
+        beatsPerBar: beatsPerBar,
+        technique: technique,
+        svgAssetPath: svgAssetPath,
+        source: source,
+        voicing: voicing,
+        skills: skills,
+        genres: genres,
+        limbs: limbs,
+        collection: collection,
+        collectionGroup: collectionGroup,
+        backing: backing,
+      );
 }

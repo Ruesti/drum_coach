@@ -127,6 +127,25 @@ class SettingsService {
   static Future<void> setProgramStageIndex(int i) =>
       _prefs.setInt('program_stage_index', i);
 
+  // ── Sheet (Blattform, 30.09.) ────────────────────────────────────────────
+  static bool get showSticking => _prefs.getBool('show_sticking') ?? true;
+  static Future<void> setShowSticking(bool v) =>
+      _prefs.setBool('show_sticking', v);
+  static bool get showCounts => _prefs.getBool('show_counts') ?? true;
+  static Future<void> setShowCounts(bool v) => _prefs.setBool('show_counts', v);
+
+  /// Last line (0-based) and mode played per exercise; the practice screen
+  /// resumes there.
+  static ({int line, bool sheet}) sheetPositionFor(String exerciseId) => (
+        line: _prefs.getInt('sheet_line_$exerciseId') ?? 0,
+        sheet: _prefs.getBool('sheet_mode_$exerciseId') ?? false,
+      );
+  static Future<void> setSheetPosition(String exerciseId,
+      {required int line, required bool sheet}) async {
+    await _prefs.setInt('sheet_line_$exerciseId', line);
+    await _prefs.setBool('sheet_mode_$exerciseId', sheet);
+  }
+
   // ── Practice-session snapshot ────────────────────────────────────────────
   // Written when the app goes to background mid-session so the timer survives
   // Android killing the process (e.g. during a phone call).
@@ -136,10 +155,14 @@ class SettingsService {
     required int elapsedSeconds,
     int? goalSeconds,
     int sessionSeconds = 0,
+    int line = 0,
+    bool sheet = false,
   }) async {
     await _prefs.setString('practice_snap_id', rudimentId);
     await _prefs.setInt('practice_snap_elapsed', elapsedSeconds);
     await _prefs.setInt('practice_snap_session', sessionSeconds);
+    await _prefs.setInt('practice_snap_line', line);
+    await _prefs.setBool('practice_snap_sheet', sheet);
     if (goalSeconds != null) {
       await _prefs.setInt('practice_snap_goal', goalSeconds);
     } else {
@@ -151,8 +174,13 @@ class SettingsService {
 
   /// The stored snapshot for [rudimentId], or null if none exists, it belongs
   /// to another exercise, or it is older than [maxAge].
-  static ({int elapsedSeconds, int? goalSeconds, int sessionSeconds})?
-      practiceSnapshotFor(
+  static ({
+    int elapsedSeconds,
+    int? goalSeconds,
+    int sessionSeconds,
+    int line,
+    bool sheet,
+  })? practiceSnapshotFor(
     String rudimentId, {
     Duration maxAge = const Duration(hours: 1),
   }) {
@@ -166,6 +194,8 @@ class SettingsService {
       elapsedSeconds: elapsed,
       goalSeconds: _prefs.getInt('practice_snap_goal'),
       sessionSeconds: _prefs.getInt('practice_snap_session') ?? 0,
+      line: _prefs.getInt('practice_snap_line') ?? 0,
+      sheet: _prefs.getBool('practice_snap_sheet') ?? false,
     );
   }
 
@@ -175,5 +205,7 @@ class SettingsService {
     await _prefs.remove('practice_snap_session');
     await _prefs.remove('practice_snap_goal');
     await _prefs.remove('practice_snap_time');
+    await _prefs.remove('practice_snap_line');
+    await _prefs.remove('practice_snap_sheet');
   }
 }
