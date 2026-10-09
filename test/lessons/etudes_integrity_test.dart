@@ -16,7 +16,9 @@ void main() {
     expect(dupes, isEmpty, reason: 'duplicate ids: $dupes');
   });
 
-  test('every étude fills whole bars and is a rudimentEtudes/techniqueStudies member', () {
+  test(
+      'every étude fills whole bars and is a rudimentEtudes/techniqueStudies member',
+      () {
     for (final r in allEtudes) {
       expect(r.collection, isNotNull, reason: '${r.id} has no collection');
       expect(
@@ -59,18 +61,54 @@ void main() {
             reason: '${r.id} sheet too long');
       }
     });
-    test('the sample sheet: 11 lines, challenge last without repeat', () {
-      final r =
-          rudimentsSeedData.firstWhere((r) => r.id == 'single_paradiddle');
-      expect(r.sheet.length, 11);
-      expect(r.sheet.take(10).every((l) => l.repeat), isTrue);
-      expect(r.sheet.last.repeat, isFalse);
-      expect(r.sheet.last.title, 'Challenge');
-      expect(r.sheet.first.counts, isTrue);
-      expect(r.sticking.length, 8,
-          reason: 'the plain pattern stays for the How box');
-      expect(r.technique.map((s) => s.title),
-          ['Why it matters', 'How to play it', 'Practice tips', 'Song examples']);
+    test('the twelve rudiment sheets: 8 lines + Challenge, lesson sections',
+        () {
+      // Katalog 3a: the twelve rudiments composed as sheets.
+      const ids = [
+        'single_stroke_roll',
+        'double_stroke_roll',
+        'single_paradiddle',
+        'double_paradiddle',
+        'paradiddle_diddle',
+        'flam',
+        'flam_accent',
+        'flam_tap',
+        'single_drag',
+        'five_stroke_roll',
+        'seven_stroke_roll',
+        'swiss_army_triplet',
+      ];
+      const beginner = [
+        'single_stroke_roll',
+        'double_stroke_roll',
+        'single_paradiddle'
+      ];
+      for (final id in ids) {
+        final r = rudimentsSeedData.firstWhere((r) => r.id == id);
+        expect(r.sheet.length, 9, reason: id);
+        expect(r.sheet.take(8).every((l) => l.repeat), isTrue, reason: id);
+        expect(r.sheet.take(8).every((l) => l.beats.isNotEmpty), isTrue);
+        expect(r.sheet.last.repeat, isFalse, reason: id);
+        expect(r.sheet.last.title, 'Challenge', reason: id);
+        expect(sheetBars(r), 24, reason: id);
+        // The plain pattern is one whole bar — the PATTERN box.
+        expect(
+            barCountOrThrow(r.sticking,
+                beatsPerBar: r.beatsPerBar, grid: r.gridUnit),
+            1,
+            reason: id);
+        expect(
+            r.technique.map((s) => s.title),
+            [
+              'Why it matters',
+              'How to play it',
+              'Practice tips',
+              'Where you hear it'
+            ],
+            reason: id);
+        final counts = r.sheet.take(2).every((l) => l.counts);
+        expect(counts, beginner.contains(id), reason: '$id count hints');
+      }
     });
   });
 

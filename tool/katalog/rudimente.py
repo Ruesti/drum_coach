@@ -187,7 +187,7 @@ SHEETS: list[Sheet] = [
         id='flam', name='Flam', min_bpm=60, target_bpm=120,
         difficulty='intermediate', skills=['control'], genres=[],
         description='A quiet grace note just before the main stroke, played with the other hand. One fat note instead of two.',
-        pattern='R4f L4f R4f L4f',
+        pattern='R4f> L4f> R4f> L4f>',
         lines=[
             'R4f L4f R4f L4f | R8f L8 R8f L8 R4f L4f',
             'R8f L8 R8 L8 R8f L8 R8 L8 | R8f L8 R8 L8 R4f L4f',

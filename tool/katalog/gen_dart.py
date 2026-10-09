@@ -24,9 +24,11 @@ def dart_str(s: str) -> str:
 
 
 def render(sheet) -> str:
+    from sheetlang import note_to_dart
     c = camel(sheet.id)
     lines = sheet.parsed()
     body = '\n'.join(line_to_dart(ln) for ln in lines)
+    pattern = '\n'.join('  ' + note_to_dart(n) + ',' for n in sheet.pattern_line().notes)
     lesson = '\n'.join(
         f'  TechniqueSection(\n    title: {dart_str(k)},\n    body: {dart_str(v)},\n  ),'
         for k, v in sheet.lesson.items())
@@ -34,6 +36,12 @@ def render(sheet) -> str:
 // edit the Python source, not this file. Katalog Schritt 3a ({sheet.name}).
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+
+/// {sheet.name}: the plain pattern, one bar — the PATTERN box on the info
+/// page and the exercise's `sticking`.
+final List<StrokeBeat> {c}Pattern = [
+{pattern}
+];
 
 /// {sheet.name}: 8 lines of two bars plus an eight-bar challenge, composed
 /// by the rule "as varied and groovy as possible" (Uli, 30.09.).
