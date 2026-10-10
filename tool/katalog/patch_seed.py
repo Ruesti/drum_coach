@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Stellt rudiments_seed.dart auf die generierten Blätter um (Katalog 3a).
+"""Stellt rudiments_seed.dart auf die generierten Blätter um (Katalog 3a/3b).
 
-Für jedes Blatt aus rudimente.py: vorhandener Eintrag → `sticking: xPattern`,
+Für jedes Blatt aller Sätze (katalog.py): vorhandener Eintrag → `sticking: xPattern`,
 `technique: xLesson`, `lines: xSheet`; fehlender Eintrag → neu angehängt.
-Idempotent. Aufruf: patch_seed.py <lib/features/lessons/data/rudiments_seed.dart>
+Idempotent. Aufruf: patch_seed.py <lib/features/lessons/data/rudiments_seed.dart>  (alle Sätze)
 """
 from __future__ import annotations
 
@@ -13,13 +13,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from gen_dart import camel, dart_str  # noqa: E402
-from rudimente import SHEETS  # noqa: E402
-
-GRID = {
-    'five_stroke_roll': 'NoteGrid.sixteenth',
-    'seven_stroke_roll': 'NoteGrid.sixteenthTriplet',
-    'swiss_army_triplet': 'NoteGrid.triplet',
-}
+from katalog import SETS, all_sheets  # noqa: E402
 
 
 def _block(src: str, start: int, key: str) -> tuple[int, int] | None:
@@ -39,49 +33,61 @@ def _scalar(src: str, start: int, key: str) -> tuple[int, int] | None:
     return (m.start() + 1, m.end()) if m else None
 
 
+def _entry(s) -> str:
+    c = camel(s.id)
+    skills = ', '.join(f'Skill.{k}' for k in s.skills)
+    genres = ', '.join(f'Genre.{g}' for g in s.genres)
+    return (
+        f"\n  Rudiment(\n    id: '{s.id}',\n    name: {dart_str(s.name)},\n"
+        f"    skills: {{{skills}}},\n"
+        + (f"    genres: {{{genres}}},\n" if genres else '')
+        + f"    description: {dart_str(s.description)},\n"
+        f"    minBpm: {s.min_bpm},\n    targetBpm: {s.target_bpm},\n"
+        f"    difficulty: Difficulty.{s.difficulty},\n"
+        f"    gridUnit: NoteGrid.{s.grid},\n"
+        + (f"    backing: '{s.backing}',\n" if s.backing else '')
+        + f"    sticking: {c}Pattern,\n    technique: {c}Lesson,\n    lines: {c}Sheet,\n  ),\n")
+
+
+def _update(src: str, at: int, c: str) -> str:
+    """Vorhandener Eintrag: sticking/technique/lines auf die generierten Namen."""
+    span = _block(src, at, 'sticking') or _scalar(src, at, 'sticking')
+    src = src[:span[0]] + f'    sticking: {c}Pattern,' + src[span[1]:]
+    span = _block(src, at, 'technique') or _scalar(src, at, 'technique')
+    if span:
+        src = src[:span[0]] + f'    technique: {c}Lesson,' + src[span[1]:]
+    else:
+        end = src.index('\n  ),\n', at)
+        src = src[:end] + f'\n    technique: {c}Lesson,' + src[end:]
+    if not _scalar(src, at, 'lines'):
+        end = src.index('\n  ),\n', at)
+        src = src[:end] + f'\n    lines: {c}Sheet,' + src[end:]
+    return src
+
+
 def patch(path: pathlib.Path) -> None:
     src = path.read_text()
-    imports = ''.join(f"import 'sheets/{s.id}_sheet.dart';\n" for s in SHEETS)
+    imports = ''.join(f"import 'sheets/{s.id}_sheet.dart';\n" for s in all_sheets())
     src = re.sub(r"(import 'sheets/[a-z_]+_sheet\.dart';\n)+", '', src)
     src = src.replace("import '../models/rudiment.dart';\n", "import '../models/rudiment.dart';\n" + imports, 1)
 
-    new_entries = []
-    for s in SHEETS:
-        c = camel(s.id)
-        key = f"    id: '{s.id}',"
-        at = src.find(key)
-        if at < 0:
-            skills = ', '.join(f'Skill.{k}' for k in s.skills)
-            genres = ', '.join(f'Genre.{g}' for g in s.genres)
-            new_entries.append(
-                f"\n  Rudiment(\n    id: '{s.id}',\n    name: {dart_str(s.name)},\n"
-                f"    skills: {{{skills}}},\n"
-                + (f"    genres: {{{genres}}},\n" if genres else '')
-                + f"    description: {dart_str(s.description)},\n"
-                f"    minBpm: {s.min_bpm},\n    targetBpm: {s.target_bpm},\n"
-                f"    difficulty: Difficulty.{s.difficulty},\n"
-                f"    gridUnit: {GRID[s.id]},\n"
-                f"    sticking: {c}Pattern,\n    technique: {c}Lesson,\n    lines: {c}Sheet,\n  ),\n")
-            continue
-        # sticking
-        span = _block(src, at, 'sticking') or _scalar(src, at, 'sticking')
-        src = src[:span[0]] + f'    sticking: {c}Pattern,' + src[span[1]:]
-        # technique
-        span = _block(src, at, 'technique') or _scalar(src, at, 'technique')
-        if span:
-            src = src[:span[0]] + f'    technique: {c}Lesson,' + src[span[1]:]
-        else:
-            end = src.index('\n  ),\n', at)
-            src = src[:end] + f'\n    technique: {c}Lesson,' + src[end:]
-        # lines
-        if not _scalar(src, at, 'lines'):
-            end = src.index('\n  ),\n', at)
-            src = src[:end] + f'\n    lines: {c}Sheet,' + src[end:]
-    if new_entries:
-        tail = src.rindex('\n];')
-        src = src[:tail] + '\n  // ─── KATALOG 3a: new base rudiments ─────────────────────────────────────\n' + ''.join(new_entries).rstrip('\n') + src[tail:]
+    updated = added = 0
+    for st in SETS:
+        new_entries = []
+        for s in st.sheets:
+            at = src.find(f"    id: '{s.id}',")
+            if at < 0:
+                new_entries.append(_entry(s))
+            else:
+                src = _update(src, at, camel(s.id))
+                updated += 1
+        if new_entries:
+            marker = f'\n  // ─── {st.seed_marker} ' + '─' * max(0, 70 - len(st.seed_marker)) + '\n'
+            tail = src.rindex('\n];')
+            src = src[:tail] + marker + ''.join(new_entries).rstrip('\n') + src[tail:]
+            added += len(new_entries)
     path.write_text(src)
-    print('seed patched:', len(SHEETS) - len(new_entries), 'updated,', len(new_entries), 'added')
+    print('seed patched:', updated, 'updated,', added, 'added')
 
 
 if __name__ == '__main__':

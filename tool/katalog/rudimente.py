@@ -6,40 +6,8 @@ Notenschrift siehe sheetlang.py. Texte Englisch (App-Sprache).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-
-from sheetlang import Line, check_sheet, parse_line
-
-
-@dataclass
-class Sheet:
-    id: str
-    name: str
-    min_bpm: int
-    target_bpm: int
-    difficulty: str  # beginner | intermediate | advanced
-    skills: list[str]
-    genres: list[str]
-    description: str
-    pattern: str  # ein Takt, Grundgestalt (How-Kasten)
-    lines: list[str]  # 8 Zeilen à 2 Takte
-    challenge: str  # 8 Takte
-    lesson: dict[str, str]
-    count_lines: int = 0  # so viele erste Zeilen tragen die Zählhilfe
-    new_seed: bool = False  # noch nicht im Basis-Katalog
-
-    def parsed(self) -> list[Line]:
-        out = [parse_line(t, counts=i < self.count_lines) for i, t in enumerate(self.lines)]
-        out.append(parse_line(self.challenge, repeat=False, title='Challenge'))
-        check_sheet(out)
-        if len(self.lines) != 8:
-            raise ValueError(f'{self.id}: {len(self.lines)} lines, expected 8')
-        if out[-1].bars != 8:
-            raise ValueError(f'{self.id}: challenge has {out[-1].bars} bars')
-        return out
-
-    def pattern_line(self) -> Line:
-        return parse_line(self.pattern, repeat=False)
+from blatt import Sheet, print_table
+from sheetlang import Line
 
 
 SHEETS: list[Sheet] = [
@@ -297,7 +265,7 @@ SHEETS: list[Sheet] = [
     ),
     Sheet(
         id='five_stroke_roll', name='Five Stroke Roll', min_bpm=60, target_bpm=140,
-        difficulty='intermediate', skills=['control'], genres=['drumCorps'], new_seed=True,
+        difficulty='intermediate', skills=['control'], genres=['drumCorps'], new_seed=True, grid='sixteenth',
         description='Two doubles and an accent: R R L L R, L L R R L. The shortest roll that already sounds like a roll.',
         pattern='R32 R32 L32 L32 R8> L32 L32 R32 R32 L8> R32 R32 L32 L32 R8> L32 L32 R32 R32 L8>',
         lines=[
@@ -325,7 +293,7 @@ SHEETS: list[Sheet] = [
     ),
     Sheet(
         id='seven_stroke_roll', name='Seven Stroke Roll', min_bpm=50, target_bpm=120,
-        difficulty='intermediate', skills=['control'], genres=['drumCorps'], new_seed=True,
+        difficulty='intermediate', skills=['control'], genres=['drumCorps'], new_seed=True, grid='sixteenthTriplet',
         description='Three doubles and an accent: R R L L R R L. Six fast notes into one landing.',
         pattern='6(R16 R16 L16 L16 R16 R16) L4> 6(L16 L16 R16 R16 L16 L16) R4>',
         lines=[
@@ -353,7 +321,7 @@ SHEETS: list[Sheet] = [
     ),
     Sheet(
         id='swiss_army_triplet', name='Swiss Army Triplet', min_bpm=50, target_bpm=110,
-        difficulty='advanced', skills=['control', 'coordination'], genres=['drumCorps'], new_seed=True,
+        difficulty='advanced', skills=['control', 'coordination'], genres=['drumCorps'], new_seed=True, grid='triplet',
         description='A flam, a tap with the same hand, then the other hand: lR R L, as triplets. Fast and oddly comfortable.',
         pattern='3(R8f> R8 L8) 3(R8f> R8 L8) 3(R8f> R8 L8) 3(R8f> R8 L8)',
         lines=[
@@ -388,9 +356,4 @@ def all_parsed() -> dict[str, list[Line]]:
 
 
 if __name__ == '__main__':
-    for s in SHEETS:
-        lines = s.parsed()
-        bars = sum(ln.bars for ln in lines)
-        notes = sum(len(ln.notes) for ln in lines)
-        print(f'{s.id:22s} {len(lines)} Zeilen  {bars:2d} Takte  {notes:3d} Noten')
-    print(len(SHEETS), 'Blätter ok')
+    print_table(SHEETS)

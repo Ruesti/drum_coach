@@ -43,5 +43,16 @@ void main() {
         expect(r.skills, contains(Skill.fill), reason: r.id);
       }
     });
+
+    test('the eight fill sheets (Katalog 3b) are tagged fill, never drum corps',
+        () {
+      final fills =
+          rudimentsSeedData.where((r) => r.id.startsWith('fill_')).toList();
+      expect(fills.length, 8);
+      for (final r in fills) {
+        expect(r.skills, contains(Skill.fill), reason: r.id);
+        expect(r.genres, isNot(contains(Genre.drumCorps)), reason: r.id);
+      }
+    });
   });
 }
