@@ -75,11 +75,23 @@ void main() {
     expect(leadsWithGraces(const []), isFalse);
   });
 
-  test('pads leave room for the number box and the repeat signs', () {
-    expect(leftPadFor(numbered: true), sheetLeftPad + sheetNumberBoxW);
+  test('pads: number box costs no width, clef only where shown', () {
+    // Uli 10.10.: the box sits above the staff, the clef is on line 1 only.
+    expect(leftPadFor(numbered: true), sheetLeftPad);
     expect(leftPadFor(numbered: false), sheetLeftPad);
     expect(rightPadFor(repeat: true), sheetRightPad + sheetRepeatW);
     expect(systemPadFor(repeat: true), sheetSystemPad + sheetRepeatSystemPad);
     expect(systemPadFor(repeat: false), sheetSystemPad);
+    expect(systemPadFor(repeat: true, clef: false),
+        sheetNoClefPad + sheetRepeatSystemPad);
+    expect(systemPadFor(repeat: false, clef: false), sheetNoClefPad);
+  });
+
+  test('line 2 onwards gets the width the clef used to take', () {
+    final g = computeSheetGeometry(r, 360, showCounts: false);
+    // Same two-bar content: line 2 (no clef) spreads its notes wider.
+    expect(g.layouts[1].pxPerQuarter, greaterThan(g.layouts[0].pxPerQuarter));
+    final first = g.layouts[1].placements.first.xCenter;
+    expect(first, lessThan(g.layouts[0].placements.first.xCenter));
   });
 }
