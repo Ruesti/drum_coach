@@ -119,13 +119,16 @@ StaffLayout computeStaffLayout({
   final shortPiece = totalBarsAll < targetBarsPerRow;
   final cap = shortPiece ? preferredPxPerQuarter * 1.5 : preferredPxPerQuarter;
   var barsPerRow = shortPiece ? totalBarsAll : targetBarsPerRow;
-  var pxPerQuarter = (usable / barsPerRow - barGap) / beatsPerBar;
+  // No trailing gap after the last bar of a row: the row ends on its final
+  // barline, flush with the right margin (Uli 10.10.: the right margin was
+  // wider than the left one).
+  var pxPerQuarter = ((usable + barGap) / barsPerRow - barGap) / beatsPerBar;
   if (pxPerQuarter > cap) pxPerQuarter = cap;
   if (pxPerQuarter < minPxPerQuarter) {
     // Even at the preferred size, [targetBarsPerRow] bars don't comfortably
     // fit this piece's note density — fall back to one bar per row.
     barsPerRow = 1;
-    pxPerQuarter = (usable - barGap) / beatsPerBar;
+    pxPerQuarter = usable / beatsPerBar;
     if (pxPerQuarter > preferredPxPerQuarter) pxPerQuarter = preferredPxPerQuarter;
     if (pxPerQuarter < minPxPerQuarter) {
       // Extreme case (very fast notes on a narrow viewport, e.g. 32nd notes
@@ -200,7 +203,7 @@ StaffLayout computeStaffLayout({
 
   // A lone row narrower than the width is centred; multi-row pieces keep
   // their last, shorter row left-aligned like printed music.
-  final rowWidth = barsPerRow * barWidthAt(pxPerQuarter);
+  final rowWidth = barsPerRow * barWidthAt(pxPerQuarter) - barGap;
   final xOffset =
       rowCount == 1 && rowWidth < usable ? (usable - rowWidth) / 2 : 0.0;
 

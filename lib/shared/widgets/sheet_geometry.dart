@@ -14,8 +14,8 @@ const double sheetCountBand = 14; // count syllables under the letters
 const double sheetRowPitchWithCounts = sheetRowPitch + sheetCountBand;
 const double sheetLeftPad = 8;
 const double sheetNumberBox = 18; // box size; it sits above the staff, left
-const double sheetRightPad = 8;
-const double sheetRepeatW = 10; // room for ":|" at the row end
+const double sheetRightPad = 4; // = the left margin (staff starts at 4)
+const double sheetRepeatW = 0; // ":|" sits on the final barline, no extra room
 const double sheetSystemPad = 26; // clef (+ time signature), first line only
 const double sheetNoClefPad = 4; // every other line starts right away
 const double sheetRepeatSystemPad = 22; // "|:" after the clef / line start
