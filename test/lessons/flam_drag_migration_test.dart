@@ -50,9 +50,11 @@ void main() {
       expect(totalQuarters(byId('flam_paradiddle')), 5.0);
     });
 
-    test('single_drag: each accent carries a 2-grace drag, 3 quarters total', () {
+    test('single_drag: every beat carries a 2-grace drag, one 4/4 bar', () {
+      // Katalog 3a: the drag pattern is four quarter-note drags (one bar),
+      // alternating hands — the PATTERN box of the Single Drag sheet.
       final r = byId('single_drag');
-      expect(totalQuarters(r), 3.0);
+      expect(totalQuarters(r), 4.0);
       for (final b in r.sticking) {
         expect(b.graces, hasLength(2));
         expect(b.graces[0], b.graces[1], reason: 'a drag is two grace notes on the same hand');
