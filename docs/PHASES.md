@@ -466,10 +466,12 @@ in PHASES.md. Follow all conventions from CLAUDE.md exactly.
 - **Etappe 1 — Pad (aktiv):** Handy, Mikrofon, Messung glaubwürdig,
   Roh-Logging, Lern-/Analysemodus, variable Tagesdosis.
   → `docs/BRIEF_ETAPPE1_PAD.md`
-- **Etappe 2 — Set:** MIDI-Eingang, Desktop-Client (PR #12),
-  Hand-Fuß-Koordination, Onboarding, Gates. Grundlage:
-  `docs/concept/BERICHT_NEUKONZEPT_ERGAENZUNG.md` Abschnitte 3, 4, 5D, 5E, 7.
-  Brief entsteht nach Etappe 1 plus Assessment-Session.
+- **Etappe 2 — Set (Brief vom 10.10.2026):** MIDI-Eingang als zweite
+  Schlagquelle, volles Set im Instrument-Modell, Linux-Desktop-Client und
+  Android per OTG, mehrstimmige Notation und Messung, Hand-Fuß-Koordination.
+  Onboarding und Assessment bleiben ein eigener Konzeptblock. Grundlage:
+  `docs/concept/BERICHT_NEUKONZEPT_ERGAENZUNG.md` Abschnitte 3, 4, 5D, 5E, 5F, 7.
+  → `docs/BRIEF_ETAPPE2_SET.md`
 - **Etappe 3 — Songs:** Import (MIDI/Guitar Pro), Mehrspur-Notation (P3),
   Studio-Editor, Transkriptions-Pipeline. Grundlage:
   `docs/concept/BRIEF_SONG_UEBUNGEN.md` und Ergänzung Abschnitt 8.
