@@ -174,7 +174,8 @@ void main() {
       // Cap for short pieces 84 px/quarter → row 4·84 + 12 gap = 348 px of
       // 754 usable, centred.
       expect(l.pxPerQuarter, closeTo(84, 0.001));
-      expect(l.xOffset, closeTo((800 - 8 - 12 - 26 - 348) / 2, 0.5));
+      // Row width = one bar without a trailing gap (4 × 84 = 336).
+      expect(l.xOffset, closeTo((800 - 8 - 12 - 26 - 336) / 2, 0.5));
     });
 
     test('three bars: two per row, the short last row stays left-aligned', () {

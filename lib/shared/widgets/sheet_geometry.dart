@@ -4,28 +4,34 @@ import 'staff_layout.dart';
 // Row and margin metrics shared by the staff painter, the sheet widget and
 // the practice window. All rows of a sheet share one pitch so the window
 // can slide by whole rows (spec §4b/§4c).
+//
+// Width (Uli, 10.10.: "sehr viel Platz geht verloren"): the number box sits
+// above the staff, the clef and time signature appear on the first line
+// only, and a row runs to the card's edge — so on a 360 dp phone the notes
+// get ~290 dp instead of ~215.
 const double sheetRowPitch = 104; // the staff band
 const double sheetCountBand = 14; // count syllables under the letters
 const double sheetRowPitchWithCounts = sheetRowPitch + sheetCountBand;
 const double sheetLeftPad = 8;
-const double sheetNumberBoxW = 26; // number box 22 px + 4 px gap
-const double sheetRightPad = 12;
-const double sheetRepeatW = 10; // room for ":|" at the row end
-const double sheetSystemPad = 26; // clef (+ time signature)
-const double sheetRepeatSystemPad = 22; // "|:" right after the time signature
+const double sheetNumberBox = 18; // box size; it sits above the staff, left
+const double sheetRightPad = 4; // = the left margin (staff starts at 4)
+const double sheetRepeatW = 0; // ":|" sits on the final barline, no extra room
+const double sheetSystemPad = 26; // clef (+ time signature), first line only
+const double sheetNoClefPad = 4; // every other line starts right away
+const double sheetRepeatSystemPad = 22; // "|:" after the clef / line start
 const double sheetGraceSystemPad = 14; // flam/drag graces before note 1
 const double sheetBarGap = 12;
 
-double leftPadFor({required bool numbered}) =>
-    sheetLeftPad + (numbered ? sheetNumberBoxW : 0);
+/// The number box no longer takes a column — kept so callers read alike.
+double leftPadFor({required bool numbered}) => sheetLeftPad;
 double rightPadFor({required bool repeat}) =>
     sheetRightPad + (repeat ? sheetRepeatW : 0);
 
-/// Room between clef/time signature and the first note: the start repeat
-/// needs its own width, and a line that opens with a flam or drag needs
-/// the grace heads clear of the repeat dots (review 01.10.).
-double systemPadFor({required bool repeat, bool graces = false}) =>
-    sheetSystemPad +
+/// Room before the first note: clef and time signature on the first line
+/// only ([clef]), the start repeat's own width, and extra space when the
+/// line opens with a flam or drag so the grace heads clear the repeat dots.
+double systemPadFor({required bool repeat, bool graces = false, bool clef = true}) =>
+    (clef ? sheetSystemPad : sheetNoClefPad) +
     (repeat ? sheetRepeatSystemPad + (graces ? sheetGraceSystemPad : 0) : 0);
 
 /// True when the first note of [beats] carries grace notes.
@@ -71,7 +77,8 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
   final layouts = <StaffLayout>[];
   final starts = <int>[];
   var rows = 0;
-  for (final l in sheet) {
+  for (var i = 0; i < sheet.length; i++) {
+    final l = sheet[i];
     starts.add(rows);
     final layout = computeStaffLayout(
       beats: l.beats,
@@ -80,8 +87,8 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
       maxWidth: maxWidth,
       leftPad: leftPadFor(numbered: true),
       rightPad: rightPadFor(repeat: l.repeat),
-      systemPad:
-          systemPadFor(repeat: l.repeat, graces: leadsWithGraces(l.beats)),
+      systemPad: systemPadFor(
+          repeat: l.repeat, graces: leadsWithGraces(l.beats), clef: i == 0),
       barGap: sheetBarGap,
     );
     layouts.add(layout);

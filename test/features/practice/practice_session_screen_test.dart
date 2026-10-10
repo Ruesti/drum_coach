@@ -227,6 +227,10 @@ void main() {
       await _pumpScreen(tester, screen: _screen());
       expect(find.byKey(const ValueKey('line-bar')), findsNothing);
       expect(find.byType(SheetWindow), findsOneWidget);
+      // Uli 10.10.: the card nearly fills the width — 6 px margins.
+      final rect = tester.getRect(find.byType(SheetWindow));
+      expect(rect.left, 6);
+      expect(rect.right, 360 - 6);
     });
 
     testWidgets(

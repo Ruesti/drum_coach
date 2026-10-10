@@ -1009,9 +1009,11 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 // started and the notes are what matters.
                 // The sheet window (Blattform, 30.09.): up to four rows, the
                 // played row on top, the next rows waiting below.
+                // 6 px at the sides (was 16): the notes need the width
+                // more than the card needs a margin (Uli, 10.10.).
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                    padding: const EdgeInsets.fromLTRB(6, 14, 6, 0),
                     child: Center(
                       child: AnimatedOpacity(
                         opacity: isPlaying || _elapsedSeconds > 0 ? 1.0 : 0.6,

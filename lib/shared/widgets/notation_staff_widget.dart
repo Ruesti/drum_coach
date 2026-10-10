@@ -152,6 +152,7 @@ class SheetStaffWidget extends StatelessWidget {
                     repeat: sheet[i].repeat,
                     finalBar: i == sheet.length - 1,
                     showTimeSig: i == 0,
+                    showClef: i == 0,
                     title: sheet[i].title,
                     countLabels: showCounts && sheet[i].counts
                         ? countLabelsFor(sheet[i].beats, rudiment.gridUnit,
@@ -209,6 +210,11 @@ class _StaffPainter extends CustomPainter {
   /// pattern). Otherwise the line ends in a single barline — or in ":|".
   final bool finalBar;
   final bool showTimeSig;
+
+  /// Clef on this line (first line of a sheet, plain patterns); the other
+  /// lines start right away — the clef is decoration on a one-line staff
+  /// and cost 26 px per row (Uli, 10.10.).
+  final bool showClef;
   final String? title;
 
   /// Count syllable per note (null entries = none); null = no count row.
@@ -229,6 +235,7 @@ class _StaffPainter extends CustomPainter {
     this.repeat = false,
     this.finalBar = true,
     this.showTimeSig = true,
+    this.showClef = true,
     this.title,
     this.countLabels,
     this.dimmed = false,
@@ -237,8 +244,8 @@ class _StaffPainter extends CustomPainter {
 
   late final double _leftPad = leftPadFor(numbered: lineNumber != null);
   late final double _rightPad = rightPadFor(repeat: repeat);
-  late final double _systemPad =
-      systemPadFor(repeat: repeat, graces: leadsWithGraces(beats));
+  late final double _systemPad = systemPadFor(
+      repeat: repeat, graces: leadsWithGraces(beats), clef: showClef);
 
   /// Duration-proportional layout — the single source of horizontal geometry,
   /// beam runs and tuplet groups. Computed once, lazily.
@@ -278,8 +285,9 @@ class _StaffPainter extends CustomPainter {
   // Right margin added past the last note when drawing a row's staff lines.
   static const double _lineEndMargin = 14;
 
-  // Number box: square at the far left, centred on the middle line.
-  static const double _boxSize = 22;
+  // Number box: small square above the staff at the far left — it takes no
+  // width from the notes.
+  static const double _boxSize = sheetNumberBox;
 
   // ── Colors — black ink on warm off-white paper ──────────────────────────
   static const _staffColor = Color(0x2E17181A); // ink @ 18%
@@ -329,7 +337,13 @@ class _StaffPainter extends CustomPainter {
       final barInRow = p.bar - row * _layout.barsPerRow;
       if (barInRow > maxBarInRow) maxBarInRow = barInRow;
     }
-    final lineEndX = maxX + _lineEndMargin;
+    // The row runs to the end of its last bar (the layout sized the bars to
+    // fill the card), never shorter than the last head plus a margin.
+    final barWidth = _layout.beatsPerBar * _layout.pxPerQuarter + sheetBarGap;
+    final rowRight =
+        _leftPad + _systemPad + (maxBarInRow + 1) * barWidth - sheetBarGap;
+    final lineEndX =
+        maxX + _lineEndMargin > rowRight ? maxX + _lineEndMargin : rowRight;
 
     // Five staff lines spanning this row's used width (they start right
     // after the number box, or near the card edge without one).
@@ -344,7 +358,7 @@ class _StaffPainter extends CustomPainter {
 
     // Number box, title and time signature belong to the first row only.
     if (row == 0) {
-      if (lineNumber != null) _drawNumberBox(canvas, staffY);
+      if (lineNumber != null) _drawNumberBox(canvas, y0);
       if (title != null) {
         // Under the staff at the left, where nothing else is drawn — above
         // the staff it would sit on the first note's accent.
@@ -355,23 +369,22 @@ class _StaffPainter extends CustomPainter {
       }
     }
 
-    // Percussion clef + time signature (time signature only on the first row
-    // of the sheet).
-    _drawClef(canvas, staffY);
+    // Percussion clef + time signature on the first line of the sheet only.
+    if (showClef) _drawClef(canvas, staffY);
     if (row == 0 && showTimeSig) _drawTimeSignature(canvas, staffY);
 
-    // Start repeat right after the time signature; the system pad keeps the
-    // first note (and its grace notes) clear of the dots.
+    // Start repeat right after the time signature (or the line start); the
+    // system pad keeps the first note (and its grace notes) clear of the dots.
     if (row == 0 && repeat) {
-      _drawStartRepeat(canvas, _leftPad + sheetSystemPad + 5, topLineY,
-          bottomLineY, staffY);
+      final clefPad = showClef ? sheetSystemPad : sheetNoClefPad;
+      _drawStartRepeat(
+          canvas, _leftPad + clefPad + 5, topLineY, bottomLineY, staffY);
     }
 
     // Barlines (full staff height) at each internal bar boundary in the row.
     final barPaint = Paint()
       ..color = _dim(_staffColor)
       ..strokeWidth = 1.0;
-    final barWidth = _layout.beatsPerBar * _layout.pxPerQuarter + sheetBarGap;
     for (var barInRow = 1; barInRow <= maxBarInRow; barInRow++) {
       final x = _leftPad + _systemPad + barInRow * barWidth - sheetBarGap / 2;
       canvas.drawLine(Offset(x, topLineY), Offset(x, bottomLineY), barPaint);
@@ -577,18 +590,18 @@ class _StaffPainter extends CustomPainter {
         _dim(_inkColor));
   }
 
-  /// Line number in a square box at the far left, centred on the middle
-  /// line — like the numbered cells of a printed exercise sheet.
-  void _drawNumberBox(Canvas canvas, double staffY) {
-    final rect = Rect.fromLTWH(
-        sheetLeftPad / 2, staffY - _boxSize / 2, _boxSize, _boxSize);
+  /// Line number in a small square box above the staff at the far left —
+  /// like the numbered cells of a printed exercise sheet, but without
+  /// taking a column from the notes.
+  void _drawNumberBox(Canvas canvas, double y0) {
+    final rect = Rect.fromLTWH(sheetLeftPad / 2, y0 + 2, _boxSize, _boxSize);
     canvas.drawRect(
         rect,
         Paint()
           ..color = _dim(_inkColor.withValues(alpha: 0.8))
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.0);
-    _drawText(canvas, '$lineNumber', rect.center, _dim(_inkColor), 12,
+    _drawText(canvas, '$lineNumber', rect.center, _dim(_inkColor), 10,
         bold: true);
   }
 
@@ -795,6 +808,7 @@ class _StaffPainter extends CustomPainter {
       old.repeat != repeat ||
       old.finalBar != finalBar ||
       old.showTimeSig != showTimeSig ||
+      old.showClef != showClef ||
       old.title != title ||
       // The label list is rebuilt per build; compare by content so a line
       // with counts does not repaint on every note of another line.
