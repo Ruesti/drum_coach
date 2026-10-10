@@ -11,6 +11,14 @@ import 'sheets/single_drag_sheet.dart';
 import 'sheets/five_stroke_roll_sheet.dart';
 import 'sheets/seven_stroke_roll_sheet.dart';
 import 'sheets/swiss_army_triplet_sheet.dart';
+import 'sheets/fill_sixteenth_singles_sheet.dart';
+import 'sheets/fill_doubles_sheet.dart';
+import 'sheets/fill_paradiddle_sheet.dart';
+import 'sheets/fill_triplets_sheet.dart';
+import 'sheets/fill_flams_sheet.dart';
+import 'sheets/fill_sextuplets_sheet.dart';
+import 'sheets/fill_six_groups_sheet.dart';
+import 'sheets/fill_roll_sheet.dart';
 
 // A plain list (not const) since 30.09.: the sample sheet is built with the
 // étude DSL, which is not const-constructible.
@@ -1527,5 +1535,129 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: swissArmyTripletPattern,
     technique: swissArmyTripletLesson,
     lines: swissArmyTripletSheet,
+  ),
+  // ─── KATALOG 3b: fill stickings ────────────────────────────────────────────
+
+  Rudiment(
+    id: 'fill_sixteenth_singles',
+    name: "Sixteenth Singles Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Three bars of time, then a bar of sixteenth-note singles into the one. The first fill every drummer plays, and the one that has to sound the cleanest.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillSixteenthSinglesPattern,
+    technique: fillSixteenthSinglesLesson,
+    lines: fillSixteenthSinglesSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_doubles',
+    name: "Doubles Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Three bars of time and a bar of R R L L. Doubles make a fill sound twice as fast as the hands move, and they are easy to spread over two drums.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillDoublesPattern,
+    technique: fillDoublesLesson,
+    lines: fillDoublesSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_paradiddle',
+    name: "Paradiddle Fill",
+    skills: {Skill.fill, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "Paradiddles as a fill over a funk band. The double inside each group moves the lead hand, so the fill wanders between the hands without you steering it.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillParadiddlePattern,
+    technique: fillParadiddleLesson,
+    lines: fillParadiddleSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_triplets',
+    name: "Triplet Fill",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "Triplet fills over a shuffle band. The time is shuffle hands or plain quarters, the fill rolls in threes and lands on the one.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    sticking: fillTripletsPattern,
+    technique: fillTripletsLesson,
+    lines: fillTripletsSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_flams',
+    name: "Flam Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Fills built from flams: fat single notes instead of fast ones. A flam fill is slow in the hands and big in the ear.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillFlamsPattern,
+    technique: fillFlamsLesson,
+    lines: fillFlamsSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_sextuplets',
+    name: "Sextuplet Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Six notes per beat over a straight band. The sextuplet fill is the fast, rolling fill of rock and fusion; the time around it stays plain eighths.",
+    minBpm: 50,
+    targetBpm: 100,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenthTriplet,
+    backing: 'rock8',
+    sticking: fillSextupletsPattern,
+    technique: fillSextupletsLesson,
+    lines: fillSextupletsSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_six_groups',
+    name: "Six-Note Groups Fill",
+    skills: {Skill.fill, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "Sixteenth-note fills phrased in groups of six: 6 + 6 + 4 over the bar. The accents drift across the beat and pull the listener along.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillSixGroupsPattern,
+    technique: fillSixGroupsLesson,
+    lines: fillSixGroupsSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_roll',
+    name: "Roll Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Closed rolls as fills: thirty-second-note doubles that swell into the one. The classic \"snare roll into the chorus\".",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.thirtySecond,
+    sticking: fillRollPattern,
+    technique: fillRollLesson,
+    lines: fillRollSheet,
   ),
 ];
