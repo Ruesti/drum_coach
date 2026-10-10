@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Baut die Kurations-Seite der Rudiment-Blätter (abcjs) aus rudimente.py.
+"""Baut die Kurations-Seite eines Katalog-Satzes (abcjs) aus den Daten in katalog.py.
 
-Aufruf: build_page.py <ausgabe.html>
+Aufruf: build_page.py <ausgabe.html> [satz]   (satz: rudimente | fills; ohne = alle Sätze)
 """
 from __future__ import annotations
 
@@ -11,15 +11,18 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from rudimente import SHEETS  # noqa: E402
+from katalog import select  # noqa: E402
 from sheetlang import counts_words, line_to_abc, sticking_words  # noqa: E402
 
 HDR = ('X:1\\nT:\\nM:4/4\\nL:1/8\\nK:perc\\n%%stretchlast 1\\n%%staffsep 92\\n'
        'V:1 clef=perc stafflines=1\\n')
 
 
-def _rows(ln, bars_per_row: int = 2):
-    """Teilt eine lange Zeile in Reihen zu je [bars_per_row] Takten (wie die App)."""
+def _rows(ln, bars_per_row: int = 2, fill_every: int = 0):
+    """Teilt eine lange Zeile in Reihen zu je [bars_per_row] Takten (wie die App).
+
+    `fill_every` = 4: jeder vierte Takt ist ein Fill-Takt und bekommt „Fill" darüber.
+    """
     from sheetlang import TPQ, Line
     bar_ticks = 4 * TPQ
     rows, cur, tick = [], [], 0
@@ -34,7 +37,12 @@ def _rows(ln, bars_per_row: int = 2):
     out = []
     for i, notes in enumerate(rows):
         sub = Line(notes, repeat=False, counts=ln.counts)
-        abc = line_to_abc(sub)  # endet mit ' |'
+        marks = {}
+        if fill_every:
+            for k in range(bars_per_row):
+                if (i * bars_per_row + k + 1) % fill_every == 0:
+                    marks[k] = 'Fill'
+        abc = line_to_abc(sub, marks=marks or None)  # endet mit ' |'
         if i == 0 and ln.repeat:
             abc = '|: ' + abc
         if i == len(rows) - 1:
@@ -45,10 +53,11 @@ def _rows(ln, bars_per_row: int = 2):
 
 def abc_for_sheet(sheet) -> str:
     parts = []
+    fill_every = 4 if sheet.line_bars == 4 else 0
     for i, ln in enumerate(sheet.parsed()):
         label = f'{i + 1} {ln.title}' if ln.title else str(i + 1)
         parts.append(f'P:{label}\\n')
-        for abc, sub in _rows(ln):
+        for abc, sub in _rows(ln, fill_every=fill_every):
             parts.append(f'{abc}\\nw: {sticking_words(sub)}\\n')
             if ln.counts:
                 parts.append(f'w: {counts_words(sub)}\\n')
@@ -60,7 +69,9 @@ def abc_for_pattern(sheet) -> str:
     return HDR + f'{line_to_abc(ln)}\\nw: {sticking_words(ln)}\\n'
 
 
-def main(out: pathlib.Path) -> None:
+def main(out: pathlib.Path, set_key: str | None) -> None:
+    sets = select(set_key)
+    SHEETS = [sh for st in sets for sh in st.sheets]
     sections = []
     data = {}
     for s in SHEETS:
@@ -72,7 +83,7 @@ def main(out: pathlib.Path) -> None:
             f'<h4>{html.escape(k)}</h4><p>{html.escape(v)}</p>' for k, v in s.lesson.items())
         sections.append(f'''
   <section class="sheet" id="{s.id}">
-    <p class="eyebrow">{len(lines)} Zeilen · {bars} Takte · {s.difficulty} · ♩ = {s.min_bpm}–{s.target_bpm}{' · NEU im Katalog' if s.new_seed else ''}</p>
+    <p class="eyebrow">{len(lines)} Zeilen · {bars} Takte · {s.difficulty} · ♩ = {s.min_bpm}–{s.target_bpm}{' · Band ' + s.backing if s.backing else ''}{' · NEU im Katalog' if s.new_seed else ''}</p>
     <h2>{html.escape(s.name)}</h2>
     <p class="sub">{html.escape(s.description)}</p>
     <div class="box"><div class="abc" id="abc_{s.id}_pattern"></div></div>
@@ -80,7 +91,10 @@ def main(out: pathlib.Path) -> None:
     <details class="lesson"><summary>Lektion (nur auf Abruf in der App)</summary>{lesson}</details>
   </section>''')
     toc = ' · '.join(f'<a href="#{s.id}">{html.escape(s.name)}</a>' for s in SHEETS)
-    page = f'''<title>Rudiment-Blätter Kuration</title>
+    step = ' + '.join(st.step for st in sets)
+    title = ' und '.join(st.title for st in sets)
+    lead = ' '.join(st.lead for st in sets)
+    page = f'''<title>{html.escape(title)} Kuration</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap">
 <style>
   :root {{ --bg:#FAF8F3; --fg:#17181A; --fg2:#6A6760; --line:#E3DFD5; --accent:#E8531E; --paper:#FFFFFF; }}
@@ -105,9 +119,9 @@ def main(out: pathlib.Path) -> None:
   details.lesson p {{ margin:0; line-height:1.5; }}
 </style>
 <main>
-  <p class="eyebrow">drum_coach · Katalog Schritt 3a · Kuration</p>
-  <h1>Zwölf Rudiment-Blätter</h1>
-  <p class="lead">Frei komponiert nach der Regel „jede Übung so abwechslungsreich und groovy wie möglich": je Blatt acht Zeilen à zwei Takte mit Wiederholung und eine Challenge über acht Takte. Oben in jedem Blatt der Kasten mit der Grundgestalt (so steht sie auf der Info-Seite), die Lektion ist eingeklappt. Sag mir je Blatt und Zeilennummer, was raus, anders oder länger soll.</p>
+  <p class="eyebrow">drum_coach · Katalog Schritt {step} · Kuration</p>
+  <h1>{html.escape(title)}</h1>
+  <p class="lead">{html.escape(lead)}</p>
   <p class="toc">{toc}</p>
   {''.join(sections)}
 </main>
@@ -124,4 +138,4 @@ for (const [id, abc] of Object.entries(DATA)) {{ ABCJS.renderAbc('abc_' + id, ab
 
 
 if __name__ == '__main__':
-    main(pathlib.Path(sys.argv[1]))
+    main(pathlib.Path(sys.argv[1]), sys.argv[2] if len(sys.argv) > 2 else None)

@@ -156,8 +156,13 @@ def _abc_len(value: int, dotted: bool) -> str:
     return {0.5: '/', 0.25: '//', 0.75: '3/4', 1.5: '3/2', 0.375: '3/8'}[base]
 
 
-def line_to_abc(line: Line, beats_per_bar: int = 4) -> str:
-    """Notenzeile als ABC-Takte; Balkengruppen je Zählzeit, Pausen brechen sie."""
+def line_to_abc(line: Line, beats_per_bar: int = 4,
+                marks: dict[int, str] | None = None) -> str:
+    """Notenzeile als ABC-Takte; Balkengruppen je Zählzeit, Pausen brechen sie.
+
+    `marks` schreibt Text über den ersten Schlag eines Takts (Taktindex ab 0),
+    z. B. {3: 'Fill'} — nur für die Kurationsseite.
+    """
     bar_ticks = beats_per_bar * TPQ
     bars: list[list[str]] = [[]]
     beat: list[str] = []
@@ -170,6 +175,8 @@ def line_to_abc(line: Line, beats_per_bar: int = 4) -> str:
         else:
             run = 0
         tok = ''
+        if marks and tick % bar_ticks == 0 and (tick // bar_ticks) in marks:
+            tok += f'"^{marks[tick // bar_ticks]}"'
         if n.tuplet and run % n.tuplet == 0:
             tok += f'({n.tuplet}'
         if n.rest:
