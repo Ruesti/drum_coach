@@ -1,0 +1,20 @@
+== voll-ruhig ==  gesendet 256  empfangen 256
+  [Rx-Isolate] Versatz ggü. Sender (ms): median -0.005  p50 |abw| 0.002  p95 |abw| 0.022  max |abw| 0.035  spanne 0.067
+  [Rx-Isolate] Drift: -0.001 ms/min
+  [Rx-Isolate]   Segment A  n=120  p50 0.002  p95 0.022  max 0.032
+  [Rx-Isolate]   Segment B1 n= 32  p50 0.002  p95 0.007  max 0.034
+  [Rx-Isolate]   Segment B2 n= 32  p50 0.003  p95 0.025  max 0.035
+  [Rx-Isolate]   Segment C  n= 64  p50 0.002  p95 0.008  max 0.032
+  [Rx-Isolate]   Segment D  n=  8  p50 0.011  p95 0.032  max 0.032
+  [Rx-Isolate] Flam-Abstand gesendet median 25.000 ms, empfangen median 25.000 ms, min 24.974, max 25.023
+  [Rx-Isolate] Burst 10 ms: empfangene Abstände min 9.965  max 10.032  n=7
+  [Haupt-Isolate] Versatz ggü. Sender (ms): median -0.032  p50 |abw| 0.008  p95 |abw| 0.106  max |abw| 0.456  spanne 0.609
+  [Haupt-Isolate] Drift: -0.012 ms/min
+  [Haupt-Isolate]   Segment A  n=120  p50 0.008  p95 0.102  max 0.456
+  [Haupt-Isolate]   Segment B1 n= 32  p50 0.007  p95 0.077  max 0.107
+  [Haupt-Isolate]   Segment B2 n= 32  p50 0.013  p95 0.110  max 0.130
+  [Haupt-Isolate]   Segment C  n= 64  p50 0.007  p95 0.103  max 0.110
+  [Haupt-Isolate]   Segment D  n=  8  p50 0.047  p95 0.153  max 0.153
+  [Haupt-Isolate] Flam-Abstand gesendet median 25.000 ms, empfangen median 24.994 ms, min 24.875, max 25.106
+  [Haupt-Isolate] Burst 10 ms: empfangene Abstände min 9.846  max 10.103  n=7
+  Hop Rx→Haupt (ms): median 1.235  p95 1.251  max 1.696
