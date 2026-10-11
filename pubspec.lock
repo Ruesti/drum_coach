@@ -335,14 +335,14 @@ packages:
     source: hosted
     version: "1.4.0"
   flutter_midi_command_linux:
-    dependency: "direct overridden"
+    dependency: "direct dev"
     description:
       path: "packages/flutter_midi_command_linux"
       relative: true
     source: path
     version: "1.4.0"
   flutter_midi_command_platform_interface:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: flutter_midi_command_platform_interface
       sha256: b461b95c4b30056cbe1188bf5991664e92ce6e878ff6631e4047824c9da1b1b0
