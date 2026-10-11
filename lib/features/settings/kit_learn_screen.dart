@@ -34,6 +34,7 @@ class _KitLearnScreenState extends State<KitLearnScreen> {
   Future<void> _connect() async {
     final ports = widget.ports ?? MidiPortService();
     final devices = await ports.inputDevices();
+    if (!mounted) return;
     final id =
         chooseMidiDevice(devices, lastId: SettingsService.midiLastDeviceId);
     if (id == null) {
@@ -41,12 +42,12 @@ class _KitLearnScreenState extends State<KitLearnScreen> {
       return;
     }
     final port = await ports.open(id);
-    if (port == null) {
-      setState(() => _error = 'Could not open the MIDI device.');
+    if (!mounted) {
+      await port?.close();
       return;
     }
-    if (!mounted) {
-      await port.close();
+    if (port == null) {
+      setState(() => _error = 'Could not open the MIDI device.');
       return;
     }
     setState(() {
