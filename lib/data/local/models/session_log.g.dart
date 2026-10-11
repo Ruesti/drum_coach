@@ -78,53 +78,68 @@ const SessionLogSchema = CollectionSchema(
       name: r'headphones',
       type: IsarType.string,
     ),
-    r'latencyOffsetMs': PropertySchema(
+    r'kitMapping': PropertySchema(
       id: 12,
+      name: r'kitMapping',
+      type: IsarType.string,
+    ),
+    r'latencyOffsetMs': PropertySchema(
+      id: 13,
       name: r'latencyOffsetMs',
       type: IsarType.double,
     ),
+    r'midiDevice': PropertySchema(
+      id: 14,
+      name: r'midiDevice',
+      type: IsarType.string,
+    ),
     r'mode': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'mode',
       type: IsarType.string,
     ),
     r'noiseSuppress': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'noiseSuppress',
       type: IsarType.bool,
     ),
     r'rating': PropertySchema(
-      id: 15,
+      id: 17,
       name: r'rating',
       type: IsarType.long,
     ),
     r'sampleRate': PropertySchema(
-      id: 16,
+      id: 18,
       name: r'sampleRate',
       type: IsarType.long,
     ),
     r'sessionUid': PropertySchema(
-      id: 17,
+      id: 19,
       name: r'sessionUid',
       type: IsarType.string,
     ),
     r'sheetLine': PropertySchema(
-      id: 18,
+      id: 20,
       name: r'sheetLine',
       type: IsarType.long,
     ),
     r'sheetMode': PropertySchema(
-      id: 19,
+      id: 21,
       name: r'sheetMode',
       type: IsarType.string,
     ),
+    r'source': PropertySchema(
+      id: 22,
+      name: r'source',
+      type: IsarType.string,
+    ),
     r'startedAt': PropertySchema(
-      id: 20,
+      id: 23,
       name: r'startedAt',
       type: IsarType.dateTime,
     ),
     r'unprocessedSupported': PropertySchema(
-      id: 21,
+      id: 24,
       name: r'unprocessedSupported',
       type: IsarType.bool,
     )
@@ -178,6 +193,18 @@ int _sessionLogEstimateSize(
   }
   bytesCount += 3 + object.exerciseId.length * 3;
   bytesCount += 3 + object.headphones.length * 3;
+  {
+    final value = object.kitMapping;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.midiDevice;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.mode.length * 3;
   bytesCount += 3 + object.sessionUid.length * 3;
   {
@@ -186,6 +213,7 @@ int _sessionLogEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.source.length * 3;
   return bytesCount;
 }
 
@@ -212,16 +240,19 @@ void _sessionLogSerialize(
   );
   writer.writeString(offsets[10], object.exerciseId);
   writer.writeString(offsets[11], object.headphones);
-  writer.writeDouble(offsets[12], object.latencyOffsetMs);
-  writer.writeString(offsets[13], object.mode);
-  writer.writeBool(offsets[14], object.noiseSuppress);
-  writer.writeLong(offsets[15], object.rating);
-  writer.writeLong(offsets[16], object.sampleRate);
-  writer.writeString(offsets[17], object.sessionUid);
-  writer.writeLong(offsets[18], object.sheetLine);
-  writer.writeString(offsets[19], object.sheetMode);
-  writer.writeDateTime(offsets[20], object.startedAt);
-  writer.writeBool(offsets[21], object.unprocessedSupported);
+  writer.writeString(offsets[12], object.kitMapping);
+  writer.writeDouble(offsets[13], object.latencyOffsetMs);
+  writer.writeString(offsets[14], object.midiDevice);
+  writer.writeString(offsets[15], object.mode);
+  writer.writeBool(offsets[16], object.noiseSuppress);
+  writer.writeLong(offsets[17], object.rating);
+  writer.writeLong(offsets[18], object.sampleRate);
+  writer.writeString(offsets[19], object.sessionUid);
+  writer.writeLong(offsets[20], object.sheetLine);
+  writer.writeString(offsets[21], object.sheetMode);
+  writer.writeString(offsets[22], object.source);
+  writer.writeDateTime(offsets[23], object.startedAt);
+  writer.writeBool(offsets[24], object.unprocessedSupported);
 }
 
 SessionLog _sessionLogDeserialize(
@@ -250,16 +281,19 @@ SessionLog _sessionLogDeserialize(
   object.exerciseId = reader.readString(offsets[10]);
   object.headphones = reader.readString(offsets[11]);
   object.id = id;
-  object.latencyOffsetMs = reader.readDoubleOrNull(offsets[12]);
-  object.mode = reader.readString(offsets[13]);
-  object.noiseSuppress = reader.readBool(offsets[14]);
-  object.rating = reader.readLongOrNull(offsets[15]);
-  object.sampleRate = reader.readLong(offsets[16]);
-  object.sessionUid = reader.readString(offsets[17]);
-  object.sheetLine = reader.readLongOrNull(offsets[18]);
-  object.sheetMode = reader.readStringOrNull(offsets[19]);
-  object.startedAt = reader.readDateTime(offsets[20]);
-  object.unprocessedSupported = reader.readBoolOrNull(offsets[21]);
+  object.kitMapping = reader.readStringOrNull(offsets[12]);
+  object.latencyOffsetMs = reader.readDoubleOrNull(offsets[13]);
+  object.midiDevice = reader.readStringOrNull(offsets[14]);
+  object.mode = reader.readString(offsets[15]);
+  object.noiseSuppress = reader.readBool(offsets[16]);
+  object.rating = reader.readLongOrNull(offsets[17]);
+  object.sampleRate = reader.readLong(offsets[18]);
+  object.sessionUid = reader.readString(offsets[19]);
+  object.sheetLine = reader.readLongOrNull(offsets[20]);
+  object.sheetMode = reader.readStringOrNull(offsets[21]);
+  object.source = reader.readString(offsets[22]);
+  object.startedAt = reader.readDateTime(offsets[23]);
+  object.unprocessedSupported = reader.readBoolOrNull(offsets[24]);
   return object;
 }
 
@@ -301,24 +335,30 @@ P _sessionLogDeserializeProp<P>(
     case 11:
       return (reader.readString(offset)) as P;
     case 12:
-      return (reader.readDoubleOrNull(offset)) as P;
-    case 13:
-      return (reader.readString(offset)) as P;
-    case 14:
-      return (reader.readBool(offset)) as P;
-    case 15:
-      return (reader.readLongOrNull(offset)) as P;
-    case 16:
-      return (reader.readLong(offset)) as P;
-    case 17:
-      return (reader.readString(offset)) as P;
-    case 18:
-      return (reader.readLongOrNull(offset)) as P;
-    case 19:
       return (reader.readStringOrNull(offset)) as P;
+    case 13:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 14:
+      return (reader.readStringOrNull(offset)) as P;
+    case 15:
+      return (reader.readString(offset)) as P;
+    case 16:
+      return (reader.readBool(offset)) as P;
+    case 17:
+      return (reader.readLongOrNull(offset)) as P;
+    case 18:
+      return (reader.readLong(offset)) as P;
+    case 19:
+      return (reader.readString(offset)) as P;
     case 20:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 21:
+      return (reader.readStringOrNull(offset)) as P;
+    case 22:
+      return (reader.readString(offset)) as P;
+    case 23:
+      return (reader.readDateTime(offset)) as P;
+    case 24:
       return (reader.readBoolOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1765,6 +1805,159 @@ extension SessionLogQueryFilter
   }
 
   QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      kitMappingIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'kitMapping',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      kitMappingIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'kitMapping',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> kitMappingEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'kitMapping',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      kitMappingGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'kitMapping',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      kitMappingLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'kitMapping',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> kitMappingBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'kitMapping',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      kitMappingStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'kitMapping',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      kitMappingEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'kitMapping',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      kitMappingContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'kitMapping',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> kitMappingMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'kitMapping',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      kitMappingIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'kitMapping',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      kitMappingIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'kitMapping',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
       latencyOffsetMsIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1844,6 +2037,159 @@ extension SessionLogQueryFilter
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      midiDeviceIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'midiDevice',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      midiDeviceIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'midiDevice',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> midiDeviceEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'midiDevice',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      midiDeviceGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'midiDevice',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      midiDeviceLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'midiDevice',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> midiDeviceBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'midiDevice',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      midiDeviceStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'midiDevice',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      midiDeviceEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'midiDevice',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      midiDeviceContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'midiDevice',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> midiDeviceMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'midiDevice',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      midiDeviceIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'midiDevice',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      midiDeviceIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'midiDevice',
+        value: '',
       ));
     });
   }
@@ -2472,6 +2818,137 @@ extension SessionLogQueryFilter
     });
   }
 
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sourceEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sourceGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sourceLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sourceBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'source',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sourceStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sourceEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sourceContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'source',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sourceMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'source',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> sourceIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'source',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition>
+      sourceIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'source',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<SessionLog, SessionLog, QAfterFilterCondition> startedAtEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -2680,6 +3157,18 @@ extension SessionLogQuerySortBy
     });
   }
 
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortByKitMapping() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'kitMapping', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortByKitMappingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'kitMapping', Sort.desc);
+    });
+  }
+
   QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortByLatencyOffsetMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'latencyOffsetMs', Sort.asc);
@@ -2690,6 +3179,18 @@ extension SessionLogQuerySortBy
       sortByLatencyOffsetMsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'latencyOffsetMs', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortByMidiDevice() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'midiDevice', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortByMidiDeviceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'midiDevice', Sort.desc);
     });
   }
 
@@ -2774,6 +3275,18 @@ extension SessionLogQuerySortBy
   QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortBySheetModeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sheetMode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortBySource() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'source', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> sortBySourceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'source', Sort.desc);
     });
   }
 
@@ -2928,6 +3441,18 @@ extension SessionLogQuerySortThenBy
     });
   }
 
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenByKitMapping() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'kitMapping', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenByKitMappingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'kitMapping', Sort.desc);
+    });
+  }
+
   QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenByLatencyOffsetMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'latencyOffsetMs', Sort.asc);
@@ -2938,6 +3463,18 @@ extension SessionLogQuerySortThenBy
       thenByLatencyOffsetMsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'latencyOffsetMs', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenByMidiDevice() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'midiDevice', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenByMidiDeviceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'midiDevice', Sort.desc);
     });
   }
 
@@ -3022,6 +3559,18 @@ extension SessionLogQuerySortThenBy
   QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenBySheetModeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sheetMode', Sort.desc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenBySource() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'source', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QAfterSortBy> thenBySourceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'source', Sort.desc);
     });
   }
 
@@ -3126,9 +3675,23 @@ extension SessionLogQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SessionLog, SessionLog, QDistinct> distinctByKitMapping(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'kitMapping', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SessionLog, SessionLog, QDistinct> distinctByLatencyOffsetMs() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'latencyOffsetMs');
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QDistinct> distinctByMidiDevice(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'midiDevice', caseSensitive: caseSensitive);
     });
   }
 
@@ -3174,6 +3737,13 @@ extension SessionLogQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'sheetMode', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<SessionLog, SessionLog, QDistinct> distinctBySource(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'source', caseSensitive: caseSensitive);
     });
   }
 
@@ -3274,10 +3844,22 @@ extension SessionLogQueryProperty
     });
   }
 
+  QueryBuilder<SessionLog, String?, QQueryOperations> kitMappingProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'kitMapping');
+    });
+  }
+
   QueryBuilder<SessionLog, double?, QQueryOperations>
       latencyOffsetMsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'latencyOffsetMs');
+    });
+  }
+
+  QueryBuilder<SessionLog, String?, QQueryOperations> midiDeviceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'midiDevice');
     });
   }
 
@@ -3323,6 +3905,12 @@ extension SessionLogQueryProperty
     });
   }
 
+  QueryBuilder<SessionLog, String, QQueryOperations> sourceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'source');
+    });
+  }
+
   QueryBuilder<SessionLog, DateTime, QQueryOperations> startedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'startedAt');
@@ -3353,23 +3941,38 @@ const OnsetEventSchema = Schema(
       name: r'deviationMs',
       type: IsarType.double,
     ),
-    r'hand': PropertySchema(
+    r'grace': PropertySchema(
       id: 1,
+      name: r'grace',
+      type: IsarType.bool,
+    ),
+    r'hand': PropertySchema(
+      id: 2,
       name: r'hand',
       type: IsarType.string,
     ),
+    r'instrument': PropertySchema(
+      id: 3,
+      name: r'instrument',
+      type: IsarType.string,
+    ),
     r'notePosition': PropertySchema(
-      id: 2,
+      id: 4,
       name: r'notePosition',
       type: IsarType.long,
     ),
     r'peakLevel': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'peakLevel',
       type: IsarType.double,
     ),
+    r'rawNote': PropertySchema(
+      id: 6,
+      name: r'rawNote',
+      type: IsarType.long,
+    ),
     r'timeMs': PropertySchema(
-      id: 4,
+      id: 7,
       name: r'timeMs',
       type: IsarType.double,
     )
@@ -3392,6 +3995,12 @@ int _onsetEventEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.instrument;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -3402,10 +4011,13 @@ void _onsetEventSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDouble(offsets[0], object.deviationMs);
-  writer.writeString(offsets[1], object.hand);
-  writer.writeLong(offsets[2], object.notePosition);
-  writer.writeDouble(offsets[3], object.peakLevel);
-  writer.writeDouble(offsets[4], object.timeMs);
+  writer.writeBool(offsets[1], object.grace);
+  writer.writeString(offsets[2], object.hand);
+  writer.writeString(offsets[3], object.instrument);
+  writer.writeLong(offsets[4], object.notePosition);
+  writer.writeDouble(offsets[5], object.peakLevel);
+  writer.writeLong(offsets[6], object.rawNote);
+  writer.writeDouble(offsets[7], object.timeMs);
 }
 
 OnsetEvent _onsetEventDeserialize(
@@ -3416,10 +4028,13 @@ OnsetEvent _onsetEventDeserialize(
 ) {
   final object = OnsetEvent();
   object.deviationMs = reader.readDoubleOrNull(offsets[0]);
-  object.hand = reader.readStringOrNull(offsets[1]);
-  object.notePosition = reader.readLongOrNull(offsets[2]);
-  object.peakLevel = reader.readDouble(offsets[3]);
-  object.timeMs = reader.readDouble(offsets[4]);
+  object.grace = reader.readBool(offsets[1]);
+  object.hand = reader.readStringOrNull(offsets[2]);
+  object.instrument = reader.readStringOrNull(offsets[3]);
+  object.notePosition = reader.readLongOrNull(offsets[4]);
+  object.peakLevel = reader.readDouble(offsets[5]);
+  object.rawNote = reader.readLongOrNull(offsets[6]);
+  object.timeMs = reader.readDouble(offsets[7]);
   return object;
 }
 
@@ -3433,12 +4048,18 @@ P _onsetEventDeserializeProp<P>(
     case 0:
       return (reader.readDoubleOrNull(offset)) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 2:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
+      return (reader.readLongOrNull(offset)) as P;
+    case 5:
+      return (reader.readDouble(offset)) as P;
+    case 6:
+      return (reader.readLongOrNull(offset)) as P;
+    case 7:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3527,6 +4148,16 @@ extension OnsetEventQueryFilter
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition> graceEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'grace',
+        value: value,
       ));
     });
   }
@@ -3678,6 +4309,159 @@ extension OnsetEventQueryFilter
   }
 
   QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      instrumentIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'instrument',
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      instrumentIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'instrument',
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition> instrumentEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'instrument',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      instrumentGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'instrument',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      instrumentLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'instrument',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition> instrumentBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'instrument',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      instrumentStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'instrument',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      instrumentEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'instrument',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      instrumentContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'instrument',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition> instrumentMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'instrument',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      instrumentIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'instrument',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      instrumentIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'instrument',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
       notePositionIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -3810,6 +4594,77 @@ extension OnsetEventQueryFilter
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition> rawNoteIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'rawNote',
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      rawNoteIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'rawNote',
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition> rawNoteEqualTo(
+      int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rawNote',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition>
+      rawNoteGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'rawNote',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition> rawNoteLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'rawNote',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<OnsetEvent, OnsetEvent, QAfterFilterCondition> rawNoteBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'rawNote',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }

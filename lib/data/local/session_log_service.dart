@@ -27,6 +27,9 @@ SessionLog buildSessionLog({
   String mode = 'learn',
   int? sheetLine,
   String? sheetMode,
+  String source = 'off',
+  String? midiDevice,
+  String? kitMapping,
 }) {
   final setup = analysis?.recordingSetup;
   return SessionLog()
@@ -49,6 +52,9 @@ SessionLog buildSessionLog({
     ..rating = rating
     ..sheetLine = sheetLine
     ..sheetMode = sheetMode
+    ..source = source
+    ..midiDevice = midiDevice
+    ..kitMapping = kitMapping
     ..clickTimesMs = [
       for (final b in beatLog) b.timestamp.microsecondsSinceEpoch / 1000.0,
     ]
@@ -60,7 +66,10 @@ SessionLog buildSessionLog({
           ..peakLevel = e.peakLevel
           ..notePosition = e.notePosition
           ..hand = e.hand
-          ..deviationMs = e.deviationMs,
+          ..deviationMs = e.deviationMs
+          ..instrument = e.instrument
+          ..rawNote = e.rawNote
+          ..grace = e.grace,
     ];
 }
 

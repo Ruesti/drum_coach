@@ -28,6 +28,9 @@ String sessionLogToJsonl(SessionLog log) {
       'rating': log.rating,
       'sheetLine': log.sheetLine,
       'sheetMode': log.sheetMode,
+      'source': log.source,
+      'midiDevice': log.midiDevice,
+      'kitMapping': log.kitMapping,
       'clickTimesMs': log.clickTimesMs,
       'clickNoteIndices': log.clickNoteIndices,
     }));
@@ -39,6 +42,9 @@ String sessionLogToJsonl(SessionLog log) {
       'notePosition': e.notePosition,
       'hand': e.hand,
       'deviationMs': e.deviationMs,
+      'instrument': e.instrument,
+      'rawNote': e.rawNote,
+      'grace': e.grace,
     }));
   }
   return buffer.toString();

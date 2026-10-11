@@ -82,4 +82,33 @@ void main() {
       expect(surplus['deviationMs'], isNull);
     });
   });
+
+  test('jsonl carries source, device, mapping, instrument, rawNote, grace',
+      () {
+    final log = _sample()
+      ..audioSource = 'midi'
+      ..sampleRate = 0
+      ..source = 'midi'
+      ..midiDevice = 'Millenium'
+      ..kitMapping = '{"snare":[38]}'
+      ..clickTimesMs = const [1000]
+      ..clickNoteIndices = const [0]
+      ..events = [
+        OnsetEvent()
+          ..timeMs = 1000
+          ..peakLevel = 0.8
+          ..instrument = 'snare'
+          ..rawNote = 38
+          ..grace = false,
+      ];
+    final lines = sessionLogToJsonl(log).trim().split('\n');
+    final header = jsonDecode(lines[0]) as Map<String, Object?>;
+    final onset = jsonDecode(lines[1]) as Map<String, Object?>;
+    expect(header['source'], 'midi');
+    expect(header['midiDevice'], 'Millenium');
+    expect(header['kitMapping'], '{"snare":[38]}');
+    expect(onset['instrument'], 'snare');
+    expect(onset['rawNote'], 38);
+    expect(onset['grace'], false);
+  });
 }
