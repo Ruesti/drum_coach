@@ -406,7 +406,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     switch (plan) {
       case MeasurementPlan.midi:
         final port = await ports.open(chosen!);
-        if (port == null || !mounted) return;
+        if (port == null) return;
+        if (!mounted) {
+          // Screen left while the port was opening: release it again.
+          await port.close();
+          return;
+        }
         await SettingsService.setMidiLastDeviceId(chosen);
         _midiDeviceName = port.deviceName;
         _source = MidiStrokeSource(
@@ -423,6 +428,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     }
     final src = _source;
     if (src == null) return;
+    if (!mounted) {
+      // dispose() already ran and missed this source.
+      src.dispose();
+      _source = null;
+      return;
+    }
     // Sensor level (Brief A.6): an exercise above the source's level is
     // played without numbers.
     if (!rudiment.requiredSensor.satisfiedBy(src.kind)) {
