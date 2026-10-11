@@ -391,7 +391,16 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     }
   }
 
+  /// Opens the stroke source, then re-applies the backing rule: it ran at
+  /// init while no source was known, and MIDI may lift the mic mute.
   Future<void> _initMeasurement() async {
+    await _openSource();
+    if (!mounted) return;
+    setState(() {});
+    _applyExtras();
+  }
+
+  Future<void> _openSource() async {
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
     final ports = MidiPortService();
     final devices = await ports.inputDevices();
@@ -432,6 +441,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       // dispose() already ran and missed this source.
       src.dispose();
       _source = null;
+      _midiDeviceName = null;
       return;
     }
     // Sensor level (Brief A.6): an exercise above the source's level is
@@ -439,6 +449,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     if (!rudiment.requiredSensor.satisfiedBy(src.kind)) {
       src.dispose();
       _source = null;
+      _midiDeviceName = null;
       return;
     }
     _sourceStatusSub = src.statusChanges.listen((s) {
@@ -446,7 +457,6 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         setState(() => _sourceLost = true);
       }
     });
-    if (mounted) setState(() {});
   }
 
   @override
