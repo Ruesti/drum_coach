@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'app/platform_support.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
 import 'data/local/isar_service.dart';
@@ -23,10 +24,12 @@ Future<void> main() async {
   ]);
   // Reminders are a convenience — a plugin failure here must never keep the
   // app stuck on the splash screen (seen in release: R8 + notifications).
-  try {
-    await NotificationService.init().timeout(const Duration(seconds: 5));
-  } catch (e) {
-    debugPrint('NotificationService.init skipped: $e');
+  if (localNotificationsAvailable) {
+    try {
+      await NotificationService.init().timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint('NotificationService.init skipped: $e');
+    }
   }
   runApp(
     const ProviderScope(
@@ -44,6 +47,7 @@ class DrumCoachApp extends StatelessWidget {
       title: 'DrumCoach',
       theme: drumCoachTheme,
       routerConfig: router,
+      builder: capContentWidth,
     );
   }
 }
