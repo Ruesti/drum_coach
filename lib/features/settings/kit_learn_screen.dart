@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../app/design_tokens.dart';
 import '../../data/local/settings_service.dart';
-import '../coaching/midi/kit_instrument.dart';
 import '../coaching/midi/kit_learn_session.dart';
 import '../coaching/midi/midi_port_service.dart';
 
