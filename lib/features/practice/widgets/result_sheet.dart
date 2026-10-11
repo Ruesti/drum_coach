@@ -450,6 +450,13 @@ class _DetailsSection extends StatelessWidget {
             row('Evenness', '±${u.intervalSpreadMs.toStringAsFixed(1)} ms'),
             if (u.dynamicsSpread != null)
               row('Dynamics spread', '${(u.dynamicsSpread! * 100).round()}%'),
+            if (analysis.accents != null)
+              row(
+                'Accents (MIDI velocity)',
+                '${analysis.accents!.accentRatio.toStringAsFixed(1)}× louder, '
+                    '${analysis.accents!.accentsLouder} of '
+                    '${analysis.accents!.accentCount} above plain',
+              ),
             row('Strokes', '${u.playedCount} / ${u.expectedCount} expected'),
           ],
           if (al != null)

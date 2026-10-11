@@ -210,6 +210,23 @@ SessionAnalysis analyzeStrokes({
   final gateOpen =
       analysisMode && summary.handValuesAllowed && matched.length >= 4;
 
+  AccentAnalysis? accents;
+  if (velocityExact && gateOpen) {
+    final velocities = <double>[];
+    final accented = <bool>[];
+    final ghost = <bool>[];
+    for (final note in assessed) {
+      if (!note.hit) continue;
+      final beat =
+          sticking[beatLog[note.noteIndex].beatIndex % sticking.length];
+      velocities.add(amplitudes[note.onsetIndex!]);
+      accented.add(beat.isAccent);
+      ghost.add(beat.isGhost);
+    }
+    accents = accentAnalysis(
+        velocities: velocities, accented: accented, ghost: ghost);
+  }
+
   final noteByOnset = <int, AlignedNote>{
     for (final n in assessed)
       if (n.hit) n.onsetIndex!: n,
@@ -260,6 +277,7 @@ SessionAnalysis analyzeStrokes({
     recordingSetup: recordingSetup,
     source: source,
     velocityExact: velocityExact,
+    accents: accents,
   );
 }
 
@@ -289,6 +307,36 @@ DynamicsAnalysis _calcDynamics(List<MatchedHit> hits) {
   return DynamicsAnalysis(
     rightHandLevel: right.isEmpty ? 0 : _mean(right),
     leftHandLevel: left.isEmpty ? 0 : _mean(left),
+  );
+}
+
+/// Accent evaluation (Brief A.5): mean accented velocity over mean plain
+/// velocity (ghosts excluded), and how many accents beat the plain median.
+/// Null below two accents or two plain notes — no number from thin air.
+AccentAnalysis? accentAnalysis({
+  required List<double> velocities,
+  required List<bool> accented,
+  required List<bool> ghost,
+}) {
+  final acc = <double>[];
+  final plain = <double>[];
+  for (var i = 0; i < velocities.length; i++) {
+    if (accented[i]) {
+      acc.add(velocities[i]);
+    } else if (!ghost[i]) {
+      plain.add(velocities[i]);
+    }
+  }
+  if (acc.length < 2 || plain.length < 2) return null;
+  final sortedPlain = List<double>.of(plain)..sort();
+  final mid = sortedPlain.length ~/ 2;
+  final plainMedian = sortedPlain.length.isOdd
+      ? sortedPlain[mid]
+      : (sortedPlain[mid - 1] + sortedPlain[mid]) / 2;
+  return AccentAnalysis(
+    accentRatio: _mean(acc) / _mean(plain),
+    accentsLouder: acc.where((v) => v > plainMedian).length,
+    accentCount: acc.length,
   );
 }
 

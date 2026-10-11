@@ -100,6 +100,31 @@ void main() {
       expect(a.timing!.overallDeviationMs, closeTo(5, 0.5));
       expect(a.events.every((e) => e.instrument == 'snare'), isTrue);
       expect(a.events.first.rawNote, 38);
+      expect(a.accents, isNull);
+    });
+
+    test('accents computed for MIDI when the gate is open', () {
+      const acc = [
+        StrokeBeat(hand: Hand.right, isAccent: true),
+        StrokeBeat(hand: Hand.left),
+        StrokeBeat(hand: Hand.right),
+        StrokeBeat(hand: Hand.left),
+      ];
+      final grid = [for (var i = 0; i < 8; i++) i * 500.0];
+      final a = analyzeStrokes(
+        events: [
+          for (var i = 0; i < 8; i++)
+            midi(grid[i], velocity: i % 4 == 0 ? 0.9 : 0.5),
+        ],
+        beatLog: beats(grid),
+        sticking: acc,
+        source: StrokeSourceKind.midi,
+        expectedInstrument: KitInstrument.snare,
+        analysisMode: true,
+      );
+      expect(a.accents, isNotNull);
+      expect(a.accents!.accentCount, 2);
+      expect(a.accents!.accentsLouder, 2);
     });
 
     test('off-instrument events are logged, not counted as extras', () {
