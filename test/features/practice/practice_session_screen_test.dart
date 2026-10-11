@@ -570,7 +570,7 @@ void main() {
     addTearDown(() => tester.binding.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null));
 
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
     final withMic = await _pumpScreen(tester, screen: _screen());
     expect(find.text('LEARN'), findsOneWidget);
     await tester.tap(find.text('LEARN'));
@@ -734,7 +734,7 @@ void main() {
     });
     addTearDown(() => tester.binding.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null));
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
 
     final container = await _pumpScreen(tester, screen: _screen());
     expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
@@ -813,7 +813,7 @@ void main() {
       'with headphones both stay on', (tester) async {
     _mockMicPermission(tester);
     final phones = _mockHeadphones(tester, 'none');
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
 
     final container = await _pumpScreen(tester, screen: _screen());
     await tester.pump(); // headphone query answered
@@ -879,7 +879,7 @@ void main() {
     container.dispose();
 
     // Mic analysis on, learn mode, no headphones: muted.
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
     container = await _pumpScreen(tester, screen: _screen());
     await tester.pump();
     expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
@@ -900,7 +900,7 @@ void main() {
       'a route change mutes the backing at once, before the headphone answer '
       'arrives', (tester) async {
     _mockMicPermission(tester);
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
     // First answer immediate ("wired"); the answer after the route change
     // is held back until the test releases it.
     const channel = MethodChannel('drum_coach/audio');

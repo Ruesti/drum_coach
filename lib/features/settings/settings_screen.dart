@@ -4,11 +4,14 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/platform_support.dart';
 import '../../data/local/session_log_service.dart';
 import '../../data/local/settings_service.dart';
 import '../../services/notification_service.dart';
 import '../../shared/widgets/app_badge.dart';
 import '../../shared/widgets/app_card.dart';
+import '../coaching/midi/midi_port_service.dart';
+import 'measurement_section.dart';
 
 const _donationUrl = 'https://ko-fi.com/drumcoach';
 
@@ -23,7 +26,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late int _targetMin;
   late bool _haptics;
   late bool _reminders;
-  late bool _micEnabled;
   final _apiKeyController = TextEditingController();
   bool _apiKeyObscured = true;
 
@@ -33,7 +35,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _targetMin = SettingsService.practiceTargetMinutes;
     _haptics = SettingsService.hapticsEnabled;
     _reminders = SettingsService.reminderEnabled;
-    _micEnabled = SettingsService.micAnalysisEnabled;
     _apiKeyController.text = SettingsService.claudeApiKey;
   }
 
@@ -61,11 +62,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await NotificationService.cancelReminder();
     }
     setState(() => _reminders = v);
-  }
-
-  Future<void> _setMicEnabled(bool v) async {
-    await SettingsService.setMicAnalysisEnabled(v);
-    setState(() => _micEnabled = v);
   }
 
   Future<void> _saveApiKey() async {
@@ -134,17 +130,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 28),
 
+          // ── Measurement ────────────────────────────────────────────────
+          _SectionLabel('MEASUREMENT'),
+          const SizedBox(height: 10),
+          MeasurementSection(ports: MidiPortService()),
+          const SizedBox(height: 28),
+
           // ── AI Coaching ────────────────────────────────────────────────
           _SectionLabel('AI COACHING'),
           const SizedBox(height: 10),
-          _SettingsTile(
-            icon: Icons.mic_outlined,
-            title: 'Microphone analysis',
-            subtitle: 'Measures timing & dynamics during the session',
-            value: _micEnabled,
-            onChanged: _setMicEnabled,
-          ),
-          const SizedBox(height: 12),
           AppCard(
             onTap: () async {
               final file = await SessionLogService.exportDay(DateTime.now());
@@ -211,6 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          if (aiCoachingAvailable) ...[
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,6 +275,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ),
           ),
+          ],
           const SizedBox(height: 8),
           AppCard(
             padding: EdgeInsets.zero,

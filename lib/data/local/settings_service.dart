@@ -89,10 +89,6 @@ class SettingsService {
   /// screen's backing/click rules.
   static bool get micAnalysisEnabled => measurementSource.mayUseMic;
 
-  /// Transitional (removed with the settings screen rebuild, Task 13).
-  static Future<void> setMicAnalysisEnabled(bool v) =>
-      setMeasurementSource(v ? MeasurementSource.auto : MeasurementSource.off);
-
   static String? get midiLastDeviceId => _prefs.getString('midi_last_device');
   static Future<void> setMidiLastDeviceId(String? id) => id == null
       ? _prefs.remove('midi_last_device')

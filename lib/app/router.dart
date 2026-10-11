@@ -16,7 +16,9 @@ import '../features/practice/session_timer_provider.dart';
 import '../features/program/program_screen.dart';
 import '../features/program/program_setup_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
+import '../features/settings/kit_learn_screen.dart';
 import '../features/settings/latency_calibration_screen.dart';
+import '../features/settings/midi_calibration_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 import '../features/today/today_screen.dart';
@@ -162,6 +164,16 @@ final router = GoRouter(
       path: '/settings/latency-calibration',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const LatencyCalibrationScreen(),
+    ),
+    GoRoute(
+      path: '/settings/kit-learn',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, __) => const KitLearnScreen(),
+    ),
+    GoRoute(
+      path: '/settings/midi-calibration',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, __) => const MidiCalibrationScreen(),
     ),
     GoRoute(
       path: '/coaching/exercise-generator',
