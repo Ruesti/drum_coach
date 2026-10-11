@@ -328,6 +328,8 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await SettingsService.init();
+    // These tests assume the microphone is off unless a test enables it.
+    await SettingsService.setMeasurementSource(MeasurementSource.off);
     // Phone-sized surface so a layout that overflows on a device fails here.
     final binding = TestWidgetsFlutterBinding.ensureInitialized();
     binding.platformDispatcher.views.first.physicalSize = const Size(1080, 2340);

@@ -1,7 +1,27 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/coaching/midi/kit_instrument.dart';
 import '../../features/lessons/models/rudiment.dart';
 import '../../features/program/models/program_config.dart';
+
+/// Which stroke source may measure (Brief Etappe 2, A.6). `auto` = MIDI when
+/// a device is connected, otherwise the microphone where allowed.
+enum MeasurementSource {
+  auto,
+  mic,
+  midi,
+  off;
+
+  bool get mayUseMic => this == auto || this == mic;
+  bool get mayUseMidi => this == auto || this == midi;
+
+  static MeasurementSource fromName(String? name) {
+    for (final s in values) {
+      if (s.name == name) return s;
+    }
+    return auto;
+  }
+}
 
 class SettingsService {
   SettingsService._();
@@ -52,10 +72,57 @@ class SettingsService {
   static Future<void> setClaudeApiKey(String v) =>
       _prefs.setString('claude_api_key', v);
 
-  static bool get micAnalysisEnabled =>
-      _prefs.getBool('mic_analysis_enabled') ?? false;
+  /// Measurement source. Migration: the Etappe-1 switch `mic_analysis_enabled`
+  /// = false must not come back as "auto" — a user who turned the mic off
+  /// stays off until they choose a source.
+  static MeasurementSource get measurementSource {
+    final stored = _prefs.getString('measurement_source');
+    if (stored != null) return MeasurementSource.fromName(stored);
+    final legacy = _prefs.getBool('mic_analysis_enabled');
+    return legacy == false ? MeasurementSource.off : MeasurementSource.auto;
+  }
+
+  static Future<void> setMeasurementSource(MeasurementSource s) =>
+      _prefs.setString('measurement_source', s.name);
+
+  /// Derived: may the microphone listen at all. Kept for the practice
+  /// screen's backing/click rules.
+  static bool get micAnalysisEnabled => measurementSource.mayUseMic;
+
+  /// Transitional (removed with the settings screen rebuild, Task 13).
   static Future<void> setMicAnalysisEnabled(bool v) =>
-      _prefs.setBool('mic_analysis_enabled', v);
+      setMeasurementSource(v ? MeasurementSource.auto : MeasurementSource.off);
+
+  static String? get midiLastDeviceId => _prefs.getString('midi_last_device');
+  static Future<void> setMidiLastDeviceId(String? id) => id == null
+      ? _prefs.remove('midi_last_device')
+      : _prefs.setString('midi_last_device', id);
+
+  static String _deviceKey(String prefix, String deviceName) =>
+      '$prefix${deviceName.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '_')}';
+
+  static KitMapping kitMappingFor(String deviceName) {
+    final raw = _prefs.getString(_deviceKey('kit_mapping_', deviceName));
+    return raw == null ? KitMapping.gm() : KitMapping.decode(raw);
+  }
+
+  static Future<void> setKitMappingFor(String deviceName, KitMapping m) =>
+      _prefs.setString(_deviceKey('kit_mapping_', deviceName), m.encode());
+
+  static double? midiLatencyOffsetMsFor(String deviceName) =>
+      _prefs.getDouble(_deviceKey('midi_latency_', deviceName));
+
+  static Future<void> setMidiLatencyOffsetMsFor(String deviceName, double v) =>
+      _prefs.setDouble(_deviceKey('midi_latency_', deviceName), v);
+
+  /// Instrument that plays the pad's role in pad exercises at the set
+  /// (Brief A.5), default snare.
+  static KitInstrument get padRoleInstrument =>
+      KitInstrument.fromName(_prefs.getString('pad_role_instrument') ?? '') ??
+      KitInstrument.snare;
+
+  static Future<void> setPadRoleInstrument(KitInstrument i) =>
+      _prefs.setString('pad_role_instrument', i.name);
 
   /// Click track on the practice screen (K2 step 2, 27.09.): a quarter-note
   /// pulse next to the exercise. Default on; analysis mode mutes it anyway.
