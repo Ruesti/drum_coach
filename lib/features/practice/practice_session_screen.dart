@@ -42,6 +42,7 @@ import '../metronome/metronome_provider.dart';
 import '../program/program_provider.dart';
 import 'ladder_plan.dart';
 import 'practice_provider.dart';
+import 'practice_shortcuts.dart';
 import 'session_timer_provider.dart';
 import 'widgets/pulse_bar.dart';
 import 'widgets/result_sheet.dart';
@@ -404,8 +405,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
     final ports = MidiPortService();
     final devices = await ports.inputDevices();
-    final chosen = chooseMidiDevice(devices,
-        lastId: SettingsService.midiLastDeviceId);
+    final chosen =
+        chooseMidiDevice(devices, lastId: SettingsService.midiLastDeviceId);
     final plan = planMeasurement(
       preference: SettingsService.measurementSource,
       midiDeviceAvailable: chosen != null,
@@ -629,8 +630,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         data: drumCoachPracticeTheme,
         child: Consumer(
           builder: (context, ref, _) {
-            final soundType = ref.watch(
-                metronomeNotifierProvider.select((s) => s.soundType));
+            final soundType =
+                ref.watch(metronomeNotifierProvider.select((s) => s.soundType));
             return _OptionsSheet(
               goalSeconds: _goalSeconds,
               suggestedMinutes: widget.targetMinutes,
@@ -740,9 +741,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             beatLog: _beatLog,
             sticking: _unit.sticking,
             source: src.kind,
-            expectedInstrument: isMidi
-                ? SettingsService.padRoleInstrument
-                : KitInstrument.pad,
+            expectedInstrument:
+                isMidi ? SettingsService.padRoleInstrument : KitInstrument.pad,
             latencyOffsetMs: isMidi
                 ? (SettingsService.midiLatencyOffsetMsFor(
                         _midiDeviceName ?? '') ??
@@ -1051,74 +1051,68 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final paused = !isPlaying && _elapsedSeconds > 0;
     final showLadder = _ladderActive && _ladderPlan != null;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      // No AppBar on this screen, so nothing else sets the status-bar icons;
-      // the screen is dark, the icons must be light.
-      value: SystemUiOverlayStyle.light,
-      child: Theme(
-        data: drumCoachPracticeTheme,
-        child: Scaffold(
-          backgroundColor: PracticeColors.base,
-          // A dimmed photo behind the whole screen, like a stage (decided
-          // 27.09.): Today's phase picture continues here; free practice
-          // picks one by difficulty. The gradient keeps sheet, tempo and
-          // buttons readable from the pad.
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(
-                _backdrop,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+    final scaffold = Scaffold(
+      backgroundColor: PracticeColors.base,
+      // A dimmed photo behind the whole screen, like a stage (decided
+      // 27.09.): Today's phase picture continues here; free practice
+      // picks one by difficulty. The gradient keeps sheet, tempo and
+      // buttons readable from the pad.
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            _backdrop,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          ),
+          AnimatedContainer(
+            key: const ValueKey('backdrop-scrim'),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                // Lighter while configuring — the sheet is translucent
+                // then and the photo should read (Uli 28.09.) — darker
+                // once the session runs; the bottom stays dark for the
+                // controls either way.
+                colors: isPlaying || _elapsedSeconds > 0
+                    ? const [
+                        Color(0x4D101010),
+                        Color(0x99101010),
+                        Color(0xE0101010),
+                      ]
+                    : const [
+                        Color(0x26101010),
+                        Color(0x66101010),
+                        Color(0xD9101010),
+                      ],
+                stops: const [0.0, 0.5, 1.0],
               ),
-              AnimatedContainer(
-                key: const ValueKey('backdrop-scrim'),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOut,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    // Lighter while configuring — the sheet is translucent
-                    // then and the photo should read (Uli 28.09.) — darker
-                    // once the session runs; the bottom stays dark for the
-                    // controls either way.
-                    colors: isPlaying || _elapsedSeconds > 0
-                        ? const [
-                            Color(0x4D101010),
-                            Color(0x99101010),
-                            Color(0xE0101010),
-                          ]
-                        : const [
-                            Color(0x26101010),
-                            Color(0x66101010),
-                            Color(0xD9101010),
-                          ],
-                    stops: const [0.0, 0.5, 1.0],
-                  ),
-                ),
-              ),
-              SafeArea(
+            ),
+          ),
+          SafeArea(
             child: Column(
               children: [
                 _Header(
                   title: rudiment.name,
                   subtitle: widget.contextLine ?? rudiment.difficulty.label,
-                  modeChip: SettingsService.measurementSource !=
-                          MeasurementSource.off
-                      ? _ModeChip(
-                          analysis: _analysisMode,
-                          source: _source?.kind,
-                          active: _measuring && !_sourceLost,
-                          unavailable: _source == null || _sourceLost,
-                          onTap: () {
-                            setState(() => _analysisMode = !_analysisMode);
-                            SettingsService.setAnalysisModeFor(
-                                widget.rudimentId, _analysisMode);
-                            _applyExtras();
-                          },
-                        )
-                      : null,
+                  modeChip:
+                      SettingsService.measurementSource != MeasurementSource.off
+                          ? _ModeChip(
+                              analysis: _analysisMode,
+                              source: _source?.kind,
+                              active: _measuring && !_sourceLost,
+                              unavailable: _source == null || _sourceLost,
+                              onTap: () {
+                                setState(() => _analysisMode = !_analysisMode);
+                                SettingsService.setAnalysisModeFor(
+                                    widget.rudimentId, _analysisMode);
+                                _applyExtras();
+                              },
+                            )
+                          : null,
                 ),
                 // The sheet draws its own paper card; only the margins are
                 // ours. 16 px at the sides costs a little note spacing versus
@@ -1231,9 +1225,34 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               ],
             ),
           ),
-            ],
-          ),
-        ),
+        ],
+      ),
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // No AppBar on this screen, so nothing else sets the status-bar icons;
+      // the screen is dark, the icons must be light.
+      value: SystemUiOverlayStyle.light,
+      child: Theme(
+        data: drumCoachPracticeTheme,
+        child: isDesktopPlatform
+            ? CallbackShortcuts(
+                bindings: practiceShortcuts(
+                  toggle: notifier.toggle,
+                  bumpBpm: (d) => _onUserBpmChanged(
+                      (ref.read(metronomeNotifierProvider).bpm + d)
+                          .clamp(40, 240)),
+                  leave: () {
+                    if (ref.read(metronomeNotifierProvider).isPlaying) {
+                      notifier.toggle();
+                    } else {
+                      context.pop();
+                    }
+                  },
+                ),
+                child: Focus(autofocus: true, child: scaffold),
+              )
+            : scaffold,
       ),
     );
   }
@@ -1637,7 +1656,6 @@ class _MoreButton extends StatelessWidget {
     );
   }
 }
-
 
 // ── Options sheet ─────────────────────────────────────────────────────────────
 
