@@ -29,6 +29,7 @@ dependencies:
   http: ^1.2.2
   google_fonts: ^6.2.1
   wakelock_plus: ^1.7.0
+  flutter_midi_command: 1.4.0
 
 dev_dependencies:
   flutter_test:
@@ -52,3 +53,9 @@ flutter:
     - family: Bravura
       fonts:
         - asset: assets/fonts/Bravura.otf
+
+dependency_overrides:
+  # §0 (docs/BERICHT_ETAPPE2_§0.md): timestamp taken in the receive isolate,
+  # virtual (virmidi) ports visible. Upstream PR pending; see packages/…/PATCH.md.
+  flutter_midi_command_linux:
+    path: packages/flutter_midi_command_linux
