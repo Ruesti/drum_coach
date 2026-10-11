@@ -98,4 +98,14 @@ void main() {
     expect(jitter!.text, contains('unsteady'));
     expect(omissions!.text, contains('dropped notes'));
   });
+
+  test('not measurable beats every other verdict', () {
+    final a = analysisAnnouncement(
+      const SessionAnalysis(
+          detectedHits: 0, expectedHits: 8, notMeasurable: true),
+      analysisMode: true,
+    )!;
+    expect(a.positive, isFalse);
+    expect(a.text, contains('not measurable'));
+  });
 }

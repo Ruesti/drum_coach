@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drum_coach/app/platform_support.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/lessons/models/pattern_playback.dart';
@@ -330,6 +331,7 @@ void main() {
     await SettingsService.init();
     // These tests assume the microphone is off unless a test enables it.
     await SettingsService.setMeasurementSource(MeasurementSource.off);
+    debugDesktopOverride = false; // phone semantics: auto falls back to mic
     // Phone-sized surface so a layout that overflows on a device fails here.
     final binding = TestWidgetsFlutterBinding.ensureInitialized();
     binding.platformDispatcher.views.first.physicalSize = const Size(1080, 2340);
@@ -337,6 +339,7 @@ void main() {
   });
 
   tearDown(() {
+    debugDesktopOverride = null;
     final view = TestWidgetsFlutterBinding.ensureInitialized()
         .platformDispatcher
         .views

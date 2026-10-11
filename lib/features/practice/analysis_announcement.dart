@@ -18,6 +18,12 @@ class Announcement {
 /// keeps its calm inline hint — a permanent mode, not a verdict).
 Announcement? analysisAnnouncement(SessionAnalysis analysis,
     {required bool analysisMode}) {
+  if (analysis.notMeasurable) {
+    return const Announcement(
+      'Run not measurable with this setup — MIDI device lost or missing.',
+      positive: false,
+    );
+  }
   if (analysis.signalTooWeak) {
     return const Announcement(
       'Recording too quiet to analyze — move the phone closer to the pad.',
