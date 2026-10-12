@@ -1,17 +1,16 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:record/record.dart';
 
 import '../../lessons/models/rudiment.dart';
+import '../midi/kit_instrument.dart';
 import '../models/session_analysis.dart';
-import 'lapse_detector.dart';
 import 'onset_detector.dart';
 import 'recording_setup.dart';
 import 'sample_clock_map.dart';
-import 'sequence_aligner.dart';
-import 'unassigned_metrics.dart';
+import 'stroke_analysis.dart';
+import 'stroke_source.dart';
 
 typedef BeatRecord = ({int beatIndex, DateTime timestamp});
 
@@ -51,6 +50,23 @@ class MicAnalysisService {
   /// How far the sample clock fell behind the wall clock over this
   /// recording — §1.3 diagnostic.
   double? get clockDriftMs => _clock.driftMs;
+
+  /// Detected strokes as [StrokeEvent]s on the shared time axis (epoch ms),
+  /// instrument `pad`, rough peak level as velocity — the microphone's half
+  /// of the StrokeSource contract (Brief Etappe 2, A.1).
+  List<StrokeEvent> get strokeEvents {
+    if (_clock.timeAt(0) == null) return const [];
+    return [
+      for (final h in _detector.hits)
+        StrokeEvent(
+          timeMs: _clock.timeAt(h.timeMs)!.microsecondsSinceEpoch / 1000.0,
+          instrument: KitInstrument.pad,
+          velocity: h.amplitude,
+          rawNote: null,
+          source: StrokeSourceKind.mic,
+        ),
+    ];
+  }
 
   Future<bool> get hasPermission => _recorder.hasPermission();
 
@@ -145,229 +161,34 @@ class MicAnalysisService {
     bool analysisMode = false,
     Map<String, Object>? recordingSetup,
   }) {
-    if (hits.isEmpty || anchor == null || beatLog.isEmpty || sticking.isEmpty) {
+    if (anchor == null) {
       return SessionAnalysis(
         detectedHits: hits.length,
         expectedHits: beatLog.length,
         recordingSetup: recordingSetup,
+        source: StrokeSourceKind.mic,
       );
     }
-
     final anchorMs = anchor.microsecondsSinceEpoch / 1000.0;
-
-    // Stroke-level filter (13.09.): the click bleeding out of headphones
-    // registers as quiet on-grid onsets (level ≤~0.14) and fakes a perfect
-    // run — a real pause then never reaches the analysis. Onsets below the
-    // stroke threshold never count as strokes; if almost nothing remains,
-    // the recording is declared too weak instead of being judged.
-    final strokes = [
-      for (final h in hits)
-        if (h.amplitude >= minStrokeLevel) h,
-    ];
-    final dropped = [
-      for (final h in hits)
-        if (h.amplitude < minStrokeLevel) h,
-    ];
-    if (hits.length >= 8 && strokes.length < hits.length * 0.2) {
-      return SessionAnalysis(
-        detectedHits: strokes.length,
-        expectedHits: beatLog.length,
-        recordingSetup: recordingSetup,
-        signalTooWeak: true,
-        peakLevels: [for (final h in hits) h.amplitude],
-        // Raw events stay logged (Phase 2) — unassigned, no verdicts.
-        events: [
-          for (final h in hits)
-            OnsetEventData(
-              timeMs: anchorMs + h.timeMs,
-              peakLevel: h.amplitude,
-              notePosition: null,
-              hand: null,
-              deviationMs: null,
-            ),
-        ],
-      );
-    }
-
-    final expectedMs = [
-      for (final b in beatLog) b.timestamp.microsecondsSinceEpoch / 1000.0,
-    ];
-    final onsetMs = [
-      for (final h in strokes) anchorMs + h.timeMs - latencyOffsetMs,
-    ];
-    final amplitudes = [for (final h in strokes) h.amplitude];
-
-    final aligned = alignSequences(expectedMs: expectedMs, onsetMs: onsetMs);
-
-    // Assess only the window from the first to the last note actually hit:
-    // expected notes before the player joined and after they stopped (the
-    // click keeps running until Stop is tapped) are not omissions — the
-    // device test showed 9-10 phantom misses per run from the tail alone.
-    // Omissions *inside* the window keep counting.
-    var firstHit = -1, lastHit = -1;
-    for (var i = 0; i < aligned.notes.length; i++) {
-      if (!aligned.notes[i].hit) continue;
-      if (firstHit < 0) firstHit = i;
-      lastHit = i;
-    }
-    final assessed = firstHit < 0
-        ? aligned.notes
-        : aligned.notes.sublist(firstHit, lastHit + 1);
-
-    final hitCount = assessed.where((n) => n.hit).length;
-    // Jitter gate (P3): std dev of the assigned notes' deviations. A run can
-    // be complete yet so uneven that per-hand values would be noise.
-    final assessedDevs = [
-      for (final n in assessed)
-        if (n.hit) n.deviationMs!,
-    ];
-    final jitterMs = _stdDev(assessedDevs);
-    final jitterExceeded =
-        assessedDevs.length >= 4 && jitterMs > jitterGateMs;
-    // Lapse detection (P3, 13.09.): averages dilute a locally bad stretch
-    // (1 bad minute in 10 is still 90%) — scan sliding windows instead.
-    // Note times relative to the session's first click so lapse positions
-    // read as exercise time (mm:ss) directly.
-    final sessionStartMs = expectedMs.isNotEmpty ? expectedMs.first : 0.0;
-    final lapses = detectLapses(
-      noteTimesMs: [for (final n in assessed) n.expectedMs - sessionStartMs],
-      deviationsMs: [for (final n in assessed) n.hit ? n.deviationMs : null],
-    );
-    final summary = AlignmentSummary(
-      expectedCount: assessed.length,
-      hitCount: hitCount,
-      missedCount: assessed.length - hitCount,
-      extraCount: aligned.extraCount,
-      handValuesAllowed: assessed.isNotEmpty &&
-          hitCount / assessed.length >= 0.9 &&
-          aligned.extraCount / assessed.length < 0.05 &&
-          !jitterExceeded &&
-          lapses.isEmpty,
-      jitterLimitExceeded: jitterExceeded,
-      lapses: lapses,
-    );
-
-    final unassigned = computeUnassignedMetrics(
-      clickMs: [for (final n in assessed) n.expectedMs],
-      onsetMs: onsetMs,
-      amplitudes: amplitudes,
-    );
-
-    // Hands come exclusively from the sticking of *assigned* notes; unmatched
-    // onsets get no hand (§1.2).
-    final matched = <MatchedHit>[];
-    final deviations = <double>[];
-    for (final note in assessed) {
-      if (!note.hit) continue;
-      deviations.add(note.deviationMs!);
-      final patternPos = beatLog[note.noteIndex].beatIndex % sticking.length;
-      matched.add(MatchedHit(
-        hitTimestamp: DateTime.fromMicrosecondsSinceEpoch(
-            (onsetMs[note.onsetIndex!] * 1000).round()),
-        amplitude: amplitudes[note.onsetIndex!],
-        deviationMs: note.deviationMs!,
-        hand: sticking[patternPos].hand,
-      ));
-    }
-
-    final gateOpen =
-        analysisMode && summary.handValuesAllowed && matched.length >= 4;
-
-    // Raw event list for the Phase-2 session log: one entry per onset, time
-    // WITHOUT the latency correction (raw data stays raw; the applied offset
-    // is logged in the session header instead).
-    final noteByOnset = <int, AlignedNote>{
-      for (final n in assessed)
-        if (n.hit) n.onsetIndex!: n,
-    };
-    final events = <OnsetEventData>[
-      for (var j = 0; j < onsetMs.length; j++)
-        OnsetEventData(
-          timeMs: onsetMs[j] + latencyOffsetMs,
-          peakLevel: amplitudes[j],
-          notePosition: noteByOnset[j] == null
-              ? null
-              : beatLog[noteByOnset[j]!.noteIndex].beatIndex,
-          hand: noteByOnset[j] == null || !gateOpen
-              ? null
-              : (sticking[beatLog[noteByOnset[j]!.noteIndex].beatIndex %
-                              sticking.length]
-                          .hand ==
-                      Hand.right
-                  ? 'R'
-                  : 'L'),
-          deviationMs: noteByOnset[j]?.deviationMs,
-        ),
-    ];
-    // Below-threshold onsets (click bleed) stay in the raw log, unassigned.
-    for (final h in dropped) {
-      events.add(OnsetEventData(
-        timeMs: anchorMs + h.timeMs,
-        peakLevel: h.amplitude,
-        notePosition: null,
-        hand: null,
-        deviationMs: null,
-      ));
-    }
-    events.sort((a, b) => a.timeMs.compareTo(b.timeMs));
-
-    return SessionAnalysis(
-      timing: gateOpen ? _calcTiming(matched) : null,
-      dynamics: gateOpen ? _calcDynamics(matched) : null,
-      unassigned: unassigned,
-      alignment: summary,
-      peakLevels: amplitudes,
-      deviationsMs: deviations,
-      events: events,
-      latencyOffsetAppliedMs: latencyOffsetMs,
-      detectedHits: strokes.length,
-      expectedHits: beatLog.length,
+    return analyzeStrokes(
+      events: [
+        for (final h in hits)
+          StrokeEvent(
+            timeMs: anchorMs + h.timeMs,
+            instrument: KitInstrument.pad,
+            velocity: h.amplitude,
+            rawNote: null,
+            source: StrokeSourceKind.mic,
+          ),
+      ],
+      beatLog: beatLog,
+      sticking: sticking,
+      source: StrokeSourceKind.mic,
+      expectedInstrument: KitInstrument.pad,
+      latencyOffsetMs: latencyOffsetMs,
+      analysisMode: analysisMode,
       recordingSetup: recordingSetup,
     );
-  }
-
-  static TimingAnalysis _calcTiming(List<MatchedHit> hits) {
-    List<double> devs(Hand h) =>
-        hits.where((m) => m.hand == h).map((m) => m.deviationMs).toList();
-
-    final all = hits.map((m) => m.deviationMs).toList();
-    final right = devs(Hand.right);
-    final left = devs(Hand.left);
-
-    final avgAll = _mean(all);
-    return TimingAnalysis(
-      overallDeviationMs: avgAll,
-      rightHandDeviationMs: right.isEmpty ? 0 : _mean(right),
-      leftHandDeviationMs: left.isEmpty ? 0 : _mean(left),
-      jitterMs: _stdDevWithMean(all, avgAll),
-    );
-  }
-
-  static DynamicsAnalysis _calcDynamics(List<MatchedHit> hits) {
-    List<double> amps(Hand h) =>
-        hits.where((m) => m.hand == h).map((m) => m.amplitude).toList();
-
-    final right = amps(Hand.right);
-    final left = amps(Hand.left);
-    return DynamicsAnalysis(
-      rightHandLevel: right.isEmpty ? 0 : _mean(right),
-      leftHandLevel: left.isEmpty ? 0 : _mean(left),
-    );
-  }
-
-  static double _mean(List<double> v) => v.reduce((a, b) => a + b) / v.length;
-
-  static double _stdDev(List<double> v) {
-    if (v.length < 2) return 0;
-    final mean = v.reduce((a, b) => a + b) / v.length;
-    return _stdDevWithMean(v, mean);
-  }
-
-  static double _stdDevWithMean(List<double> v, double mean) {
-    final variance =
-        v.map((x) => (x - mean) * (x - mean)).reduce((a, b) => a + b) /
-            v.length;
-    return math.sqrt(variance);
   }
 
   void dispose() {

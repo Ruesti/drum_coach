@@ -4,11 +4,14 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/platform_support.dart';
 import '../../data/local/session_log_service.dart';
 import '../../data/local/settings_service.dart';
 import '../../services/notification_service.dart';
 import '../../shared/widgets/app_badge.dart';
 import '../../shared/widgets/app_card.dart';
+import '../coaching/midi/midi_port_service.dart';
+import 'measurement_section.dart';
 
 const _donationUrl = 'https://ko-fi.com/drumcoach';
 
@@ -23,9 +26,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late int _targetMin;
   late bool _haptics;
   late bool _reminders;
-  late bool _micEnabled;
   final _apiKeyController = TextEditingController();
   bool _apiKeyObscured = true;
+
+  /// One port service for the screen's lifetime (not one per build).
+  final _midiPorts = MidiPortService();
 
   @override
   void initState() {
@@ -33,7 +38,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _targetMin = SettingsService.practiceTargetMinutes;
     _haptics = SettingsService.hapticsEnabled;
     _reminders = SettingsService.reminderEnabled;
-    _micEnabled = SettingsService.micAnalysisEnabled;
     _apiKeyController.text = SettingsService.claudeApiKey;
   }
 
@@ -61,11 +65,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await NotificationService.cancelReminder();
     }
     setState(() => _reminders = v);
-  }
-
-  Future<void> _setMicEnabled(bool v) async {
-    await SettingsService.setMicAnalysisEnabled(v);
-    setState(() => _micEnabled = v);
   }
 
   Future<void> _saveApiKey() async {
@@ -134,49 +133,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 28),
 
-          // ── AI Coaching ────────────────────────────────────────────────
-          _SectionLabel('AI COACHING'),
+          // ── Measurement ────────────────────────────────────────────────
+          _SectionLabel('MEASUREMENT'),
           const SizedBox(height: 10),
-          _SettingsTile(
-            icon: Icons.mic_outlined,
-            title: 'Microphone analysis',
-            subtitle: 'Measures timing & dynamics during the session',
-            value: _micEnabled,
-            onChanged: _setMicEnabled,
-          ),
-          const SizedBox(height: 12),
+          MeasurementSection(ports: _midiPorts),
+          const SizedBox(height: 28),
+
+          // ── Data & coaching (export, latency, AI coach) ────────────────
+          _SectionLabel('DATA & COACHING'),
+          const SizedBox(height: 10),
           AppCard(
             onTap: () async {
-              final file = await SessionLogService.exportDay(DateTime.now());
-              if (!context.mounted) return;
-              if (file == null) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('No session logs today yet.')));
+              final ExportOutcome out;
+              try {
+                out = await SessionLogService.exportDayTo(
+                  DateTime.now(),
+                  shareAvailable: fileShareAvailable,
+                  share: (f) => SharePlus.instance
+                      .share(ShareParams(files: [XFile(f.path)])),
+                );
+              } catch (e) {
+                debugPrint('export failed: $e');
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Export failed.')));
                 return;
               }
-              await SharePlus.instance
-                  .share(ShareParams(files: [XFile(file.path)]));
+              final message = SessionLogService.exportMessage(out);
+              if (!context.mounted || message == null) return;
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text(message)));
             },
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.ios_share, size: 20, color: AppColors.textMuted),
-                SizedBox(width: 12),
+                const Icon(Icons.ios_share,
+                    size: 20, color: AppColors.textMuted),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Export today's session logs",
+                      const Text("Export today's session logs",
                           style: TextStyle(
                               fontSize: 14, fontWeight: FontWeight.w600)),
                       Text(
-                        'Raw data as JSONL via the share dialog',
-                        style: TextStyle(
+                        fileShareAvailable
+                            ? 'Raw data as JSONL via the share dialog'
+                            : 'Raw data as JSONL, saved to '
+                                'Documents/drum_coach',
+                        style: const TextStyle(
                             color: AppColors.textMuted, fontSize: 11),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, size: 18, color: AppColors.textFaint),
+                const Icon(Icons.chevron_right,
+                    size: 18, color: AppColors.textFaint),
               ],
             ),
           ),
@@ -211,6 +223,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          if (aiCoachingAvailable) ...[
           AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,6 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ),
           ),
+          ],
           const SizedBox(height: 8),
           AppCard(
             padding: EdgeInsets.zero,

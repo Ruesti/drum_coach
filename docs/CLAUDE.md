@@ -1,8 +1,8 @@
 # DrumCoach – Claude Code Context
 
 ## Project Overview
-Android app for training and improving drum rudiments on a practice pad.
-Flutter, Android-first. iOS support may follow later.
+Flutter app (Android, Linux desktop) for training and improving drum rudiments on a practice pad
+(and, from Etappe 2, an electronic kit via MIDI). Android-first. iOS support may follow later.
 
 ## Core Features
 1. **Metronome** – BPM slider, tap tempo, subdivisions, accent patterns, visual beat indicator
@@ -20,9 +20,28 @@ Flutter, Android-first. iOS support may follow later.
 | Audio (metronome) | `flutter_soloud` (low-latency, avoids drift) |
 | Charts | `fl_chart` |
 | UI | Material 3, dark theme |
+| MIDI input | flutter_midi_command 1.4.0 (Linux: vendored patched copy under packages/, see PATCH.md) |
 
 > **No backend / auth yet.** Supabase may be added later for cloud sync.
 > When adding Supabase, follow the same pattern used in FocusPilot.
+
+## Measurement sources (Etappe 2, Phase A)
+Spec: `docs/BRIEF_ETAPPE2_SET.md`; timing experiment: `docs/BERICHT_ETAPPE2_§0.md`.
+- `StrokeSource` (`lib/features/coaching/services/stroke_source.dart`) has two implementations: `MicStrokeSource` (microphone onsets) and `MidiStrokeSource` (`lib/features/coaching/midi/`). Both emit `StrokeEvent(timeMs, instrument, velocity, rawNote, source)`.
+- `analyzeStrokes` (`stroke_analysis.dart`) is the single analysis core for both sources; hands come from the sticking via the sequence alignment, never from the source.
+- Setting `SettingsService.measurementSource` (`MeasurementSource`: auto / mic / midi / off). `Rudiment.requiredSensor` (`SensorLevel`: none / mic / midi) decides measurability; MIDI satisfies the mic level, not vice versa. Without a satisfying source the practice screen shows "not measurable".
+- Time axis is raw epoch milliseconds, no latency correction in the event; the latency offset is applied in the analysis. MIDI timestamps are stamped in the receive isolate (vendored patch), never in the main isolate; `midi_timestamp_mapper.dart` maps per platform.
+- Kit mapping (MIDI note -> `KitInstrument`) and MIDI latency offset are stored per device name (`SettingsService.kitMappingFor` / `midiLatencyOffsetMsFor`); learned in the kit learn and MIDI calibration screens. GM default: snare = {38, 40} (most modules send the rimshot as 40), snare rim / cross-stick = 37. Kit learn step: every zone hit on a step belongs to the current instrument (first hit replaces, further hits add), the user moves on with Next; Skip keeps the instrument as it was.
+- Notes the mapping does not know are kept as `KitInstrument.unknown` events (raw note logged, never analysed) and counted in `MidiStrokeSource.unmappedNotes`.
+- A MIDI session without a stored latency offset still shows numbers but announces "MIDI latency not calibrated"; the practice header shows the source as text (`MIDI · <device>[ · not calibrated]`, `MIC`, `NOT MEASURABLE`).
+- Raw log (`session_log_codec.dart`): session header has `source`, `midiDevice`, `kitMapping` (the mapping the source was opened with), `latencyOffsetMs`; each `onset` line has `instrument` and `rawNote` besides `timeMs`, `peakLevel`, `notePosition`, `hand`, `deviationMs`. Rows from before Etappe 2 have an empty `source`; the export writes `mic`/`off` from `audioSource`.
+- Export (`SessionLogService.deliverExport`): on the phone via the share sheet; on the desktop (`fileShareAvailable` false — share_plus throws on Linux) the JSONL is saved to `<documents>/drum_coach/` and the path is shown.
+
+## Desktop (Linux)
+- Build: `flutter build linux --release` (packages: `clang cmake ninja-build pkg-config libgtk-3-dev libasound2-dev`); bundle in `build/linux/x64/release/bundle/`.
+- `lib/app/platform_support.dart` is the only platform switch (`isDesktopPlatform`, feature flags such as `aiCoachingAvailable`); do not add `Platform.isLinux` checks elsewhere.
+- Headless smoke run: `NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1`.
+- MIDI integration test over a virtual ALSA port: `tool/midi/virtual_port_test.sh` (needs `snd-virmidi` and the `audio` group; tagged `alsa`, skipped in the normal `flutter test`).
 
 ## Folder Structure
 ```

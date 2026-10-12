@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../coaching/services/stroke_source.dart';
+
 enum Hand { right, left }
 
 /// Duration of a single grid cell (= one metronome tick) in a pattern.
@@ -261,6 +263,10 @@ class Rudiment {
   /// user's own choice per exercise overrides it.
   final String? backing;
 
+  /// Sensor level this exercise needs to be measured (Brief Etappe 2, A.6).
+  /// Pad exercises need the microphone; MIDI satisfies it as well.
+  final SensorLevel requiredSensor;
+
   /// The sheet's lines (Blattform). Empty for legacy exercises, whose plain
   /// [sticking] then is the one and only line — see [sheet].
   final List<ExerciseLine> lines;
@@ -285,6 +291,7 @@ class Rudiment {
     this.collection,
     this.collectionGroup,
     this.backing,
+    this.requiredSensor = SensorLevel.mic,
     this.lines = const [],
   });
 
@@ -310,6 +317,7 @@ class Rudiment {
         svgAssetPath: svgAssetPath,
         source: source,
         voicing: voicing,
+        requiredSensor: requiredSensor,
         skills: skills,
         genres: genres,
         limbs: limbs,

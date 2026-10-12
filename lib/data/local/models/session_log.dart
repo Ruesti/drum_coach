@@ -48,6 +48,17 @@ class SessionLog {
   /// `line` | `sheet` | null (legacy).
   String? sheetMode;
 
+  /// Measurement source of this session: `mic` | `midi` | `off`
+  /// (Brief Etappe 2, A.9). Rows written before Etappe 2 read back empty
+  /// from Isar (the field default only applies to new objects); the export
+  /// derives `mic`/`off` from [audioSource] then (`exportedSource`).
+  String source = 'off';
+
+  /// MIDI device name and the kit mapping (JSON) in force - reproducible
+  /// instrument assignment for every logged note.
+  String? midiDevice;
+  String? kitMapping;
+
   /// Planned click instants (epoch ms, shared time axis §1.3) and the note
   /// index each click belongs to.
   late List<double> clickTimesMs;
@@ -63,4 +74,9 @@ class OnsetEvent {
   int? notePosition;
   String? hand;
   double? deviationMs;
+
+  /// `KitInstrument.name`; `pad` for the microphone, null in old rows.
+  String? instrument;
+  int? rawNote;
+  bool grace = false;
 }

@@ -88,7 +88,9 @@ class ResultSheet extends StatefulWidget {
   /// error releases the rating and shows a hint.
   final Future<void> Function(int rating) onRate;
   final VoidCallback onDone;
-  final VoidCallback onExport;
+  /// Exports the session log; returns a line to show under the button
+  /// (e.g. where the file was saved on the desktop), or null.
+  final Future<String?> Function() onExport;
 
   @override
   State<ResultSheet> createState() => _ResultSheetState();
@@ -98,6 +100,18 @@ class _ResultSheetState extends State<ResultSheet> {
   int? _rating;
   bool _saving = false;
   String? _saveError;
+  String? _exportMessage;
+
+  Future<void> _export() async {
+    String? message;
+    try {
+      message = await widget.onExport();
+    } catch (e) {
+      debugPrint('export failed: $e');
+      message = 'Export failed.';
+    }
+    if (mounted) setState(() => _exportMessage = message);
+  }
 
   Future<void> _rate(int r) async {
     if (_rating != null) return; // saved once
@@ -132,6 +146,10 @@ class _ResultSheetState extends State<ResultSheet> {
   Widget build(BuildContext context) {
     final a = widget.analysis;
     final hasMic = a != null && (a.hasData || a.signalTooWeak);
+    // A measurement problem is announced even with fewer than four strokes.
+    final showBanner = widget.announcement != null &&
+        (hasMic ||
+            (a != null && (a.notMeasurable || a.noStrokesOnInstrument)));
     final values = a == null
         ? const <CoreValue>[]
         : coreValues(a, analysisMode: widget.analysisMode);
@@ -161,7 +179,7 @@ class _ResultSheetState extends State<ResultSheet> {
             style: AppTypography.body
                 .copyWith(fontSize: 13, color: AppColors.textMuted),
           ),
-          if (hasMic && widget.announcement != null) ...[
+          if (showBanner) ...[
             const SizedBox(height: 16),
             VerdictBanner(announcement: widget.announcement!),
           ],
@@ -235,7 +253,7 @@ class _ResultSheetState extends State<ResultSheet> {
                   _CoreValueRow(values[i], last: i == values.length - 1),
               ],
             )
-          else if (!hasMic)
+          else if (!hasMic && !showBanner)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
@@ -287,12 +305,22 @@ class _ResultSheetState extends State<ResultSheet> {
             builder: (_, log, __) => log == null
                 ? const SizedBox.shrink()
                 : Center(
-                    child: TextButton.icon(
-                      onPressed: widget.onExport,
-                      icon: const Icon(Icons.ios_share, size: 16),
-                      label: const Text('Export session (JSONL)'),
-                      style: TextButton.styleFrom(
-                          foregroundColor: AppColors.textMuted),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton.icon(
+                          onPressed: _export,
+                          icon: const Icon(Icons.ios_share, size: 16),
+                          label: const Text('Export session (JSONL)'),
+                          style: TextButton.styleFrom(
+                              foregroundColor: AppColors.textMuted),
+                        ),
+                        if (_exportMessage != null)
+                          Text(_exportMessage!,
+                              textAlign: TextAlign.center,
+                              style: AppTypography.body.copyWith(
+                                  fontSize: 12, color: AppColors.textMuted)),
+                      ],
                     ),
                   ),
           ),
@@ -450,6 +478,13 @@ class _DetailsSection extends StatelessWidget {
             row('Evenness', '±${u.intervalSpreadMs.toStringAsFixed(1)} ms'),
             if (u.dynamicsSpread != null)
               row('Dynamics spread', '${(u.dynamicsSpread! * 100).round()}%'),
+            if (analysis.accents != null)
+              row(
+                'Accents (MIDI velocity)',
+                '${analysis.accents!.accentRatio.toStringAsFixed(1)}× louder, '
+                    '${analysis.accents!.accentsLouder} of '
+                    '${analysis.accents!.accentCount} above plain',
+              ),
             row('Strokes', '${u.playedCount} / ${u.expectedCount} expected'),
           ],
           if (al != null)

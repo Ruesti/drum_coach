@@ -114,4 +114,69 @@ void main() {
     expect(jsonl, contains('"sheetLine":3'));
     expect(jsonl, contains('"sheetMode":"line"'));
   });
+
+  test('midi session: source, device, mapping and per-event instrument', () {
+    final analysis = SessionAnalysis(
+      detectedHits: 1,
+      expectedHits: 1,
+      events: const [
+        OnsetEventData(
+            timeMs: 1000,
+            peakLevel: 0.8,
+            notePosition: 0,
+            instrument: 'snare',
+            rawNote: 38),
+        OnsetEventData(
+            timeMs: 975,
+            peakLevel: 0.3,
+            instrument: 'snare',
+            rawNote: 38,
+            grace: true),
+        OnsetEventData(
+            timeMs: 1250, peakLevel: 0.9, instrument: 'kick', rawNote: 36),
+      ],
+      recordingSetup: const {'audioSource': 'midi', 'sampleRate': 0},
+    );
+    final log = buildSessionLog(
+      analysis: analysis,
+      beatLog: beatLog([1000]),
+      exerciseId: 'single_stroke_roll',
+      bpm: 100,
+      durationSeconds: 30,
+      rating: 2,
+      startedAt: started,
+      headphones: 'none',
+      device: const DeviceInfo(model: 'laptop', androidVersion: 'linux'),
+      latencyOffsetMs: 12,
+      source: 'midi',
+      midiDevice: 'Millenium MPS-850',
+      kitMapping: '{"snare":[38]}',
+    );
+    expect(log.source, 'midi');
+    expect(log.midiDevice, 'Millenium MPS-850');
+    expect(log.kitMapping, '{"snare":[38]}');
+    expect(log.audioSource, 'midi');
+    expect(log.events[0].instrument, 'snare');
+    expect(log.events[0].rawNote, 38);
+    expect(log.events[0].grace, isFalse);
+    expect(log.events[1].grace, isTrue);
+    expect(log.events[2].instrument, 'kick');
+  });
+
+  test('default source is off and mic sessions say mic', () {
+    final log = buildSessionLog(
+      analysis: null,
+      beatLog: const [],
+      exerciseId: 'x',
+      bpm: 100,
+      durationSeconds: 1,
+      rating: 1,
+      startedAt: started,
+      headphones: 'none',
+      device: const DeviceInfo(model: 'm', androidVersion: 'v'),
+      latencyOffsetMs: null,
+    );
+    expect(log.source, 'off');
+    expect(log.midiDevice, isNull);
+  });
 }

@@ -21,7 +21,16 @@ import 'auto_backing.dart';
 import 'backdrop.dart';
 import '../coaching/services/recording_setup.dart';
 import '../coaching/services/ai_coaching_service.dart';
-import '../coaching/services/mic_analysis_service.dart';
+import '../../app/platform_support.dart';
+import '../coaching/midi/kit_instrument.dart';
+import '../coaching/midi/midi_port_service.dart';
+import '../coaching/midi/midi_stroke_source.dart';
+import '../coaching/midi/midi_timestamp_mapper.dart';
+import '../coaching/services/mic_analysis_service.dart' show BeatRecord;
+import '../coaching/services/mic_stroke_source.dart';
+import '../coaching/services/stroke_analysis.dart';
+import '../coaching/services/stroke_source.dart';
+import 'measurement_plan.dart';
 import '../lessons/lesson_detail_screen.dart';
 import '../lessons/lessons_provider.dart';
 import '../lessons/models/pattern_playback.dart';
@@ -33,6 +42,7 @@ import '../metronome/metronome_provider.dart';
 import '../program/program_provider.dart';
 import 'ladder_plan.dart';
 import 'practice_provider.dart';
+import 'practice_shortcuts.dart';
 import 'session_timer_provider.dart';
 import 'widgets/pulse_bar.dart';
 import 'widgets/result_sheet.dart';
@@ -75,6 +85,9 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   final int? line;
   final String? mode;
 
+  /// MIDI port access; null = the real plugin (test seam).
+  final MidiPortService? ports;
+
   const PracticeSessionScreen({
     super.key,
     required this.rudimentId,
@@ -86,6 +99,7 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
     this.phase,
     this.line,
     this.mode,
+    this.ports,
   });
 
   @override
@@ -110,6 +124,34 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
     );
   }
   return (line: clampLine(remembered.line), sheet: remembered.sheet);
+}
+
+/// Click track rule (27.09., Brief A.5): silent only while the *microphone*
+/// analyses without headphones — MIDI cannot hear the speaker.
+bool extrasAllowed({
+  required bool analysisMode,
+  required bool headphones,
+  required bool micListens,
+}) =>
+    !analysisMode || headphones || !micListens;
+
+/// Visible source line under the header (Brief A.3/A.4/A.6): which source
+/// measures, which device, whether its latency is calibrated — or that the
+/// run cannot be measured. Null while the source is still being opened.
+String? measurementStatusText({
+  required bool opening,
+  required StrokeSourceKind? source,
+  required String? midiDeviceName,
+  required bool lost,
+  required bool latencyCalibrated,
+}) {
+  if (opening) return null;
+  if (source == null || lost) return 'NOT MEASURABLE';
+  if (source == StrokeSourceKind.mic) return 'MIC';
+  final name = midiDeviceName ?? 'device';
+  return latencyCalibrated
+      ? 'MIDI · $name'
+      : 'MIDI · $name · not calibrated';
 }
 
 /// The engine's loop-rebuild debounce (`metronome_engine.dart`).
@@ -146,9 +188,22 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   // Beat log for mic correlation: recorded in build via ref.listen
   final List<BeatRecord> _beatLog = [];
 
-  // Mic analysis
-  MicAnalysisService? _micService;
-  bool _micRecording = false;
+  // Measurement (Brief Etappe 2, A.1): one stroke source, mic or MIDI.
+  StrokeSource? _source;
+  bool _measuring = false;
+  String? _midiDeviceName;
+  StreamSubscription<StrokeSourceStatus>? _sourceStatusSub;
+  bool _sourceLost = false;
+
+  /// True until [_openSource] has finished (the status line waits).
+  bool _sourceOpening = true;
+
+  /// The kit mapping the MIDI source was opened with — logged as is, even
+  /// if the settings change before the session is saved.
+  KitMapping? _openedMapping;
+
+  bool get _midiLatencyCalibrated =>
+      SettingsService.midiLatencyOffsetMsFor(_midiDeviceName ?? '') != null;
 
   final _aiService = AICoachingService();
 
@@ -169,15 +224,25 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// they cannot reach it.
   bool _headphones = false;
 
-  /// Click track: rule of 27.09. — silent while analysing without headphones
-  /// (in learn mode the short, quiet pulse is tolerated).
-  bool get _extrasAllowed => !_analysisMode || _headphones;
+  /// Click track: rule of 27.09. — silent while the mic analyses without
+  /// headphones (in learn mode the short, quiet pulse is tolerated).
+  bool get _extrasAllowed => extrasAllowed(
+      analysisMode: _analysisMode,
+      headphones: _headphones,
+      micListens: _micListens);
 
-  /// Backing: silent whenever the mic listens at all (mic analysis on, learn
-  /// or analysis mode) without headphones — a kick at 70 % and hi-hat noise
-  /// through the speaker register as strokes and wreck the result.
-  bool get _backingAllowed =>
-      !SettingsService.micAnalysisEnabled || _headphones;
+  /// Backing: silent whenever the *microphone* listens without headphones.
+  /// MIDI cannot hear the speaker (Brief A.5).
+  bool get _micListens =>
+      _source?.kind == StrokeSourceKind.mic ||
+      (_source == null &&
+          planMeasurement(
+                preference: SettingsService.measurementSource,
+                midiDeviceAvailable: false,
+                isDesktop: isDesktopPlatform,
+              ) ==
+              MeasurementPlan.mic);
+  bool get _backingAllowed => !_micListens || _headphones;
 
   /// Overlapping headphone queries (start + route change): only the newest
   /// answer counts.
@@ -222,7 +287,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       _unitChangedAt = DateTime.now();
       // Re-anchor the mic (spec §5): onsets before the switch belong to the
       // old unit and would count as extra strokes against the new one.
-      if (_micRecording) unawaited(_restartMicRecording());
+      if (_measuring) unawaited(_restartMeasuring());
     }
     SettingsService.setSheetPosition(widget.rudimentId,
         line: _lineIndex, sheet: _sheetMode);
@@ -249,9 +314,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     return false;
   }
 
-  Future<void> _restartMicRecording() async {
-    await _stopMicRecording();
-    await _startMicRecording();
+  Future<void> _restartMeasuring() async {
+    await _stopMeasuring();
+    await _startMeasuring();
   }
 
   void _selectLine(int i) {
@@ -329,7 +394,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       } else {
         _presetExerciseBpm();
       }
-      _initMicIfEnabled();
+      _initMeasurement();
       if (snap != null && mounted) {
         _sessionTimerNotifier.restore(snap.sessionSeconds);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -372,12 +437,98 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     }
   }
 
-  Future<void> _initMicIfEnabled() async {
-    if (!SettingsService.micAnalysisEnabled) return;
-    final status = await Permission.microphone.request();
-    if (status.isGranted && mounted) {
-      _micService = MicAnalysisService();
+  /// Opens the stroke source, then re-applies the backing rule: it ran at
+  /// init while no source was known, and MIDI may lift the mic mute.
+  Future<void> _initMeasurement() async {
+    await _openSource();
+    _sourceOpening = false;
+    if (!mounted) return;
+    setState(() {});
+    _applyExtras();
+  }
+
+  /// Opens the stroke source; any failure counts as "no source" (the
+  /// session runs without numbers instead of breaking).
+  Future<void> _openSource() async {
+    try {
+      await _openSourceOrThrow();
+    } catch (e) {
+      debugPrint('measurement: opening the source failed: $e');
+      await _sourceStatusSub?.cancel();
+      _sourceStatusSub = null;
+      _source?.dispose();
+      _source = null;
+      _midiDeviceName = null;
+      _openedMapping = null;
     }
+  }
+
+  Future<void> _openSourceOrThrow() async {
+    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    final ports = widget.ports ?? MidiPortService();
+    final devices = await ports.inputDevices();
+    final chosen =
+        chooseMidiDevice(devices, lastId: SettingsService.midiLastDeviceId);
+    final plan = planMeasurement(
+      preference: SettingsService.measurementSource,
+      midiDeviceAvailable: chosen != null,
+      isDesktop: isDesktopPlatform,
+    );
+    if (!mounted) return;
+    switch (plan) {
+      case MeasurementPlan.midi:
+        final port = await ports.open(chosen!);
+        if (port == null) return;
+        if (!mounted) {
+          // Screen left while the port was opening: release it again.
+          await port.close();
+          return;
+        }
+        _midiDeviceName = port.deviceName;
+        _openedMapping = SettingsService.kitMappingFor(port.deviceName);
+        _source = MidiStrokeSource(
+          port: port,
+          mapping: _openedMapping!,
+          mapper: MidiTimestampMapper(midiTimestampUnitForPlatform(
+              isAndroid: isAndroidPlatform, isLinux: isLinuxPlatform)),
+        );
+        await SettingsService.setMidiLastDeviceId(chosen);
+      case MeasurementPlan.mic:
+        // The desktop has no permission plugin (MissingPluginException);
+        // the user chose the microphone explicitly there.
+        if (isDesktopPlatform) {
+          _source = MicStrokeSource();
+        } else {
+          final status = await Permission.microphone.request();
+          if (status.isGranted && mounted) _source = MicStrokeSource();
+        }
+      case MeasurementPlan.none:
+        return;
+    }
+    final src = _source;
+    if (src == null) return;
+    if (!mounted) {
+      // dispose() already ran and missed this source.
+      src.dispose();
+      _source = null;
+      _midiDeviceName = null;
+      _openedMapping = null;
+      return;
+    }
+    // Sensor level (Brief A.6): an exercise above the source's level is
+    // played without numbers.
+    if (!rudiment.requiredSensor.satisfiedBy(src.kind)) {
+      src.dispose();
+      _source = null;
+      _midiDeviceName = null;
+      _openedMapping = null;
+      return;
+    }
+    _sourceStatusSub = src.statusChanges.listen((s) {
+      if (s == StrokeSourceStatus.notMeasurable && mounted) {
+        setState(() => _sourceLost = true);
+      }
+    });
   }
 
   @override
@@ -402,8 +553,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         ..setPatternVolumes(null)
         ..setSubdivision(Subdivision.quarter);
     });
-    _micService?.stopRecording();
-    _micService?.dispose();
+    _sourceStatusSub?.cancel();
+    _source?.stop();
+    _source?.dispose();
     super.dispose();
   }
 
@@ -459,19 +611,20 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     });
   }
 
-  Future<void> _startMicRecording() async {
-    if (_micService == null || _micRecording) return;
+  Future<void> _startMeasuring() async {
+    final src = _source;
+    if (src == null || _measuring) return;
     try {
-      await _micService!.startRecording();
-      if (mounted) setState(() => _micRecording = true);
+      await src.start();
+      if (mounted) setState(() => _measuring = true);
     } catch (_) {}
   }
 
-  Future<void> _stopMicRecording() async {
-    if (!_micRecording) return;
+  Future<void> _stopMeasuring() async {
+    if (!_measuring) return;
     try {
-      await _micService!.stopRecording();
-      _micRecording = false;
+      await _source!.stop();
+      _measuring = false;
     } catch (_) {}
   }
 
@@ -548,8 +701,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         data: drumCoachPracticeTheme,
         child: Consumer(
           builder: (context, ref, _) {
-            final soundType = ref.watch(
-                metronomeNotifierProvider.select((s) => s.soundType));
+            final soundType =
+                ref.watch(metronomeNotifierProvider.select((s) => s.soundType));
             return _OptionsSheet(
               goalSeconds: _goalSeconds,
               suggestedMinutes: widget.targetMinutes,
@@ -626,20 +779,55 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final metronome = ref.read(metronomeNotifierProvider.notifier);
     metronome.stop();
     _stopTicker();
-    await _stopMicRecording();
+    await _stopMeasuring();
     if (!mounted) return;
 
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
     final metState = ref.read(metronomeNotifierProvider);
     SessionAnalysis? analysis;
-    if (_micService != null && _beatLog.isNotEmpty) {
+    final src = _source;
+    if (src != null && _beatLog.isNotEmpty) {
       try {
-        analysis = _micService!.analyze(
-          beatLog: _beatLog,
-          sticking: _unit.sticking,
-          latencyOffsetMs: SettingsService.latencyOffsetMs ?? 0,
-          analysisMode: _analysisMode,
-        );
+        if (_sourceLost || src.status == StrokeSourceStatus.notMeasurable) {
+          analysis = SessionAnalysis(
+            detectedHits: src.events.length,
+            expectedHits: _beatLog.length,
+            notMeasurable: true,
+            source: src.kind,
+            recordingSetup: src.describeSetup(),
+            events: [
+              for (final e in src.events)
+                OnsetEventData(
+                  timeMs: e.timeMs,
+                  peakLevel: e.velocity,
+                  instrument: e.instrument.name,
+                  rawNote: e.rawNote,
+                ),
+            ],
+          );
+        } else {
+          final isMidi = src.kind == StrokeSourceKind.midi;
+          final midiOffset = isMidi
+              ? SettingsService.midiLatencyOffsetMsFor(_midiDeviceName ?? '')
+              : null;
+          analysis = analyzeStrokes(
+            events: src.events,
+            beatLog: _beatLog,
+            sticking: _unit.sticking,
+            source: src.kind,
+            expectedInstrument:
+                isMidi ? SettingsService.padRoleInstrument : KitInstrument.pad,
+            latencyOffsetMs: isMidi
+                ? (midiOffset ?? 0)
+                : (SettingsService.latencyOffsetMs ?? 0),
+            analysisMode: _analysisMode,
+            recordingSetup: src.describeSetup(),
+          );
+          // Brief A.4: warn, do not withhold — numbers stay.
+          if (isMidi && midiOffset == null) {
+            analysis = analysis.withLatencyUncalibrated();
+          }
+        }
       } catch (e) {
         // A broken analysis must not block saving the session.
         debugPrint('analysis failed: $e');
@@ -685,10 +873,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               onDone: () => Navigator.of(sheetContext).pop(),
               onExport: () async {
                 final log = _sessionLogN.value;
-                if (log == null) return;
-                final file = await SessionLogService.exportSession(log);
-                await SharePlus.instance
-                    .share(ShareParams(files: [XFile(file.path)]));
+                if (log == null) return null;
+                final out = await SessionLogService.deliverExport(
+                  write: (dir) => SessionLogService.exportSession(log, dir: dir),
+                  shareAvailable: fileShareAvailable,
+                  share: (f) => SharePlus.instance
+                      .share(ShareParams(files: [XFile(f.path)])),
+                );
+                return SessionLogService.exportMessage(out);
               },
             ),
           ),
@@ -768,7 +960,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         startedAt: DateTime.now().subtract(Duration(seconds: _elapsedSeconds)),
         headphones: await AudioCapabilities.headphonesType(),
         device: await AudioCapabilities.deviceInfo(),
-        latencyOffsetMs: SettingsService.latencyOffsetMs,
+        latencyOffsetMs: _source?.kind == StrokeSourceKind.midi
+            ? SettingsService.midiLatencyOffsetMsFor(_midiDeviceName ?? '')
+            : SettingsService.latencyOffsetMs,
+        source: _source?.kind.name ?? 'off',
+        midiDevice: _midiDeviceName,
+        kitMapping: _openedMapping?.encode(),
         mode: _analysisMode ? 'analysis' : 'learn',
         sheetLine: _sheetMode ? null : _lineIndex + 1,
         sheetMode: _sheetMode ? 'sheet' : 'line',
@@ -878,7 +1075,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       // Record beat timestamps for mic correlation — only main-note onsets
       // (silent grid ticks and flam/drag grace ticks are not expected
       // strokes), logged as note index so the sticking maps hits to hands.
-      if (_micRecording && newTick && !stale) {
+      if (_measuring && newTick && !stale) {
         final tick = next.currentBeatIndex % _playback.totalTicks;
         if (_playback.isOnsetTick(tick)) {
           _beatLog.add((
@@ -893,7 +1090,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       // Start/stop ticker and mic with metronome
       if (next.isPlaying && !(prev?.isPlaying ?? false)) {
         _startTicker();
-        _startMicRecording();
+        _startMeasuring();
         _sessionTimerNotifier.resume();
       } else if (!next.isPlaying && (prev?.isPlaying ?? false)) {
         _unitChangedAt = null;
@@ -932,71 +1129,78 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final paused = !isPlaying && _elapsedSeconds > 0;
     final showLadder = _ladderActive && _ladderPlan != null;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      // No AppBar on this screen, so nothing else sets the status-bar icons;
-      // the screen is dark, the icons must be light.
-      value: SystemUiOverlayStyle.light,
-      child: Theme(
-        data: drumCoachPracticeTheme,
-        child: Scaffold(
-          backgroundColor: PracticeColors.base,
-          // A dimmed photo behind the whole screen, like a stage (decided
-          // 27.09.): Today's phase picture continues here; free practice
-          // picks one by difficulty. The gradient keeps sheet, tempo and
-          // buttons readable from the pad.
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(
-                _backdrop,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+    final scaffold = Scaffold(
+      backgroundColor: PracticeColors.base,
+      // A dimmed photo behind the whole screen, like a stage (decided
+      // 27.09.): Today's phase picture continues here; free practice
+      // picks one by difficulty. The gradient keeps sheet, tempo and
+      // buttons readable from the pad.
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            _backdrop,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          ),
+          AnimatedContainer(
+            key: const ValueKey('backdrop-scrim'),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                // Lighter while configuring — the sheet is translucent
+                // then and the photo should read (Uli 28.09.) — darker
+                // once the session runs; the bottom stays dark for the
+                // controls either way.
+                colors: isPlaying || _elapsedSeconds > 0
+                    ? const [
+                        Color(0x4D101010),
+                        Color(0x99101010),
+                        Color(0xE0101010),
+                      ]
+                    : const [
+                        Color(0x26101010),
+                        Color(0x66101010),
+                        Color(0xD9101010),
+                      ],
+                stops: const [0.0, 0.5, 1.0],
               ),
-              AnimatedContainer(
-                key: const ValueKey('backdrop-scrim'),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOut,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    // Lighter while configuring — the sheet is translucent
-                    // then and the photo should read (Uli 28.09.) — darker
-                    // once the session runs; the bottom stays dark for the
-                    // controls either way.
-                    colors: isPlaying || _elapsedSeconds > 0
-                        ? const [
-                            Color(0x4D101010),
-                            Color(0x99101010),
-                            Color(0xE0101010),
-                          ]
-                        : const [
-                            Color(0x26101010),
-                            Color(0x66101010),
-                            Color(0xD9101010),
-                          ],
-                    stops: const [0.0, 0.5, 1.0],
-                  ),
-                ),
-              ),
-              SafeArea(
+            ),
+          ),
+          SafeArea(
             child: Column(
               children: [
                 _Header(
                   title: rudiment.name,
                   subtitle: widget.contextLine ?? rudiment.difficulty.label,
-                  modeChip: SettingsService.micAnalysisEnabled
-                      ? _ModeChip(
-                          analysis: _analysisMode,
-                          micOn: _micRecording,
-                          onTap: () {
-                            setState(() => _analysisMode = !_analysisMode);
-                            SettingsService.setAnalysisModeFor(
-                                widget.rudimentId, _analysisMode);
-                            _applyExtras();
-                          },
-                        )
-                      : null,
+                  statusLine:
+                      SettingsService.measurementSource != MeasurementSource.off
+                          ? measurementStatusText(
+                              opening: _sourceOpening,
+                              source: _source?.kind,
+                              midiDeviceName: _midiDeviceName,
+                              lost: _sourceLost,
+                              latencyCalibrated: _midiLatencyCalibrated,
+                            )
+                          : null,
+                  modeChip:
+                      SettingsService.measurementSource != MeasurementSource.off
+                          ? _ModeChip(
+                              analysis: _analysisMode,
+                              source: _source?.kind,
+                              active: _measuring && !_sourceLost,
+                              unavailable: _source == null || _sourceLost,
+                              onTap: () {
+                                setState(() => _analysisMode = !_analysisMode);
+                                SettingsService.setAnalysisModeFor(
+                                    widget.rudimentId, _analysisMode);
+                                _applyExtras();
+                              },
+                            )
+                          : null,
                 ),
                 // The sheet draws its own paper card; only the margins are
                 // ours. 16 px at the sides costs a little note spacing versus
@@ -1109,9 +1313,34 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               ],
             ),
           ),
-            ],
-          ),
-        ),
+        ],
+      ),
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // No AppBar on this screen, so nothing else sets the status-bar icons;
+      // the screen is dark, the icons must be light.
+      value: SystemUiOverlayStyle.light,
+      child: Theme(
+        data: drumCoachPracticeTheme,
+        child: isDesktopPlatform
+            ? CallbackShortcuts(
+                bindings: practiceShortcuts(
+                  toggle: notifier.toggle,
+                  bumpBpm: (d) => _onUserBpmChanged(
+                      (ref.read(metronomeNotifierProvider).bpm + d)
+                          .clamp(40, 240)),
+                  leave: () {
+                    if (ref.read(metronomeNotifierProvider).isPlaying) {
+                      notifier.toggle();
+                    } else {
+                      context.pop();
+                    }
+                  },
+                ),
+                child: Focus(autofocus: true, child: scaffold),
+              )
+            : scaffold,
       ),
     );
   }
@@ -1290,10 +1519,19 @@ const _headerShadow = [
 ];
 
 class _Header extends StatelessWidget {
-  const _Header({required this.title, required this.subtitle, this.modeChip});
+  const _Header({
+    required this.title,
+    required this.subtitle,
+    this.statusLine,
+    this.modeChip,
+  });
 
   final String title;
   final String subtitle;
+
+  /// Measurement source and device ("MIDI · TD-17", "MIC", "NOT
+  /// MEASURABLE") — visible text, readable from the kit.
+  final String? statusLine;
   final Widget? modeChip;
 
   @override
@@ -1327,6 +1565,21 @@ class _Header extends StatelessWidget {
                         fontSize: 13,
                         color: PracticeColors.textMuted,
                         shadows: _headerShadow)),
+                if (statusLine != null) ...[
+                  const SizedBox(height: 2),
+                  Text(statusLine!,
+                      key: const ValueKey('measurement-status'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: PracticeTypography.label.copyWith(
+                          fontSize: 11,
+                          letterSpacing: 0.66,
+                          color: statusLine == 'NOT MEASURABLE' ||
+                                  statusLine!.endsWith('not calibrated')
+                              ? PracticeColors.accent
+                              : PracticeColors.textSecondary,
+                          shadows: _headerShadow)),
+                ],
               ],
             ),
           ),
@@ -1337,24 +1590,37 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// "ANALYSIS" / "LEARN" pill with the mic state; tap switches the mode.
+/// "ANALYSIS" / "LEARN" pill with the source state (mic or MIDI); tap
+/// switches the mode.
 class _ModeChip extends StatelessWidget {
   const _ModeChip({
     required this.analysis,
-    required this.micOn,
+    required this.source,
+    required this.active,
+    required this.unavailable,
     required this.onTap,
   });
 
   final bool analysis;
-  final bool micOn;
+
+  /// The open stroke source, or null when none could be opened.
+  final StrokeSourceKind? source;
+
+  /// The source is recording right now.
+  final bool active;
+
+  /// No source, or the source was lost mid-session.
+  final bool unavailable;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: analysis
-          ? 'Analysis mode (per-hand values) — tap for Learn mode'
-          : 'Learn mode — tap for hand analysis',
+      message: unavailable
+          ? 'Not measurable with this setup'
+          : analysis
+              ? 'Analysis mode (per-hand values) — tap for Learn mode'
+              : 'Learn mode — tap for hand analysis',
       child: Material(
         color: Colors.transparent,
         shape: const StadiumBorder(
@@ -1369,9 +1635,14 @@ class _ModeChip extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(micOn ? Icons.mic : Icons.mic_off,
+                  Icon(
+                      unavailable
+                          ? Icons.mic_off
+                          : source == StrokeSourceKind.midi
+                              ? Icons.piano
+                              : Icons.mic,
                       size: 16,
-                      color: micOn
+                      color: active
                           ? PracticeColors.accent
                           : PracticeColors.textFaint),
                   const SizedBox(width: 6),
@@ -1497,7 +1768,6 @@ class _MoreButton extends StatelessWidget {
     );
   }
 }
-
 
 // ── Options sheet ─────────────────────────────────────────────────────────────
 

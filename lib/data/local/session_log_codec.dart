@@ -2,6 +2,13 @@ import 'dart:convert';
 
 import 'models/session_log.dart';
 
+/// The `source` header value. Rows from before Etappe 2 have no source
+/// (empty): they were microphone sessions unless the recording was off.
+String exportedSource(SessionLog log) {
+  if (log.source.isNotEmpty) return log.source;
+  return log.audioSource != 'off' ? 'mic' : 'off';
+}
+
 /// JSONL serialization of a [SessionLog] (Brief Etappe 1, Phase 2): line 1
 /// is the session header, every following line one onset event. Day exports
 /// simply concatenate the per-session strings.
@@ -28,6 +35,9 @@ String sessionLogToJsonl(SessionLog log) {
       'rating': log.rating,
       'sheetLine': log.sheetLine,
       'sheetMode': log.sheetMode,
+      'source': exportedSource(log),
+      'midiDevice': log.midiDevice,
+      'kitMapping': log.kitMapping,
       'clickTimesMs': log.clickTimesMs,
       'clickNoteIndices': log.clickNoteIndices,
     }));
@@ -39,6 +49,9 @@ String sessionLogToJsonl(SessionLog log) {
       'notePosition': e.notePosition,
       'hand': e.hand,
       'deviationMs': e.deviationMs,
+      'instrument': e.instrument,
+      'rawNote': e.rawNote,
+      'grace': e.grace,
     }));
   }
   return buffer.toString();

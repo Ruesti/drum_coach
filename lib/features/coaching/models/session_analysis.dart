@@ -1,5 +1,6 @@
 import '../../lessons/models/rudiment.dart';
 import '../services/lapse_detector.dart';
+import '../services/stroke_source.dart';
 import '../services/unassigned_metrics.dart';
 
 export '../services/lapse_detector.dart' show Lapse;
@@ -46,10 +47,20 @@ class AlignmentSummary {
 /// computed away from logged data), assignment and hand are derived views.
 class OnsetEventData {
   final double timeMs;      // raw epoch ms on the shared time axis
-  final double peakLevel;
+  final double peakLevel;   // mic: peak level; midi: velocity 0–1
   final int? notePosition;  // assigned note index, null = surplus onset
   final String? hand;       // 'R'/'L', only when assigned and gate open
   final double? deviationMs;
+
+  /// `KitInstrument.name` the stroke came from (`pad` for the microphone).
+  final String? instrument;
+
+  /// MIDI note number, null for the microphone.
+  final int? rawNote;
+
+  /// True for a grace note absorbed by a flam/drag main stroke (Brief A.1):
+  /// logged, never a hit and never an extra.
+  final bool grace;
 
   const OnsetEventData({
     required this.timeMs,
@@ -57,6 +68,24 @@ class OnsetEventData {
     this.notePosition,
     this.hand,
     this.deviationMs,
+    this.instrument,
+    this.rawNote,
+    this.grace = false,
+  });
+}
+
+/// Accent evaluation from exact velocities (Brief A.5): only computed for
+/// MIDI. [accentRatio] = mean velocity of accented notes / mean of plain
+/// notes; [accentsLouder] = how many accented notes beat the plain median.
+class AccentAnalysis {
+  final double accentRatio;
+  final int accentsLouder;
+  final int accentCount;
+
+  const AccentAnalysis({
+    required this.accentRatio,
+    required this.accentsLouder,
+    required this.accentCount,
   });
 }
 
@@ -102,6 +131,30 @@ class SessionAnalysis {
   /// strokes (13.09.: headphone click at level ≤0.14 was all the mic heard).
   final bool signalTooWeak;
 
+  /// Which source measured this session; null = nothing measured.
+  final StrokeSourceKind? source;
+
+  /// Velocities are exact (MIDI) — accent and ghost values may show numbers.
+  final bool velocityExact;
+
+  /// Set when the exercise could not be measured with this setup (device
+  /// lost, sensor level unmet). No numbers are shown then.
+  final bool notMeasurable;
+
+  final AccentAnalysis? accents;
+
+  /// MIDI measured without a stored latency offset for the device (Brief
+  /// A.4): numbers are shown, but timing may read late — the sheet warns.
+  final bool latencyUncalibrated;
+
+  /// Strokes arrived, but none on the instrument the exercise is measured
+  /// on (pad role) — a kit-mapping or pad-role problem, not a bad run.
+  final bool noStrokesOnInstrument;
+
+  /// Label of the instrument the exercise was measured on, for the
+  /// [noStrokesOnInstrument] hint.
+  final String? expectedInstrumentLabel;
+
   const SessionAnalysis({
     this.timing,
     this.dynamics,
@@ -112,12 +165,42 @@ class SessionAnalysis {
     this.events = const [],
     this.latencyOffsetAppliedMs = 0,
     this.signalTooWeak = false,
+    this.source,
+    this.velocityExact = false,
+    this.notMeasurable = false,
+    this.accents,
+    this.latencyUncalibrated = false,
+    this.noStrokesOnInstrument = false,
+    this.expectedInstrumentLabel,
     required this.detectedHits,
     required this.expectedHits,
     this.recordingSetup,
   });
 
   bool get hasData => detectedHits > 3;
+
+  /// The same analysis flagged as measured without a latency calibration.
+  SessionAnalysis withLatencyUncalibrated() => SessionAnalysis(
+        timing: timing,
+        dynamics: dynamics,
+        unassigned: unassigned,
+        alignment: alignment,
+        peakLevels: peakLevels,
+        deviationsMs: deviationsMs,
+        events: events,
+        latencyOffsetAppliedMs: latencyOffsetAppliedMs,
+        signalTooWeak: signalTooWeak,
+        source: source,
+        velocityExact: velocityExact,
+        notMeasurable: notMeasurable,
+        accents: accents,
+        latencyUncalibrated: true,
+        noStrokesOnInstrument: noStrokesOnInstrument,
+        expectedInstrumentLabel: expectedInstrumentLabel,
+        detectedHits: detectedHits,
+        expectedHits: expectedHits,
+        recordingSetup: recordingSetup,
+      );
 }
 
 class TimingAnalysis {

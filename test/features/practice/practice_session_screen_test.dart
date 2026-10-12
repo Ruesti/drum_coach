@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:drum_coach/app/platform_support.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
+import 'package:drum_coach/features/coaching/services/stroke_source.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/lessons/models/pattern_playback.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
@@ -21,6 +23,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../helpers/midi_fakes.dart';
 
 /// Overrides [MetronomeNotifier] so its very first `build()` already reports
 /// the metronome as playing mid-pattern — the state a real device hits when
@@ -328,6 +332,9 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await SettingsService.init();
+    // These tests assume the microphone is off unless a test enables it.
+    await SettingsService.setMeasurementSource(MeasurementSource.off);
+    debugDesktopOverride = false; // phone semantics: auto falls back to mic
     // Phone-sized surface so a layout that overflows on a device fails here.
     final binding = TestWidgetsFlutterBinding.ensureInitialized();
     binding.platformDispatcher.views.first.physicalSize = const Size(1080, 2340);
@@ -335,6 +342,7 @@ void main() {
   });
 
   tearDown(() {
+    debugDesktopOverride = null;
     final view = TestWidgetsFlutterBinding.ensureInitialized()
         .platformDispatcher
         .views
@@ -565,7 +573,7 @@ void main() {
     addTearDown(() => tester.binding.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null));
 
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
     final withMic = await _pumpScreen(tester, screen: _screen());
     expect(find.text('LEARN'), findsOneWidget);
     await tester.tap(find.text('LEARN'));
@@ -729,7 +737,7 @@ void main() {
     });
     addTearDown(() => tester.binding.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null));
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
 
     final container = await _pumpScreen(tester, screen: _screen());
     expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
@@ -808,7 +816,7 @@ void main() {
       'with headphones both stay on', (tester) async {
     _mockMicPermission(tester);
     final phones = _mockHeadphones(tester, 'none');
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
 
     final container = await _pumpScreen(tester, screen: _screen());
     await tester.pump(); // headphone query answered
@@ -874,7 +882,7 @@ void main() {
     container.dispose();
 
     // Mic analysis on, learn mode, no headphones: muted.
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
     container = await _pumpScreen(tester, screen: _screen());
     await tester.pump();
     expect(container.read(metronomeNotifierProvider).backingStyleId, isNull);
@@ -895,7 +903,7 @@ void main() {
       'a route change mutes the backing at once, before the headphone answer '
       'arrives', (tester) async {
     _mockMicPermission(tester);
-    await SettingsService.setMicAnalysisEnabled(true);
+    await SettingsService.setMeasurementSource(MeasurementSource.auto);
     // First answer immediate ("wired"); the answer after the route change
     // is held back until the test releases it.
     const channel = MethodChannel('drum_coach/audio');
@@ -948,5 +956,149 @@ void main() {
     await tester.tap(find.text('Stop'));
     await tester.pump();
     expect(sheet().opacity, 1.0);
+  });
+
+  group('measurement source (Etappe 2 fixes)', () {
+    test('extrasAllowed: only the listening mic without headphones mutes '
+        'the click in analysis mode', () {
+      expect(
+          extrasAllowed(
+              analysisMode: true, headphones: false, micListens: true),
+          isFalse);
+      expect(
+          extrasAllowed(
+              analysisMode: true, headphones: false, micListens: false),
+          isTrue);
+      expect(
+          extrasAllowed(
+              analysisMode: true, headphones: true, micListens: true),
+          isTrue);
+      expect(
+          extrasAllowed(
+              analysisMode: false, headphones: false, micListens: true),
+          isTrue);
+    });
+
+    test('measurementStatusText', () {
+      String? text({
+        bool opening = false,
+        StrokeSourceKind? source,
+        String? name,
+        bool lost = false,
+        bool calibrated = true,
+      }) =>
+          measurementStatusText(
+              opening: opening,
+              source: source,
+              midiDeviceName: name,
+              lost: lost,
+              latencyCalibrated: calibrated);
+      expect(text(opening: true), isNull);
+      expect(text(), 'NOT MEASURABLE');
+      expect(text(source: StrokeSourceKind.mic), 'MIC');
+      expect(text(source: StrokeSourceKind.mic, lost: true), 'NOT MEASURABLE');
+      expect(text(source: StrokeSourceKind.midi, name: 'TD-17'), 'MIDI · TD-17');
+      expect(
+          text(source: StrokeSourceKind.midi, name: 'TD-17', calibrated: false),
+          'MIDI · TD-17 · not calibrated');
+      expect(text(source: StrokeSourceKind.midi, name: 'TD-17', lost: true),
+          'NOT MEASURABLE');
+    });
+
+    PracticeSessionScreen midiScreen(FakeMidiPorts ports) =>
+        PracticeSessionScreen(
+          rudimentId: rudimentsSeedData.first.id,
+          isFromRoutine: false,
+          ports: ports,
+        );
+
+    String statusText(WidgetTester tester) => tester
+        .widget<Text>(find.byKey(const ValueKey('measurement-status')))
+        .data!;
+
+    testWidgets(
+        'MIDI device present: the status line names it and warns about the '
+        'missing calibration; analysis mode keeps the click track',
+        (tester) async {
+      _mockHeadphones(tester, 'none');
+      await SettingsService.setMeasurementSource(MeasurementSource.auto);
+      final port = FakeMidiPort(deviceName: 'TD-17');
+      final container =
+          await _pumpScreen(tester, screen: midiScreen(FakeMidiPorts(port: port)));
+      await tester.pump();
+      expect(statusText(tester), 'MIDI · TD-17 · not calibrated');
+      expect(SettingsService.midiLastDeviceId, port.deviceId);
+
+      // Analysis mode, no headphones: MIDI cannot hear the speaker, the
+      // click track stays (A1).
+      await tester.tap(find.text('LEARN'));
+      await tester.pump();
+      expect(find.text('ANALYSIS'), findsOneWidget);
+      expect(container.read(metronomeNotifierProvider).clickTrack, isTrue);
+      expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+    });
+
+    testWidgets('a calibrated MIDI device shows no warning', (tester) async {
+      _mockHeadphones(tester, 'none');
+      await SettingsService.setMeasurementSource(MeasurementSource.midi);
+      await SettingsService.setMidiLatencyOffsetMsFor('TD-17', 18);
+      final container = await _pumpScreen(tester,
+          screen: midiScreen(
+              FakeMidiPorts(port: FakeMidiPort(deviceName: 'TD-17'))));
+      await tester.pump();
+      expect(statusText(tester), 'MIDI · TD-17');
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+    });
+
+    testWidgets('device lost mid-session: NOT MEASURABLE', (tester) async {
+      _mockHeadphones(tester, 'none');
+      await SettingsService.setMeasurementSource(MeasurementSource.midi);
+      final port = FakeMidiPort(deviceName: 'TD-17');
+      final container = await _pumpScreen(tester,
+          screen: midiScreen(FakeMidiPorts(port: port)));
+      await tester.pump();
+      await tester.tap(find.text('Start'));
+      await tester.pump();
+      port.hit(38);
+      port.conn.add(false);
+      await tester.pump();
+      await tester.pump();
+      expect(statusText(tester), 'NOT MEASURABLE');
+      await tester.tap(find.text('Stop'));
+      await tester.pump();
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+    });
+
+    testWidgets('a failing MIDI plugin counts as no source, not a crash',
+        (tester) async {
+      _mockHeadphones(tester, 'none');
+      await SettingsService.setMeasurementSource(MeasurementSource.midi);
+      final container = await _pumpScreen(tester,
+          screen: midiScreen(FakeMidiPorts(
+              port: FakeMidiPort(), openError: StateError('plugin'))));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(statusText(tester), 'NOT MEASURABLE');
+      // Extras were re-applied after the failure: MIDI-only, no mic.
+      expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+    });
+
+    testWidgets('the microphone on the phone: MIC', (tester) async {
+      _mockMicPermission(tester);
+      _mockHeadphones(tester, 'none');
+      await SettingsService.setMeasurementSource(MeasurementSource.auto);
+      final container = await _pumpScreen(tester,
+          screen: midiScreen(FakeMidiPorts()));
+      await tester.pump();
+      expect(statusText(tester), 'MIC');
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+    });
   });
 }

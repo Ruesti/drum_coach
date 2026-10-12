@@ -1,4 +1,5 @@
 import '../coaching/models/session_analysis.dart';
+import '../coaching/services/stroke_source.dart';
 
 /// The one sentence the player must not miss on the feedback sheet, with its
 /// tone. Extracted so the priority order is testable: the user overlooked
@@ -18,6 +19,30 @@ class Announcement {
 /// keeps its calm inline hint — a permanent mode, not a verdict).
 Announcement? analysisAnnouncement(SessionAnalysis analysis,
     {required bool analysisMode}) {
+  if (analysis.notMeasurable) {
+    return Announcement(
+      analysis.source == StrokeSourceKind.mic
+          ? 'Measurement failed — microphone could not start.'
+          : 'Run not measurable with this setup — MIDI device lost or missing.',
+      positive: false,
+    );
+  }
+  // No strokes on the measured instrument outranks the latency warning:
+  // without strokes there is no timing to read late.
+  if (analysis.noStrokesOnInstrument) {
+    final label = analysis.expectedInstrumentLabel ?? 'the measured instrument';
+    return Announcement(
+      'No strokes on $label — check kit mapping or pad role in Settings.',
+      positive: false,
+    );
+  }
+  if (analysis.latencyUncalibrated) {
+    return const Announcement(
+      'MIDI latency not calibrated — timing may read late. Calibrate in '
+      'Settings.',
+      positive: false,
+    );
+  }
   if (analysis.signalTooWeak) {
     return const Announcement(
       'Recording too quiet to analyze — move the phone closer to the pad.',

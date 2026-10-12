@@ -73,7 +73,7 @@ void main() {
               coachEnabled: false,
               onRate: (_) async {},
               onDone: () {},
-              onExport: () {},
+              onExport: () async => null,
             ),
           ),
         ),
