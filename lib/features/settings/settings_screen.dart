@@ -29,6 +29,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _apiKeyController = TextEditingController();
   bool _apiKeyObscured = true;
 
+  /// One port service for the screen's lifetime (not one per build).
+  final _midiPorts = MidiPortService();
+
   @override
   void initState() {
     super.initState();
@@ -133,44 +136,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // ── Measurement ────────────────────────────────────────────────
           _SectionLabel('MEASUREMENT'),
           const SizedBox(height: 10),
-          MeasurementSection(ports: MidiPortService()),
+          MeasurementSection(ports: _midiPorts),
           const SizedBox(height: 28),
 
-          // ── AI Coaching ────────────────────────────────────────────────
-          _SectionLabel('AI COACHING'),
+          // ── Data & coaching (export, latency, AI coach) ────────────────
+          _SectionLabel('DATA & COACHING'),
           const SizedBox(height: 10),
           AppCard(
             onTap: () async {
-              final file = await SessionLogService.exportDay(DateTime.now());
-              if (!context.mounted) return;
-              if (file == null) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('No session logs today yet.')));
+              final ExportOutcome out;
+              try {
+                out = await SessionLogService.exportDayTo(
+                  DateTime.now(),
+                  shareAvailable: fileShareAvailable,
+                  share: (f) => SharePlus.instance
+                      .share(ShareParams(files: [XFile(f.path)])),
+                );
+              } catch (e) {
+                debugPrint('export failed: $e');
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Export failed.')));
                 return;
               }
-              await SharePlus.instance
-                  .share(ShareParams(files: [XFile(file.path)]));
+              final message = SessionLogService.exportMessage(out);
+              if (!context.mounted || message == null) return;
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text(message)));
             },
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.ios_share, size: 20, color: AppColors.textMuted),
-                SizedBox(width: 12),
+                const Icon(Icons.ios_share,
+                    size: 20, color: AppColors.textMuted),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Export today's session logs",
+                      const Text("Export today's session logs",
                           style: TextStyle(
                               fontSize: 14, fontWeight: FontWeight.w600)),
                       Text(
-                        'Raw data as JSONL via the share dialog',
-                        style: TextStyle(
+                        fileShareAvailable
+                            ? 'Raw data as JSONL via the share dialog'
+                            : 'Raw data as JSONL, saved to '
+                                'Documents/drum_coach',
+                        style: const TextStyle(
                             color: AppColors.textMuted, fontSize: 11),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, size: 18, color: AppColors.textFaint),
+                const Icon(Icons.chevron_right,
+                    size: 18, color: AppColors.textFaint),
               ],
             ),
           ),

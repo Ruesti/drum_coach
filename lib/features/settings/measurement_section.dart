@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/platform_support.dart';
 import '../../data/local/settings_service.dart';
 import '../../shared/widgets/app_card.dart';
 import '../coaching/midi/kit_instrument.dart';
@@ -22,12 +25,19 @@ class _MeasurementSectionState extends State<MeasurementSection> {
   List<({String id, String name, bool hasInput})> _devices = const [];
   late MeasurementSource _source = SettingsService.measurementSource;
   late KitInstrument _padRole = SettingsService.padRoleInstrument;
+  StreamSubscription<void>? _setupSub;
 
   @override
   void initState() {
     super.initState();
     _refresh();
-    widget.ports.setupChanges.listen((_) => _refresh());
+    _setupSub = widget.ports.setupChanges.listen((_) => _refresh());
+  }
+
+  @override
+  void dispose() {
+    _setupSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _refresh() async {
@@ -36,18 +46,36 @@ class _MeasurementSectionState extends State<MeasurementSection> {
     setState(() => _devices = [for (final d in devices) if (d.hasInput) d]);
   }
 
+  /// Opens a MIDI sub-screen and refreshes the subtitles on return (a new
+  /// calibration or mapping was maybe saved).
+  Future<void> _openAndRefresh(String route) async {
+    await context.push(route);
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final device = _devices.isEmpty ? null : _devices.first;
+    // The device the practice screen would open (Brief A.3).
+    final chosenId =
+        chooseMidiDevice(_devices, lastId: SettingsService.midiLastDeviceId);
+    final device = chosenId == null
+        ? null
+        : _devices.firstWhere((d) => d.id == chosenId);
+    final desktop = isDesktopPlatform;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SegmentedButton<MeasurementSource>(
-          segments: const [
-            ButtonSegment(value: MeasurementSource.auto, label: Text('Auto')),
-            ButtonSegment(value: MeasurementSource.mic, label: Text('Mic')),
-            ButtonSegment(value: MeasurementSource.midi, label: Text('MIDI')),
-            ButtonSegment(value: MeasurementSource.off, label: Text('Off')),
+          segments: [
+            const ButtonSegment(
+                value: MeasurementSource.auto, label: Text('Auto')),
+            ButtonSegment(
+                value: MeasurementSource.mic,
+                label: Text(desktop ? 'Mic (untested)' : 'Mic')),
+            const ButtonSegment(
+                value: MeasurementSource.midi, label: Text('MIDI')),
+            const ButtonSegment(
+                value: MeasurementSource.off, label: Text('Off')),
           ],
           selected: {_source},
           onSelectionChanged: (s) async {
@@ -56,9 +84,13 @@ class _MeasurementSectionState extends State<MeasurementSection> {
           },
         ),
         const SizedBox(height: 6),
-        const Text(
-          'Auto: MIDI when a module is connected, otherwise the microphone.',
-          style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+        Text(
+          desktop
+              ? 'Auto: MIDI when a module is connected; the microphone only '
+                  'on the phone.'
+              : 'Auto: MIDI when a module is connected, otherwise the '
+                  'microphone.',
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
         ),
         const SizedBox(height: 12),
         AppCard(
@@ -81,7 +113,7 @@ class _MeasurementSectionState extends State<MeasurementSection> {
         ),
         const SizedBox(height: 12),
         AppCard(
-          onTap: () => context.push('/settings/kit-learn'),
+          onTap: () => _openAndRefresh('/settings/kit-learn'),
           child: const Row(
             children: [
               Icon(Icons.school_outlined, size: 20, color: AppColors.textMuted),
@@ -93,7 +125,7 @@ class _MeasurementSectionState extends State<MeasurementSection> {
                     Text('Learn kit',
                         style: TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w600)),
-                    Text('Hit each pad once so the app knows your module',
+                    Text('Hit every pad (all zones) so the app knows your module',
                         style: TextStyle(
                             color: AppColors.textMuted, fontSize: 11)),
                   ],
@@ -105,7 +137,7 @@ class _MeasurementSectionState extends State<MeasurementSection> {
         ),
         const SizedBox(height: 12),
         AppCard(
-          onTap: () => context.push('/settings/midi-calibration'),
+          onTap: () => _openAndRefresh('/settings/midi-calibration'),
           child: Row(
             children: [
               const Icon(Icons.timer_outlined,
@@ -124,7 +156,7 @@ class _MeasurementSectionState extends State<MeasurementSection> {
                                       device.name) !=
                                   null
                           ? 'Saved: ${SettingsService.midiLatencyOffsetMsFor(device.name)!.round()} ms'
-                          : 'Not calibrated yet — play 16 quarters to the click',
+                          : 'Not calibrated yet — play 20 quarters to the click',
                       style: const TextStyle(
                           color: AppColors.textMuted, fontSize: 11),
                     ),

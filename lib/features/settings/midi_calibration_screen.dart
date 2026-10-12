@@ -11,6 +11,7 @@ import '../coaching/midi/midi_latency.dart';
 import '../coaching/midi/midi_port_service.dart';
 import '../coaching/midi/midi_stroke_source.dart';
 import '../coaching/midi/midi_timestamp_mapper.dart';
+import '../metronome/metronome_engine.dart' show Subdivision;
 import '../metronome/metronome_provider.dart';
 
 /// MIDI latency (Brief A.4): the click leaves the app late (audio → AUX →
@@ -18,7 +19,10 @@ import '../metronome/metronome_provider.dart';
 /// the pad-role instrument give the offset; the spread says whether to
 /// trust it.
 class MidiCalibrationScreen extends ConsumerStatefulWidget {
-  const MidiCalibrationScreen({super.key});
+  const MidiCalibrationScreen({super.key, this.ports});
+
+  /// Test seam; null = the real plugin.
+  final MidiPortService? ports;
 
   @override
   ConsumerState<MidiCalibrationScreen> createState() =>
@@ -41,14 +45,18 @@ class _MidiCalibrationScreenState extends ConsumerState<MidiCalibrationScreen> {
   final List<double> _clickMs = [];
   MidiLatencyResult? _result;
 
+  /// The tempo the user had before calibrating — restored on leaving.
+  late final int _bpmBefore;
+
   @override
   void initState() {
     super.initState();
+    _bpmBefore = ref.read(metronomeNotifierProvider).bpm;
     _connect();
   }
 
   Future<void> _connect() async {
-    final ports = MidiPortService();
+    final ports = widget.ports ?? MidiPortService();
     final devices = await ports.inputDevices();
     if (!mounted) return;
     final id =
@@ -72,31 +80,46 @@ class _MidiCalibrationScreenState extends ConsumerState<MidiCalibrationScreen> {
         port: port,
         mapping: SettingsService.kitMappingFor(port.deviceName),
         mapper: MidiTimestampMapper(midiTimestampUnitForPlatform(
-            isAndroid: !isDesktopPlatform, isLinux: isDesktopPlatform)),
+            isAndroid: isAndroidPlatform, isLinux: isLinuxPlatform)),
       );
     });
   }
 
   Future<void> _start() async {
     final src = _source;
-    if (src == null) return;
+    // Set before the first await: a double tap must not start twice.
+    if (src == null || _running) return;
+    setState(() {
+      _running = true;
+      _result = null;
+    });
     _clickMs.clear();
-    _result = null;
-    await src.start();
+    try {
+      await src.start();
+    } catch (e) {
+      debugPrint('midi calibration: start failed: $e');
+      if (mounted) {
+        setState(() {
+          _running = false;
+          _error = 'Could not start the MIDI device.';
+        });
+      }
+      return;
+    }
     if (!mounted) return;
     _notifier
       ..setBpm(_bpm)
+      ..setSubdivision(Subdivision.quarter)
       ..setClickTrack(true)
       ..setBacking(null, beatsPerBar: 4);
-    setState(() => _running = true);
+    if (!ref.read(metronomeNotifierProvider).isPlaying) _notifier.start();
     _clickOn = true;
-    _notifier.toggle();
   }
 
   Future<void> _finish() async {
     if (_clickOn) {
       _clickOn = false;
-      _notifier.toggle();
+      _notifier.stop();
     }
     final src = _source;
     if (src == null) return;
@@ -129,7 +152,13 @@ class _MidiCalibrationScreenState extends ConsumerState<MidiCalibrationScreen> {
 
   @override
   void dispose() {
-    if (_clickOn) _notifier.toggle();
+    final stopClick = _clickOn;
+    final bpm = _bpmBefore;
+    // Deferred: Riverpod forbids changing provider state during teardown.
+    Future.microtask(() {
+      if (stopClick) _notifier.stop();
+      _notifier.setBpm(bpm);
+    });
     _source?.dispose(); // also closes the port
     super.dispose();
   }
