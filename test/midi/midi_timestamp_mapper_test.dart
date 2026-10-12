@@ -33,4 +33,41 @@ void main() {
     expect(t2 - t1, closeTo(500 - 8, 1e-6)); // first event carried 8 ms extra
     expect(t3 - t2, closeTo(500, 1e-6));
   });
+
+  test('monotonicNanos after the fact: an early late-arriving event is '
+      'corrected once a later event lowers the offset', () {
+    final m = MidiTimestampMapper(MidiTimestampUnit.monotonicNanos);
+    const base = 1700000000000000;
+    // Event 1 arrived 9 ms late, event 2 only 1 ms.
+    m.observe(libTimestamp: 5000000000, arrivalEpochUs: base + 9000);
+    expect(m.offsetUs, base - 5000000 + 9000);
+    m.observe(libTimestamp: 5500000000, arrivalEpochUs: base + 501000);
+    expect(m.offsetUs, base - 5000000 + 1000);
+    final t1 = m.toEpochMsWith(
+        libTimestamp: 5000000000,
+        arrivalEpochUs: base + 9000,
+        offsetUs: m.offsetUs);
+    final t2 = m.toEpochMsWith(
+        libTimestamp: 5500000000,
+        arrivalEpochUs: base + 501000,
+        offsetUs: m.offsetUs);
+    expect(t2 - t1, closeTo(500, 1e-6));
+    expect(t1, closeTo((base + 1000) / 1000.0, 1e-6));
+  });
+
+  test('epochMicros ignores the offset; no offset yet falls back to arrival',
+      () {
+    final e = MidiTimestampMapper(MidiTimestampUnit.epochMicros);
+    e.observe(libTimestamp: 1700000000123456, arrivalEpochUs: 1);
+    expect(e.offsetUs, isNull);
+    expect(
+        e.toEpochMsWith(
+            libTimestamp: 1700000000123456, arrivalEpochUs: 0, offsetUs: 5),
+        closeTo(1700000000123.456, 1e-6));
+    final m = MidiTimestampMapper(MidiTimestampUnit.monotonicNanos);
+    expect(
+        m.toEpochMsWith(
+            libTimestamp: 7, arrivalEpochUs: 1700000000000500, offsetUs: null),
+        closeTo(1700000000000.5, 1e-6));
+  });
 }

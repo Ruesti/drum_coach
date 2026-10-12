@@ -6,8 +6,11 @@ import 'midi_port_service.dart';
 import 'midi_timestamp_mapper.dart';
 
 /// Strokes from a MIDI module (Brief A.1). No minimum gap, no level
-/// threshold: a Note-On is a stroke. Notes the mapping does not know are
-/// counted in [unmappedNotes] for the learn step's hint and dropped.
+/// threshold: a Note-On is a stroke. Notes the mapping does not know become
+/// [KitInstrument.unknown] events (logged with their raw note, Brief A.9)
+/// and are counted in [unmappedNotes] for the learn step's hint. Raw stamps
+/// are kept and converted when [events] is read, so monotonic (Android)
+/// stamps use the session-wide minimum offset.
 class MidiStrokeSource implements StrokeSource {
   MidiStrokeSource({
     required MidiPort port,
@@ -27,7 +30,7 @@ class MidiStrokeSource implements StrokeSource {
   final MidiPort _port;
   final KitMapping _mapping;
   final MidiTimestampMapper _mapper;
-  final List<StrokeEvent> _events = [];
+  final List<({MidiNoteOn note, KitInstrument instrument})> _raw = [];
   final Set<int> unmappedNotes = {};
   final _statusCtrl = StreamController<StrokeSourceStatus>.broadcast();
   StreamSubscription<MidiNoteOn>? _noteSub;
@@ -51,26 +54,33 @@ class MidiStrokeSource implements StrokeSource {
   @override
   String? get deviceName => _port.deviceName;
   @override
-  List<StrokeEvent> get events => List.unmodifiable(_events);
+  List<StrokeEvent> get events {
+    final offset = _mapper.offsetUs;
+    return List.unmodifiable([
+      for (final r in _raw)
+        StrokeEvent(
+          timeMs: _mapper.toEpochMsWith(
+              libTimestamp: r.note.libTimestamp,
+              arrivalEpochUs: r.note.arrivalEpochUs,
+              offsetUs: offset),
+          instrument: r.instrument,
+          velocity: r.note.velocity / 127.0,
+          rawNote: r.note.note,
+          source: StrokeSourceKind.midi,
+        ),
+    ]);
+  }
 
   @override
   Future<void> start() async {
-    _events.clear();
+    _raw.clear();
     unmappedNotes.clear();
     _noteSub ??= _port.noteOns.listen((n) {
       final instrument = _mapping.instrumentFor(n.note);
-      if (instrument == null) {
-        unmappedNotes.add(n.note);
-        return;
-      }
-      _events.add(StrokeEvent(
-        timeMs: _mapper.toEpochMs(
-            libTimestamp: n.libTimestamp, arrivalEpochUs: n.arrivalEpochUs),
-        instrument: instrument,
-        velocity: n.velocity / 127.0,
-        rawNote: n.note,
-        source: StrokeSourceKind.midi,
-      ));
+      if (instrument == null) unmappedNotes.add(n.note);
+      _mapper.observe(
+          libTimestamp: n.libTimestamp, arrivalEpochUs: n.arrivalEpochUs);
+      _raw.add((note: n, instrument: instrument ?? KitInstrument.unknown));
     });
   }
 

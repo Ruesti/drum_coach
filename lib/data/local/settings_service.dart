@@ -85,10 +85,6 @@ class SettingsService {
   static Future<void> setMeasurementSource(MeasurementSource s) =>
       _prefs.setString('measurement_source', s.name);
 
-  /// Derived: may the microphone listen at all. Kept for the practice
-  /// screen's backing/click rules.
-  static bool get micAnalysisEnabled => measurementSource.mayUseMic;
-
   static String? get midiLastDeviceId => _prefs.getString('midi_last_device');
   static Future<void> setMidiLastDeviceId(String? id) => id == null
       ? _prefs.remove('midi_last_device')

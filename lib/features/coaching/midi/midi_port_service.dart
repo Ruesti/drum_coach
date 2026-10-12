@@ -57,6 +57,21 @@ String? chooseMidiDevice(
   return inputs.first.id;
 }
 
+/// After a MIDI setup change: is [deviceId] still there? Asks [deviceIds]
+/// once, re-checks once when that throws; a device that cannot be confirmed
+/// counts as gone (a number that is sometimes wrong is worse than none).
+Future<bool> devicePresentAfterSetupChange({
+  required Future<List<String>> Function() deviceIds,
+  required String deviceId,
+}) async {
+  for (var attempt = 0; attempt < 2; attempt++) {
+    try {
+      return (await deviceIds()).contains(deviceId);
+    } catch (_) {}
+  }
+  return false;
+}
+
 /// An open input port: parsed Note-Ons, connection state, identity.
 abstract class MidiPort {
   Stream<MidiNoteOn> get noteOns;
@@ -80,9 +95,17 @@ class _CommandPort implements MidiPort {
       if (note != null) _notes.add(note);
     });
     _setup = _midi.onMidiSetupChanged?.listen((_) async {
-      final still = (await _midi.devices ?? const <fmc.MidiDevice>[])
-          .any((d) => d.id == _device.id);
+      final still = await devicePresentAfterSetupChange(
+        deviceIds: () async => [
+          for (final d in await _midi.devices ?? const <fmc.MidiDevice>[])
+            d.id,
+        ],
+        deviceId: _device.id,
+      );
       if (!still && !_connection.isClosed) _connection.add(false);
+    }, onError: (Object e) {
+      // A broken setup stream cannot vouch for the device any more.
+      if (!_connection.isClosed) _connection.add(false);
     });
   }
 
@@ -136,12 +159,24 @@ class MidiPortService {
   }
 
   Future<MidiPort?> open(String deviceId) async {
-    final devices = await _midi.devices ?? const <fmc.MidiDevice>[];
+    List<fmc.MidiDevice> devices;
+    try {
+      devices = await _midi.devices ?? const <fmc.MidiDevice>[];
+    } catch (_) {
+      return null;
+    }
     for (final d in devices) {
       if (d.id != deviceId) continue;
       try {
         await _midi.connectToDevice(d);
       } catch (_) {
+        return null;
+      }
+      // Without the packet stream the port would stay silent forever.
+      if (_midi.onMidiPacketReceived == null) {
+        try {
+          _midi.disconnectDevice(d);
+        } catch (_) {}
         return null;
       }
       return _CommandPort(_midi, d);

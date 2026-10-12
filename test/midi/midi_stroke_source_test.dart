@@ -45,7 +45,11 @@ void main() {
     port.notes.add(on(99, 64, 1700000000300000)); // unmapped note
     await Future<void>.delayed(Duration.zero);
     await src.stop();
-    expect(src.events.length, 2);
+    // The unmapped note is kept as an `unknown` event with its raw note
+    // (Brief A.9: the raw log holds all events).
+    expect(src.events.length, 3);
+    expect(src.events[2].instrument, KitInstrument.unknown);
+    expect(src.events[2].rawNote, 99);
     expect(src.events[0].instrument, KitInstrument.snare);
     expect(src.events[0].velocity, closeTo(1.0, 1e-9));
     expect(src.events[0].timeMs, closeTo(1700000000000.0, 1e-6));
@@ -99,5 +103,35 @@ void main() {
     expect(src.events.length, 1);
     src.dispose();
     expect(port.closed, isTrue);
+  });
+
+  test('monotonic stamps: events are converted with the session-wide '
+      'minimum offset, so an early late arrival is corrected', () async {
+    final port = FakePort();
+    final src = MidiStrokeSource(
+      port: port,
+      mapping: KitMapping.gm(),
+      mapper: MidiTimestampMapper(MidiTimestampUnit.monotonicNanos),
+    );
+    await src.start();
+    const base = 1700000000000000;
+    // First stroke reached Dart 9 ms late, the second only 1 ms.
+    port.notes.add(const MidiNoteOn(
+        note: 38,
+        velocity: 100,
+        channel: 9,
+        libTimestamp: 5000000000,
+        arrivalEpochUs: base + 9000));
+    port.notes.add(const MidiNoteOn(
+        note: 38,
+        velocity: 100,
+        channel: 9,
+        libTimestamp: 5500000000,
+        arrivalEpochUs: base + 501000));
+    await Future<void>.delayed(Duration.zero);
+    await src.stop();
+    final e = src.events;
+    expect(e[1].timeMs - e[0].timeMs, closeTo(500, 1e-6));
+    expect(e[0].timeMs, closeTo((base + 1000) / 1000.0, 1e-6));
   });
 }

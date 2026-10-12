@@ -23,12 +23,15 @@ void main() {
       expect(KitInstrument.china.gmNote, 52);
       expect(KitInstrument.splash.gmNote, 55);
       expect(KitInstrument.pad.gmNote, isNull);
+      expect(KitInstrument.unknown.gmNote, isNull);
+      expect(KitInstrument.unknown.label, 'Unknown note');
     });
 
     test('learn order starts with snare and kick and never contains pad', () {
       expect(KitInstrument.learnOrder.first, KitInstrument.snare);
       expect(KitInstrument.learnOrder[1], KitInstrument.kick);
       expect(KitInstrument.learnOrder, isNot(contains(KitInstrument.pad)));
+      expect(KitInstrument.learnOrder, isNot(contains(KitInstrument.unknown)));
       expect(KitInstrument.learnOrder.length, 16);
     });
 
@@ -45,6 +48,11 @@ void main() {
       expect(m.instrumentFor(36), KitInstrument.kick);
       expect(m.instrumentFor(99), isNull);
       expect(m.notes[KitInstrument.pad], isNull);
+      expect(m.notes[KitInstrument.unknown], isNull);
+      // Most modules send the snare rimshot as 40; the cross-stick stays 37.
+      expect(m.notes[KitInstrument.snare], {38, 40});
+      expect(m.instrumentFor(40), KitInstrument.snare);
+      expect(m.notes[KitInstrument.snareRim], {37});
     });
 
     test('assign moves a note away from its previous instrument', () {
@@ -52,15 +60,15 @@ void main() {
       // rim by mistake: the note must live in exactly one place.
       final m = KitMapping.gm().assign(KitInstrument.snareRim, 38);
       expect(m.instrumentFor(38), KitInstrument.snareRim);
-      expect(m.notes[KitInstrument.snare], isEmpty);
+      expect(m.notes[KitInstrument.snare], {40});
       // Original mapping is untouched (value semantics).
       expect(KitMapping.gm().instrumentFor(38), KitInstrument.snare);
     });
 
     test('assign adds a second zone to the same instrument', () {
-      final m = KitMapping.gm().assign(KitInstrument.snare, 40);
-      expect(m.notes[KitInstrument.snare], {38, 40});
-      expect(m.instrumentFor(40), KitInstrument.snare);
+      final m = KitMapping.gm().assign(KitInstrument.kick, 35);
+      expect(m.notes[KitInstrument.kick], {35, 36});
+      expect(m.instrumentFor(35), KitInstrument.kick);
     });
 
     test('remove clears an instrument', () {

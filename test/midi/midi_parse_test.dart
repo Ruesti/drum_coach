@@ -40,4 +40,43 @@ void main() {
     expect(chooseMidiDevice(outputOnly), isNull);
     expect(chooseMidiDevice(const []), isNull);
   });
+
+  group('devicePresentAfterSetupChange', () {
+    test('present / absent from one answer', () async {
+      expect(
+          await devicePresentAfterSetupChange(
+              deviceIds: () async => ['20:0', '24:0'], deviceId: '20:0'),
+          isTrue);
+      expect(
+          await devicePresentAfterSetupChange(
+              deviceIds: () async => ['24:0'], deviceId: '20:0'),
+          isFalse);
+    });
+
+    test('one failure is re-checked once', () async {
+      var calls = 0;
+      final present = await devicePresentAfterSetupChange(
+        deviceIds: () async {
+          if (calls++ == 0) throw StateError('busy');
+          return ['20:0'];
+        },
+        deviceId: '20:0',
+      );
+      expect(present, isTrue);
+      expect(calls, 2);
+    });
+
+    test('a device that cannot be confirmed counts as gone', () async {
+      var calls = 0;
+      final present = await devicePresentAfterSetupChange(
+        deviceIds: () async {
+          calls++;
+          throw StateError('plugin gone');
+        },
+        deviceId: '20:0',
+      );
+      expect(present, isFalse);
+      expect(calls, 2);
+    });
+  });
 }

@@ -8,7 +8,8 @@ import '../coaching/midi/kit_learn_session.dart';
 import '../coaching/midi/midi_port_service.dart';
 
 /// "Hit the …" (Brief A.2): one instrument after another, under two minutes
-/// for a full kit. Saved per device name.
+/// for a full kit. Every zone hit on a step belongs to that instrument; Next
+/// moves on, Skip keeps the instrument as it was. Saved per device name.
 class KitLearnScreen extends StatefulWidget {
   const KitLearnScreen({super.key, this.ports});
 
@@ -33,29 +34,38 @@ class _KitLearnScreenState extends State<KitLearnScreen> {
 
   Future<void> _connect() async {
     final ports = widget.ports ?? MidiPortService();
-    final devices = await ports.inputDevices();
-    if (!mounted) return;
-    final id =
-        chooseMidiDevice(devices, lastId: SettingsService.midiLastDeviceId);
-    if (id == null) {
-      setState(() => _error = 'No MIDI device connected. Plug in the module.');
+    MidiPort? port;
+    try {
+      final devices = await ports.inputDevices();
+      if (!mounted) return;
+      final id =
+          chooseMidiDevice(devices, lastId: SettingsService.midiLastDeviceId);
+      if (id == null) {
+        setState(
+            () => _error = 'No MIDI device connected. Plug in the module.');
+        return;
+      }
+      port = await ports.open(id);
+    } catch (e) {
+      debugPrint('kit learn: opening the MIDI device failed: $e');
+      if (mounted) setState(() => _error = 'Could not open the MIDI device.');
       return;
     }
-    final port = await ports.open(id);
     if (!mounted) {
       await port?.close();
       return;
     }
-    if (port == null) {
+    final opened = port;
+    if (opened == null) {
       setState(() => _error = 'Could not open the MIDI device.');
       return;
     }
     setState(() {
-      _port = port;
+      _port = opened;
       _session = KitLearnSession(
-          start: SettingsService.kitMappingFor(port.deviceName));
+          start: SettingsService.kitMappingFor(opened.deviceName));
     });
-    _sub = port.noteOns.listen((n) {
+    _sub = opened.noteOns.listen((n) {
       final s = _session;
       if (s == null || s.done) return;
       setState(() {
@@ -102,7 +112,8 @@ class _KitLearnScreenState extends State<KitLearnScreen> {
                               color: AppColors.textMuted, fontSize: 12)),
                       const SizedBox(height: 24),
                       if (!s.done) ...[
-                        Text('Hit the ${s.current!.label}',
+                        Text('Hit the ${s.current!.label} (all zones), '
+                            'then Next',
                             style: const TextStyle(
                                 fontSize: 26, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 8),
@@ -112,6 +123,11 @@ class _KitLearnScreenState extends State<KitLearnScreen> {
                           Text('Last note: $_lastNote',
                               style: const TextStyle(
                                   color: AppColors.textMuted, fontSize: 12)),
+                        if (s.currentNotes.isNotEmpty)
+                          Text(
+                              'Notes for this instrument: '
+                              '${(s.currentNotes.toList()..sort()).join(', ')}',
+                              style: const TextStyle(fontSize: 13)),
                         if (s.hint != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
@@ -129,6 +145,10 @@ class _KitLearnScreenState extends State<KitLearnScreen> {
                             OutlinedButton(
                                 onPressed: () => setState(s.skip),
                                 child: const Text('Skip')),
+                            const SizedBox(width: 12),
+                            FilledButton(
+                                onPressed: () => setState(s.next),
+                                child: const Text('Next')),
                           ],
                         ),
                       ] else ...[

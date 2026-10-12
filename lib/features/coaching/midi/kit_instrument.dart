@@ -2,7 +2,8 @@ import 'dart:convert';
 
 /// Every instrument of a full kit (Brief Etappe 2, A.2) with its General
 /// MIDI default note. `pad` is the microphone's "instrument": one voice,
-/// no note number.
+/// no note number. `unknown` carries MIDI notes the kit mapping does not
+/// know: logged with their raw note (Brief A.9), never mapped, never learnt.
 enum KitInstrument {
   kick(36, 'Kick'),
   snare(38, 'Snare'),
@@ -20,7 +21,8 @@ enum KitInstrument {
   rideBell(53, 'Ride bell'),
   china(52, 'China'),
   splash(55, 'Splash'),
-  pad(null, 'Pad (microphone)');
+  pad(null, 'Pad (microphone)'),
+  unknown(null, 'Unknown note');
 
   const KitInstrument(this.gmNote, this.label);
 
@@ -70,9 +72,12 @@ class KitMapping {
   Map<KitInstrument, Set<int>> get notes => Map.unmodifiable(_notes);
 
   /// General MIDI defaults — what nearly every module sends out of the box.
+  /// The snare also takes 40: most modules send the rimshot as 40 (the
+  /// cross-stick stays 37 on [KitInstrument.snareRim]).
   factory KitMapping.gm() => KitMapping._({
         for (final i in KitInstrument.values)
           if (i.gmNote != null) i: {i.gmNote!},
+        KitInstrument.snare: {38, 40},
       });
 
   KitInstrument? instrumentFor(int note) {
@@ -103,12 +108,17 @@ class KitMapping {
   factory KitMapping.fromJson(Map<String, Object?> json) {
     final notes = <KitInstrument, Set<int>>{
       for (final i in KitInstrument.values)
-        if (i != KitInstrument.pad) i: <int>{},
+        if (i != KitInstrument.pad && i != KitInstrument.unknown) i: <int>{},
     };
     for (final e in json.entries) {
       final instrument = KitInstrument.fromName(e.key);
       final raw = e.value;
-      if (instrument == null || raw is! List) continue;
+      if (instrument == null ||
+          instrument == KitInstrument.pad ||
+          instrument == KitInstrument.unknown ||
+          raw is! List) {
+        continue;
+      }
       notes[instrument] = {for (final n in raw) if (n is int) n};
     }
     return KitMapping._(notes);

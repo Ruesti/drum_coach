@@ -12,13 +12,13 @@ void main() {
   test('measurement source defaults to auto', () async {
     await init({});
     expect(SettingsService.measurementSource, MeasurementSource.auto);
-    expect(SettingsService.micAnalysisEnabled, isTrue);
+    expect(SettingsService.measurementSource.mayUseMic, isTrue);
   });
 
   test('legacy "mic analysis off" migrates to off, never to auto', () async {
     await init({'mic_analysis_enabled': false});
     expect(SettingsService.measurementSource, MeasurementSource.off);
-    expect(SettingsService.micAnalysisEnabled, isFalse);
+    expect(SettingsService.measurementSource.mayUseMic, isFalse);
   });
 
   test('legacy "mic analysis on" migrates to auto', () async {
@@ -30,7 +30,7 @@ void main() {
     await init({'mic_analysis_enabled': false});
     await SettingsService.setMeasurementSource(MeasurementSource.midi);
     expect(SettingsService.measurementSource, MeasurementSource.midi);
-    expect(SettingsService.micAnalysisEnabled, isFalse);
+    expect(SettingsService.measurementSource.mayUseMic, isFalse);
     expect(MeasurementSource.midi.mayUseMidi, isTrue);
     expect(MeasurementSource.mic.mayUseMidi, isFalse);
   });
@@ -40,10 +40,10 @@ void main() {
     expect(SettingsService.kitMappingFor('Millenium').instrumentFor(38),
         KitInstrument.snare);
     await SettingsService.setKitMappingFor(
-        'Millenium', KitMapping.gm().assign(KitInstrument.snare, 40));
-    expect(SettingsService.kitMappingFor('Millenium').instrumentFor(40),
+        'Millenium', KitMapping.gm().assign(KitInstrument.snare, 41));
+    expect(SettingsService.kitMappingFor('Millenium').instrumentFor(41),
         KitInstrument.snare);
-    expect(SettingsService.kitMappingFor('Other').instrumentFor(40), isNull);
+    expect(SettingsService.kitMappingFor('Other').instrumentFor(41), isNull);
   });
 
   test('midi latency per device, last device id, pad role', () async {
