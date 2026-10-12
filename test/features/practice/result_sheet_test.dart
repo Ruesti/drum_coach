@@ -56,6 +56,7 @@ void main() {
     SessionLog? log,
     bool coach = false,
     Future<void> Function(int)? onRate,
+    String? exportMessage,
   }) async {
     final rated = <int>[];
     final done = <int>[];
@@ -78,7 +79,10 @@ void main() {
             coachEnabled: coach,
             onRate: onRate ?? (r) async => rated.add(r),
             onDone: () => done.add(1),
-            onExport: () => exported.add(1),
+            onExport: () async {
+              exported.add(1);
+              return exportMessage;
+            },
           ),
         ),
       ),
@@ -240,7 +244,7 @@ void main() {
             coachEnabled: false,
             onRate: (_) async {},
             onDone: () {},
-            onExport: () {},
+            onExport: () async => null,
           ),
         ),
       ),
@@ -250,5 +254,46 @@ void main() {
     ladder.value = 'Clean tempo now 88 BPM.';
     await tester.pump();
     expect(find.text('Clean tempo now 88 BPM.'), findsOneWidget);
+  });
+
+  testWidgets('desktop export: the saved path shows under the button',
+      (tester) async {
+    await pump(tester,
+        a: analysis,
+        log: SessionLog(),
+        exportMessage: 'Saved to /home/u/Documents/drum_coach/session_x.jsonl');
+    await tester.tap(find.text('Export session (JSONL)'));
+    await tester.pump();
+    expect(find.text('Saved to /home/u/Documents/drum_coach/session_x.jsonl'),
+        findsOneWidget);
+  });
+
+  testWidgets('not measurable: the banner shows even with fewer than four '
+      'strokes', (tester) async {
+    await pump(tester,
+        a: const SessionAnalysis(
+            detectedHits: 1, expectedHits: 16, notMeasurable: true),
+        announcement: const Announcement(
+            'Run not measurable with this setup — MIDI device lost or missing.',
+            positive: false));
+    expect(
+        find.text(
+            'Run not measurable with this setup — MIDI device lost or missing.'),
+        findsOneWidget);
+    expect(find.text('No mic analysis this time'), findsNothing);
+  });
+
+  testWidgets('no strokes on the instrument: the banner shows with zero '
+      'strokes', (tester) async {
+    await pump(tester,
+        a: const SessionAnalysis(
+            detectedHits: 0,
+            expectedHits: 16,
+            noStrokesOnInstrument: true,
+            expectedInstrumentLabel: 'Snare'),
+        announcement: const Announcement(
+            'No strokes on Snare — check kit mapping or pad role in Settings.',
+            positive: false));
+    expect(find.textContaining('No strokes on Snare'), findsOneWidget);
   });
 }
