@@ -224,6 +224,41 @@ void main() {
     });
   });
 
+  test('strokes only off the pad-role instrument: flagged, logged, no '
+      'verdict', () {
+    final grid = [for (var i = 0; i < 8; i++) i * 500.0];
+    final a = analyzeStrokes(
+      events: [
+        for (final g in grid)
+          midi(g, instrument: KitInstrument.kick, rawNote: 36),
+      ],
+      beatLog: beats(grid),
+      sticking: rlrl,
+      source: StrokeSourceKind.midi,
+      expectedInstrument: KitInstrument.snare,
+      analysisMode: true,
+    );
+    expect(a.noStrokesOnInstrument, isTrue);
+    expect(a.expectedInstrumentLabel, 'Snare');
+    expect(a.timing, isNull);
+    expect(a.alignment, isNull);
+    expect(a.events.length, 8);
+    expect(a.events.every((e) => e.instrument == 'kick'), isTrue);
+    expect(a.events.every((e) => e.notePosition == null), isTrue);
+  });
+
+  test('strokes on the instrument: not flagged', () {
+    final grid = [for (var i = 0; i < 8; i++) i * 500.0];
+    final a = analyzeStrokes(
+      events: [for (final g in grid) midi(g)],
+      beatLog: beats(grid),
+      sticking: rlrl,
+      source: StrokeSourceKind.midi,
+      expectedInstrument: KitInstrument.snare,
+    );
+    expect(a.noStrokesOnInstrument, isFalse);
+  });
+
   test('analyzeHits still delegates with identical results (mic path)', () {
     final anchor = DateTime.fromMicrosecondsSinceEpoch((t0 * 1000).round());
     final grid = [for (var i = 0; i < 8; i++) i * 500.0];

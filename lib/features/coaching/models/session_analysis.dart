@@ -143,6 +143,18 @@ class SessionAnalysis {
 
   final AccentAnalysis? accents;
 
+  /// MIDI measured without a stored latency offset for the device (Brief
+  /// A.4): numbers are shown, but timing may read late — the sheet warns.
+  final bool latencyUncalibrated;
+
+  /// Strokes arrived, but none on the instrument the exercise is measured
+  /// on (pad role) — a kit-mapping or pad-role problem, not a bad run.
+  final bool noStrokesOnInstrument;
+
+  /// Label of the instrument the exercise was measured on, for the
+  /// [noStrokesOnInstrument] hint.
+  final String? expectedInstrumentLabel;
+
   const SessionAnalysis({
     this.timing,
     this.dynamics,
@@ -157,12 +169,38 @@ class SessionAnalysis {
     this.velocityExact = false,
     this.notMeasurable = false,
     this.accents,
+    this.latencyUncalibrated = false,
+    this.noStrokesOnInstrument = false,
+    this.expectedInstrumentLabel,
     required this.detectedHits,
     required this.expectedHits,
     this.recordingSetup,
   });
 
   bool get hasData => detectedHits > 3;
+
+  /// The same analysis flagged as measured without a latency calibration.
+  SessionAnalysis withLatencyUncalibrated() => SessionAnalysis(
+        timing: timing,
+        dynamics: dynamics,
+        unassigned: unassigned,
+        alignment: alignment,
+        peakLevels: peakLevels,
+        deviationsMs: deviationsMs,
+        events: events,
+        latencyOffsetAppliedMs: latencyOffsetAppliedMs,
+        signalTooWeak: signalTooWeak,
+        source: source,
+        velocityExact: velocityExact,
+        notMeasurable: notMeasurable,
+        accents: accents,
+        latencyUncalibrated: true,
+        noStrokesOnInstrument: noStrokesOnInstrument,
+        expectedInstrumentLabel: expectedInstrumentLabel,
+        detectedHits: detectedHits,
+        expectedHits: expectedHits,
+        recordingSetup: recordingSetup,
+      );
 }
 
 class TimingAnalysis {

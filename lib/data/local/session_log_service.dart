@@ -89,26 +89,80 @@ class SessionLogService {
         .findAll();
   }
 
-  /// Writes [content] to a shareable temp file and returns it.
-  static Future<File> writeExportFile(String name, String content) async {
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/$name');
+  /// Writes [content] as [name] into [dir] (default: the temp directory,
+  /// shareable) and returns the file.
+  static Future<File> writeExportFile(String name, String content,
+      {Directory? dir}) async {
+    final target = dir ?? await getTemporaryDirectory();
+    await target.create(recursive: true);
+    final file = File('${target.path}/$name');
     await file.writeAsString(content);
     return file;
   }
 
-  static Future<File> exportSession(SessionLog log) =>
+  static Future<File> exportSession(SessionLog log, {Directory? dir}) =>
       writeExportFile('session_${log.sessionUid}.jsonl',
-          sessionLogToJsonl(log));
+          sessionLogToJsonl(log),
+          dir: dir);
 
   /// All sessions of [day] concatenated into one JSONL file, or null when
   /// the day has no logs.
-  static Future<File?> exportDay(DateTime day) async {
+  static Future<File?> exportDay(DateTime day, {Directory? dir}) async {
     final logs = await forDay(day);
     if (logs.isEmpty) return null;
     final content = [for (final l in logs) sessionLogToJsonl(l)].join();
     final stamp = '${day.year}-${day.month.toString().padLeft(2, '0')}-'
         '${day.day.toString().padLeft(2, '0')}';
-    return writeExportFile('sessions_$stamp.jsonl', content);
+    return writeExportFile('sessions_$stamp.jsonl', content, dir: dir);
+  }
+
+  /// Export or save (Etappe 2 fix C2): where file sharing works the file is
+  /// written to the temp directory and handed to [share]; on the desktop
+  /// (share_plus 13 throws `UnimplementedError` on Linux) it is written into
+  /// `<documents>/drum_coach/` and returned unshared, for a SnackBar.
+  static Future<ExportOutcome> deliverExport({
+    required Future<File?> Function(Directory dir) write,
+    required bool shareAvailable,
+    required Future<void> Function(File file) share,
+    Future<Directory> Function()? tempDir,
+    Future<Directory> Function()? documentsDir,
+  }) async {
+    final Directory dir;
+    if (shareAvailable) {
+      dir = await (tempDir ?? getTemporaryDirectory)();
+    } else {
+      final docs = await (documentsDir ?? getApplicationDocumentsDirectory)();
+      dir = Directory('${docs.path}/drum_coach');
+    }
+    final file = await write(dir);
+    if (file == null) return (file: null, shared: false);
+    if (!shareAvailable) return (file: file, shared: false);
+    await share(file);
+    return (file: file, shared: true);
+  }
+
+  /// [day]'s logs, shared or saved — see [deliverExport].
+  static Future<ExportOutcome> exportDayTo(
+    DateTime day, {
+    required bool shareAvailable,
+    required Future<void> Function(File file) share,
+  }) =>
+      deliverExport(
+        write: (dir) => exportDay(day, dir: dir),
+        shareAvailable: shareAvailable,
+        share: share,
+      );
+
+  /// SnackBar text for an export outcome, null when the share sheet took it.
+  static String? exportMessage(ExportOutcome outcome,
+      {String empty = 'No session logs today yet.'}) {
+    final file = outcome.file;
+    if (file == null) return empty;
+    if (outcome.shared) return null;
+    return 'Saved to ${file.path}';
   }
 }
+
+/// What an export did: the written file (null = nothing to export) and
+/// whether it went through the share sheet.
+typedef ExportOutcome = ({File? file, bool shared});

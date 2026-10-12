@@ -111,4 +111,23 @@ void main() {
     expect(onset['rawNote'], 38);
     expect(onset['grace'], false);
   });
+
+  group('exportedSource', () {
+    test('keeps a stored source', () {
+      expect(exportedSource(_sample()..source = 'midi'), 'midi');
+    });
+    test('rows from before Etappe 2 (empty source) derive it from the '
+        'audio source', () {
+      expect(exportedSource(_sample()..source = ''), 'mic');
+      expect(
+          exportedSource(_sample()
+            ..source = ''
+            ..audioSource = 'off'),
+          'off');
+      final header = jsonDecode(
+              sessionLogToJsonl(_sample()..source = '').split('\n').first)
+          as Map<String, dynamic>;
+      expect(header['source'], 'mic');
+    });
+  });
 }

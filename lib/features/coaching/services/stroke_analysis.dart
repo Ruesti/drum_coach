@@ -89,6 +89,23 @@ SessionAnalysis analyzeStrokes({
       if (e.instrument != expectedInstrument) e,
   ];
 
+  // Strokes, but none on the measured instrument: a mapping / pad-role
+  // problem. Logged unassigned, no verdict on a run that was not measured.
+  if (onInstrument.isEmpty) {
+    return SessionAnalysis(
+      detectedHits: 0,
+      expectedHits: beatLog.length,
+      recordingSetup: recordingSetup,
+      events: [for (final e in events) unassigned(e)]
+        ..sort((a, b) => a.timeMs.compareTo(b.timeMs)),
+      latencyOffsetAppliedMs: latencyOffsetMs,
+      source: source,
+      velocityExact: velocityExact,
+      noStrokesOnInstrument: true,
+      expectedInstrumentLabel: expectedInstrument.label,
+    );
+  }
+
   // Stroke-level filter (13.09.) — microphone only: headphone click bleed
   // registers as quiet on-grid onsets. MIDI velocities are exact; a quiet
   // ghost note is a stroke.
@@ -328,13 +345,16 @@ AccentAnalysis? accentAnalysis({
     }
   }
   if (acc.length < 2 || plain.length < 2) return null;
+  final plainMean = _mean(plain);
+  // All plain notes at velocity 0: no ratio to speak of.
+  if (plainMean == 0) return null;
   final sortedPlain = List<double>.of(plain)..sort();
   final mid = sortedPlain.length ~/ 2;
   final plainMedian = sortedPlain.length.isOdd
       ? sortedPlain[mid]
       : (sortedPlain[mid - 1] + sortedPlain[mid]) / 2;
   return AccentAnalysis(
-    accentRatio: _mean(acc) / _mean(plain),
+    accentRatio: _mean(acc) / plainMean,
     accentsLouder: acc.where((v) => v > plainMedian).length,
     accentCount: acc.length,
   );

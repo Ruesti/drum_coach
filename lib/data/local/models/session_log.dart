@@ -49,7 +49,9 @@ class SessionLog {
   String? sheetMode;
 
   /// Measurement source of this session: `mic` | `midi` | `off`
-  /// (Brief Etappe 2, A.9). Older rows read back as `off` via the default.
+  /// (Brief Etappe 2, A.9). Rows written before Etappe 2 read back empty
+  /// from Isar (the field default only applies to new objects); the export
+  /// derives `mic`/`off` from [audioSource] then (`exportedSource`).
   String source = 'off';
 
   /// MIDI device name and the kit mapping (JSON) in force - reproducible

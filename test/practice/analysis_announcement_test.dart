@@ -1,4 +1,5 @@
 import 'package:drum_coach/features/coaching/models/session_analysis.dart';
+import 'package:drum_coach/features/coaching/services/stroke_source.dart';
 import 'package:drum_coach/features/practice/analysis_announcement.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -107,5 +108,88 @@ void main() {
     )!;
     expect(a.positive, isFalse);
     expect(a.text, contains('not measurable'));
+  });
+
+  test('a microphone that failed to start is not called a lost MIDI device',
+      () {
+    final a = analysisAnnouncement(
+      const SessionAnalysis(
+          detectedHits: 0,
+          expectedHits: 8,
+          notMeasurable: true,
+          source: StrokeSourceKind.mic),
+      analysisMode: true,
+    )!;
+    expect(a.text, 'Measurement failed — microphone could not start.');
+    expect(a.text, isNot(contains('MIDI')));
+  });
+
+  test('priority: notMeasurable > noStrokesOnInstrument > latencyUncalibrated '
+      '> signalTooWeak > verdicts', () {
+    String text(SessionAnalysis a) =>
+        analysisAnnouncement(a, analysisMode: true)!.text;
+    expect(
+        text(const SessionAnalysis(
+            detectedHits: 0,
+            expectedHits: 8,
+            notMeasurable: true,
+            noStrokesOnInstrument: true,
+            latencyUncalibrated: true,
+            signalTooWeak: true,
+            source: StrokeSourceKind.midi)),
+        contains('not measurable'));
+    expect(
+        text(const SessionAnalysis(
+            detectedHits: 0,
+            expectedHits: 8,
+            noStrokesOnInstrument: true,
+            expectedInstrumentLabel: 'Snare',
+            latencyUncalibrated: true,
+            signalTooWeak: true)),
+        'No strokes on Snare — check kit mapping or pad role in Settings.');
+    expect(
+        text(const SessionAnalysis(
+            detectedHits: 0,
+            expectedHits: 8,
+            latencyUncalibrated: true,
+            signalTooWeak: true)),
+        'MIDI latency not calibrated — timing may read late. Calibrate in '
+        'Settings.');
+    // The warning outranks even a clean verdict — numbers still show.
+    final clean = analysisAnnouncement(
+      SessionAnalysis(
+          detectedHits: 100,
+          expectedHits: 100,
+          alignment: summary(handValues: true),
+          timing: timing,
+          latencyUncalibrated: true),
+      analysisMode: true,
+    )!;
+    expect(clean.positive, isFalse);
+    expect(clean.text, contains('not calibrated'));
+    // Learn mode warns too.
+    expect(
+        analysisAnnouncement(
+                const SessionAnalysis(
+                    detectedHits: 8,
+                    expectedHits: 8,
+                    latencyUncalibrated: true),
+                analysisMode: false)!
+            .text,
+        contains('not calibrated'));
+  });
+
+  test('withLatencyUncalibrated keeps every other field', () {
+    final a = SessionAnalysis(
+            detectedHits: 9,
+            expectedHits: 10,
+            timing: timing,
+            source: StrokeSourceKind.midi,
+            velocityExact: true)
+        .withLatencyUncalibrated();
+    expect(a.latencyUncalibrated, isTrue);
+    expect(a.detectedHits, 9);
+    expect(a.timing, same(timing));
+    expect(a.velocityExact, isTrue);
   });
 }

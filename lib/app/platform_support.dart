@@ -12,6 +12,21 @@ bool get isDesktopPlatform =>
     debugDesktopOverride ??
     (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS));
 
+/// Linux host (the MIDI timestamp unit depends on it). Override true reads
+/// as Linux, false as Android.
+bool get isLinuxPlatform =>
+    debugDesktopOverride ?? (!kIsWeb && Platform.isLinux);
+
+/// Android host. Override false reads as Android, true as not.
+bool get isAndroidPlatform =>
+    debugDesktopOverride == null
+        ? (!kIsWeb && Platform.isAndroid)
+        : !debugDesktopOverride!;
+
+/// share_plus 13 throws `UnimplementedError` for file sharing on Linux:
+/// on the desktop exports are saved to a file instead.
+bool get fileShareAvailable => !isDesktopPlatform;
+
 /// AI coaching needs the phone-only flow (API key, share sheet).
 bool get aiCoachingAvailable => !isDesktopPlatform;
 

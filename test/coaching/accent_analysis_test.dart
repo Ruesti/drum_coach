@@ -40,4 +40,14 @@ void main() {
       isNull,
     );
   });
+
+  test('plain notes all at velocity 0: no ratio', () {
+    expect(
+        accentAnalysis(
+          velocities: const [0.9, 0, 0.8, 0],
+          accented: const [true, false, true, false],
+          ghost: const [false, false, false, false],
+        ),
+        isNull);
+  });
 }
