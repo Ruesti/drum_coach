@@ -1,3 +1,4 @@
+import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/practice/auto_backing.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -67,5 +68,23 @@ void main() {
   test('eighths and quarters → rock8', () {
     expect(autoBackingStyle(_r(), bpm: 90), 'rock8');
     expect(autoBackingStyle(_r(grid: NoteGrid.quarter), bpm: 90), 'rock8');
+  });
+  test(
+      'catalog fills (3b): one sheet, one feel — the sextuplet sheet plays '
+      'straight by its explicit default, the triplet sheet shuffles even on '
+      'its dotted line, the paradiddle sheet gets funk', () {
+    Rudiment seed(String id) =>
+        rudimentsSeedData.firstWhere((r) => r.id == id);
+    // The practice screen hands a line (with sextuplets inside) to the
+    // rule; without the explicit default it would pick shuffle.
+    final sext = seed('fill_sextuplets');
+    expect(autoBackingStyle(sext.withSticking(sext.sheet.first.beats), bpm: 80),
+        'rock8');
+    final trip = seed('fill_triplets');
+    expect(autoBackingStyle(trip.withSticking(trip.sheet[4].beats), bpm: 90),
+        'shuffle');
+    final para = seed('fill_paradiddle');
+    expect(autoBackingStyle(para.withSticking(para.sheet.first.beats), bpm: 90),
+        'funk16');
   });
 }

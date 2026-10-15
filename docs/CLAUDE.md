@@ -181,6 +181,22 @@ enum Hand { right, left }
   (PATTERN · THE SHEET · LESSON) and behind "About this exercise" — never on
   the practice screen (Uli, 30.09.: "Lektion nur auf Abruf, als Übung nur
   Noten"). Catalog rule: every exercise as varied and groovy as possible.
+- Catalog content (Katalog 3a, 2026-10): the twelve rudiment sheets live
+  ONCE in `tool/katalog/rudimente.py` (small token notation, see
+  `tool/katalog/README.md`); `gen_dart.py` writes
+  `data/sheets/<id>_sheet.dart` (pattern, lines, lesson) and
+  `patch_seed.py` wires them into `rudiments_seed.dart`. Never edit the
+  generated sheet files by hand. Five/seven stroke roll and Swiss army
+  triplet are base rudiments since then.
+- Katalog 3b (2026-10-10): the eight fill-sticking sheets live in
+  `tool/katalog/fills.py` (ids `fill_*`; 8 lines of four bars = three bars
+  of single-voice time + one bar of fill, Challenge 8 bars = 40 bars; the
+  first note of every line is accented — the one after the fill, Brief
+  §3.2). `blatt.py` holds the `Sheet` class (`line_bars`, `backing`,
+  `grid`), `katalog.py` the registry of sets; every generator takes an
+  optional set name. The band is per exercise ("one sheet, one feel"): the
+  sextuplet sheet sets `backing: 'rock8'` explicitly, the triplet sheet
+  lives in the shuffle, paradiddle and six-note groups are funk.
 
 ## Rudiment Tag Axes & Seed Data
 Rudiments are no longer organized in a single category tree — a rudiment can

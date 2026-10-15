@@ -10,11 +10,13 @@ void main() {
       }
     });
 
-    test('exactly 7 rudiments carry the drumCorps genre tag', () {
+    test('exactly 10 rudiments carry the drumCorps genre tag', () {
+      // 7 from the tag migration + the three roll/triplet sheets of
+      // Katalog 3a (five/seven stroke roll, Swiss army triplet).
       final count = rudimentsSeedData
           .where((r) => r.genres.contains(Genre.drumCorps))
           .length;
-      expect(count, 7);
+      expect(count, 10);
     });
 
     test('at least 3 rudiments are tagged both control and coordination', () {
@@ -39,6 +41,17 @@ void main() {
       expect(linear, isNotEmpty);
       for (final r in linear) {
         expect(r.skills, contains(Skill.fill), reason: r.id);
+      }
+    });
+
+    test('the eight fill sheets (Katalog 3b) are tagged fill, never drum corps',
+        () {
+      final fills =
+          rudimentsSeedData.where((r) => r.id.startsWith('fill_')).toList();
+      expect(fills.length, 8);
+      for (final r in fills) {
+        expect(r.skills, contains(Skill.fill), reason: r.id);
+        expect(r.genres, isNot(contains(Genre.drumCorps)), reason: r.id);
       }
     });
   });

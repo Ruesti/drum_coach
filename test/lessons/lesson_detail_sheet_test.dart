@@ -45,7 +45,7 @@ void main() {
       'Why it matters',
       'How to play it',
       'Practice tips',
-      'Song examples'
+      'Where you hear it'
     ]) {
       await tester.scrollUntilVisible(find.text(t), 200,
           scrollable: find.byType(Scrollable).first);
@@ -55,7 +55,8 @@ void main() {
 
   testWidgets('a one-line exercise shows the sheet only, no pattern box',
       (tester) async {
-    await pump(tester, 'single_stroke_roll');
+    // A legacy basic rudiment without authored lines.
+    await pump(tester, 'multiple_bounce_roll');
     expect(find.text('THE SHEET'), findsOneWidget);
     expect(find.byType(SheetStaffWidget), findsOneWidget);
     expect(find.text('PATTERN'), findsNothing);
