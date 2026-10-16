@@ -204,6 +204,19 @@ void main() {
     expect(lin.lines.every(linear), isTrue, reason: 'groove_linear is not linear');
     final fill = rudimentsSeedData.firstWhere((r) => r.id == 'set_fill_linear');
     expect(sheetBars(fill), 40);
+    // The fill bars (bar 4 of each line, bars 4 and 8 of the Challenge) are linear.
+    final barTicks = fill.beatsPerBar * kitTicksPerQuarter;
+    for (var i = 0; i < fill.sheet.length; i++) {
+      final fillBars = i < 8 ? {3} : {3, 7};
+      final ticks = <int>{};
+      for (final v in fill.sheet[i].kitVoices) {
+        for (final o in onsetsOf(v.beats, fill.gridUnit)) {
+          if (!fillBars.contains(o.tick ~/ barTicks)) continue;
+          expect(ticks.add(o.tick), isTrue,
+              reason: 'set_fill_linear sheet line ${i + 1}: fill bar not linear at tick ${o.tick}');
+        }
+      }
+    }
     final db = rudimentsSeedData.firstWhere((r) => r.id == 'set_fill_double_bass');
     expect(db.hasFootSides, isTrue);
     expect(db.limbs.contains(Limb.doubleBass), isTrue);

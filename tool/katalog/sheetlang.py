@@ -506,3 +506,25 @@ def check_sheet(lines: list[Line | KitLine]) -> None:
     total = sheet_bars(lines)
     if total > 64:
         raise ValueError(f'sheet has {total} bars (> 64)')
+
+
+def check_hands(kl: KitLine) -> None:
+    """Eine Hand spielt nie zwei Trommeln auf einmal: zwei Hand-Spuren mit demselben Buchstaben
+    (R/L) auf demselben Einsatz-Tick sind ein Fehler. Füße sind ausgenommen; ein Vorschlag
+    (Flam/Drag) zählt als Gegenhand auf dem Tick seiner Hauptnote."""
+    seen: dict[tuple[int, str], str] = {}
+    for t in kl.tracks:
+        if t.foot:
+            continue
+        tick = 0
+        for n in t.notes:
+            if not n.rest:
+                hands = [n.hand] + ([{'R': 'L', 'L': 'R'}[n.hand]] if n.graces else [])
+                for h in hands:
+                    other = seen.get((tick, h))
+                    if other is not None and other != t.key:
+                        bar, at = divmod(tick, 4 * TPQ)
+                        raise ValueError(f'hand {h} on {other} and {t.key} at tick {tick} '
+                                         f'(bar {bar + 1}, beat {at / TPQ + 1:g})')
+                    seen[(tick, h)] = t.key
+            tick += n.ticks()

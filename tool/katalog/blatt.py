@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from sheetlang import KitLine, Line, check_sheet, parse_kit_line, parse_line
+from sheetlang import KitLine, Line, check_hands, check_sheet, parse_kit_line, parse_line
 
 
 @dataclass
@@ -33,12 +33,19 @@ class Sheet:
     kit: bool = False  # Spuren-Blatt (Phase B.1): Zeilen als `HH: … / SN: … / BD: …`
     limbs: tuple[str, ...] = ('hands',)  # Limb-Tags des Seed-Eintrags
 
-    def _parse(self, text: str, **kw) -> Line | KitLine:
-        return parse_kit_line(text, **kw) if self.kit else parse_line(text, **kw)
+    def _parse(self, text: str, where: str = '', **kw) -> Line | KitLine:
+        if not self.kit:
+            return parse_line(text, **kw)
+        kl = parse_kit_line(text, **kw)
+        try:
+            check_hands(kl)
+        except ValueError as e:
+            raise ValueError(f'{self.id} {where}: {e}') from None
+        return kl
 
     def parsed(self) -> list[Line | KitLine]:
-        out = [self._parse(t, counts=i < self.count_lines) for i, t in enumerate(self.lines)]
-        out.append(self._parse(self.challenge, repeat=False, title='Challenge'))
+        out = [self._parse(t, f'line {i + 1}', counts=i < self.count_lines) for i, t in enumerate(self.lines)]
+        out.append(self._parse(self.challenge, 'challenge', repeat=False, title='Challenge'))
         check_sheet(out)
         if len(self.lines) != 8:
             raise ValueError(f'{self.id}: {len(self.lines)} lines, expected 8')
@@ -50,7 +57,7 @@ class Sheet:
         return out
 
     def pattern_line(self) -> Line | KitLine:
-        ln = self._parse(self.pattern, repeat=False)
+        ln = self._parse(self.pattern, 'pattern', repeat=False)
         if ln.bars != 1:
             raise ValueError(f'{self.id}: pattern has {ln.bars} bars, expected 1')
         return ln

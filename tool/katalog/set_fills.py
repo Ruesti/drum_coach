@@ -92,7 +92,7 @@ def orchestrate(fill: str, plan: list[str | None]) -> dict[str, str]:
 _RESTS = [(24, '-4'), (18, '-8.'), (12, '-8'), (9, '-16.'), (6, '-16'), (3, '-32')]
 
 
-def _rest_tokens(pos: int, length: int) -> list[str]:
+def rest_tokens(pos: int, length: int) -> list[str]:
     """Pausen für `length` Ticks ab Position `pos` in der Zählzeit, möglichst wenige Zeichen."""
     out = []
     while length:
@@ -117,7 +117,7 @@ def _beat_for(track: str, i: int, items, track_of) -> str:
     def flush():
         nonlocal rest
         if rest:
-            out.extend(_rest_tokens(pos - rest, rest))
+            out.extend(rest_tokens(pos - rest, rest))
             rest = 0
 
     k = 0

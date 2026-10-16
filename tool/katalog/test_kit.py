@@ -231,5 +231,36 @@ class OrchestrateFeet(unittest.TestCase):
         self.assertFalse(is_linear(parse_kit_line('HH: R8 R8 R8 R8 R8 R8 R8 R8\nSN: -4 L4 -4 L4')))
 
 
+class CheckHands(unittest.TestCase):
+    def test_one_hand_on_two_drums_raises(self):
+        from sheetlang import check_hands
+        with self.assertRaises(ValueError) as cm:
+            check_hands(parse_kit_line('HH: R16 L16 R16 L16 -4 -2\nSN: -16 L16g -8 -4 -2'))
+        self.assertIn('tick 6', str(cm.exception))
+
+    def test_right_hat_and_left_snare_together_pass(self):
+        from sheetlang import check_hands
+        check_hands(parse_kit_line('HH: R8 R8 R8 R8 R8 R8 R8 R8\nSN: -4 L4> -4 L4>'))
+
+    def test_flam_grace_is_the_other_hand(self):
+        from sheetlang import check_hands
+        with self.assertRaises(ValueError):
+            check_hands(parse_kit_line('HH: R4 R4 R4 R4\nSN: -4 L4f> -4 L4>'))  # grace R on 2 meets the hat
+        check_hands(parse_kit_line('HH: R4 -4 R4 R4\nSN: -4 L4f> -4 L4>'))
+
+    def test_feet_never_collide(self):
+        from sheetlang import check_hands
+        check_hands(parse_kit_line('HH: R4 R4 R4 R4\nBD: K4r K4r K4l K4l\nHP: P4 P4 P4 P4'))
+
+    def test_sheets_check_their_lines(self):
+        from blatt import Sheet
+        bad = 'HH: R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16\nSN: -16 L16g -8 -4 -2\nBD: K4 -2.'
+        sh = Sheet(id='x', name='x', min_bpm=60, target_bpm=100, difficulty='beginner', skills=[], genres=[],
+                   description='', pattern=bad, lines=[bad] * 8, challenge=bad, lesson={}, kit=True)
+        with self.assertRaises(ValueError) as cm:
+            sh.pattern_line()
+        self.assertIn('x pattern', str(cm.exception))
+
+
 if __name__ == '__main__':
     unittest.main()

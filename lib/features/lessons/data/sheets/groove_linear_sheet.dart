@@ -971,7 +971,7 @@ const List<TechniqueSection> grooveLinearLesson = [
   TechniqueSection(
     title: "How to play it",
     body:
-        "Line 1: kick on 1 and the \"a\" of 2, backbeat on 2 and 4, ghost notes on the \"and\" of 1 and of 3, and the right hand on the hi-hat on every other sixteenth that is left. The hi-hat does not play with the kick or the snare; the left hand plays only the snare.",
+        "Line 1: kick on 1 and the \"a\" of 2, backbeat on 2 and 4, ghost notes on the \"and\" of 1 and of 3, and the right hand on the hi-hat on every sixteenth that is left. The hi-hat does not play with the kick or the snare; the left hand plays only the snare.",
   ),
   TechniqueSection(
     title: "Practice tips",

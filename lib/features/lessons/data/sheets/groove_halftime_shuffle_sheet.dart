@@ -462,7 +462,7 @@ final List<ExerciseLine> grooveHalftimeShuffleSheet = [
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
       rest(NoteValue.eighth, tuplet: Tuplet.triplet),
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
-      note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
+      rest(NoteValue.eighth, tuplet: Tuplet.triplet),
       rest(NoteValue.eighth, tuplet: Tuplet.triplet),
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
@@ -474,7 +474,7 @@ final List<ExerciseLine> grooveHalftimeShuffleSheet = [
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
       rest(NoteValue.eighth, tuplet: Tuplet.triplet),
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
-      note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
+      rest(NoteValue.eighth, tuplet: Tuplet.triplet),
       rest(NoteValue.eighth, tuplet: Tuplet.triplet),
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
@@ -857,7 +857,7 @@ const List<TechniqueSection> grooveHalftimeShuffleLesson = [
   TechniqueSection(
     title: "Practice tips",
     body:
-        "Line 2 drops the ghosts so you hear the frame: shuffle hat, kick, backbeat on 3. Line 3 makes the ghosts denser, also on the \"let\" with the hat. Line 4 adds a kick on the \"let\" of 4, line 5 opens the hi-hat on the \"let\" of 4, line 6 moves the right hand to the ride while the foot closes the hat on 2 and 4, line 7 plays the backbeat as a flam, line 8 begins with a crash. Practise the hands alone until the ghosts are even.",
+        "Line 2 drops the ghosts so you hear the frame: shuffle hat, kick, backbeat on 3. Line 3 makes the ghosts denser, also on the \"let\" with the hat. Line 4 adds a kick on the \"let\" of 4, line 5 opens the hi-hat on the \"let\" of 4, line 6 moves the right hand to the ride while the foot closes the hat on 2 and 4, line 7 plays the backbeat as a flam (the hat skips beat 3, because the right hand plays the grace note), line 8 begins with a crash. Practise the hands alone until the ghosts are even.",
   ),
   TechniqueSection(
     title: "Where you hear it",

@@ -34,6 +34,8 @@ HH8_DISCO = 'R8 -8 R8 -8 R8 -8 R8 -8'  # jedes „+" offen
 HH16 = 'R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16'
 HH16A = 'R16> L16 R16 L16 R16> L16 R16 L16 R16> L16 R16 L16 R16> L16 R16 L16'
 HH16_NO1 = '-16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16'
+HH16R = ' '.join(['R16'] * 16)  # nur rechte Hand: die linke ist frei für Ghosts
+HH16AR = ' '.join(['R16> R16 R16 R16'] * 4)  # dto., Akzent auf den Zählzeiten
 HH16_O = 'R16 L16 R16 L16 R16 L16 R16 -16 R16 L16 R16 L16 R16 L16 R16 -16'  # „a" von 2 und 4 offen
 HO_4A = '-2 -4 -8 R8'
 HO_2A4A = '-4 -8 R8 -4 -8 R8'
@@ -139,9 +141,9 @@ SW_5 = {'RD': RIDE_SW, 'HP': HP24, 'BD': BD_SW, 'SN': SN_SW2A}
 SW_8 = {'RD': RIDE_SW_A, 'HP': HP24, 'BD': BD_SW, 'SN': SN_SW24}
 
 FK_1 = {'HH': HH16A, 'SN': SN24, 'BD': BD_FUNK}
-FK_2 = {'HH': HH16A, 'SN': SN_FUNK, 'BD': BD_FUNK}
+FK_2 = {'HH': HH16AR, 'SN': SN_FUNK, 'BD': BD_FUNK}
 FK_4 = {'HH': HH16_O, 'HO': HO_16, 'SN': SN24, 'BD': BD_FUNK}
-FK_8 = {'HH': HH16A, 'SN': SN24G3, 'BD': BD_FUNK2}
+FK_8 = {'HH': HH16AR, 'SN': SN24G3, 'BD': BD_FUNK2}
 
 HO_L1 = {'HH': HH8_O4, 'HO': HO_4A, 'SN': SN24, 'BD': BD13}
 HO_L2 = {'HH': HH8_O24, 'HO': HO_2A4A, 'SN': SN24, 'BD': BD13}
@@ -151,7 +153,7 @@ HO_L7 = {'HH': 'R8 R8 R8 -8 R8 R8 R8 R8', 'HO': '-4 -8 R8 -2', 'SN': SN24, 'BD':
 LESSON_ROCK16 = {
     'Why it matters': 'Sixteenths on the hi-hat fill every gap the eighth groove leaves open, so the same backbeat suddenly drives harder. It is the groove of mid-tempo rock and pop where the song needs motion without more speed.',
     'How to play it': 'Alternate R L on the hi-hat. On 2 and 4 the left hand hits the snare together with the right-hand hat note, then jumps straight back for the next sixteenth on the hat. The kick plays 1, 3 and the "and" of 3, always together with a right-hand hi-hat note.',
-    'Practice tips': 'Start line 1 slowly enough that the hi-hat stays even through the backbeat; the stroke before and after the snare tends to go quiet. Line 3 accents the quarters on the hat, line 8 puts the kick on "e" and "a" — count the sixteenths out loud before you play it.',
+    'Practice tips': 'Start line 1 slowly enough that the hi-hat stays even through the backbeat; the stroke before and after the snare tends to go quiet. Line 3 accents the quarters on the hat. Line 5 adds a ghost note on the "e" of 3, which falls on a left-hand hat note, so the right hand plays all sixteenths on the hat alone there and the left hand stays on the snare. Line 8 puts the kick on "e" and "a" — count the sixteenths out loud before you play it.',
     'Where you hear it': 'The Doobie Brothers "Long Train Runnin\'", Boz Scaggs "Lowdown" with Jeff Porcaro, and a great many 70s and 80s soft-rock and pop sixteenth-hat grooves.',
 }
 
@@ -179,7 +181,7 @@ LESSON_SWING = {
 LESSON_FUNK16 = {
     'Why it matters': 'Funk puts the groove in the sixteenths: an accented hat, a snare backbeat that never moves, and a kick that dances around the beat. Ghost notes between the backbeats make it feel alive rather than mechanical.',
     'How to play it': 'Hi-hat sixteenths alternating, accent on every quarter. Snare backbeat on 2 and 4 loud, ghost notes barely touching the head. The kick plays 1, the "a" of 1, the "and" of 2, 3 and the "a" of 3 — syncopated, but every note still lines up with a hat stroke.',
-    'Practice tips': 'Play the kick pattern alone against the hat first, then add the backbeat, then the ghosts. Ghosts must be quiet: if they sound like backbeats, the groove collapses. Line 4 opens the hat on the "a" of 2 and 4, line 6 moves the second backbeat to the "and" of 4.',
+    'Practice tips': 'Play the kick pattern alone against the hat first, then add the backbeat, then the ghosts. Ghosts must be quiet: if they sound like backbeats, the groove collapses. In lines 2, 7 and 8 some ghosts fall on a left-hand hat note, so the right hand plays the sixteenths on the hat alone there and the left hand stays on the snare. Line 4 opens the hat on the "a" of 2 and 4, line 6 moves the second backbeat to the "and" of 4.',
     'Where you hear it': 'James Brown "Cold Sweat" and "Funky Drummer" with Clyde Stubblefield, Tower of Power with David Garibaldi, the Meters with Zigaboo Modeliste, and Red Hot Chili Peppers with Chad Smith.',
 }
 
@@ -219,7 +221,7 @@ SHEETS: list[Sheet] = [
             kit({'HH': HH16, 'SN': SN24, 'BD': BD13}, R16_1),
             two(R16_3),
             two(R16_4),
-            two({'HH': HH16, 'SN': SN24G, 'BD': BD_ROCK16}),
+            two({'HH': HH16R, 'SN': SN24G, 'BD': BD_ROCK16}),
             two({'HH': HH16, 'SN': SN24, 'BD': BD_DBL}),
             kit({'C1~': C1_1, 'HH': HH16_NO1, 'SN': SN24, 'BD': BD_ROCK16}, R16_1),
             two(R16_8),

@@ -11,18 +11,18 @@ Englisch (App-Sprache).
 from __future__ import annotations
 
 from blatt import Sheet, print_table
-from grooves import (C1_1, HH8, HH8_NO1, HH16, HP24, SHUF_NO1, SN3, SN24, SN24G, SN24G3, groove, kit, two)
-from set_fills import GROOVES, _rest_tokens, challenge, fill_bar, orchestrate, phrase  # noqa: F401
+from grooves import (C1_1, HH8, HH8_NO1, HH16R, HP24, SHUF_NO1, SN3, SN24, SN24G, SN24G3, groove, kit, two)
+from set_fills import GROOVES, challenge, fill_bar, orchestrate, phrase, rest_tokens  # noqa: F401
 from sheetlang import TPQ, KitLine, parse_kit_line
 
 
-def is_linear(kl: KitLine) -> bool:
-    """Kein Tick mit zwei Einsätzen (über alle Spuren)."""
+def is_linear(kl: KitLine, bars: set[int] | None = None) -> bool:
+    """Kein Tick mit zwei Einsätzen (über alle Spuren); mit `bars` nur in diesen Takten (0-basiert)."""
     seen: set[int] = set()
     for t in kl.tracks:
         tick = 0
         for n in t.notes:
-            if not n.rest:
+            if not n.rest and (bars is None or tick // (4 * TPQ) in bars):
                 if tick in seen:
                     return False
                 seen.add(tick)
@@ -59,13 +59,13 @@ def lin(pattern: str) -> dict[str, str]:
                 ch = _LIN_CH.get(slots[4 * b + s])
                 if ch and ch[0] == key:
                     if rest:
-                        toks += _rest_tokens((s * 6) - rest, rest)
+                        toks += rest_tokens((s * 6) - rest, rest)
                         rest = 0
                     toks.append(ch[1])
                 else:
                     rest += 6
             if rest:
-                toks += _rest_tokens(TPQ - rest, rest)
+                toks += rest_tokens(TPQ - rest, rest)
             beats.append(' '.join(toks))
         out[key] = ' '.join(beats)
     return out
@@ -101,8 +101,8 @@ K16_1 = {'HH': HH8, 'SN': SN24, 'BD': BD_K16A}
 K16_2 = {'HH': HH8, 'SN': SN24, 'BD': BD_K16E}
 K16_3 = {'HH': HH8, 'SN': SN24, 'BD': BD_K16B}
 K16_4 = {'HH': HH8, 'SN': SN24, 'BD': BD_K16C}
-K16_5 = {'HH': HH16, 'SN': SN24G, 'BD': BD_K16A}
-K16_6 = {'HH': HH16, 'SN': SN24G3, 'BD': BD_K16E}
+K16_5 = {'HH': HH16R, 'SN': SN24G, 'BD': BD_K16A}
+K16_6 = {'HH': HH16R, 'SN': SN24G3, 'BD': BD_K16E}
 K16_7 = {'HH': HH8, 'SN': SN3, 'BD': BD_K16C}
 K16_8A = {'C1~': C1_1, 'HH': HH8_NO1, 'SN': SN24, 'BD': BD_K16A}
 K16_8B = {'HH': HH8, 'SN': SN24, 'BD': BD_K16B}
@@ -114,6 +114,7 @@ HTS_BD = 'K4 3(-8 -8 K8) -2'  # 1 und „let" von 2
 HTS_SN_DENSE = '3(-8 L8g L8g) 3(-8 L8g L8g) 3(L8> -8 L8g) 3(-8 L8g L8g)'  # Ghosts auch auf „let"
 HTS_SN_FLAM = '3(-8 L8g -8) 3(-8 L8g -8) 3(L8f> -8 L8g) 3(-8 L8g -8)'  # Backbeat als Flam
 HTS_BD_4L = 'K4 3(-8 -8 K8) -4 3(-8 -8 K8)'  # dazu „let" von 4
+HTS_HH_NO3 = '3(R8 -8 R8) 3(R8 -8 R8) 3(-8 -8 R8) 3(R8 -8 R8)'  # Hat setzt auf 3 aus: die rechte Hand spielt den Vorschlag
 HTS_HH_O4 = '3(R8 -8 R8) 3(R8 -8 R8) 3(R8 -8 R8) 3(R8 -8 -8)'  # „let" von 4 offen (HO-Spur)
 HTS_HO_4L = '-2. 3(-8 -8 R8)'
 
@@ -188,7 +189,7 @@ LESSON_DOUBLE_BASS_FILL = {
 
 LESSON_LINEAR_GROOVE = {
     'Why it matters': 'A linear groove never stacks two sounds: hi-hat, snare and kick each get their own sixteenths. The result is transparent and busy at once, with every note audible, and it is the heart of the funk drumming of the 70s. It also trains you to place every limb exactly, because nothing hides behind a unison.',
-    'How to play it': 'Line 1: kick on 1 and the "a" of 2, backbeat on 2 and 4, ghost notes on the "and" of 1 and of 3, and the right hand on the hi-hat on every other sixteenth that is left. The hi-hat does not play with the kick or the snare; the left hand plays only the snare.',
+    'How to play it': 'Line 1: kick on 1 and the "a" of 2, backbeat on 2 and 4, ghost notes on the "and" of 1 and of 3, and the right hand on the hi-hat on every sixteenth that is left. The hi-hat does not play with the kick or the snare; the left hand plays only the snare.',
     'Practice tips': 'Count sixteenths out loud ("1 e and a") and play line 1 at 60 until it flows. Lines 2 and 3 move the kick ("and" of 2, doubles on "1 e"), line 4 leaves only one backbeat, on 4, line 5 puts a ghost right after each backbeat. Line 6 is two different bars, line 7 keeps the backbeat on 2 only and surrounds the kicks with ghosts, line 8 ends on an open hi-hat on the "a" of 4; close it with the foot on the next one. Ghosts stay barely audible, backbeats loud.',
     'Where you hear it': 'David Garibaldi with Tower of Power ("Oakland Stroke", "What Is Hip?"), Steve Gadd\'s sticking-based grooves such as "50 Ways to Leave Your Lover", and funk and fusion drumming ever since.',
 }
@@ -196,14 +197,14 @@ LESSON_LINEAR_GROOVE = {
 LESSON_KICK16_GROOVE = {
     'Why it matters': 'Rock and funk grooves get their personality from where the kick falls between the eighths. Moving one kick to the "e" or the "a" of a beat changes the whole feel while the hands stay the same, and each of these patterns is one you will meet on records.',
     'How to play it': 'Hi-hat eighths and backbeat on 2 and 4 stay fixed. Line 1 puts the kick on 1, the "a" of 2, 3 and the "a" of 4; each "a" is the sixteenth right before the next beat and falls between two hi-hat notes. Heel up, short strokes, and land the "a" exactly halfway between the hat strokes.',
-    'Practice tips': 'Line 2 moves the extra kicks to the "e" of 2 and 4, line 3 doubles them on 1 and 3 ("1 a", "3 a"), line 4 plays 1, 3, the "a" of 3 and the "and" of 4. Lines 5 and 6 switch to sixteenth hats so every kick has a hat partner, with ghost notes on the snare. Line 7 is half-time with the backbeat on 3, line 8 opens with a crash. Count the sixteenths aloud before you play a line.',
+    'Practice tips': 'Line 2 moves the extra kicks to the "e" of 2 and 4, line 3 doubles them on 1 and 3 ("1 a", "3 a"), line 4 plays 1, 3, the "a" of 3 and the "and" of 4. Lines 5 and 6 switch to sixteenth hats, played with the right hand alone so the left hand is free for the ghost notes on the snare, and every kick has a hat partner. Line 7 is half-time with the backbeat on 3, line 8 opens with a crash. Count the sixteenths aloud before you play a line.',
     'Where you hear it': 'Rock and funk records everywhere: Zigaboo Modeliste with the Meters, Jeff Porcaro with Toto, John Bonham with Led Zeppelin and Chad Smith with the Red Hot Chili Peppers all lean on kicks on the "e" and the "a".',
 }
 
 LESSON_HALFTIME_SHUFFLE = {
     'Why it matters': 'The half-time shuffle is one of the hardest and most famous grooves on the kit: a shuffle hi-hat, the backbeat only on 3, and ghost notes on the middle triplet notes that fill every gap. When it sits, it rolls like nothing else; when it does not, everyone hears it.',
     'How to play it': 'Right hand on the hi-hat: the first and last note of every triplet, never the middle. Left hand: a soft ghost on the middle triplet note of every beat, except on 3, where it plays the loud backbeat on the beat and a ghost on the "let". The kick plays 1 and the "let" of 2. Ghosts at the lowest height the stick can manage.',
-    'Practice tips': 'Line 2 drops the ghosts so you hear the frame: shuffle hat, kick, backbeat on 3. Line 3 makes the ghosts denser, also on the "let" with the hat. Line 4 adds a kick on the "let" of 4, line 5 opens the hi-hat on the "let" of 4, line 6 moves the right hand to the ride while the foot closes the hat on 2 and 4, line 7 plays the backbeat as a flam, line 8 begins with a crash. Practise the hands alone until the ghosts are even.',
+    'Practice tips': 'Line 2 drops the ghosts so you hear the frame: shuffle hat, kick, backbeat on 3. Line 3 makes the ghosts denser, also on the "let" with the hat. Line 4 adds a kick on the "let" of 4, line 5 opens the hi-hat on the "let" of 4, line 6 moves the right hand to the ride while the foot closes the hat on 2 and 4, line 7 plays the backbeat as a flam (the hat skips beat 3, because the right hand plays the grace note), line 8 begins with a crash. Practise the hands alone until the ghosts are even.',
     'Where you hear it': 'Bernard Purdie on Steely Dan "Babylon Sisters" (the Purdie shuffle), Jeff Porcaro on Toto "Rosanna", John Bonham on Led Zeppelin "Fool in the Rain".',
 }
 
@@ -253,7 +254,7 @@ SHEETS: list[Sheet] = [
             two(HTS_4),
             two({'HH': HTS_HH_O4, 'HO': HTS_HO_4L, 'SN': HTS_SN, 'BD': HTS_BD}),
             two({'RD': HTS_HH, 'HP': HP24, 'SN': HTS_SN, 'BD': HTS_BD}),
-            two({'HH': HTS_HH, 'SN': HTS_SN_FLAM, 'BD': HTS_BD}),
+            two({'HH': HTS_HH_NO3, 'SN': HTS_SN_FLAM, 'BD': HTS_BD}),
             kit(HTS_8A, HTS_1),
         ],
         challenge=kit(HTS_1, HTS_1, HTS_2, HTS_2, HTS_4, HTS_4, HTS_8A, HTS_1),
@@ -269,6 +270,11 @@ def _check_linear() -> None:
             raise ValueError(f'groove_linear line {i + 1} is not linear')
     if not is_linear(lin_sheet.pattern_line()):
         raise ValueError('groove_linear pattern is not linear')
+    fill_sheet = next(s for s in SHEETS if s.id == 'set_fill_linear')
+    for i, kl in enumerate(fill_sheet.parsed()):
+        fill_bars = {3} if i < 8 else {3, 7}
+        if not is_linear(kl, fill_bars):
+            raise ValueError(f'set_fill_linear {"challenge" if i == 8 else f"line {i + 1}"}: fill bar is not linear')
     for s in SHEETS[:2]:
         for i, f in enumerate(s.lines):
             if 'K16' not in f.split('BD:')[1].split('\n')[0]:
