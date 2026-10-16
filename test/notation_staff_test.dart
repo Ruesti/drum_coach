@@ -81,34 +81,18 @@ void main() {
       }
     });
 
-    testWidgets('tapping a line reports its index', (tester) async {
-      final taps = <int>[];
-      await tester.pumpWidget(MaterialApp(
-          home: Scaffold(
-              body: SizedBox(
-                  width: 360,
-                  child: SheetStaffWidget(
-                      rudiment: sheet, activeLine: 0, onLineTap: taps.add)))));
-      await tester.tap(paints().at(1));
-      expect(taps, [1]);
-    });
-
     testWidgets('onlyLine draws one line, numbered as in the sheet',
         (tester) async {
-      final taps = <int>[];
       await tester.pumpWidget(MaterialApp(
           home: Scaffold(
               body: SizedBox(
                   width: 360,
-                  child: SheetStaffWidget(
-                      rudiment: sheet, onlyLine: 1, onLineTap: taps.add)))));
+                  child: SheetStaffWidget(rudiment: sheet, onlyLine: 1)))));
       expect(tester.takeException(), isNull);
       expect(paints(), findsOneWidget);
       final h = (paints().evaluate().single.widget as CustomPaint).size.height;
       // Line 2 is one row; the sheet's counts give every row the band.
       expect(h, sheetRowPitch + sheetCountBand);
-      await tester.tap(paints());
-      expect(taps, [1]);
     });
 
     testWidgets('active line and index render a cursor without throwing',

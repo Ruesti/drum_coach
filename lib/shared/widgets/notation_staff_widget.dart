@@ -98,8 +98,7 @@ class NotationStaffWidget extends StatelessWidget {
 /// line, an optional title above and count syllables below.
 ///
 /// [activeLine] / [activeIndex] place the cursor; every other line dims to
-/// 45 % (null = nothing dims, the info page). [onLineTap] reports the index
-/// of a tapped line.
+/// 45 % (null = nothing dims, the info page).
 ///
 /// [onlyLine] draws that one line alone (the practice screen's one-line
 /// view): its number box, title, repeat signs, clef, time signature and a
@@ -113,7 +112,6 @@ class SheetStaffWidget extends StatelessWidget {
   final int? activeTick;
   final bool showSticking;
   final bool showCounts;
-  final ValueChanged<int>? onLineTap;
 
   /// Geometry computed by the caller for this content width (the practice
   /// window caches it across the per-note rebuilds); null computes it here.
@@ -133,7 +131,6 @@ class SheetStaffWidget extends StatelessWidget {
     this.activeTick,
     this.showSticking = true,
     this.showCounts = true,
-    this.onLineTap,
     this.geometry,
     this.onlyLine,
   });
@@ -169,47 +166,41 @@ class SheetStaffWidget extends StatelessWidget {
         child: Column(
           children: [
             for (final i in shown)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onLineTap == null ? null : () => onLineTap!(i),
-                child: _linePaint(
-                  contentWidth: contentWidth,
-                  // A line drawn alone carries its own clef: take the
-                  // painter's height, whatever line the geometry put the
-                  // clef on.
-                  height: only == null
-                      ? geo.layouts[i].rowCount * geo.rowPitch
+              _linePaint(
+                contentWidth: contentWidth,
+                // A line drawn alone carries its own clef: take the
+                // painter's height, whatever line the geometry put the
+                // clef on.
+                height: only == null
+                    ? geo.layouts[i].rowCount * geo.rowPitch
+                    : null,
+                painter: _StaffPainter(
+                  beats: sheet[i].beats,
+                  voices: sheet[i].isKit ? sheet[i].kitVoices : null,
+                  grid: rudiment.gridUnit,
+                  beatsPerBar: rudiment.beatsPerBar,
+                  maxWidth: contentWidth,
+                  rowPitch: geo.rowPitch,
+                  activeIndex: activeLine == i ? activeIndex : null,
+                  activeTick: activeLine == i ? activeTick : null,
+                  lineNumber: i + 1,
+                  repeat: sheet[i].repeat,
+                  finalBar: only != null || i == sheet.length - 1,
+                  showTimeSig: only != null || i == 0,
+                  showClef: only != null || i == 0,
+                  title: sheet[i].title,
+                  countLabels: showCounts && sheet[i].counts && !sheet[i].isKit
+                      ? countLabelsFor(sheet[i].beats, rudiment.gridUnit,
+                          rudiment.beatsPerBar)
                       : null,
-                  painter: _StaffPainter(
-                    beats: sheet[i].beats,
-                    voices: sheet[i].isKit ? sheet[i].kitVoices : null,
-                    grid: rudiment.gridUnit,
-                    beatsPerBar: rudiment.beatsPerBar,
-                    maxWidth: contentWidth,
-                    rowPitch: geo.rowPitch,
-                    activeIndex: activeLine == i ? activeIndex : null,
-                    activeTick: activeLine == i ? activeTick : null,
-                    lineNumber: i + 1,
-                    repeat: sheet[i].repeat,
-                    finalBar: only != null || i == sheet.length - 1,
-                    showTimeSig: only != null || i == 0,
-                    showClef: only != null || i == 0,
-                    title: sheet[i].title,
-                    countLabels:
-                        showCounts && sheet[i].counts && !sheet[i].isKit
-                            ? countLabelsFor(sheet[i].beats,
-                                rudiment.gridUnit, rudiment.beatsPerBar)
-                            : null,
-                    kitCountLabels:
-                        showCounts && sheet[i].counts && sheet[i].isKit
-                            ? kitCountLabelsFor(
-                                geo.kitLayouts[i]!, rudiment.gridUnit)
-                            : null,
-                    dimmed:
-                        only == null && activeLine != null && activeLine != i,
-                    showSticking: showSticking,
-                    footLetters: footLetters,
-                  ),
+                  kitCountLabels: showCounts &&
+                          sheet[i].counts &&
+                          sheet[i].isKit
+                      ? kitCountLabelsFor(geo.kitLayouts[i]!, rudiment.gridUnit)
+                      : null,
+                  dimmed: only == null && activeLine != null && activeLine != i,
+                  showSticking: showSticking,
+                  footLetters: footLetters,
                 ),
               ),
           ],

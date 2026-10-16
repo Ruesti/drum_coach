@@ -88,7 +88,7 @@ class _LineListScreenState extends ConsumerState<LineListScreen> {
             : AppBar(
                 title: Text(
                   rudiment.name,
-                  maxLines: rudiment.name.length > 24 ? 2 : 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 actions: [
