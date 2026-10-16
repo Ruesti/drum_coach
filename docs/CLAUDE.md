@@ -42,6 +42,21 @@ Spec: `docs/BRIEF_ETAPPE2_SET.md`; timing experiment: `docs/BERICHT_ETAPPE2_§0.
 - `lib/app/platform_support.dart` is the only platform switch (`isDesktopPlatform`, feature flags such as `aiCoachingAvailable`); do not add `Platform.isLinux` checks elsewhere.
 - Headless smoke run: `NO_AT_BRIDGE=1 GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1`.
 - MIDI integration test over a virtual ALSA port: `tool/midi/virtual_port_test.sh` (needs `snd-virmidi` and the `audio` group; tagged `alsa`, skipped in the normal `flutter test`).
+- **Delivery (2026-10-16):** build the release bundle **on the laptop**
+  (host `laptop`), never on the NUC — the NUC has glibc 2.41, the laptop
+  2.35, so a NUC-built bundle does not start there. Flutter on the laptop
+  lives in `~/development/flutter/bin`; the checkout is
+  `~/agent-test-checkouts/drum_coach-etappe2-phase-b`:
+  ```bash
+  ssh laptop
+  cd ~/agent-test-checkouts/drum_coach-etappe2-phase-b
+  git fetch && git reset --hard origin/<branch>   # e.g. worktree-etappe2-phase-b
+  ~/development/flutter/bin/flutter build linux --release
+  rsync -a --delete build/linux/x64/release/bundle/ ~/drum-coach/
+  ~/drum-coach/drum_coach   # start; the MIDI source appears when the module hangs on USB
+  ```
+  Click/backing play over the sound card; shortcuts Space / ↑↓ / ± / Esc.
+  Windows is a separate later step.
 
 ## Folder Structure
 ```
@@ -57,11 +72,16 @@ lib/
 │   │   └── widgets/
 │   ├── lessons/
 │   │   ├── lessons_screen.dart
-│   │   ├── lesson_detail_screen.dart
+│   │   ├── lesson_detail_screen.dart   # info page: PATTERN · legend · LESSON
+│   │   ├── line_list_screen.dart       # /exercise/:id — the sheet's lines as cards
+│   │   ├── exercise_entry.dart         # openExercise: line list or direct practice
 │   │   ├── lessons_provider.dart
+│   │   ├── models/sheet_plan.dart      # SheetPlan.sequence: line(s) → one loop
 │   │   └── data/rudiments_seed.dart
 │   ├── practice/
 │   │   ├── practice_session_screen.dart
+│   │   ├── line_selection.dart         # ?lines= parsing, nav label, log fields
+│   │   ├── widgets/line_view.dart      # one-line practice view
 │   │   └── practice_provider.dart
 │   ├── stats/
 │   │   ├── stats_screen.dart
@@ -154,15 +174,21 @@ enum Hand { right, left }
 ```
 
 ### Sheets (Blattform, 2026-09-30)
-- An exercise is a **sheet** of numbered lines: `Rudiment.lines`
+- An exercise is a **sheet** of numbered lines: `Rudiment.lines` — since
+  2026-10-16 ("Zeilen statt Blatt") every catalog sheet has **8 lines**, no
+  Challenge any more (rudiment/groove/feet sheets 16 bars, fills 32)
   (`ExerciseLine(beats, {repeat, title, counts})`, each 1–8 whole bars);
   `Rudiment.sheet` never is empty — legacy exercises are one-line sheets
   made of their plain `sticking`. A sheet stays ≤ 64 bars
   (`maxBackingCycleBars`; integrity test). Author lines with the étude DSL
   (`line(...)`), e.g. `data/sheets/single_paradiddle_sheet.dart`.
 - `SheetPlan` (`models/sheet_plan.dart`, pure) turns the sheet into the
-  **unit** the practice screen plays: one line or the whole sheet (each
-  line once), a flat note list plus `locate(noteIndex)` for the cursor.
+  **unit** the practice screen plays: `SheetPlan.sequence(r, selection,
+  {repeats, start})` — one line in a loop, or a sequence (every selected
+  line `repeats` times, then wrap around), played as **one** loop of at
+  most 64 bars (`maxSequenceBars`; repeats are lowered otherwise). Flat
+  note list plus `locate/locateTick` (with slot) for the cursor and
+  `stepOf(slot)` for the header.
   `Rudiment.withSticking(unit.beats)` hands that unit to playback, backing
   choice and analysis as an ordinary exercise — engine and analysis know
   nothing about lines.
@@ -171,16 +197,27 @@ enum Hand { right, left }
   barline, titles above and count syllables (`countLabelsFor`) below;
   letters/numbers/counts use the label font (IBM Plex Mono).
   `NotationStaffWidget` stays the plain one-line box for the pattern.
-- Practice screen: `SheetWindow` shows up to four rows, the played row
-  always on top, slides up one row at every row boundary (180 ms), jumps
-  on loop restart and line changes; sheet mode wraps the preview. Line bar
-  `‹ Line n / m ›` + `Line | Sheet` on multi-line sheets; `?line=` (1-based)
-  and `?mode=line|sheet` route params; position remembered per exercise
-  (`SettingsService.sheetPositionFor`); switches "Sticking letters" /
-  "Count hints" in the ⋯ sheet. `SessionLog.sheetLine/sheetMode` record it.
+- Practice screen: `LineView` shows only the current line (one bar per
+  row on phones; the window scrolls row by row with the played row on
+  top). Header bar `‹ Line 3 of 8 ›` for a single line, or
+  `Sequence 2 of 4 · Line 5 · 1/2` for a sequence; ‹/› in a sequence turns
+  its start point. Route params `?lines=all|1,3,5` (1-based), `?line=N` as
+  alias, `?mode=` is ignored. Last practised line per exercise
+  `SettingsService.lastLineFor`; repeats per line
+  `SettingsService.sequenceRepeats` (Settings → LINE SEQUENCES, 1×–4×,
+  default 2). `SessionLog.sheetMode` = `line` / `sequence`. Switches
+  "Sticking letters" / "Count hints" in the ⋯ sheet.
+- **Line list** (`/exercise/:rudimentId`, `LineListScreen`): one card per
+  line (`SheetStaffWidget(onlyLine:)`); tap = practise that line, long
+  press / Select = selection, "Play N lines" plays the selection in
+  ascending order, "Play all" the whole sheet, ⓘ = info page; the last
+  practised line is framed. Library and collection tiles go through
+  `openExercise`: multi-line sheets open the line list, one-line exercises
+  practise directly. Today, routine and program always play all lines
+  (`lines=all`).
 - The lesson text (`technique` sections: Why it matters / How to play it /
   Practice tips / Song examples) appears only on the Library info page
-  (PATTERN · THE SHEET · LESSON) and behind "About this exercise" — never on
+  (PATTERN · legend · LESSON, "Start Practice" = all lines) and behind "About this exercise" — never on
   the practice screen (Uli, 30.09.: "Lektion nur auf Abruf, als Übung nur
   Noten"). Catalog rule: every exercise as varied and groovy as possible.
 - Catalog content (Katalog 3a, 2026-10): the twelve rudiment sheets live
@@ -325,6 +362,7 @@ class DailyRoutineItem {
 Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
 /routine              → DailyRoutineScreen   (top-level, no tab anymore)
 /routine/:rudimentId  → PracticeSessionScreen (from routine context)
+/exercise/:rudimentId → LineListScreen       (line list, ?lines= into practice)
 /lessons, /lessons/:id, /stats → redirect to /library, /library/:id, /progress
 ```
 
@@ -347,9 +385,9 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
   read `AppPalette.of(context)`. Fonts are bundled under `assets/google_fonts/`
   — never rely on runtime fetching (tests would break).
 - `PracticeSessionScreen` (K2 step 2): no AppBar — header row (back, name,
-  context line from `?ctx=`, mode chip), the sheet window (`SheetWindow`,
-  up to four rows, the played row on top; line bar below it on multi-line
-  sheets), the `PulseBar`
+  context line from `?ctx=`, mode chip), the line view (`LineView`,
+  only the current line, the played row on top; line/sequence bar below
+  it on multi-line sheets), the `PulseBar`
   (running marker + volume pulses; the click track is a second voice in the
   loop, off in analysis mode), `TempoRow` (±4 BPM, tap the number for exact
   entry), one primary button Start/Stop/Resume with the time, Finish on its
