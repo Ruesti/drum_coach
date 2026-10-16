@@ -100,7 +100,7 @@ final List<ExerciseLine> feetDoubleBassSixteenthsSheet = [
       foot(NoteValue.sixteenth, side: R),
       foot(NoteValue.sixteenth, side: L),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.quarter),
@@ -144,7 +144,7 @@ final List<ExerciseLine> feetDoubleBassSixteenthsSheet = [
       foot(NoteValue.quarter, side: R),
       foot(NoteValue.quarter, side: R),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.quarter),

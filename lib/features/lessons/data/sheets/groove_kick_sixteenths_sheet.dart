@@ -82,7 +82,7 @@ final List<ExerciseLine> grooveKickSixteenthsSheet = [
       rest(NoteValue.eighth, dotted: true),
       foot(NoteValue.sixteenth),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth),
@@ -130,7 +130,7 @@ final List<ExerciseLine> grooveKickSixteenthsSheet = [
       foot(NoteValue.sixteenth),
       rest(NoteValue.eighth),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth),

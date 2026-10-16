@@ -112,7 +112,7 @@ final List<ExerciseLine> grooveFunk16Sheet = [
       foot(NoteValue.sixteenth),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.sixteenth, accent: true),
@@ -180,7 +180,7 @@ final List<ExerciseLine> grooveFunk16Sheet = [
       foot(NoteValue.sixteenth),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.sixteenth, accent: true),

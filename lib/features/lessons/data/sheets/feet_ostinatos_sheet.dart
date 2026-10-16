@@ -85,7 +85,7 @@ final List<ExerciseLine> feetOstinatosSheet = [
       rest(NoteValue.eighth),
       foot(NoteValue.eighth),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.ride, [
       note(R, NoteValue.eighth),
@@ -141,7 +141,7 @@ final List<ExerciseLine> feetOstinatosSheet = [
       rest(NoteValue.quarter),
       foot(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.sixteenth),

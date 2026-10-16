@@ -112,7 +112,7 @@ final List<ExerciseLine> feetDoubleBassTripletsSheet = [
       foot(NoteValue.eighth, side: R, tuplet: Tuplet.triplet),
       foot(NoteValue.eighth, side: L, tuplet: Tuplet.triplet),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
@@ -168,7 +168,7 @@ final List<ExerciseLine> feetDoubleBassTripletsSheet = [
       foot(NoteValue.eighth, side: R, tuplet: Tuplet.triplet),
       foot(NoteValue.eighth, side: L, tuplet: Tuplet.triplet),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),

@@ -76,7 +76,7 @@ final List<ExerciseLine> grooveSwingSheet = [
       foot(NoteValue.quarter, ghost: true),
       foot(NoteValue.quarter, ghost: true),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.ride, [
       note(R, NoteValue.quarter),
@@ -128,7 +128,7 @@ final List<ExerciseLine> grooveSwingSheet = [
       rest(NoteValue.eighth, tuplet: Tuplet.triplet),
       note(L, NoteValue.eighth, tuplet: Tuplet.triplet),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.ride, [
       note(R, NoteValue.quarter),

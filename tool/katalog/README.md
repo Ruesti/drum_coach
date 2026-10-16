@@ -56,7 +56,7 @@ einem Schlagzeug-System, Akkorde `[cg]`. Triolen/Sextolen der Schichten bekommen
 ## Blatt-Felder (blatt.py)
 
 `line_bars` (2 Rudiment, 4 Fill; jede Zeile muss genau so lang sein),
-`count_lines` (so viele erste Zeilen zählen), `backing` (Stil-Id oder None =
+`count_lines` (so viele erste Zeilen zählen; Kit-Blätter immer 0 — S23-Test 16.10.), `backing` (Stil-Id oder None =
 Automatik `autoBackingStyle`), `grid` (NoteGrid neuer Seed-Einträge),
 `new_seed` (noch nicht im Basis-Katalog). Fill-Blätter: Takt 1 jeder Zeile
 beginnt mit Akzent (die Eins nach dem Fill); auf der Kurationsseite steht

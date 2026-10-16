@@ -88,7 +88,7 @@ final List<ExerciseLine> grooveShuffleSheet = [
       foot(NoteValue.quarter),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
@@ -140,7 +140,7 @@ final List<ExerciseLine> grooveShuffleSheet = [
       foot(NoteValue.eighth, tuplet: Tuplet.triplet),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),

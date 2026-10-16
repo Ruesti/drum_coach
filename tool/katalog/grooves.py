@@ -103,7 +103,6 @@ def groove(**kw) -> Sheet:
     kw.setdefault('line_bars', 2)
     kw.setdefault('new_seed', True)
     kw.setdefault('genres', [])
-    kw.setdefault('count_lines', 2)
     return Sheet(**kw)
 
 

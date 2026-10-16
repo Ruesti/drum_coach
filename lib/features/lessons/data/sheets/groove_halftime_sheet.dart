@@ -73,7 +73,7 @@ final List<ExerciseLine> grooveHalftimeSheet = [
       foot(NoteValue.eighth),
       rest(NoteValue.half),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth, accent: true),
@@ -111,7 +111,7 @@ final List<ExerciseLine> grooveHalftimeSheet = [
       foot(NoteValue.quarter),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth, accent: true),

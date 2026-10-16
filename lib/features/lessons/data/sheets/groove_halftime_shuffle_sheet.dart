@@ -115,7 +115,7 @@ final List<ExerciseLine> grooveHalftimeShuffleSheet = [
       foot(NoteValue.eighth, tuplet: Tuplet.triplet),
       rest(NoteValue.half),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),
@@ -163,7 +163,7 @@ final List<ExerciseLine> grooveHalftimeShuffleSheet = [
       foot(NoteValue.eighth, tuplet: Tuplet.triplet),
       rest(NoteValue.half),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth, tuplet: Tuplet.triplet),

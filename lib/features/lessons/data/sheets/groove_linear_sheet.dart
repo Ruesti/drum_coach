@@ -124,7 +124,7 @@ final List<ExerciseLine> grooveLinearSheet = [
       foot(NoteValue.sixteenth),
       rest(NoteValue.half),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       rest(NoteValue.sixteenth),
@@ -204,7 +204,7 @@ final List<ExerciseLine> grooveLinearSheet = [
       rest(NoteValue.eighth),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       rest(NoteValue.eighth),

@@ -88,7 +88,7 @@ final List<ExerciseLine> feetKickSixteenthsSheet = [
       rest(NoteValue.eighth),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth),
@@ -132,7 +132,7 @@ final List<ExerciseLine> feetKickSixteenthsSheet = [
       foot(NoteValue.sixteenth),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth),

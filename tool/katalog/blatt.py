@@ -25,7 +25,7 @@ class Sheet:
     lines: list[str]  # 8 Zeilen à line_bars Takte
     challenge: str  # 8 Takte
     lesson: dict[str, str]
-    count_lines: int = 0  # so viele erste Zeilen tragen die Zählhilfe
+    count_lines: int = 0  # so viele erste Zeilen tragen die Zählhilfe (Kit-Blätter: immer 0)
     new_seed: bool = False  # noch nicht im Basis-Katalog
     line_bars: int = 2  # Takte je Zeile (2 Rudiment, 4 Fill)
     backing: str | None = None  # Stil-Id, None = Automatik (autoBackingStyle)
@@ -44,6 +44,8 @@ class Sheet:
         return kl
 
     def parsed(self) -> list[Line | KitLine]:
+        if self.kit and self.count_lines:
+            raise ValueError(f'{self.id}: kit sheets carry no count syllables (count_lines must be 0)')
         out = [self._parse(t, f'line {i + 1}', counts=i < self.count_lines) for i, t in enumerate(self.lines)]
         out.append(self._parse(self.challenge, 'challenge', repeat=False, title='Challenge'))
         check_sheet(out)

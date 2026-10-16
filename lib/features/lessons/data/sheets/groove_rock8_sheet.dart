@@ -76,7 +76,7 @@ final List<ExerciseLine> grooveRock8Sheet = [
       foot(NoteValue.quarter),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth),
@@ -117,7 +117,7 @@ final List<ExerciseLine> grooveRock8Sheet = [
       foot(NoteValue.eighth),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.eighth),

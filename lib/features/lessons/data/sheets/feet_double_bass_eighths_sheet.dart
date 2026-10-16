@@ -76,7 +76,7 @@ final List<ExerciseLine> feetDoubleBassEighthsSheet = [
       foot(NoteValue.eighth, side: R),
       foot(NoteValue.eighth, side: L),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.quarter),
@@ -115,7 +115,7 @@ final List<ExerciseLine> feetDoubleBassEighthsSheet = [
       foot(NoteValue.eighth, side: L),
       rest(NoteValue.quarter),
     ]),
-  ], counts: true),
+  ]),
   kitLine([
     voice(KitInstrument.hiHatClosed, [
       note(R, NoteValue.quarter),
