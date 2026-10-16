@@ -65,8 +65,13 @@ class NotationStaffWidget extends StatelessWidget {
           grid: rudiment.gridUnit,
           beatsPerBar: rudiment.beatsPerBar,
           maxWidth: contentWidth,
-          rowPitch: kit ? kitRowPitch : sheetRowPitch,
+          rowPitch: rudiment.hasFootSides
+              ? kitRowPitchWithFeet
+              : kit
+                  ? kitRowPitch
+                  : sheetRowPitch,
           activeIndex: activeIndex,
+          footLetters: rudiment.hasFootSides,
         );
         return Container(
           width: double.infinity,
@@ -178,6 +183,7 @@ class SheetStaffWidget extends StatelessWidget {
                             : null,
                     dimmed: activeLine != null && activeLine != i,
                     showSticking: showSticking,
+                    footLetters: rudiment.hasFootSides,
                   ),
                 ),
               ),
@@ -258,6 +264,9 @@ class _StaffPainter extends CustomPainter {
   final bool dimmed;
   final bool showSticking;
 
+  /// Sheet draws a second letter row for foot sides (Nachtrag B.4c).
+  final bool footLetters;
+
   _StaffPainter({
     required this.beats,
     this.voices,
@@ -277,6 +286,7 @@ class _StaffPainter extends CustomPainter {
     this.kitCountLabels,
     this.dimmed = false,
     this.showSticking = true,
+    this.footLetters = false,
   });
 
   bool get isKit => voices != null;
@@ -322,7 +332,8 @@ class _StaffPainter extends CustomPainter {
       );
 
   // ── Layout metrics ────────────────────────────────────────────────────────
-  double get _staffBandH => isKit ? kitRowPitch : sheetRowPitch;
+  double get _staffBandH =>
+      footLetters ? kitRowPitchWithFeet : isKit ? kitRowPitch : sheetRowPitch;
 
   // Five-line staff geometry.
   static const double _lineGap = 6; // vertical gap between adjacent staff lines
@@ -335,12 +346,14 @@ class _StaffPainter extends CustomPainter {
   // Middle staff line / notehead center.
   double get _midY => isKit ? 60 : 54;
   // R/L letters (below the bottom line).
-  double get _letterY => isKit ? 116 : 90;
+  double get _letterY => footLetters ? 130 : isKit ? 116 : 90;
   // Count syllables (in the count band).
-  double get _countY => isKit ? kitRowPitch : 104;
+  double get _countY =>
+      footLetters ? kitRowPitchWithFeet : isKit ? kitRowPitch : 104;
   // Line title: under the staff, left, in the free strip between the bottom
   // line and the letters (kit: under the feet stems).
-  double get _titleY => isKit ? 98 : 69;
+  double get _titleY => footLetters ? 96 : isKit ? 98 : 69;
+  static const double _footLetterY = 114; // foot sides under the feet stems
   static const double _stemBottomY = 96; // feet stems of a kit row end here
 
   static const double _headRx = 6;
@@ -901,6 +914,7 @@ class _StaffPainter extends CustomPainter {
       !listEquals(old.kitCountLabels, kitCountLabels) ||
       old.dimmed != dimmed ||
       old.showSticking != showSticking ||
+      old.footLetters != footLetters ||
       old.voices != voices ||
       old.activeTick != activeTick;
 }

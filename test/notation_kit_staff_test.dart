@@ -185,4 +185,29 @@ void main() {
       expect(systemPadFor(repeat: false), sheetSystemPad);
     });
   });
+
+  group('foot letters (Nachtrag B.4c)', () {
+    testWidgets('a sheet with foot sides uses the taller kit row', (tester) async {
+      final r = doubleBassShowcase();
+      expect(r.hasFootSides, isTrue);
+      final g = computeSheetGeometry(r, 352, showCounts: true);
+      expect(g.rowPitch, kitRowPitchWithFeet + sheetCountBand);
+      expect(computeSheetGeometry(r, 352, showCounts: false).rowPitch,
+          kitRowPitchWithFeet);
+      // The showcase without foot sides keeps the Teil-1 pitch.
+      expect(computeSheetGeometry(kitShowcase(), 352, showCounts: false).rowPitch,
+          kitRowPitch);
+    });
+
+    testWidgets('golden: double bass sixteenths with foot letters and pedal',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+              body: SizedBox(
+                  width: 360, child: SheetStaffWidget(rudiment: doubleBassShowcase())))));
+      expect(tester.takeException(), isNull);
+      await expectLater(find.byType(SheetStaffWidget),
+          matchesGoldenFile('goldens/kit_staff_feet.png'));
+    });
+  });
 }

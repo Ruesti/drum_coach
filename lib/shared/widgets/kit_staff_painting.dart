@@ -207,7 +207,20 @@ extension _KitPainting on _StaffPainter {
       _drawAccent(canvas, Offset(x, up ? y0 + _accentY : stemEndY + 8),
           _dim(_StaffPainter._accentColor));
     }
-    if (!up) return;
+    if (!up) {
+      // Foot side (double bass): the one side of the column, under the stems.
+      final side = switch (drawn.hand) {
+        Hand.right => 'R',
+        Hand.left => 'L',
+        null => null,
+      };
+      if (footLetters && showSticking && side != null) {
+        _drawText(canvas, side, Offset(x, y0 + _StaffPainter._footLetterY),
+            _dim(_StaffPainter._letterColor), 11,
+            bold: true);
+      }
+      return;
+    }
     final letter = switch (drawn.hand) {
       Hand.right => 'R',
       Hand.left => 'L',

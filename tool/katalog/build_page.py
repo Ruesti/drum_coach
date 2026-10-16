@@ -127,7 +127,8 @@ def abc_for_kit_pattern(sheet) -> str:
 
 
 KIT_LEGEND = ('Hände Hals oben, Füße Hals unten · x = Becken/Hi-Hat · Raute = Glocke · '
-              'Crash/China/Splash auf der Hilfslinie · Kick erster Zwischenraum · Pedal unter der ersten Linie')
+              'Crash/China/Splash auf der Hilfslinie · Kick erster Zwischenraum · Pedal unter der ersten Linie'
+              ' · Fußseiten R/L nur in der App')
 
 
 def main(out: pathlib.Path, set_key: str | None) -> None:

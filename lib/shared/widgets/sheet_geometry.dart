@@ -17,6 +17,10 @@ const double sheetRowPitchWithCounts = sheetRowPitch + sheetCountBand;
 /// A kit row (Brief B.2): five lines with stems up (hands) and down (feet)
 /// need more height than the pad row. One pitch for the whole sheet.
 const double kitRowPitch = 132;
+
+/// A kit row with foot letters (double bass, Nachtrag B.4c): a second
+/// letter row under the feet stems needs more height.
+const double kitRowPitchWithFeet = 146;
 const double sheetLeftPad = 8;
 const double sheetNumberBox = 18; // box size; it sits above the staff, left
 const double sheetRightPad = 4; // = the left margin (staff starts at 4)
@@ -110,6 +114,7 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
   final sheet = r.sheet;
   final counts = showCounts && sheet.any((l) => l.counts);
   final kit = sheet.any((l) => l.isKit);
+  final feet = kit && r.hasFootSides;
   final layouts = <StaffLayout>[];
   final kitLayouts = <KitLineLayout?>[];
   final starts = <int>[];
@@ -156,7 +161,7 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
       rows += layout.rowCount;
     }
   }
-  final base = kit ? kitRowPitch : sheetRowPitch;
+  final base = feet ? kitRowPitchWithFeet : kit ? kitRowPitch : sheetRowPitch;
   return SheetGeometry(
       layouts, counts ? base + sheetCountBand : base, starts, rows,
       kitLayouts: kitLayouts);
