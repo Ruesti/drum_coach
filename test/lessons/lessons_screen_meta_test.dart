@@ -10,7 +10,7 @@ void main() {
         const ProviderScope(child: MaterialApp(home: LessonsScreen())));
     await tester.pumpAndSettle();
     // Single Stroke Roll is the first tile and a sheet since Katalog 3a.
-    expect(find.text('60–200 BPM · 9 lines · 24 bars'), findsOneWidget);
+    expect(find.text('60–200 BPM · 8 lines · 16 bars'), findsOneWidget);
     // The filter chip rows scroll too — drag the list itself.
     final list = find.descendant(
         of: find.byType(ListView), matching: find.byType(Scrollable));
@@ -19,9 +19,9 @@ void main() {
         scrollable: list);
     expect(find.text('40–100 BPM'), findsWidgets);
     await tester.scrollUntilVisible(
-        find.text('60–120 BPM · 9 lines · 24 bars'), 200,
+        find.text('60–120 BPM · 8 lines · 16 bars'), 200,
         scrollable: list);
-    expect(find.text('60–120 BPM · 9 lines · 24 bars'), findsOneWidget);
+    expect(find.text('60–120 BPM · 8 lines · 16 bars'), findsOneWidget);
   });
 
   testWidgets('kit exercises carry a KIT badge in the library', (tester) async {

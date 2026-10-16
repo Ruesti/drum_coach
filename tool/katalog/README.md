@@ -7,8 +7,7 @@ Urteil am Pad) und der **Dart-Code** (Blattform, `etude_dsl`).
 ```
 sheetlang.py   Notenschrift: Parser, Prüfung (ganze Takte 1–8, 24er-Raster),
                Zählhilfe (wie countLabelsFor), ABC- und Dart-Ausgabe
-blatt.py       Sheet: ein Blatt (8 Zeilen à line_bars Takte + Challenge 8 Takte),
-               Formprüfung, Übersichtstabelle
+blatt.py       Sheet: ein Blatt (8 Zeilen à line_bars Takte), Formprüfung, Übersichtstabelle
 katalog.py     Registry der Sätze: rudimente (3a), fills (3b), grooves (B.4a), set_fills (B.4b),
                feet (B.4c, 7 Blätter), set_more (B.4c, 5 Blätter) — Titel, Seed-Marker
 rudimente.py   die zwölf Rudiment-Blätter + Lektionstexte (Daten, 2 Takte je Zeile)

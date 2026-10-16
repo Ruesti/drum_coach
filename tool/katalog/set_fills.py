@@ -188,12 +188,6 @@ def phrase(groove: str, fill: str, plan: list[str | None]) -> str:
     return kit(first, time, time, fill_bar(fill, plan))
 
 
-def challenge(groove: str, fill_a: str, plan_a: list[str | None], fill_b: str, plan_b: list[str | None]) -> str:
-    """Acht Takte in einem kit(...)-Aufruf: zweimal drei Time-Takte und ein Fill."""
-    first, time = GROOVES[groove]
-    return kit(first, time, time, fill_bar(fill_a, plan_a), first, time, time, fill_bar(fill_b, plan_b))
-
-
 _PAD = {s.id: s for s in fills.SHEETS}
 
 
@@ -215,7 +209,6 @@ def set_fill(pad_id: str, *, groove: str, name: str, description: str, lesson: d
         id='set_' + pad_id, name=name, description=description, lesson=lesson,
         pattern=kit({**orchestrate(fills_[0], PLANS[0]), 'BD': BD13}),
         lines=[phrase(groove, fills_[i], PLANS[i]) for i in range(8)],
-        challenge=challenge(groove, fills_[0], PLANS[0], fills_[3], PLANS[3]),
         **kw,
     )
 
@@ -355,7 +348,6 @@ SHEETS: list[Sheet] = [
         description='Simple stickings around all four toms, one drum per beat, with crash, china or ride bell on the one.',
         pattern=kit(_around_bars(0)[1]),
         lines=[kit(*_around_bars(i)) for i in range(8)],
-        challenge=kit(*_around_bars(0), *_around_bars(2), *_around_bars(3), *_around_bars(7)),
         lesson=LESSON_AROUND,
         line_bars=2, kit=True, limbs=('allFour',), new_seed=True,
     ),

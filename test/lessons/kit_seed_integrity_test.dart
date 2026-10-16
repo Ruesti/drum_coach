@@ -64,7 +64,7 @@ void main() {
     }
   });
 
-  test('the seven groove sheets: 8 lines + Challenge, 24 bars, hi-hat/ride, '
+  test('the seven groove sheets: 8 lines, 16 bars, hi-hat/ride, '
       'snare and kick in line 1, four lesson sections', () {
     const ids = [
       'groove_rock8',
@@ -77,11 +77,9 @@ void main() {
     ];
     for (final id in ids) {
       final r = rudimentsSeedData.firstWhere((r) => r.id == id);
-      expect(r.sheet.length, 9, reason: id);
-      expect(r.sheet.take(8).every((l) => l.repeat), isTrue, reason: id);
-      expect(r.sheet.last.repeat, isFalse, reason: id);
-      expect(r.sheet.last.title, 'Challenge', reason: id);
-      expect(sheetBars(r), 24, reason: id);
+      expect(r.sheet.length, 8, reason: id);
+      expect(r.sheet.every((l) => l.repeat), isTrue, reason: id);
+      expect(sheetBars(r), 16, reason: id);
       expect(r.skills.contains(Skill.groove), isTrue, reason: id);
       final first = r.sheet.first.kitVoices.map((v) => v.instrument).toSet();
       expect(first.contains(KitInstrument.kick), isTrue, reason: id);
@@ -118,8 +116,8 @@ void main() {
     ];
     for (final id in ids) {
       final r = rudimentsSeedData.firstWhere((r) => r.id == id);
-      expect(r.sheet.length, 9, reason: id);
-      expect(sheetBars(r), 40, reason: id);
+      expect(r.sheet.length, 8, reason: id);
+      expect(sheetBars(r), 32, reason: id);
       expect(r.skills.contains(Skill.fill), isTrue, reason: id);
       for (var i = 0; i < 8; i++) {
         final l = r.sheet[i];
@@ -138,8 +136,8 @@ void main() {
       }
     }
     final around = rudimentsSeedData.firstWhere((r) => r.id == 'set_around_the_kit');
-    expect(around.sheet.length, 9);
-    expect(sheetBars(around), 24);
+    expect(around.sheet.length, 8);
+    expect(sheetBars(around), 16);
     final cymbals = {
       for (final l in around.sheet)
         ...l.kitVoices
@@ -165,8 +163,8 @@ void main() {
     };
     for (final e in ids.entries) {
       final r = rudimentsSeedData.firstWhere((r) => r.id == e.key);
-      expect(r.sheet.length, 9, reason: e.key);
-      expect(sheetBars(r), 24, reason: e.key);
+      expect(r.sheet.length, 8, reason: e.key);
+      expect(sheetBars(r), 16, reason: e.key);
       expect(r.limbs.contains(e.value), isTrue, reason: e.key);
       expect(r.hasFootSides, e.value == Limb.doubleBass, reason: e.key);
       expect(() => SheetPlan.wholeSheet(r), returnsNormally, reason: e.key);
@@ -204,14 +202,14 @@ void main() {
       return true;
     }
     final lin = rudimentsSeedData.firstWhere((r) => r.id == 'groove_linear');
-    expect(lin.sheet.length, 9);
+    expect(lin.sheet.length, 8);
     expect(lin.lines.every(linear), isTrue, reason: 'groove_linear is not linear');
     final fill = rudimentsSeedData.firstWhere((r) => r.id == 'set_fill_linear');
-    expect(sheetBars(fill), 40);
-    // The fill bars (bar 4 of each line, bars 4 and 8 of the Challenge) are linear.
+    expect(sheetBars(fill), 32);
+    // The fill bar (bar 4 of each line) is linear.
     final barTicks = fill.beatsPerBar * kitTicksPerQuarter;
     for (var i = 0; i < fill.sheet.length; i++) {
-      final fillBars = i < 8 ? {3} : {3, 7};
+      const fillBars = {3};
       final ticks = <int>{};
       for (final v in fill.sheet[i].kitVoices) {
         for (final o in onsetsOf(v.beats, fill.gridUnit)) {
@@ -225,6 +223,6 @@ void main() {
     expect(db.hasFootSides, isTrue);
     expect(db.limbs.contains(Limb.doubleBass), isTrue);
     final k16 = rudimentsSeedData.firstWhere((r) => r.id == 'groove_kick_sixteenths');
-    expect(sheetBars(k16), 24);
+    expect(sheetBars(k16), 16);
   });
 }

@@ -1,6 +1,6 @@
 """Sechs Grooves und ein Hi-Hat-Blatt (Phase B.4), frei komponiert.
 
-Jedes Blatt: 8 Zeilen à 2 Takte mit Wiederholung + Challenge 8 Takte, als
+Jedes Blatt: 8 Zeilen à 2 Takte mit Wiederholung, als
 Spuren (sheetlang: `HH: … / SN: … / BD: …`). Zeile 1 ist der Groove der
 gleichnamigen Band-Stimme (backing_styles.dart), die Zeilen 2–8 variieren
 Kick, Hi-Hat (Akzent, offen), Snare (Ghosts, Cross-Stick) und den Crash
@@ -207,7 +207,6 @@ SHEETS: list[Sheet] = [
             kit(R8_7, R8_3),
             two(R8_8),
         ],
-        challenge=kit(R8_1, R8_1, R8_3, R8_3, R8_4, R8_4, R8_8, R8_8),
         lesson=LESSON_ROCK8,
     ),
     groove(
@@ -225,7 +224,6 @@ SHEETS: list[Sheet] = [
             kit({'C1~': C1_1, 'HH': HH16_NO1, 'SN': SN24, 'BD': BD_ROCK16}, R16_1),
             two(R16_8),
         ],
-        challenge=kit(R16_1, R16_1, R16_3, R16_3, R16_4, R16_4, R16_8, R16_8),
         lesson=LESSON_ROCK16,
     ),
     groove(
@@ -243,7 +241,6 @@ SHEETS: list[Sheet] = [
             kit({'C1~': C1_1, 'HH': HH8_NO1, 'SN': SN3, 'BD': BD_HALF}, HT_3),
             two(HT_8),
         ],
-        challenge=kit(HT_1, HT_1, HT_3, HT_3, HT_6, HT_6, HT_8, HT_8),
         lesson=LESSON_HALFTIME,
     ),
     groove(
@@ -261,7 +258,6 @@ SHEETS: list[Sheet] = [
             kit({'C1~': C1_1, 'HH': SHUF_NO1, 'SN': SN24, 'BD': BD13}, SH_2),
             two(SH_8),
         ],
-        challenge=kit(SH_1, SH_1, SH_2, SH_2, SH_3, SH_3, SH_8, SH_8),
         lesson=LESSON_SHUFFLE,
     ),
     groove(
@@ -279,7 +275,6 @@ SHEETS: list[Sheet] = [
             two({'RD': RIDE_SW, 'HP': HP24, 'BD': BD_SW, 'SN': SN_SW3}),
             two(SW_8),
         ],
-        challenge=kit(SW_1, SW_1, SW_2, SW_2, SW_5, SW_5, SW_8, SW_8),
         lesson=LESSON_SWING,
     ),
     groove(
@@ -297,7 +292,6 @@ SHEETS: list[Sheet] = [
             kit({'C1~': C1_1, 'HH': HH16_NO1, 'SN': SN24, 'BD': BD_FUNK}, FK_2),
             two(FK_8),
         ],
-        challenge=kit(FK_1, FK_1, FK_2, FK_2, FK_4, FK_4, FK_8, FK_8),
         lesson=LESSON_FUNK16,
     ),
     groove(
@@ -315,7 +309,6 @@ SHEETS: list[Sheet] = [
             two(HO_L7),
             two({'HH': HH16_O, 'HO': HO_16, 'SN': SN24, 'BD': BD_ROCK16}),
         ],
-        challenge=kit(HO_L1, HO_L1, HO_L2, HO_L2, HO_L3, HO_L3, HO_L7, HO_L7),
         lesson=LESSON_HIHAT_OPEN,
     ),
 ]

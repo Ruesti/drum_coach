@@ -32,7 +32,7 @@ SETS: list[SheetSet] = [
     SheetSet(
         key='rudimente', step='3a', title='Zwölf Rudiment-Blätter',
         lead='Frei komponiert nach der Regel „jede Übung so abwechslungsreich und groovy wie möglich": '
-             'je Blatt acht Zeilen à zwei Takte mit Wiederholung und eine Challenge über acht Takte. '
+             'je Blatt acht Zeilen à zwei Takte mit Wiederholung. '
              'Oben in jedem Blatt der Kasten mit der Grundgestalt (so steht sie auf der Info-Seite), '
              'die Lektion ist eingeklappt. Sag mir je Blatt und Zeilennummer, was raus, anders oder länger soll.',
         seed_marker='KATALOG 3a: new base rudiments',

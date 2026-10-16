@@ -3,9 +3,8 @@
 Brief §3.2: je Zeile drei Takte einstimmiges Time-Muster plus ein Takt Fill,
 als Vier-Takt-Phrase geloopt; die Band kommt aus dem Loop und läuft im
 Fill-Takt weiter. Takt 1 jeder Zeile beginnt mit Akzent — die Eins nach dem
-Fill. Jedes Blatt: 8 Zeilen à 4 Takte mit Wiederholung + Challenge 8 Takte
-(zweimal 3 + 1). Regel (Uli, 30.09.): so abwechslungsreich und groovy wie
-möglich. Notenschrift siehe sheetlang.py. Texte Englisch (App-Sprache).
+Fill. Jedes Blatt: 8 Zeilen à 4 Takte mit Wiederholung. Regel (Uli, 30.09.):
+so abwechslungsreich und groovy wie möglich. Notenschrift siehe sheetlang.py. Texte Englisch (App-Sprache).
 """
 from __future__ import annotations
 
@@ -31,10 +30,6 @@ PD = 'R16 L16 R16 R16 L16> R16 L16 L16 R16 L16 R16 R16 L16> R16 L16 L16'
 def phrase(t1: str, t: str, fill: str) -> str:
     """Drei Takte Time (Takt 1 mit Akzent auf der Eins) und ein Takt Fill."""
     return f'{t1} | {t} | {t} | {fill}'
-
-
-def challenge(t1: str, t: str, fill_a: str, fill_b: str) -> str:
-    return phrase(t1, t, fill_a) + ' | ' + phrase(t1, t, fill_b)
 
 
 def fill_sheet(**kw) -> Sheet:
@@ -162,7 +157,6 @@ SHEETS: list[Sheet] = [
             phrase(RK1, RK, _SX[6]),
             phrase(S1, S, _SX[7]),
         ],
-        challenge=challenge(RK1, RK, _SX[0], _SX[3]),
         lesson={
             'Why it matters': 'A fill is a sentence with a full stop: it leaves the groove, says something, and lands on the one. Sixteenth singles are the plainest sentence there is, so every flaw shows, and every success does too.',
             'How to play it': 'Play the three time bars exactly as written, hands relaxed, then switch to even R L singles for the fill bar and hit the first note of the next bar with an accent, as if it were a crash. Listen for the landing: the accent on the one should feel inevitable, not early.',
@@ -185,7 +179,6 @@ SHEETS: list[Sheet] = [
             phrase(RK1, RK, _DB[6]),
             phrase(S1, S, _DB[7]),
         ],
-        challenge=challenge(RK1, RK, _DB[0], _DB[3]),
         lesson={
             'Why it matters': 'With doubles, each hand only has to move half as often, so the fill can be fast and still relaxed. On the kit, R R L L is two notes on one drum and two on the next: the simplest way "around the kit".',
             'How to play it': 'Time as written, then R R L L for the fill, the second stroke of each pair as loud as the first. Land on the one with an accent. Listen for the second notes: if they go quiet, the fill thins out and the landing comes early.',
@@ -208,7 +201,6 @@ SHEETS: list[Sheet] = [
             phrase(EB1, EB, _PD[6]),
             phrase(RK1, RK, _PD[7]),
         ],
-        challenge=challenge(RK1, RK, _PD[1], _PD[4]),
         lesson={
             'Why it matters': 'A paradiddle fill does not sound like a roll and not like singles; it has a built-in bounce, because R L R R L R L L mixes both. On the kit it is the funk fill: accents on the snare, the doubles on the toms.',
             'How to play it': 'Time, then R L R R L R L L twice for the fill bar, land on the one. Listen for the accent (line 2): the first note of every group should stick out while the doubles stay low and even.',
@@ -231,7 +223,6 @@ SHEETS: list[Sheet] = [
             phrase(Q1, Q, _TR[6]),
             phrase(SH1, SH, _TR[7]),
         ],
-        challenge=challenge(SH1, SH, _TR[0], _TR[3]),
         lesson={
             'Why it matters': 'Triplets roll where sixteenths march. In a shuffle or a 12/8 ballad a triplet fill is the only fill that fits, and it has to come from the same feel as the time, not from a different world.',
             'How to play it': 'Shuffle hands as time: right hand on the first and last note of each triplet, left hand on two and four. For the fill, even R L R L R L triplets, then the accent on the one. Listen for the swing: the fill must keep the band\'s lilt, not straighten it out.',
@@ -254,7 +245,6 @@ SHEETS: list[Sheet] = [
             phrase(Q1, Q, _FL[6]),
             phrase(S1, S, _FL[7]),
         ],
-        challenge=challenge(RK1, RK, _FL[1], _FL[7]),
         lesson={
             'Why it matters': 'Not every fill has to be fast. Four flams on the quarter notes stop a band in its tracks, and a flam on the one after a run is the fattest landing there is.',
             'How to play it': 'Time as written, then flams: the grace note low and just ahead, the main note full height. Alternate the lead hand as marked. Listen for one fat note, not two thin ones; if you hear "ta-ta", the grace note is too high or too early.',
@@ -277,7 +267,6 @@ SHEETS: list[Sheet] = [
             phrase(HT1, HT, _SE[6]),
             phrase(RK1, RK, _SE[7]),
         ],
-        challenge=challenge(RK1, RK, _SE[1], _SE[4]),
         lesson={
             'Why it matters': 'Sextuplets are the step up from sixteenths: half as much again, with the same hands. A one-bar sextuplet fill at 90 BPM is as fast as most drummers ever need to be, and it has to end on the one as if nothing happened.',
             'How to play it': 'Straight eighths or rock hands as time, then six even singles per beat, accent on the first of each six, land on the one. The band stays in straight eighths on purpose: the sextuplets are the fill, not the feel. Listen for the accents lining up with the hi-hat.',
@@ -300,7 +289,6 @@ SHEETS: list[Sheet] = [
             phrase(PD1, PD, _SG[6]),
             phrase(HT1, HT, _SG[7]),
         ],
-        challenge=challenge(RK1, RK, _SG[1], _SG[3]),
         lesson={
             'Why it matters': 'Sixteen sixteenths split as 6 + 6 + 4 do not sit on the beats; the accents land on 1, the "a" of 2 and the "and" of 3, then the four remaining notes bring you home. That drift is what makes a fill sound modern instead of square.',
             'How to play it': 'Time as written, then the fill with accents exactly where marked: first note of each group of six, and the first note of the final four. Keep everything else low and even. Listen for the accents against the band: they should feel like a slow triplet laid over the groove.',
@@ -323,7 +311,6 @@ SHEETS: list[Sheet] = [
             phrase(Q1, Q, _RO[6]),
             phrase(S1, S, _RO[7]),
         ],
-        challenge=challenge(RK1, RK, _RO[0], _RO[3]),
         lesson={
             'Why it matters': 'A roll is the only fill that gets louder without getting busier. One beat of roll into the one is a nine stroke roll, half a bar is a seventeen, and a whole bar announces a chorus like nothing else.',
             'How to play it': 'Time, then R R L L in thirty-second notes: one wrist stroke per pair, the second note from the rebound, pressed just enough to be even. Land on the one with the accent. Listen for a smooth hum, not a gallop; if you hear the pairs, slow down.',

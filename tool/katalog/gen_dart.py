@@ -55,7 +55,7 @@ def render(sheet, step: str, source: str) -> str:
 import '../etude_dsl.dart';
 {pattern_voices}
 {pattern_block}
-/// {sheet.name}: {form} plus an eight-bar challenge, composed
+/// {sheet.name}: {form}, composed
 /// by the rule "as varied and groovy as possible" (Uli, 30.09.).
 final List<ExerciseLine> {c}Sheet = [
 {body}

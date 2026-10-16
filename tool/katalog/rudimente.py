@@ -1,7 +1,7 @@
 """Die zwölf Rudiment-Blätter (Katalog Schritt 3a), frei komponiert.
 
 Regel (Uli, 30.09.): jede Übung so abwechslungsreich und groovy wie möglich.
-Jedes Blatt: 8 Zeilen à 2 Takte mit Wiederholung + Challenge 8 Takte.
+Jedes Blatt: 8 Zeilen à 2 Takte mit Wiederholung.
 Notenschrift siehe sheetlang.py. Texte Englisch (App-Sprache).
 """
 from __future__ import annotations
@@ -26,12 +26,6 @@ SHEETS: list[Sheet] = [
             'R8 L8> R8 L8> R16 L16 R16 L16 R8 L8> | R16 L16 R16 L16 R16 L16 R16 L16 R8> L8 R8> L8',
             'R16 L16 R16 L16 R32 L32 R32 L32 R32 L32 R32 L32 R8 L8 R4 | R8 L8 R16 L16 R16 L16 R4> -4',
         ],
-        challenge=(
-            'R8 L8 R8 L8 R8 L8 R8 L8 | R16 L16 R16 L16 R8 L8 R4 L4 | '
-            'R16> L16 R16 L16 R16> L16 R16 L16 R16> L16 R16 L16 R16> L16 R16 L16 | R8 L8 R8 -8 L8 R8 L8 -8 | '
-            '3(R8 L8 R8) 3(L8 R8 L8) R4 L4 | R8 L8> R8 L8> R16 L16 R16 L16 R8 L8> | '
-            'R32 L32 R32 L32 R32 L32 R32 L32 R8 L8 R16 L16 R16 L16 R4 | R8 L8 R8 L8 R4> -4'
-        ),
         lesson={
             'Why it matters': 'Every fill, every roll, every fast passage on the kit is built from single strokes. If they are even, everything else sounds even.',
             'How to play it': 'Alternate the hands, R L R L, each stroke from the same height, the stick rebounding by itself. The left hand should be indistinguishable from the right.',
@@ -54,12 +48,6 @@ SHEETS: list[Sheet] = [
             '3(R8 R8 L8) 3(L8 R8 R8) 3(L8 L8 R8) 3(R8 L8 L8) | R8 R8 L8 L8 R4 L4',
             'R32 R32 L32 L32 R32 R32 L32 L32 R8 L8 R32 R32 L32 L32 R32 R32 L32 L32 R8> L8> | R32 R32 L32 L32 R32 R32 L32 L32 R32 R32 L32 L32 R32 R32 L32 L32 R4> -4',
         ],
-        challenge=(
-            'R8 R8 L8 L8 R8 R8 L8 L8 | R16 R16 L16 L16 R16 R16 L16 L16 R8 L8 R4 | '
-            'R16> R16 L16 L16 R16> R16 L16 L16 R16> R16 L16 L16 R16> R16 L16 L16 | R16 R16 L16 L16 -8 R8 L16 L16 R16 R16 -8 L8 | '
-            '3(R8 R8 L8) 3(L8 R8 R8) 3(L8 L8 R8) 3(R8 L8 L8) | R8> L16 L16 R16 R16 L8> R8> L16 L16 R16 R16 L8> | '
-            'R32 R32 L32 L32 R32 R32 L32 L32 R8 L8 R32 R32 L32 L32 R32 R32 L32 L32 R8> L8> | R8 R8 L8 L8 R4> -4'
-        ),
         lesson={
             'Why it matters': 'Doubles are the engine behind rolls, paradiddles and every "fast but relaxed" sound. They also teach the stick to do half the work.',
             'How to play it': 'Two strokes with each hand, R R L L. Slow: two wrist strokes. Fast: one wrist stroke and a controlled rebound, the fingers pulling the second stroke up to full volume.',
@@ -82,12 +70,6 @@ SHEETS: list[Sheet] = [
             '3(R8 L8 R8) 3(R8 L8 R8) 3(L8 L8 R8) 3(L8 R8 R8) | 3(L8 R8 L8) 3(L8 R8 L8) R4> L4>',
             'R16 -16 R16 R16 L16 -16 L16 L16 R16 -16 R16 R16 L16 -16 L16 L16 | R16 L16 R16 R16 L16 R16 L16 L16 R4> -4',
         ],
-        challenge=(
-            'R8 L8 R8 R8 L8 R8 L8 L8 | R16 L16 R16 R16 L8 R8 L16 R16 L16 L16 R8 L8 | '
-            'R16 L16> R16 R16 L16 R16> L16 L16 R16 L16> R16 R16 L16 R16> L16 L16 | R16 L16 R16 R16 -8 L8 R16 L16 R16 R16 -8 L8 | '
-            'R8 R8 L8 R8 L8 L8 R8 L8 | R16 R16 L16 L16 R8> L8> R16 L16 R16 R16 L8> R8> | '
-            '3(R8 L8 R8) 3(R8 L8 R8) 3(L8 L8 R8) 3(L8 R8 R8) | R16 L16 R16 R16 L16 R16 L16 L16 R4> -4'
-        ),
         lesson={
             'Why it matters': 'The paradiddle joins singles and doubles and switches the lead hand by itself. On the kit that is what moves you freely between the hands: fills, grooves split between snare and toms, anything "mixed".',
             'How to play it': 'One stroke right, one left, then two right: R L R R. Then the mirror image, L R L L. Say it out loud: pa-ra-did-dle.',
@@ -110,12 +92,6 @@ SHEETS: list[Sheet] = [
             '3(R8> L8 R8) 3(L8> R8 R8) 3(L8> R8 L8) 3(R8> L8 L8) | 3(R8 L8 R8>) 3(L8 R8 R8>) 3(L8 R8 L8>) 3(R8 L8 L8>)',
             'R16 L16 R16 L16 R16 R16 -8 L16 R16 L16 R16 L16 L16 -8 | R16 L16 R16 L16 R16 R16 L16 R16 L16 R16 L16 L16 R4>',
         ],
-        challenge=(
-            '3(R8 L8 R8) 3(L8 R8 R8) 3(L8 R8 L8) 3(R8 L8 L8) | 3(R8> L8 R8) 3(L8 R8 R8) L8> R8 L4 | '
-            'R16> L16 R16 L16 R16 R16 L16> R16 L16 R16 L16 L16 R4> | 6(R16 L16 R16 L16 R16 R16) 6(L16 R16 L16 R16 L16 L16) R4 L4 | '
-            '3(R8 L8 R8) 3(L8 R8 R8) -4 L4 | 3(L8 R8 L8) 3(R8 L8 L8) R8 L8 R4 | '
-            'R16 L16 R16 L16 R16 R16 -8 L16 R16 L16 R16 L16 L16 -8 | 3(R8> L8 R8) 3(L8 R8 R8) L4> -4'
-        ),
         lesson={
             'Why it matters': 'Six notes per group: in triplets it falls on the beat every two beats, in sixteenths it drifts across the bar. That drift is the most useful thing about it, it is how you phrase in threes over a four-beat groove.',
             'How to play it': 'Four singles and a double: R L R L R R, then L R L R L L. Keep the double as even as the singles.',
@@ -138,12 +114,6 @@ SHEETS: list[Sheet] = [
             '3(R8 L8 R8>) 3(R8 L8 L8) 3(R8 L8 R8>) 3(R8 L8 L8) | 3(R8 L8 R8) 3(R8> L8 L8) 3(R8 L8 R8) 3(R8> L8 L8)',
             '3(R8 -8 R8) 3(R8 L8 L8) 3(R8 -8 R8) 3(R8 L8 L8) | 3(R8 L8 R8) 3(R8 L8 L8) R4> -4',
         ],
-        challenge=(
-            '3(R8 L8 R8) 3(R8 L8 L8) 3(R8 L8 R8) 3(R8 L8 L8) | 3(R8> L8 R8) 3(R8 L8 L8) R8> L8 R4 | '
-            '6(R16 L16 R16 R16 L16 L16) 6(R16 L16 R16 R16 L16 L16) R4> L4 | R16> L16 R16 R16 L16 L16 R16> L16 R16 R16 L16 L16 R4 | '
-            '3(R8 L8 R8) 3(R8 L8 L8) -4 R4 | 3(R8 L8 R8) 3(R8 L8 L8) R8 L8 R8 L8 | '
-            '3(R8 -8 R8) 3(R8 L8 L8) 3(R8 -8 R8) 3(R8 L8 L8) | 3(R8 L8 R8) 3(R8 L8 L8) R4> -4'
-        ),
         lesson={
             'Why it matters': 'Because the lead hand never changes, the paradiddle-diddle rolls like a wheel. It is the quickest way to a smooth sextuplet and to fills that sound like one long motion.',
             'How to play it': 'R L R R L L, then again R L R R L L. Right hand leads every group (play it left-led as well, line 4).',
@@ -166,12 +136,6 @@ SHEETS: list[Sheet] = [
             '3(R8f L8 R8) 3(L8f R8 L8) 3(R8f L8 R8) 3(L8f R8 L8) | R4f L4f R4f L4f',
             'R8.f L16 R8.f L16 R8.f L16 R8.f L16 | R8f L8 R16 L16 R16 L16 R4f L4f',
         ],
-        challenge=(
-            'R4f L4f R4f L4f | R8f L8 R8 L8 R8f L8 R8 L8 | '
-            'R16f L16 R16 L16 R16f L16 R16 L16 R16f L16 R16 L16 R16f L16 R16 L16 | R4f> -8 L8 R4f> -8 L8 | '
-            'R16f L16 R16 R16 L16f R16 L16 L16 R16f L16 R16 R16 L16f R16 L16 L16 | R8 L8f R8 L8f R8 L8f R8 L8f | '
-            'R8.f L16 R8.f L16 R8.f L16 R8.f L16 | R8f L8 R8 L8 R4f> -4'
-        ),
         lesson={
             'Why it matters': 'A flam makes a single note sound bigger without hitting harder. It is the drummer\'s way of putting weight on a beat, the backbeat with a flam is a different backbeat.',
             'How to play it': 'The grace note comes from low (a few centimetres), the main note from high; both move at the same time and land almost together. Right flam: l R. Left flam: r L.',
@@ -194,12 +158,6 @@ SHEETS: list[Sheet] = [
             '3(R8f> -8 L8) 3(R8f> -8 L8) 3(R8f> -8 L8) 3(R8f> -8 L8) | 3(R8f> L8 R8) 3(L8f> R8 L8) 3(R8f> L8 R8) 3(L8f> R8 L8)',
             '6(R16f> L16 R16 L16f> R16 L16) 6(R16f> L16 R16 L16f> R16 L16) R4f> L4 | 3(R8f> L8 R8) 3(L8f> R8 L8) 3(R8f> L8 R8) L4>',
         ],
-        challenge=(
-            '3(R8f> L8 R8) 3(L8f> R8 L8) 3(R8f> L8 R8) 3(L8f> R8 L8) | 3(R8f> L8 R8) 3(L8f> R8 L8) R4f> L4 | '
-            'R16f> L16 R16 L16f> R16 L16 R16f> L16 R16 L16f> R16 L16 R16f> L16 R16 L16f> | R16 L16 R16f> L16 R16 L16f> R16 L16 R4f> L4 | '
-            '3(R8f> L8 -8) 3(L8f> R8 -8) 3(R8f> L8 -8) 3(L8f> R8 -8) | 3(R8f> -8 L8) 3(R8f> -8 L8) 3(R8f> -8 L8) 3(R8f> -8 L8) | '
-            '6(R16f> L16 R16 L16f> R16 L16) 6(R16f> L16 R16 L16f> R16 L16) R4f> L4 | 3(R8f> L8 R8) 3(L8f> R8 L8) R4f> -4'
-        ),
         lesson={
             'Why it matters': 'The flam accent is the triplet with a backbone: a heavy first note, two light ones. It teaches hands to change roles every beat, flam, tap, tap, with the lead switching sides.',
             'How to play it': 'lR L R, then rL R L, as eighth-note triplets. The flam is loud (accent), the two taps are low and even.',
@@ -222,12 +180,6 @@ SHEETS: list[Sheet] = [
             'R8f R8 L16 L16 R16 R16 L8f L8 R16 R16 L16 L16 | R8f R8 L8f L8 R16f R16 L16f L16 R4>',
             'R8 L8f L8 R8f R8 L8f L8 R8f | R8 L8f L8 R8f R8 L8f -4',
         ],
-        challenge=(
-            'R8f R8 L8f L8 R8f R8 L8f L8 | R16f R16 L16f L16 R16f R16 L16f L16 R16f R16 L16f L16 R16f R16 L16f L16 | '
-            'R8f R8 L8f L8 R4f L4f | R8f R8 -4 L8f L8 -4 | '
-            '3(R8f R8 L8) 3(R8f R8 L8) 3(L8f L8 R8) 3(L8f L8 R8) | R8f R8> L8f L8> R8f R8> L8f L8> | '
-            'R8f R8 L16 L16 R16 R16 L8f L8 R16 R16 L16 L16 | R8f R8 L8f L8 R4f> -4'
-        ),
         lesson={
             'Why it matters': 'Flam tap is double strokes with a flam on the first one, a rudiment that sounds like a small march by itself. It trains the grace note hand to get out of the way instantly.',
             'How to play it': 'lR R, then rL L. The flam\'s grace note (the other hand) is low; the main stroke and the tap are played by the same hand.',
@@ -250,12 +202,6 @@ SHEETS: list[Sheet] = [
             'R8d L8 R16 R16 L16 L16 R8d L8 R16 R16 L16 L16 | R8d L8 R8d L8 R16d L16 R16 L16 R4d>',
             'R8 L16 R16d L8 R16 L16d R8 L16 R16d L8 R16 L16d | R8d L8 R8d L8 R4d> -4',
         ],
-        challenge=(
-            'R4d L4d R4d L4d | R8d L8 R8 L8 R8d L8 R8 L8 | '
-            'R16d L16 R16 L16 R16d L16 R16 L16 R16d L16 R16 L16 R16d L16 R16 L16 | R8d L8> L8d R8> R8d L8> L8d R8> | '
-            'R4d -8 L8 R4d -8 L8 | 3(R8d L8 R8) 3(L8d R8 L8) 3(R8d L8 R8) 3(L8d R8 L8) | '
-            'R8d L8 R16 R16 L16 L16 R8d L8 R16 R16 L16 L16 | R8d L8 R8d L8 R4d> -4'
-        ),
         lesson={
             'Why it matters': 'The drag is the rudiment that connects notes: a short double leading into a stroke. Rolls, ruffs and most "textured" snare playing grow out of it.',
             'How to play it': 'Two low bounced strokes with one hand, then the main stroke with the other: llR. Then rrL. The graces are quick and quiet, the main note full.',
@@ -278,12 +224,6 @@ SHEETS: list[Sheet] = [
             'R16 R16 L16 L16 R16> L16 L16 R16 R16 L16> R16 R16 L16 L16 R16> L16 | L16 L16 R16 R16 L16> R16 R16 L16 L16 R16> L8 R4',
             'R32 R32 L32 L32 R32 R32 L32 L32 R32 R32 L32 L32 R32 R32 L32 L32 R4> -4 | R32 R32 L32 L32 R8> L32 L32 R32 R32 L8> R4> -4',
         ],
-        challenge=(
-            'R32 R32 L32 L32 R8> L32 L32 R32 R32 L8> R32 R32 L32 L32 R8> L32 L32 R32 R32 L8> | R16 R16 L16 L16 R8> L16 L16 R16 R16 L8> R4> | '
-            'R8 L32 L32 R32 R32 L8> R8 L32 L32 R32 R32 L8> R4 | R32 R32 L32 L32 R8> -4 L32 L32 R32 R32 L8> -4 | '
-            'R16 R16 L16 L16 R4> L16 L16 R16 R16 L4> | R16 R16 L16 L16 R16> L16 L16 R16 R16 L16> R16 R16 L16 L16 R16> L16 | '
-            'R32 R32 L32 L32 R32 R32 L32 L32 R32 R32 L32 L32 R32 R32 L32 L32 R4> -4 | R32 R32 L32 L32 R8> L32 L32 R32 R32 L8> R4> -4'
-        ),
         lesson={
             'Why it matters': 'Rolls are how a snare drum sustains a note. The five stroke roll is the smallest one, and once its two doubles are even, every longer roll is the same motion continued.',
             'How to play it': 'R R L L R: two doubles, then an accented single that ends the roll, alternating the lead each time. Written as thirty-second notes into an eighth, or as sixteenths into an eighth (line 2).',
@@ -306,12 +246,6 @@ SHEETS: list[Sheet] = [
             '6(R16> R16 L16 L16 R16 R16) L4 6(L16> L16 R16 R16 L16 L16) R4 | 6(R16> R16 L16 L16 R16 R16) L4> R4> L4>',
             '6(R16 R16 L16 L16 R16 R16) 6(L16 L16 R16 R16 L16 L16) R4> -4 | 6(R16 R16 L16 L16 R16 R16) L4> 6(L16 L16 R16 R16 L16 L16) R4>',
         ],
-        challenge=(
-            '6(R16 R16 L16 L16 R16 R16) L4> 6(L16 L16 R16 R16 L16 L16) R4> | R16 R16 L16 L16 R16 R16 L8> L16 L16 R16 R16 L16 L16 R8> | '
-            'R32 R32 L32 L32 R32 R32 L16> R32 R32 L32 L32 R32 R32 L16> R32 R32 L32 L32 R32 R32 L16> R32 R32 L32 L32 R32 R32 L16> | 6(R16 R16 L16 L16 R16 R16) L4> -4 R4 | '
-            '6(L16 L16 R16 R16 L16 L16) R8> L8 R8 L8 R16 L16 R16 L16 | 3(R8 R8 L8) 3(L8 R8 R8) L4> R4 | '
-            '6(R16 R16 L16 L16 R16 R16) 6(L16 L16 R16 R16 L16 L16) R4> -4 | 6(R16 R16 L16 L16 R16 R16) L4> R4> -4'
-        ),
         lesson={
             'Why it matters': 'Seven strokes fill exactly a beat of sextuplets before the landing, so this roll teaches you to start a roll on the beat and finish it on the next one, the most common roll in written music.',
             'How to play it': 'R R L L R R L: three doubles as a sextuplet, then the accent on the next beat with the other hand. Alternate the lead.',
@@ -334,12 +268,6 @@ SHEETS: list[Sheet] = [
             '3(R8f> -8 L8) 3(R8f> -8 L8) 3(R8f> R8 L8) 3(R8f> R8 L8) | 3(R8f> -8 L8) 3(R8f> R8 L8) R4f> L4',
             '6(R16f> R16 L16 R16f> R16 L16) 6(R16f> R16 L16 R16f> R16 L16) R4f> L4 | 6(R16f> R16 L16 R16f> R16 L16) R4f> 3(R8f> R8 L8) R4f>',
         ],
-        challenge=(
-            '3(R8f> R8 L8) 3(R8f> R8 L8) 3(R8f> R8 L8) 3(R8f> R8 L8) | 3(R8f> R8 L8) 3(L8f> L8 R8) 3(R8f> R8 L8) 3(L8f> L8 R8) | '
-            'R16f> R16 L16 R16f> R16 L16 R16f> R16 L16 R16f> R16 L16 R16f> R16 L16 R16f> | R16 L16 R16f> R16 L16 R16f> R16 L16 R4f> L4 | '
-            '3(R8f> R8 -8) 3(R8f> R8 -8) 3(R8f> R8 L8) 3(R8f> R8 L8) | 3(R8f> R8 L8) 3(R8f> L8 R8) 3(L8f> L8 R8) 3(L8f> R8 L8) | '
-            '6(R16f> R16 L16 R16f> R16 L16) 6(R16f> R16 L16 R16f> R16 L16) R4f> L4 | 3(R8f> R8 L8) 3(R8f> R8 L8) R4f> -4'
-        ),
         lesson={
             'Why it matters': 'The Swiss army triplet is the fastest way to play flammed triplets, because the lead hand plays two notes in a row and never has to cross. It is the secret behind many impossible-looking fills.',
             'How to play it': 'lR R L: a flam (left grace, right main), a right tap, a left tap, as an eighth-note triplet. Same lead every group; line 2 alternates it.',

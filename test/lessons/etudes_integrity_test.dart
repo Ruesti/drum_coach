@@ -61,8 +61,7 @@ void main() {
             reason: '${r.id} sheet too long');
       }
     });
-    test('the twelve rudiment sheets: 8 lines + Challenge, lesson sections',
-        () {
+    test('the twelve rudiment sheets: 8 lines, lesson sections', () {
       // Katalog 3a: the twelve rudiments composed as sheets.
       const ids = [
         'single_stroke_roll',
@@ -85,12 +84,10 @@ void main() {
       ];
       for (final id in ids) {
         final r = rudimentsSeedData.firstWhere((r) => r.id == id);
-        expect(r.sheet.length, 9, reason: id);
-        expect(r.sheet.take(8).every((l) => l.repeat), isTrue, reason: id);
-        expect(r.sheet.take(8).every((l) => l.beats.isNotEmpty), isTrue);
-        expect(r.sheet.last.repeat, isFalse, reason: id);
-        expect(r.sheet.last.title, 'Challenge', reason: id);
-        expect(sheetBars(r), 24, reason: id);
+        expect(r.sheet.length, 8, reason: id);
+        expect(r.sheet.every((l) => l.repeat), isTrue, reason: id);
+        expect(r.sheet.every((l) => l.beats.isNotEmpty), isTrue);
+        expect(sheetBars(r), 16, reason: id);
         // The plain pattern is one whole bar — the PATTERN box.
         expect(
             barCountOrThrow(r.sticking,
@@ -112,7 +109,7 @@ void main() {
     });
     test(
         'the eight fill sheets: 3 bars of time + 1 bar of fill per line, '
-        'Challenge 8 bars, the one after the fill accented, fill tag', () {
+        'the one after the fill accented, fill tag', () {
       // Katalog 3b, Brief §3.2: four-bar phrases looped, the band runs on
       // through the fill bar, success = the fill and the one after it.
       const ids = [
@@ -129,7 +126,8 @@ void main() {
       for (final id in ids) {
         final r = rudimentsSeedData.firstWhere((r) => r.id == id);
         expect(r.skills, contains(Skill.fill), reason: id);
-        expect(r.sheet.length, 9, reason: id);
+        expect(r.sheet.length, 8, reason: id);
+        expect(r.sheet.every((l) => l.repeat), isTrue, reason: id);
         for (var i = 0; i < 8; i++) {
           final l = r.sheet[i];
           expect(l.repeat, isTrue, reason: '$id line ${i + 1}');
@@ -141,14 +139,7 @@ void main() {
           expect(l.beats.first.isAccent, isTrue,
               reason: '$id line ${i + 1} lands without an accent on the one');
         }
-        expect(r.sheet.last.repeat, isFalse, reason: id);
-        expect(r.sheet.last.title, 'Challenge', reason: id);
-        expect(
-            barCountOrThrow(r.sheet.last.beats,
-                beatsPerBar: r.beatsPerBar, grid: r.gridUnit),
-            8,
-            reason: id);
-        expect(sheetBars(r), 40, reason: id);
+        expect(sheetBars(r), 32, reason: id);
         // The PATTERN box shows the fill bar of line 1 — one whole bar.
         expect(
             barCountOrThrow(r.sticking,

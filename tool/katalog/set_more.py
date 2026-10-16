@@ -4,7 +4,7 @@ Die beiden Fill-Blätter bringen ihre Füße selbst mit: Fuß-Tokens im Fill
 (`K16`, `K16r`/`K16l`) legt `orchestrate` auf die Kick-Spur, die Hände wandern
 wie in set_fills Zählzeit für Zählzeit über Snare und Toms; drei Takte
 `rock16` davor, die Eins danach ist ein Crash. Die Grooves: 8 Zeilen à 2 Takte
-+ Challenge 8 Takte. Linear = nie zwei Stimmen auf demselben Tick (is_linear).
+mit Wiederholung. Linear = nie zwei Stimmen auf demselben Tick (is_linear).
 Regel (Uli, 30.09.): so abwechslungsreich und groovy wie möglich. Texte
 Englisch (App-Sprache).
 """
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from blatt import Sheet, print_table
 from grooves import (C1_1, HH8, HH8_NO1, HH16R, HP24, SHUF_NO1, SN3, SN24, SN24G, SN24G3, groove, kit, two)
-from set_fills import GROOVES, challenge, fill_bar, orchestrate, phrase, rest_tokens  # noqa: F401
+from set_fills import GROOVES, fill_bar, orchestrate, phrase, rest_tokens  # noqa: F401
 from sheetlang import TPQ, KitLine, parse_kit_line
 
 
@@ -157,10 +157,8 @@ DOUBLE_BASS_FILLS: list[tuple[str, list[str | None]]] = [
 ]
 
 
-def feet_fill(*, id: str, fills_: list[tuple[str, list[str | None]]], challenge_lines: tuple[int, int],
-              **kw) -> Sheet:
+def feet_fill(*, id: str, fills_: list[tuple[str, list[str | None]]], **kw) -> Sheet:
     """Fill-Blatt am Set mit eigenen Fuß-Tokens: drei Takte rock16, ein Fill-Takt, Crash auf der Eins."""
-    a, b = challenge_lines
     kw.setdefault('kit', True)
     kw.setdefault('line_bars', 4)
     kw.setdefault('new_seed', True)
@@ -169,7 +167,6 @@ def feet_fill(*, id: str, fills_: list[tuple[str, list[str | None]]], challenge_
         id=id,
         pattern=kit(fill_bar(*fills_[0])),
         lines=[phrase('rock16', f, p) for f, p in fills_],
-        challenge=challenge('rock16', *fills_[a - 1], *fills_[b - 1]),
         **kw,
     )
 
@@ -218,14 +215,14 @@ SHEETS: list[Sheet] = [
         id='set_fill_linear', name='Linear Fill (Kit)', min_bpm=60, target_bpm=120,
         difficulty='intermediate', grid='sixteenth', limbs=('allFour',), skills=['fill', 'coordination'],
         description='Hands and kick take turns, one note per sixteenth, around snare and toms after a rock sixteenths groove.',
-        fills_=LINEAR_FILLS, challenge_lines=(1, 4), lesson=LESSON_LINEAR_FILL,
+        fills_=LINEAR_FILLS, lesson=LESSON_LINEAR_FILL,
     ),
     feet_fill(
         id='set_fill_double_bass', name='Double Bass Fill (Kit)', min_bpm=60, target_bpm=140,
         difficulty='advanced', grid='sixteenth', limbs=('doubleBass',), skills=['fill', 'endurance'],
         genres=['metal'],
         description='The hands start the fill on snare and toms and both feet finish it with a sixteenth-note roll, crash on the one.',
-        fills_=DOUBLE_BASS_FILLS, challenge_lines=(1, 8), lesson=LESSON_DOUBLE_BASS_FILL,
+        fills_=DOUBLE_BASS_FILLS, lesson=LESSON_DOUBLE_BASS_FILL,
     ),
     groove(
         id='groove_linear', name='Linear Groove', min_bpm=60, target_bpm=120,
@@ -233,7 +230,6 @@ SHEETS: list[Sheet] = [
         description='Hi-hat, snare and kick never play together: every sixteenth belongs to one voice, with ghost notes between the backbeats.',
         pattern=kit(LIN_A),
         lines=LINEAR_LINES,
-        challenge=kit(LIN_A, LIN_A, LIN_3, LIN_3, LIN_5, LIN_5, LIN_8A, LIN_8),
         lesson=LESSON_LINEAR_GROOVE,
     ),
     groove(
@@ -243,7 +239,6 @@ SHEETS: list[Sheet] = [
         pattern=kit(K16_1),
         lines=[two(K16_1), two(K16_2), two(K16_3), two(K16_4), two(K16_5), two(K16_6), two(K16_7),
                kit(K16_8A, K16_8B)],
-        challenge=kit(K16_1, K16_1, K16_2, K16_2, K16_5, K16_5, K16_8A, K16_8B),
         lesson=LESSON_KICK16_GROOVE,
     ),
     groove(
@@ -261,7 +256,6 @@ SHEETS: list[Sheet] = [
             two({'HH': HTS_HH_NO3, 'SN': HTS_SN_FLAM, 'BD': HTS_BD}),
             kit(HTS_8A, HTS_8B),
         ],
-        challenge=kit(HTS_1, HTS_1, HTS_2, HTS_2, HTS_4, HTS_4, HTS_8A, HTS_8B),
         lesson=LESSON_HALFTIME_SHUFFLE,
     ),
 ]
@@ -276,23 +270,21 @@ def _check_linear() -> None:
         raise ValueError('groove_linear pattern is not linear')
     fill_sheet = next(s for s in SHEETS if s.id == 'set_fill_linear')
     for i, kl in enumerate(fill_sheet.parsed()):
-        fill_bars = {3} if i < 8 else {3, 7}
-        if not is_linear(kl, fill_bars):
-            raise ValueError(f'set_fill_linear {"challenge" if i == 8 else f"line {i + 1}"}: fill bar is not linear')
+        if not is_linear(kl, {3}):
+            raise ValueError(f'set_fill_linear line {i + 1}: fill bar is not linear')
     # Jeder Fill-Takt trägt eigene Kick-Sechzehntel: mindestens ein BD-Einsatz neben dem Viertelraster.
     for s in SHEETS[:2]:
         for i, kl in enumerate(s.parsed()):
             bd = next(t for t in kl.tracks if t.key == 'BD')
-            for bar in ({3} if i < 8 else {3, 7}):
-                tick, off_grid = 0, False
-                for n in bd.notes:
-                    if not n.rest and tick // (4 * TPQ) == bar and tick % TPQ != 0:
-                        off_grid = True
-                    tick += n.ticks()
-                if not off_grid:
-                    where = 'challenge' if i == 8 else f'line {i + 1}'
-                    raise ValueError(f'{s.id} {where} bar {bar + 1}: the fill has no kick of its own '
-                                     '(no BD onset off the quarter grid)')
+            bar = 3
+            tick, off_grid = 0, False
+            for n in bd.notes:
+                if not n.rest and tick // (4 * TPQ) == bar and tick % TPQ != 0:
+                    off_grid = True
+                tick += n.ticks()
+            if not off_grid:
+                raise ValueError(f'{s.id} line {i + 1} bar {bar + 1}: the fill has no kick of its own '
+                                 '(no BD onset off the quarter grid)')
 
 
 if __name__ == '__main__':

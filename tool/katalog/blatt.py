@@ -1,8 +1,8 @@
 """Ein Blatt des Katalogs: Daten + Formprüfung (Katalog 3a/3b).
 
-Ein Blatt hat 8 Zeilen gleicher Länge (`line_bars` Takte, mit Wiederholung)
-und eine Challenge über 8 Takte ohne Wiederholung. Rudiment-Blätter (3a):
-2 Takte je Zeile; Fill-Blätter (3b): 4 Takte je Zeile (3 Time + 1 Fill).
+Ein Blatt hat 8 Zeilen gleicher Länge (`line_bars` Takte, mit Wiederholung).
+Rudiment-Blätter (3a): 2 Takte je Zeile; Fill-Blätter (3b): 4 Takte je Zeile
+(3 Time + 1 Fill).
 """
 from __future__ import annotations
 
@@ -23,7 +23,6 @@ class Sheet:
     description: str
     pattern: str  # ein Takt, Grundgestalt (PATTERN-Kasten)
     lines: list[str]  # 8 Zeilen à line_bars Takte
-    challenge: str  # 8 Takte
     lesson: dict[str, str]
     count_lines: int = 0  # so viele erste Zeilen tragen die Zählhilfe (Kit-Blätter: immer 0)
     new_seed: bool = False  # noch nicht im Basis-Katalog
@@ -47,15 +46,12 @@ class Sheet:
         if self.kit and self.count_lines:
             raise ValueError(f'{self.id}: kit sheets carry no count syllables (count_lines must be 0)')
         out = [self._parse(t, f'line {i + 1}', counts=i < self.count_lines) for i, t in enumerate(self.lines)]
-        out.append(self._parse(self.challenge, 'challenge', repeat=False, title='Challenge'))
         check_sheet(out)
         if len(self.lines) != 8:
             raise ValueError(f'{self.id}: {len(self.lines)} lines, expected 8')
-        for i, ln in enumerate(out[:-1]):
+        for i, ln in enumerate(out):
             if ln.bars != self.line_bars:
                 raise ValueError(f'{self.id}: line {i + 1} has {ln.bars} bars, expected {self.line_bars}')
-        if out[-1].bars != 8:
-            raise ValueError(f'{self.id}: challenge has {out[-1].bars} bars')
         return out
 
     def pattern_line(self) -> Line | KitLine:

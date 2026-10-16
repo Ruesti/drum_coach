@@ -1,6 +1,6 @@
 """Sieben Fuß-Blätter (Phase B.4c): Kick, Double Bass, Hi-hat-Fuß, Ostinati.
 
-Jedes Blatt: 8 Zeilen à 2 Takte mit Wiederholung + Challenge 8 Takte, als
+Jedes Blatt: 8 Zeilen à 2 Takte mit Wiederholung, als
 Spuren (sheetlang: `HH: … / SN: … / BD: …`). Die Hände halten einfache Time,
 die Füße tragen die Übung: Kick-Kontrolle, Sechzehntel-Kombinationen, Double
 Bass mit Fußseiten (`K8r`/`K8l`, R/L nur in der App), Hi-hat-Fuß und
@@ -182,7 +182,6 @@ SHEETS: list[Sheet] = [
         description='The hands keep a plain rock beat while the kick moves: on and off the beat, doubles, four-on-the-floor.',
         pattern=kit(KC[0]),
         lines=[two(b) for b in KC] + [kit(*KC_8)],
-        challenge=kit(KC[0], KC[0], KC[2], KC[2], KC[4], KC[4], *KC_8),
         lesson=LESSON_KICK_CONTROL,
     ),
     feet_sheet(
@@ -191,7 +190,6 @@ SHEETS: list[Sheet] = [
         description='Eight sixteenth-note kick combinations on 1 and 3 under a steady backbeat, first with eighth hats, then with sixteenths.',
         pattern=kit(KS[0]),
         lines=[two(b) for b in KS],
-        challenge=kit(KS[0], KS[0], KS[2], KS[2], KS[5], KS[5], KS[7], KS[7]),
         lesson=LESSON_KICK_SIXTEENTHS,
     ),
     feet_sheet(
@@ -210,7 +208,6 @@ SHEETS: list[Sheet] = [
             two(DB8_7),
             kit(DB8_8A, DB8_8B),
         ],
-        challenge=kit(DB8_1, DB8_1, DB8_3, DB8_3, DB8_5, DB8_5, DB8_8A, DB8_8B),
         lesson=LESSON_DB8,
     ),
     feet_sheet(
@@ -229,7 +226,6 @@ SHEETS: list[Sheet] = [
             two({'HH': HHQ, 'SN': SN24, 'BD': BD_R16_GAP}),
             two(DB16_8),
         ],
-        challenge=kit(DB16_1, DB16_1, DB16_3, DB16_3, DB16_4, DB16_4, DB16_8, DB16_8),
         lesson=LESSON_DB16,
     ),
     feet_sheet(
@@ -248,7 +244,6 @@ SHEETS: list[Sheet] = [
             two({'HH': HHQ, 'SN': SN3, 'BD': BD_R3_PAIR}),
             two(DB3_8),
         ],
-        challenge=kit(DB3_1, DB3_1, DB3_3, DB3_3, DB3_4, DB3_4, DB3_8, DB3_8),
         lesson=LESSON_DB3,
     ),
     feet_sheet(
@@ -266,7 +261,6 @@ SHEETS: list[Sheet] = [
             two({'SN': SN24G, 'BD': BD13, 'HP': HP_ALL}),
             two(HF_8),
         ],
-        challenge=kit(HF_1, HF_1, HF_3, HF_3, HF_5, HF_5, HF_8, HF_8),
         lesson=LESSON_HIHAT_FOOT,
     ),
     feet_sheet(
@@ -285,7 +279,6 @@ SHEETS: list[Sheet] = [
             two({'RD': RIDE_SW, 'HP': HP24, 'BD': BD_SW, 'SN': SN_SW2}),
             two(FO_8),
         ],
-        challenge=kit(FO_1, FO_1, FO_3, FO_3, FO_5, FO_5, FO_8, FO_8),
         lesson=LESSON_OSTINATOS,
     ),
 ]

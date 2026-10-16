@@ -1,4 +1,5 @@
 """Spuren-Notenschrift (Phase B.1): Parser, Dart- und ABC-Ausgabe. Aufruf: cd tool/katalog && python3 -m unittest -v"""
+import dataclasses
 import unittest
 
 from sheetlang import (KitLine, is_kit_text, kit_line_to_abc, kit_line_to_dart, note_to_dart,
@@ -258,10 +259,25 @@ class CheckHands(unittest.TestCase):
         from blatt import Sheet
         bad = 'HH: R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16\nSN: -16 L16g -8 -4 -2\nBD: K4 -2.'
         sh = Sheet(id='x', name='x', min_bpm=60, target_bpm=100, difficulty='beginner', skills=[], genres=[],
-                   description='', pattern=bad, lines=[bad] * 8, challenge=bad, lesson={}, kit=True)
+                   description='', pattern=bad, lines=[bad] * 8, lesson={}, kit=True)
         with self.assertRaises(ValueError) as cm:
             sh.pattern_line()
         self.assertIn('x pattern', str(cm.exception))
+
+
+class NoChallengeTest(unittest.TestCase):
+    def test_sheet_has_no_challenge_field(self):
+        from blatt import Sheet
+        self.assertNotIn('challenge', {f.name for f in dataclasses.fields(Sheet)})
+
+    def test_every_sheet_parses_to_eight_repeating_lines(self):
+        import katalog
+        for st in katalog.SETS:
+            for s in st.sheets:
+                lines = s.parsed()
+                self.assertEqual(len(lines), 8, s.id)
+                self.assertTrue(all(ln.repeat and ln.title is None for ln in lines), s.id)
+                self.assertEqual(sum(ln.bars for ln in lines), 8 * s.line_bars, s.id)
 
 
 if __name__ == '__main__':

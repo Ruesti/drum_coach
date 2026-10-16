@@ -285,11 +285,11 @@ void main() {
       final rec = _RecordingMetronomeNotifier();
       await _pumpScreen(tester,
           screen: _screen(id: sheetId), metronome: () => rec);
-      expect(find.text('Line 1 / 9'), findsOneWidget);
+      expect(find.text('Line 1 / 8'), findsOneWidget);
       final line2 = SheetPlan.line(sheetRudiment(), 1);
       await tester.tap(find.byKey(const ValueKey('line-next')));
       await tester.pump();
-      expect(find.text('Line 2 / 9'), findsOneWidget);
+      expect(find.text('Line 2 / 8'), findsOneWidget);
       expect(
           rec.volumes.last,
           PatternPlayback.forRudiment(sheetRudiment().withSticking(line2.beats))
@@ -305,9 +305,9 @@ void main() {
           screen: _screen(id: sheetId), metronome: () => rec);
       await tester.tap(find.byKey(const ValueKey('mode-sheet')));
       await tester.pump();
-      expect(find.text('Sheet · 24 bars'), findsOneWidget);
+      expect(find.text('Sheet · 16 bars'), findsOneWidget);
       expect(find.byKey(const ValueKey('line-next')), findsNothing);
-      expect(rec.volumes.last, 24 * 96);
+      expect(rec.volumes.last, 16 * 96);
       expect(
           SettingsService.sheetPositionFor(sheetId), (line: 0, sheet: true));
     });
@@ -316,21 +316,21 @@ void main() {
         (tester) async {
       final a =
           await _pumpScreen(tester, screen: _screen(id: sheetId, line: 3));
-      expect(find.text('Line 3 / 9'), findsOneWidget);
+      expect(find.text('Line 3 / 8'), findsOneWidget);
       a.dispose();
       // A fresh State: the same widget type in the same place would keep
       // the old one (and its line) alive.
       await tester.pumpWidget(const SizedBox());
       final b =
           await _pumpScreen(tester, screen: _screen(id: sheetId, line: 40));
-      expect(find.text('Line 1 / 9'), findsOneWidget);
+      expect(find.text('Line 1 / 8'), findsOneWidget);
       b.dispose();
     });
 
     testWidgets('the remembered position is restored', (tester) async {
       await SettingsService.setSheetPosition(sheetId, line: 4, sheet: false);
       await _pumpScreen(tester, screen: _screen(id: sheetId));
-      expect(find.text('Line 5 / 9'), findsOneWidget);
+      expect(find.text('Line 5 / 8'), findsOneWidget);
     });
 
     testWidgets('tapping a line in the window selects it', (tester) async {
@@ -340,7 +340,7 @@ void main() {
       await tester.tapAt(Offset(clip.center.dx,
           clip.top + sheetWindowPad + 1.5 * sheetRowPitchWithCounts));
       await tester.pump();
-      expect(find.text('Line 2 / 9'), findsOneWidget);
+      expect(find.text('Line 2 / 8'), findsOneWidget);
     });
 
     testWidgets('switching lines while playing reloads the loop at once',
@@ -353,7 +353,7 @@ void main() {
       await tester.pump();
       expect(rec.volumes.length, before + 1);
       expect(find.text('Stop'), findsOneWidget);
-      expect(find.text('Line 2 / 9'), findsOneWidget);
+      expect(find.text('Line 2 / 8'), findsOneWidget);
     });
 
     testWidgets('options: sticking letters and count hints switches',
