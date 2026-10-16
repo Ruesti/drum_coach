@@ -1,3 +1,4 @@
+import '../../coaching/services/stroke_source.dart';
 import '../models/rudiment.dart';
 import 'sheets/single_stroke_roll_sheet.dart';
 import 'sheets/double_stroke_roll_sheet.dart';
@@ -19,6 +20,13 @@ import 'sheets/fill_flams_sheet.dart';
 import 'sheets/fill_sextuplets_sheet.dart';
 import 'sheets/fill_six_groups_sheet.dart';
 import 'sheets/fill_roll_sheet.dart';
+import 'sheets/groove_rock8_sheet.dart';
+import 'sheets/groove_rock16_sheet.dart';
+import 'sheets/groove_halftime_sheet.dart';
+import 'sheets/groove_shuffle_sheet.dart';
+import 'sheets/groove_swing_sheet.dart';
+import 'sheets/groove_funk16_sheet.dart';
+import 'sheets/groove_hihat_open_sheet.dart';
 
 // A plain list (not const) since 30.09.: the sample sheet is built with the
 // étude DSL, which is not const-constructible.
@@ -1659,5 +1667,146 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fillRollPattern,
     technique: fillRollLesson,
     lines: fillRollSheet,
+  ),
+  // ─── PHASE B.4: kit grooves ────────────────────────────────────────────────
+
+  Rudiment(
+    id: 'groove_rock8',
+    name: "Rock 8ths Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "Hi-hat eighths, backbeat on 2 and 4, kick on 1 and 3 — the groove the band played for you at the pad. Now you are the band.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveRock8PatternVoices,
+    sticking: grooveRock8Pattern,
+    technique: grooveRock8Lesson,
+    lines: grooveRock8Sheet,
+  ),
+
+  Rudiment(
+    id: 'groove_rock16',
+    name: "Rock 16ths Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "Sixteenth notes on the hi-hat with both hands over a rock backbeat — the same groove, twice the motion.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveRock16PatternVoices,
+    sticking: grooveRock16Pattern,
+    technique: grooveRock16Lesson,
+    lines: grooveRock16Sheet,
+  ),
+
+  Rudiment(
+    id: 'groove_halftime',
+    name: "Half-time Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "One backbeat per bar, on 3: the tempo stays, the groove feels twice as big.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveHalftimePatternVoices,
+    sticking: grooveHalftimePattern,
+    technique: grooveHalftimeLesson,
+    lines: grooveHalftimeSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_shuffle',
+    name: "Shuffle Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "Long-short triplet eighths on the hi-hat, backbeat on 2 and 4 — the bounce of blues and boogie rock.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveShufflePatternVoices,
+    sticking: grooveShufflePattern,
+    technique: grooveShuffleLesson,
+    lines: grooveShuffleSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_swing',
+    name: "Swing Ride",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.jazz},
+    description:
+        "The jazz ride pattern with the hi-hat foot on 2 and 4 and a feathered kick, plus snare comments in between.",
+    minBpm: 60,
+    targetBpm: 180,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveSwingPatternVoices,
+    sticking: grooveSwingPattern,
+    technique: grooveSwingLesson,
+    lines: grooveSwingSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_funk16',
+    name: "Funk 16ths Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "Accented sixteenth hats, a syncopated kick and ghost notes around a backbeat that never moves.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveFunk16PatternVoices,
+    sticking: grooveFunk16Pattern,
+    technique: grooveFunk16Lesson,
+    lines: grooveFunk16Sheet,
+  ),
+
+  Rudiment(
+    id: 'groove_hihat_open',
+    name: "Open Hi-hat",
+    skills: {Skill.groove, Skill.control},
+    genres: {Genre.rock},
+    description:
+        "Open the hi-hat on the offbeats and close it with the foot right on the next count — from one open note per bar to the disco beat.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveHihatOpenPatternVoices,
+    sticking: grooveHihatOpenPattern,
+    technique: grooveHihatOpenLesson,
+    lines: grooveHihatOpenSheet,
   ),
 ];

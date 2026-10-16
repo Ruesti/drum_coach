@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import fills
+import grooves
 import rudimente
 from blatt import Sheet
 
@@ -43,6 +44,14 @@ SETS: list[SheetSet] = [
              'eingeklappt. Sag mir je Blatt und Zeilennummer, was raus, anders oder länger soll.',
         seed_marker='KATALOG 3b: fill stickings',
         sheets=fills.SHEETS,
+    ),
+    SheetSet(
+        key='grooves', step='B.4a', title='Sechs Grooves und Open Hi-hat',
+        lead='Phase B.4: der Groove der Band-Stimme als Blatt — Hi-Hat, Snare, Kick spielst du jetzt selbst, die Band '
+             'schweigt in den Stimmen, die du spielst. Hände Hals oben, Füße Hals unten. Sag mir je Blatt und '
+             'Zeilennummer, was raus, anders oder länger soll.',
+        seed_marker='PHASE B.4: kit grooves',
+        sheets=grooves.SHEETS,
     ),
 ]
 
