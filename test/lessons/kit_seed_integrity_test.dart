@@ -37,7 +37,8 @@ void main() {
     }
   });
 
-  test('every kit line: kit voices of equal whole bars (1..8), drawable '
+  test(
+      'every kit line: kit voices of equal whole bars (1..8), drawable '
       'layers, sheet ≤ 64 bars; a line never holds the same instrument twice',
       () {
     for (final r in kits) {
@@ -60,11 +61,16 @@ void main() {
             reason: '${r.id} line ${i + 1} is not drawable');
       }
       expect(sheetBars(r), lessThanOrEqualTo(64), reason: r.id);
-      expect(() => SheetPlan.wholeSheet(r), returnsNormally, reason: r.id);
+      expect(
+          () => SheetPlan.sequence(
+              r, [for (var i = 0; i < r.sheet.length; i++) i]),
+          returnsNormally,
+          reason: r.id);
     }
   });
 
-  test('the seven groove sheets: 8 lines, 16 bars, hi-hat/ride, '
+  test(
+      'the seven groove sheets: 8 lines, 16 bars, hi-hat/ride, '
       'snare and kick in line 1, four lesson sections', () {
     const ids = [
       'groove_rock8',
@@ -90,10 +96,16 @@ void main() {
           reason: id);
       expect(
           r.technique.map((s) => s.title),
-          ['Why it matters', 'How to play it', 'Practice tips', 'Where you hear it'],
+          [
+            'Why it matters',
+            'How to play it',
+            'Practice tips',
+            'Where you hear it'
+          ],
           reason: id);
     }
-    final hats = rudimentsSeedData.firstWhere((r) => r.id == 'groove_hihat_open');
+    final hats =
+        rudimentsSeedData.firstWhere((r) => r.id == 'groove_hihat_open');
     expect(
         hats.lines.every((l) =>
             l.kitVoices.any((v) => v.instrument == KitInstrument.hiHatOpen) ||
@@ -102,7 +114,8 @@ void main() {
         reason: 'every hi-hat line opens or pedals');
   });
 
-  test('the eight set fills: 3 bars of groove + 1 bar of fill per line, the '
+  test(
+      'the eight set fills: 3 bars of groove + 1 bar of fill per line, the '
       'one after the fill on a crash, kick under the fill; around the kit', () {
     const ids = [
       'set_fill_sixteenth_singles',
@@ -131,11 +144,13 @@ void main() {
             (v) => InstrumentClass.anyTom.members.contains(v.instrument));
         expect(toms.every((v) => v.accepts == InstrumentClass.anyTom), isTrue,
             reason: '$id line ${i + 1}: toms accept any tom');
-        expect(l.kitVoices.any((v) => v.instrument == KitInstrument.kick), isTrue,
+        expect(
+            l.kitVoices.any((v) => v.instrument == KitInstrument.kick), isTrue,
             reason: '$id line ${i + 1}: no kick');
       }
     }
-    final around = rudimentsSeedData.firstWhere((r) => r.id == 'set_around_the_kit');
+    final around =
+        rudimentsSeedData.firstWhere((r) => r.id == 'set_around_the_kit');
     expect(around.sheet.length, 8);
     expect(sheetBars(around), 16);
     final cymbals = {
@@ -167,7 +182,11 @@ void main() {
       expect(sheetBars(r), 16, reason: e.key);
       expect(r.limbs.contains(e.value), isTrue, reason: e.key);
       expect(r.hasFootSides, e.value == Limb.doubleBass, reason: e.key);
-      expect(() => SheetPlan.wholeSheet(r), returnsNormally, reason: e.key);
+      expect(
+          () => SheetPlan.sequence(
+              r, [for (var i = 0; i < r.sheet.length; i++) i]),
+          returnsNormally,
+          reason: e.key);
       expect(
           r.technique.map((s) => s.title),
           [
@@ -201,9 +220,11 @@ void main() {
       }
       return true;
     }
+
     final lin = rudimentsSeedData.firstWhere((r) => r.id == 'groove_linear');
     expect(lin.sheet.length, 8);
-    expect(lin.lines.every(linear), isTrue, reason: 'groove_linear is not linear');
+    expect(lin.lines.every(linear), isTrue,
+        reason: 'groove_linear is not linear');
     final fill = rudimentsSeedData.firstWhere((r) => r.id == 'set_fill_linear');
     expect(sheetBars(fill), 32);
     // The fill bar (bar 4 of each line) is linear.
@@ -215,14 +236,17 @@ void main() {
         for (final o in onsetsOf(v.beats, fill.gridUnit)) {
           if (!fillBars.contains(o.tick ~/ barTicks)) continue;
           expect(ticks.add(o.tick), isTrue,
-              reason: 'set_fill_linear sheet line ${i + 1}: fill bar not linear at tick ${o.tick}');
+              reason:
+                  'set_fill_linear sheet line ${i + 1}: fill bar not linear at tick ${o.tick}');
         }
       }
     }
-    final db = rudimentsSeedData.firstWhere((r) => r.id == 'set_fill_double_bass');
+    final db =
+        rudimentsSeedData.firstWhere((r) => r.id == 'set_fill_double_bass');
     expect(db.hasFootSides, isTrue);
     expect(db.limbs.contains(Limb.doubleBass), isTrue);
-    final k16 = rudimentsSeedData.firstWhere((r) => r.id == 'groove_kick_sixteenths');
+    final k16 =
+        rudimentsSeedData.firstWhere((r) => r.id == 'groove_kick_sixteenths');
     expect(sheetBars(k16), 16);
   });
 }

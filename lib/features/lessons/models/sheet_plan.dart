@@ -1,25 +1,44 @@
 import '../../coaching/midi/kit_instrument.dart';
 import 'rudiment.dart';
 
-/// What the practice screen plays and measures: one line of the sheet, or
-/// all lines in order (each once). A flat note list plus the map back to
-/// (line, index in line) for the cursor. Pure.
+/// Longest sequence in bars (the backing engine's cycle limit,
+/// `maxBackingCycleBars`); longer sequences play each line fewer times.
+const int maxSequenceBars = 64;
+
+/// Most passes per line in a sequence.
+const int maxSequenceRepeats = 4;
+
+/// What the practice screen plays and measures: one line of the sheet, or a
+/// sequence of selected lines, each played [repeats] times in selection
+/// order, starting at [start] and looping round. A flat note list plus the
+/// map back to (line, index in line, slot) for the cursor. Pure.
+///
+/// A *slot* is one played pass of one line; [lines], [lineStarts] and
+/// [lineTickStarts] run parallel per slot.
 class SheetPlan {
   final List<StrokeBeat> beats;
 
-  /// Note index at which each covered line starts (parallel to [lines]).
+  /// Note index at which each slot starts (parallel to [lines]).
   final List<int> lineStarts;
 
-  /// Sheet line indices covered, in play order.
+  /// Sheet line index of each slot, in play order.
   final List<int> lines;
-  final bool wholeSheet;
 
-  /// The unit's voices (Brief B.1): one per instrument across the covered
-  /// lines, a voice missing in a line filled with that line's length of
-  /// rests; a pad unit is one `pad` voice carrying [beats].
+  /// The cleaned selection of sheet lines, in its original order.
+  final List<int> selection;
+
+  /// Index into [selection] at which the loop begins.
+  final int start;
+
+  /// Passes per line actually used (capped to [maxSequenceBars]).
+  final int repeats;
+
+  /// The unit's voices (Brief B.1): one per instrument across the slots,
+  /// a voice missing in a line filled with that line's length of rests; a
+  /// pad unit is one `pad` voice carrying [beats].
   final List<Voice> voices;
 
-  /// Tick at which each covered line starts (parallel to [lines]).
+  /// Tick at which each slot starts (parallel to [lines]).
   final List<int> lineTickStarts;
   final int totalTicks;
 
@@ -27,47 +46,83 @@ class SheetPlan {
     required this.beats,
     required this.lineStarts,
     required this.lines,
-    required this.wholeSheet,
+    required this.selection,
+    required this.start,
+    required this.repeats,
     required this.voices,
     required this.lineTickStarts,
     required this.totalTicks,
   });
 
-  /// The one line [lineIndex] (clamped into the sheet).
-  factory SheetPlan.line(Rudiment r, int lineIndex) {
-    final sheet = r.sheet;
-    final i = lineIndex.clamp(0, sheet.length - 1);
-    final l = sheet[i];
-    return SheetPlan._(
-      beats: l.beats,
-      lineStarts: const [0],
-      lines: [i],
-      wholeSheet: false,
-      voices: l.voices,
-      lineTickStarts: const [0],
-      totalTicks: _ticks(l.beats, r.gridUnit),
-    );
-  }
+  /// The one line [lineIndex] (clamped into the sheet), looping alone.
+  factory SheetPlan.line(Rudiment r, int lineIndex) =>
+      SheetPlan.sequence(r, [lineIndex.clamp(0, r.sheet.length - 1)]);
 
-  /// Every line once, in order.
-  factory SheetPlan.wholeSheet(Rudiment r) {
+  /// The lines of [selection] in its order, each [repeats] times, beginning
+  /// at selection index [start] (modulo). Out-of-range and duplicate
+  /// indices are dropped; an empty selection is line 1. One line plays once
+  /// per pass (repeats 1); repeats shrink silently until the sequence fits
+  /// [maxSequenceBars].
+  factory SheetPlan.sequence(Rudiment r, List<int> selection,
+      {int repeats = 2, int start = 0}) {
     final sheet = r.sheet;
+    final sel = <int>[];
+    for (final i in selection) {
+      if (i >= 0 && i < sheet.length && !sel.contains(i)) sel.add(i);
+    }
+    if (sel.isEmpty) sel.add(0);
+    var reps = 1;
+    if (sel.length > 1) {
+      reps = repeats.clamp(1, maxSequenceRepeats);
+      final bars = sel.fold<int>(
+          0,
+          (n, i) =>
+              n +
+              barsOf(sheet[i].beats,
+                  grid: r.gridUnit, beatsPerBar: r.beatsPerBar));
+      while (reps > 1 && reps * bars > maxSequenceBars) {
+        reps--;
+      }
+    }
+    final first = start % sel.length;
+    final slots = [
+      for (var k = 0; k < sel.length; k++)
+        for (var p = 0; p < reps; p++) sel[(first + k) % sel.length],
+    ];
+
+    if (slots.length == 1) {
+      // A single line keeps its own lists unchanged.
+      final l = sheet[slots.first];
+      return SheetPlan._(
+        beats: l.beats,
+        lineStarts: const [0],
+        lines: slots,
+        selection: sel,
+        start: first,
+        repeats: reps,
+        voices: l.voices,
+        lineTickStarts: const [0],
+        totalTicks: _ticks(l.beats, r.gridUnit),
+      );
+    }
+
     final beats = <StrokeBeat>[];
     final starts = <int>[];
     final tickStarts = <int>[];
     var ticks = 0;
-    for (final l in sheet) {
+    for (final i in slots) {
+      final l = sheet[i];
       starts.add(beats.length);
       tickStarts.add(ticks);
       beats.addAll(l.beats);
       ticks += _ticks(l.beats, r.gridUnit);
     }
     // Instruments in order of first appearance; accepts from the first
-    // line that carries the voice.
+    // slot that carries the voice.
     final order = <KitInstrument>[];
     final accepts = <KitInstrument, InstrumentClass?>{};
-    for (final l in sheet) {
-      for (final v in l.voices) {
+    for (final i in slots) {
+      for (final v in sheet[i].voices) {
         if (!order.contains(v.instrument)) {
           order.add(v.instrument);
           accepts[v.instrument] = v.accepts;
@@ -77,7 +132,8 @@ class SheetPlan {
     final voices = <Voice>[];
     for (final inst in order) {
       final all = <StrokeBeat>[];
-      for (final l in sheet) {
+      for (final i in slots) {
+        final l = sheet[i];
         Voice? own;
         for (final v in l.voices) {
           if (v.instrument == inst) {
@@ -92,15 +148,20 @@ class SheetPlan {
     return SheetPlan._(
       beats: beats,
       lineStarts: starts,
-      lines: [for (var i = 0; i < sheet.length; i++) i],
-      wholeSheet: true,
+      lines: slots,
+      selection: sel,
+      start: first,
+      repeats: reps,
       voices: voices,
       lineTickStarts: tickStarts,
       totalTicks: ticks,
     );
   }
 
-  /// The selected line (line mode) or the first line (sheet mode).
+  /// More than one line selected.
+  bool get isSequence => selection.length > 1;
+
+  /// The line of the first slot (the selected line in line mode).
   int get lineIndex => lines.first;
 
   /// A kit unit: anything but the single pad voice.
@@ -115,22 +176,28 @@ class SheetPlan {
         KitInstrument.hiHatPedal,
       }.contains(v.instrument));
 
-  /// Sheet line and index within it for a note index of [beats].
-  ({int line, int index}) locate(int noteIndex) {
+  /// Selection step (index into [selection]) and pass (0-based) of [slot].
+  ({int step, int pass}) stepOf(int slot) => (
+        step: (start + slot ~/ repeats) % selection.length,
+        pass: slot % repeats,
+      );
+
+  /// Sheet line, index within it and slot for a note index of [beats].
+  ({int line, int index, int slot}) locate(int noteIndex) {
     var k = 0;
     while (k + 1 < lineStarts.length && lineStarts[k + 1] <= noteIndex) {
       k++;
     }
-    return (line: lines[k], index: noteIndex - lineStarts[k]);
+    return (line: lines[k], index: noteIndex - lineStarts[k], slot: k);
   }
 
-  /// Sheet line and tick within it for a tick of the unit.
-  ({int line, int tick}) locateTick(int tick) {
+  /// Sheet line, tick within it and slot for a tick of the unit.
+  ({int line, int tick, int slot}) locateTick(int tick) {
     var k = 0;
     while (k + 1 < lineTickStarts.length && lineTickStarts[k + 1] <= tick) {
       k++;
     }
-    return (line: lines[k], tick: tick - lineTickStarts[k]);
+    return (line: lines[k], tick: tick - lineTickStarts[k], slot: k);
   }
 }
 

@@ -151,9 +151,7 @@ String? measurementStatusText({
   if (source == null || lost) return 'NOT MEASURABLE';
   if (source == StrokeSourceKind.mic) return 'MIC';
   final name = midiDeviceName ?? 'device';
-  return latencyCalibrated
-      ? 'MIDI · $name'
-      : 'MIDI · $name · not calibrated';
+  return latencyCalibrated ? 'MIDI · $name' : 'MIDI · $name · not calibrated';
 }
 
 /// The engine's loop-rebuild debounce (`metronome_engine.dart`).
@@ -279,7 +277,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   void _buildUnit(Rudiment rudiment) {
     _kitExercise = rudiment.isKit;
     _plan = _sheetMode
-        ? SheetPlan.wholeSheet(rudiment)
+        ? SheetPlan.sequence(
+            rudiment, [for (var i = 0; i < rudiment.sheet.length; i++) i],
+            repeats: 1)
         : SheetPlan.line(rudiment, _lineIndex);
     _unit = rudiment.withSticking(_plan.beats);
     // A kit unit mixes its voices; the cursor then steps per column.
@@ -914,7 +914,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 final log = _sessionLogN.value;
                 if (log == null) return null;
                 final out = await SessionLogService.deliverExport(
-                  write: (dir) => SessionLogService.exportSession(log, dir: dir),
+                  write: (dir) =>
+                      SessionLogService.exportSession(log, dir: dir),
                   shareAvailable: fileShareAvailable,
                   share: (f) => SharePlus.instance
                       .share(ShareParams(files: [XFile(f.path)])),
@@ -1155,7 +1156,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final tickLoc =
         activeBeat == null || !_plan.isKit || _playback.onsetTicks.isEmpty
             ? null
-        : _plan.locateTick(_playback.onsetTicks[activeBeat]);
+            : _plan.locateTick(_playback.onsetTicks[activeBeat]);
     final isPlaying =
         ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
     final bpm = ref.watch(metronomeNotifierProvider.select((s) => s.bpm));
@@ -1243,8 +1244,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                               onTap: rudiment.isKit
                                   ? null
                                   : () {
-                                      setState(() =>
-                                          _analysisMode = !_analysisMode);
+                                      setState(
+                                          () => _analysisMode = !_analysisMode);
                                       SettingsService.setAnalysisModeFor(
                                           widget.rudimentId, _analysisMode);
                                       _applyExtras();
