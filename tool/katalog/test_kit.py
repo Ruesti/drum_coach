@@ -182,5 +182,24 @@ class Orchestrate(unittest.TestCase):
             orchestrate('R4 R4 R4', plan)  # three quarters, not a bar
 
 
+class FootSide(unittest.TestCase):
+    def test_side_flags_on_feet(self):
+        notes = parse_line('K16r K16l K8 -4 -2').notes
+        self.assertEqual([n.side for n in notes], ['R', 'L', None, None, None])
+        self.assertEqual(note_to_dart(notes[0]), 'foot(NoteValue.sixteenth, side: R)')
+        self.assertEqual(note_to_dart(notes[1]), 'foot(NoteValue.sixteenth, side: L)')
+        self.assertEqual(note_to_dart(notes[2]), 'foot(NoteValue.eighth)')
+        self.assertEqual(note_to_dart(parse_line('K8>r -8 -2.').notes[0]),
+                         'foot(NoteValue.eighth, accent: true, side: R)')
+
+    def test_side_only_on_feet_and_only_one(self):
+        with self.assertRaises(ValueError):
+            parse_line('R8r L8 R4 L4 R4')
+        with self.assertRaises(ValueError):
+            parse_line('K8rl -8 -4 -2')
+        kl = parse_kit_line('HH: R4 R4 R4 R4\nBD: K16r K16l K16r K16l K4 -2')
+        self.assertEqual([n.side for n in kl.tracks[1].notes][:4], ['R', 'L', 'R', 'L'])
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -21,7 +21,7 @@ import re
 from dataclasses import dataclass
 
 TPQ = 24  # Ticks je Viertel, wie PatternPlayback / countLabelsFor
-_TOKEN = re.compile(r'^([RLKP])(32|16|8|4|2|1)([.>gfd]*)$')
+_TOKEN = re.compile(r'^([RLKP])(32|16|8|4|2|1)([.>gfdrl]*)$')
 _REST = re.compile(r'^-(32|16|8|4|2|1)(\.?)$')
 
 
@@ -34,6 +34,7 @@ class Note:
     ghost: bool = False
     graces: int = 0  # 0, 1 (Flam), 2 (Drag)
     tuplet: int = 0  # 0, 3 (Triole), 6 (Sextole)
+    side: str | None = None  # Fußseite 'R' | 'L' (Doppelfuß), nur K/P
 
     @property
     def rest(self) -> bool:
@@ -124,6 +125,13 @@ def _parse_token(tok: str) -> Note:
     n.graces = 2 if 'd' in flags else 1 if 'f' in flags else 0
     if n.is_foot and n.graces:
         raise ValueError(f'foot note {tok!r} cannot carry a flam/drag')
+    sides = [s for s in 'rl' if s in flags]
+    if sides:
+        if not n.is_foot:
+            raise ValueError(f'side flag on a hand note {tok!r} (r/l belong to K/P)')
+        if len(sides) > 1:
+            raise ValueError(f'both sides on {tok!r}')
+        n.side = sides[0].upper()
     return n
 
 
@@ -438,6 +446,8 @@ def note_to_dart(n: Note) -> str:
             args.append('accent: true')
         if n.ghost:
             args.append('ghost: true')
+        if n.side:
+            args.append(f'side: {n.side}')
         args += extras
         return f'foot({v}' + (', ' + ', '.join(args) if args else '') + ')'
     args = []

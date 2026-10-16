@@ -223,6 +223,11 @@ class Voice {
       accepts?.members.contains(played) ?? played == instrument;
 }
 
+/// True when a foot voice carries a sided stroke (double bass, Nachtrag
+/// B.4c): the sheet then draws a second letter row under the feet stems.
+bool voicesHaveFootSides(Iterable<Voice> voices) => voices
+    .any((v) => v.isFoot && v.beats.any((b) => !b.isRest && b.hand != null));
+
 /// One line of a sheet (Blattform, 30.09.): a phrase of whole bars, drawn
 /// with a number box, repeat signs when [repeat], an optional [title] above
 /// the staff ("Challenge") and, when [counts], the count syllables under the
@@ -345,6 +350,11 @@ class Rudiment {
 
   /// Kit exercise: full-kit notation, MIDI only (Brief B).
   bool get isKit => voicing == ExerciseVoicing.kit;
+
+  /// A foot voice with sides (double bass): second letter row (B.4c).
+  bool get hasFootSides =>
+      voicesHaveFootSides(patternVoices) ||
+      sheet.any((l) => voicesHaveFootSides(l.voices));
 
   /// A copy carrying [beats] as its sticking and no lines: the practice
   /// screen hands the currently played unit (one line or the whole sheet) to

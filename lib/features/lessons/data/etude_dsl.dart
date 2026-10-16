@@ -69,14 +69,16 @@ int barCountOrThrow(List<StrokeBeat> beats,
   return rounded;
 }
 
-/// A foot stroke (kick, hi-hat pedal): no hand (Brief B.1).
+/// A foot stroke (kick, hi-hat pedal): no hand — or, for double bass, the
+/// foot that plays it ([side]; Nachtrag B.4c). Measurement ignores the side.
 StrokeBeat foot(NoteValue v,
         {bool accent = false,
         bool ghost = false,
         bool dotted = false,
-        Tuplet tuplet = Tuplet.none}) =>
+        Tuplet tuplet = Tuplet.none,
+        Hand? side}) =>
     StrokeBeat(
-        hand: null,
+        hand: side,
         value: v,
         isAccent: accent,
         isGhost: ghost,
