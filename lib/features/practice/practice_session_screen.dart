@@ -268,7 +268,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         ? SheetPlan.wholeSheet(rudiment)
         : SheetPlan.line(rudiment, _lineIndex);
     _unit = rudiment.withSticking(_plan.beats);
-    _playback = PatternPlayback.forRudiment(_unit);
+    // A kit unit mixes its voices; the cursor then steps per column.
+    _playback = _plan.isKit
+        ? buildVoicesPlayback(_plan.voices, rudiment.gridUnit)
+        : PatternPlayback.forRudiment(_unit);
   }
 
   /// Line or mode change: new unit, new loop, fresh beat log, position
@@ -465,6 +468,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
   Future<void> _openSourceOrThrow() async {
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    // Kit exercises are measured per voice (Brief B.3) — not in this step:
+    // no source, no number; sheet, click and cursor run (Leitprinzip: no
+    // number is better than a wrong one).
+    if (rudiment.isKit) return;
     final ports = widget.ports ?? MidiPortService();
     final devices = await ports.inputDevices();
     final chosen =
@@ -648,7 +655,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _metronomeNotifier
       ..setClickTrack(SettingsService.clickTrackEnabled && _extrasAllowed)
       ..setBacking(backingOn ? _backingStyleId : null,
-          beatsPerBar: _unit.beatsPerBar);
+          beatsPerBar: _unit.beatsPerBar,
+          // Brief B.4: the band keeps quiet in the voices the player plays.
+          backingKick: !_plan.playsKick,
+          backingHihat: !_plan.playsHihat);
   }
 
   /// Ask the platform for headphones, then re-apply the extras. Failure
@@ -1109,8 +1119,13 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             ? _playback
                 .noteIndexAtTick(s.currentBeatIndex % _playback.totalTicks)
             : null));
-    // Which sheet line and note the cursor is on (null before the start).
-    final loc = activeBeat == null ? null : _plan.locate(activeBeat);
+    // Which sheet line and note (pad) or tick (kit) the cursor is on (null
+    // before the start).
+    final loc =
+        activeBeat == null || _plan.isKit ? null : _plan.locate(activeBeat);
+    final tickLoc = activeBeat == null || !_plan.isKit
+        ? null
+        : _plan.locateTick(_playback.onsetTicks[activeBeat]);
     final isPlaying =
         ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
     final bpm = ref.watch(metronomeNotifierProvider.select((s) => s.bpm));
@@ -1193,6 +1208,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                               source: _source?.kind,
                               active: _measuring && !_sourceLost,
                               unavailable: _source == null || _sourceLost,
+                              kit: rudiment.isKit,
                               onTap: () {
                                 setState(() => _analysisMode = !_analysisMode);
                                 SettingsService.setAnalysisModeFor(
@@ -1225,8 +1241,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                         curve: Curves.easeOut,
                         child: SheetWindow(
                           rudiment: rudiment,
-                          activeLine: loc?.line ?? _plan.lineIndex,
+                          activeLine:
+                              tickLoc?.line ?? loc?.line ?? _plan.lineIndex,
                           activeIndex: loc?.index,
+                          activeTick: tickLoc?.tick,
                           sheetMode: _sheetMode,
                           showSticking: SettingsService.showSticking,
                           showCounts: SettingsService.showCounts,
@@ -1598,6 +1616,7 @@ class _ModeChip extends StatelessWidget {
     required this.source,
     required this.active,
     required this.unavailable,
+    required this.kit,
     required this.onTap,
   });
 
@@ -1611,16 +1630,21 @@ class _ModeChip extends StatelessWidget {
 
   /// No source, or the source was lost mid-session.
   final bool unavailable;
+
+  /// Kit exercise: measured per voice from B.3 on — not yet.
+  final bool kit;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: unavailable
-          ? 'Not measurable with this setup'
-          : analysis
-              ? 'Analysis mode (per-hand values) — tap for Learn mode'
-              : 'Learn mode — tap for hand analysis',
+      message: kit
+          ? 'Full-kit measurement is not available yet'
+          : unavailable
+              ? 'Not measurable with this setup'
+              : analysis
+                  ? 'Analysis mode (per-hand values) — tap for Learn mode'
+                  : 'Learn mode — tap for hand analysis',
       child: Material(
         color: Colors.transparent,
         shape: const StadiumBorder(

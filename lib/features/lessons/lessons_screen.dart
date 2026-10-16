@@ -249,6 +249,10 @@ class _RudimentTile extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (rudiment.isKit) ...[
+            const AppBadge(label: 'KIT'),
+            const SizedBox(width: 6),
+          ],
           AppBadge(
             label: rudiment.difficulty.label,
             color: rudiment.difficulty.color,

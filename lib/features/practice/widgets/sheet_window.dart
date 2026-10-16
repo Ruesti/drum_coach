@@ -37,6 +37,9 @@ class SheetWindow extends StatefulWidget {
   final Rudiment rudiment;
   final int activeLine;
   final int? activeIndex;
+
+  /// Cursor tick within [activeLine] for kit lines; [activeIndex] is ignored there.
+  final int? activeTick;
   final bool sheetMode;
   final bool showSticking;
   final bool showCounts;
@@ -48,6 +51,7 @@ class SheetWindow extends StatefulWidget {
     required this.rudiment,
     required this.activeLine,
     this.activeIndex,
+    this.activeTick,
     this.sheetMode = false,
     this.showSticking = true,
     this.showCounts = true,
@@ -94,6 +98,9 @@ class _SheetWindowState extends State<SheetWindow>
 
   int _rowFor(SheetGeometry geo) {
     final line = widget.activeLine.clamp(0, geo.layouts.length - 1);
+    if (line < geo.kitLayouts.length && geo.kitLayouts[line] != null) {
+      return geo.rowOfTick(line, widget.activeTick ?? 0);
+    }
     final notes = geo.layouts[line].placements.length;
     if (notes == 0) return geo.rowStart[line];
     final index = (widget.activeIndex ?? 0).clamp(0, notes - 1);
@@ -152,6 +159,7 @@ class _SheetWindowState extends State<SheetWindow>
         geometry: geo,
         activeLine: widget.activeLine,
         activeIndex: widget.activeIndex,
+        activeTick: widget.activeTick,
         showSticking: widget.showSticking,
         showCounts: widget.showCounts,
         onLineTap: widget.onLineTap,

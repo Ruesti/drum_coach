@@ -4,6 +4,7 @@ import 'package:drum_coach/app/platform_support.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/coaching/services/stroke_source.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
+import 'package:drum_coach/features/lessons/lessons_provider.dart';
 import 'package:drum_coach/features/lessons/models/pattern_playback.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/lessons/models/sheet_plan.dart';
@@ -24,6 +25,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../helpers/kit_fixtures.dart';
 import '../../helpers/midi_fakes.dart';
 
 /// Overrides [MetronomeNotifier] so its very first `build()` already reports
@@ -64,6 +66,31 @@ class _RecordingPlayingMetronomeNotifier extends _RecordingMetronomeNotifier {
       const MetronomeState(isPlaying: true, currentBeatIndex: 0);
 }
 
+/// Idle metronome that records the last backing call's mute flags.
+class _BackingFlagsMetronomeNotifier extends MetronomeNotifier {
+  ({bool kick, bool hihat})? last;
+  @override
+  MetronomeState build() => const MetronomeState();
+  @override
+  void setBacking(String? styleId,
+      {required int beatsPerBar,
+      bool backingKick = true,
+      bool backingHihat = true}) {
+    last = (kick: backingKick, hihat: backingHihat);
+    super.setBacking(styleId,
+        beatsPerBar: beatsPerBar,
+        backingKick: backingKick,
+        backingHihat: backingHihat);
+  }
+}
+
+/// Playing metronome the test moves tick by tick.
+class _TickingMetronomeNotifier extends MetronomeNotifier {
+  @override
+  MetronomeState build() => const MetronomeState(isPlaying: true);
+  void tickTo(int tick) => state = state.copyWith(currentBeatIndex: tick);
+}
+
 /// Records saves instead of writing to Isar (no database in widget tests).
 /// The ratings go into a list the TEST owns: the provider is autoDispose, so
 /// the notifier instance is thrown away right after the screen's call and a
@@ -88,12 +115,14 @@ Future<ProviderContainer> _pumpScreen(
   required PracticeSessionScreen screen,
   MetronomeNotifier Function()? metronome,
   List<int>? saves,
+  List<Override> extraOverrides = const [],
 }) async {
   final container = ProviderContainer(overrides: [
     metronomeNotifierProvider
         .overrideWith(metronome ?? () => _IdleMetronomeNotifier()),
     practiceNotifierProvider
         .overrideWith(() => _FakePracticeNotifier(saves ?? <int>[])),
+    ...extraOverrides,
   ]);
   addTearDown(container.dispose);
   await tester.pumpWidget(
@@ -1101,6 +1130,80 @@ void main() {
       expect(statusText(tester), 'MIC');
       await tester.pumpWidget(const SizedBox());
       container.dispose();
+    });
+  });
+
+  group('kit exercises (Etappe 2, Phase B.1)', () {
+    List<Override> kitCatalog() => [
+          rudimentsProvider
+              .overrideWithValue([...rudimentsSeedData, kitShowcase()]),
+        ];
+
+    testWidgets('loads the mixed unit: one cycle of every voice', (tester) async {
+      final rec = _RecordingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'),
+          metronome: () => rec,
+          extraOverrides: kitCatalog());
+      expect(rec.volumes.last, 2 * 96); // line 1: two bars
+      expect(find.byType(SheetWindow), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a running kit session puts the cursor on a column',
+        (tester) async {
+      final metronome = _TickingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'),
+          metronome: () => metronome,
+          extraOverrides: kitCatalog());
+      SheetWindow window() =>
+          tester.widget<SheetWindow>(find.byType(SheetWindow));
+      metronome.tickTo(0);
+      await tester.pump();
+      expect((window().activeLine, window().activeTick), (0, 0));
+      expect(window().activeIndex, isNull);
+      metronome.tickTo(96); // bar 2, beat 1 (24 ticks per quarter)
+      await tester.pump();
+      expect((window().activeLine, window().activeTick), (0, 96));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('mutes the band voices the player covers', (tester) async {
+      final rec = _BackingFlagsMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'),
+          metronome: () => rec,
+          extraOverrides: kitCatalog());
+      await tester.pump();
+      expect(rec.last, (kick: false, hihat: false));
+    });
+
+    testWidgets('opens no stroke source even with a MIDI module at hand',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({'measurement_source': 'midi'});
+      await SettingsService.init();
+      final port = FakeMidiPort();
+      final ports = FakeMidiPorts(port: port);
+      await _pumpScreen(tester,
+          screen: PracticeSessionScreen(
+              rudimentId: 'kit_showcase', isFromRoutine: false, ports: ports),
+          extraOverrides: kitCatalog());
+      await tester.pump();
+      expect(ports.opened, 0);
+      expect(find.text('NOT MEASURABLE'), findsOneWidget);
+      expect(find.textContaining('MIDI ·'), findsNothing);
+    });
+
+    testWidgets('the mode chip explains why: full-kit measurement is not '
+        'available yet', (tester) async {
+      // The chip shows only with a measurement source chosen (setUp: off).
+      await SettingsService.setMeasurementSource(MeasurementSource.midi);
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'), extraOverrides: kitCatalog());
+      await tester.pump();
+      expect(find.byTooltip('Full-kit measurement is not available yet'),
+          findsOneWidget);
     });
   });
 }

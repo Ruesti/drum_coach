@@ -6,6 +6,8 @@ import 'package:drum_coach/shared/widgets/sheet_geometry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/kit_fixtures.dart';
+
 void main() {
   List<StrokeBeat> bar() => eighths([R, L, R, L, R, L, R, L]);
   final six = Rudiment(
@@ -131,5 +133,17 @@ void main() {
     await tester.tapAt(Offset(
         clip.center.dx, clip.top + sheetWindowPad + 1.5 * sheetRowPitch));
     expect(taps, [1]);
+  });
+
+  testWidgets('a kit sheet window follows the tick: line 2, tick 0 is the '
+      'row after line 1', (tester) async {
+    final kit = kitShowcase(); // line 1: 2 bars = 1 row; line 2: 2 bars = 1 row
+    await pump(tester, SheetWindow(rudiment: kit, activeLine: 0, activeTick: 0));
+    final top = offsetOf(tester);
+    await pump(tester,
+        SheetWindow(rudiment: kit, activeLine: 1, activeTick: 24));
+    await tester.pumpAndSettle();
+    expect(top - offsetOf(tester), kitRowPitch + sheetCountBand);
+    expect(tester.takeException(), isNull);
   });
 }
