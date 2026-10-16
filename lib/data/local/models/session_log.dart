@@ -45,8 +45,13 @@ class SessionLog {
   /// sessions (Blattform, 30.09.).
   int? sheetLine;
 
-  /// `line` | `sheet` | null (legacy).
+  /// `line` | `sequence` (`sheet` in Blattform rows) | null (legacy).
   String? sheetMode;
+
+  /// The lines of a sequence, 1-based comma separated in selection
+  /// order (`?lines=` form, e.g. `1,3,5`); null for one line and for rows
+  /// written before 16.10.
+  String? sheetLines;
 
   /// Measurement source of this session: `mic` | `midi` | `off`
   /// (Brief Etappe 2, A.9). Rows written before Etappe 2 read back empty

@@ -31,7 +31,7 @@ List<int> initialLineSelection({
 /// The `?lines=` value for a selection: 1-based, comma separated.
 String linesQuery(List<int> zeroBased) => zeroBased.map((i) => i + 1).join(',');
 
-/// The line bar's label: "Line 3 of 8" for one line, "Sequence 2 of 4 ·
+/// The line bar's label: "Line 3 of 8" for one line, "Step 2 of 4 ·
 /// Line 5 · 1/2" inside a sequence ([line], [step], [pass] 0-based).
 String lineNavLabel({
   required int line,
@@ -43,12 +43,13 @@ String lineNavLabel({
 }) =>
     steps <= 1
         ? 'Line ${line + 1} of $lineCount'
-        : 'Sequence ${step + 1} of $steps · Line ${line + 1} · '
+        : 'Step ${step + 1} of $steps · Line ${line + 1} · '
             '${pass + 1}/$repeats';
 
-/// Session-log fields for the played unit: the 1-based line for one line,
-/// null for a sequence.
-({int? line, String mode}) sessionLogSheetFields(SheetPlan plan) =>
+/// Session-log fields for the played unit: the 1-based line for one line;
+/// for a sequence no line but its selection ([linesQuery] form).
+({int? line, String? lines, String mode}) sessionLogSheetFields(
+        SheetPlan plan) =>
     plan.isSequence
-        ? (line: null, mode: 'sequence')
-        : (line: plan.lineIndex + 1, mode: 'line');
+        ? (line: null, lines: linesQuery(plan.selection), mode: 'sequence')
+        : (line: plan.lineIndex + 1, lines: null, mode: 'line');

@@ -267,7 +267,7 @@ void main() {
           screen: _screen(id: sheetId, lines: '1,3'), metronome: () => rec);
       // Two 2-bar lines, each twice.
       expect(rec.volumes.last, 2 * 2 * 2 * 96);
-      expect(find.text('Sequence 1 of 2 · Line 1 · 1/2'), findsOneWidget);
+      expect(find.text('Step 1 of 2 · Line 1 · 1/2'), findsOneWidget);
       expect(find.byKey(const ValueKey('mode-line')), findsNothing);
       expect(find.byKey(const ValueKey('mode-sheet')), findsNothing);
     });
@@ -279,10 +279,10 @@ void main() {
           metronome: () => metronome);
       metronome.tickTo(2 * 192);
       await tester.pump();
-      expect(find.text('Sequence 2 of 2 · Line 3 · 1/2'), findsOneWidget);
+      expect(find.text('Step 2 of 2 · Line 3 · 1/2'), findsOneWidget);
       metronome.tickTo(3 * 192);
       await tester.pump();
-      expect(find.text('Sequence 2 of 2 · Line 3 · 2/2'), findsOneWidget);
+      expect(find.text('Step 2 of 2 · Line 3 · 2/2'), findsOneWidget);
     });
 
     testWidgets('one-line view: only the current line is drawn',
@@ -313,11 +313,11 @@ void main() {
       final before = rec.volumes.length;
       await tester.tap(find.byKey(const ValueKey('line-next')));
       await tester.pump();
-      expect(find.text('Sequence 2 of 2 · Line 3 · 1/2'), findsOneWidget);
+      expect(find.text('Step 2 of 2 · Line 3 · 1/2'), findsOneWidget);
       expect(rec.volumes.length, before + 1);
       await tester.tap(find.byKey(const ValueKey('line-next')));
       await tester.pump();
-      expect(find.text('Sequence 1 of 2 · Line 1 · 1/2'), findsOneWidget);
+      expect(find.text('Step 1 of 2 · Line 1 · 1/2'), findsOneWidget);
       expect(find.text('Stop'), findsOneWidget);
     });
 
@@ -337,7 +337,7 @@ void main() {
       await _pumpScreen(tester,
           screen: _screen(id: 'multiple_bounce_roll', lines: 'all'));
       expect(find.byKey(const ValueKey('line-bar')), findsNothing);
-      expect(find.textContaining('Sequence'), findsNothing);
+      expect(find.textContaining(RegExp(r'^Step \d+ of')), findsNothing);
     });
 
     testWidgets('?line=3 opens line 3; ?mode=sheet is ignored', (tester) async {
@@ -385,7 +385,7 @@ void main() {
       await _pumpScreen(tester, screen: _screen(id: sheetId, lines: '1,3'));
       await tester.tap(find.byKey(const ValueKey('line-next')));
       await tester.pump();
-      expect(find.text('Sequence 2 of 2 · Line 3 · 1/2'), findsOneWidget);
+      expect(find.text('Step 2 of 2 · Line 3 · 1/2'), findsOneWidget);
       expect(SettingsService.lastLineFor(sheetId), 6);
     });
 

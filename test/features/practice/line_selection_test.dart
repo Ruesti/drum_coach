@@ -43,13 +43,13 @@ void main() {
     expect(
         lineNavLabel(
             line: 4, lineCount: 8, step: 1, steps: 4, pass: 0, repeats: 2),
-        'Sequence 2 of 4 · Line 5 · 1/2');
+        'Step 2 of 4 · Line 5 · 1/2');
   });
-  test('sessionLogSheetFields: line number for one line, null for a sequence',
-      () {
-    expect(
-        sessionLogSheetFields(SheetPlan.line(r, 2)), (line: 3, mode: 'line'));
+  test('sessionLogSheetFields: line number for one line, selection for a '
+      'sequence', () {
+    expect(sessionLogSheetFields(SheetPlan.line(r, 2)),
+        (line: 3, lines: null, mode: 'line'));
     expect(sessionLogSheetFields(SheetPlan.sequence(r, [0, 2])),
-        (line: null, mode: 'sequence'));
+        (line: null, lines: '1,3', mode: 'sequence'));
   });
 }

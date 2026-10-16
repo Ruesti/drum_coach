@@ -1000,6 +1000,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         mode: _analysisMode ? 'analysis' : 'learn',
         sheetLine: sessionLogSheetFields(_plan).line,
         sheetMode: sessionLogSheetFields(_plan).mode,
+        sheetLines: sessionLogSheetFields(_plan).lines,
       );
       await SessionLogService.save(log);
       if (!mounted) return;
@@ -1404,7 +1405,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
 // ── Line bar ───────────────────────────────────────────────────────────────────
 
-/// Under the one-line view: ‹ label › — "Line 3 of 8" or "Sequence 2 of 4 ·
+/// Under the one-line view: ‹ label › — "Line 3 of 8" or "Step 2 of 4 ·
 /// Line 5 · 1/2" (see [lineNavLabel]).
 class _LineBar extends StatelessWidget {
   final String label;

@@ -27,6 +27,7 @@ SessionLog buildSessionLog({
   String mode = 'learn',
   int? sheetLine,
   String? sheetMode,
+  String? sheetLines,
   String source = 'off',
   String? midiDevice,
   String? kitMapping,
@@ -52,6 +53,7 @@ SessionLog buildSessionLog({
     ..rating = rating
     ..sheetLine = sheetLine
     ..sheetMode = sheetMode
+    ..sheetLines = sheetLines
     ..source = source
     ..midiDevice = midiDevice
     ..kitMapping = kitMapping

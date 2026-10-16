@@ -35,6 +35,7 @@ String sessionLogToJsonl(SessionLog log) {
       'rating': log.rating,
       'sheetLine': log.sheetLine,
       'sheetMode': log.sheetMode,
+      'sheetLines': log.sheetLines,
       'source': exportedSource(log),
       'midiDevice': log.midiDevice,
       'kitMapping': log.kitMapping,

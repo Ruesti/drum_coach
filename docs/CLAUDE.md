@@ -200,12 +200,13 @@ enum Hand { right, left }
 - Practice screen: `LineView` shows only the current line (one bar per
   row on phones; the window scrolls row by row with the played row on
   top). Header bar `‹ Line 3 of 8 ›` for a single line, or
-  `Sequence 2 of 4 · Line 5 · 1/2` for a sequence; ‹/› in a sequence turns
+  `Step 2 of 4 · Line 5 · 1/2` for a sequence; ‹/› in a sequence turns
   its start point. Route params `?lines=all|1,3,5` (1-based), `?line=N` as
   alias, `?mode=` is ignored. Last practised line per exercise
   `SettingsService.lastLineFor`; repeats per line
   `SettingsService.sequenceRepeats` (Settings → LINE SEQUENCES, 1×–4×,
-  default 2). `SessionLog.sheetMode` = `line` / `sequence`. Switches
+  default 2). `SessionLog.sheetMode` = `line` / `sequence`; a sequence
+  also logs `sheetLines` (`1,3,5`). Switches
   "Sticking letters" / "Count hints" in the ⋯ sheet.
 - **Line list** (`/exercise/:rudimentId`, `LineListScreen`): one card per
   line (`SheetStaffWidget(onlyLine:)`); tap = practise that line, long
@@ -452,6 +453,9 @@ StickingPatternWidget({
   synthesised in `backing_sounds.dart`) into `LoopVoice`s over one cycle of
   `lcm(pattern, bar)` ticks; `buildLoopWav` mixes them with a soft limiter
   (knee 0.8, ceiling 0.98). Backing only on the 24-tick pattern clock.
+  The engine renders off the main isolate (`renderLoopWavInIsolate`,
+  `Isolate.run`; a 64-bar sequence loop takes 200–400 ms) and drops a
+  render a newer rebuild or a stop superseded (`renderLoopIfCurrent`).
   Analysis-mode rule: click track and backing sound only with headphones
   (the mic would hear them); the practice screen re-checks on the
   metronome's `audioRouteChanges`. Sound gate:
