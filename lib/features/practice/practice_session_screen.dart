@@ -232,16 +232,18 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       micListens: _micListens);
 
   /// Backing: silent whenever the *microphone* listens without headphones.
-  /// MIDI cannot hear the speaker (Brief A.5).
+  /// MIDI cannot hear the speaker (Brief A.5). Kit exercises open no source
+  /// yet (B.3), so nothing listens there.
   bool get _micListens =>
-      _source?.kind == StrokeSourceKind.mic ||
-      (_source == null &&
-          planMeasurement(
-                preference: SettingsService.measurementSource,
-                midiDeviceAvailable: false,
-                isDesktop: isDesktopPlatform,
-              ) ==
-              MeasurementPlan.mic);
+      !_kitExercise &&
+      (_source?.kind == StrokeSourceKind.mic ||
+          (_source == null &&
+              planMeasurement(
+                    preference: SettingsService.measurementSource,
+                    midiDeviceAvailable: false,
+                    isDesktop: isDesktopPlatform,
+                  ) ==
+                  MeasurementPlan.mic));
   bool get _backingAllowed => !_micListens || _headphones;
 
   /// Overlapping headphone queries (start + route change): only the newest
@@ -259,11 +261,15 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   late bool _sheetMode;
   late SheetPlan _plan;
 
+  /// The exercise is a kit sheet: no measurement in Teil 1.
+  bool _kitExercise = false;
+
   /// The played unit as an ordinary exercise: playback, backing choice and
   /// analysis see only this (spec §2).
   late Rudiment _unit;
 
   void _buildUnit(Rudiment rudiment) {
+    _kitExercise = rudiment.isKit;
     _plan = _sheetMode
         ? SheetPlan.wholeSheet(rudiment)
         : SheetPlan.line(rudiment, _lineIndex);
@@ -1123,8 +1129,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     // before the start).
     final loc =
         activeBeat == null || _plan.isKit ? null : _plan.locate(activeBeat);
-    final tickLoc = activeBeat == null || !_plan.isKit
-        ? null
+    final tickLoc =
+        activeBeat == null || !_plan.isKit || _playback.onsetTicks.isEmpty
+            ? null
         : _plan.locateTick(_playback.onsetTicks[activeBeat]);
     final isPlaying =
         ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
@@ -1209,12 +1216,16 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                               active: _measuring && !_sourceLost,
                               unavailable: _source == null || _sourceLost,
                               kit: rudiment.isKit,
-                              onTap: () {
-                                setState(() => _analysisMode = !_analysisMode);
-                                SettingsService.setAnalysisModeFor(
-                                    widget.rudimentId, _analysisMode);
-                                _applyExtras();
-                              },
+                              // No measurement for kit yet: nothing to switch.
+                              onTap: rudiment.isKit
+                                  ? null
+                                  : () {
+                                      setState(() =>
+                                          _analysisMode = !_analysisMode);
+                                      SettingsService.setAnalysisModeFor(
+                                          widget.rudimentId, _analysisMode);
+                                      _applyExtras();
+                                    },
                             )
                           : null,
                 ),
@@ -1633,7 +1644,7 @@ class _ModeChip extends StatelessWidget {
 
   /// Kit exercise: measured per voice from B.3 on — not yet.
   final bool kit;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

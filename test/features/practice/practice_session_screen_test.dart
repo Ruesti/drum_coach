@@ -69,6 +69,7 @@ class _RecordingPlayingMetronomeNotifier extends _RecordingMetronomeNotifier {
 /// Idle metronome that records the last backing call's mute flags.
 class _BackingFlagsMetronomeNotifier extends MetronomeNotifier {
   ({bool kick, bool hihat})? last;
+  String? lastStyleId;
   @override
   MetronomeState build() => const MetronomeState();
   @override
@@ -77,6 +78,7 @@ class _BackingFlagsMetronomeNotifier extends MetronomeNotifier {
       bool backingKick = true,
       bool backingHihat = true}) {
     last = (kick: backingKick, hihat: backingHihat);
+    lastStyleId = styleId;
     super.setBacking(styleId,
         beatsPerBar: beatsPerBar,
         backingKick: backingKick,
@@ -1177,6 +1179,44 @@ void main() {
           extraOverrides: kitCatalog());
       await tester.pump();
       expect(rec.last, (kick: false, hihat: false));
+    });
+
+    testWidgets('no microphone listens: the band plays on a phone without '
+        'headphones (auto source) — pad exercises keep the mic rule',
+        (tester) async {
+      _mockMicPermission(tester);
+      _mockHeadphones(tester, 'none');
+      await SettingsService.setMeasurementSource(MeasurementSource.auto);
+      await SettingsService.setBackingEnabled(true);
+      Future<_BackingFlagsMetronomeNotifier> run(String id) async {
+        final rec = _BackingFlagsMetronomeNotifier();
+        await _pumpScreen(tester,
+            screen: PracticeSessionScreen(
+                rudimentId: id, isFromRoutine: false, ports: FakeMidiPorts()),
+            metronome: () => rec,
+            extraOverrides: kitCatalog());
+        await tester.pump();
+        await tester.pumpWidget(const SizedBox());
+        return rec;
+      }
+
+      final kit = await run('kit_showcase');
+      expect(kit.lastStyleId, isNotNull);
+      expect(kit.last, (kick: false, hihat: false));
+      final pad = await run(rudimentsSeedData.first.id);
+      expect(pad.lastStyleId, isNull);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the mode chip does not toggle for kit exercises',
+        (tester) async {
+      await SettingsService.setMeasurementSource(MeasurementSource.midi);
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'), extraOverrides: kitCatalog());
+      await tester.pump();
+      final chip = find.byTooltip('Full-kit measurement is not available yet');
+      final ink = find.descendant(of: chip, matching: find.byType(InkWell));
+      expect(tester.widget<InkWell>(ink).onTap, isNull);
     });
 
     testWidgets('opens no stroke source even with a MIDI module at hand',
