@@ -30,6 +30,7 @@ void main() {
     'set_fill_triplets',
     'feet_double_bass_sixteenths',
     'feet_kick_control',
+    'feet_double_bass_triplets',
   ];
 
   for (final id in ids) {

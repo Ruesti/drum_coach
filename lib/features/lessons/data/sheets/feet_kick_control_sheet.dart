@@ -548,11 +548,11 @@ const List<TechniqueSection> feetKickControlLesson = [
   TechniqueSection(
     title: "Practice tips",
     body:
-        "Line 1 is the reference: kick on 1 and 3 locked to the hat. Lines 2 and 4 move the kick to the \"and\", line 3 and line 5 ask for two strokes in a row (the second one as loud as the first), line 7 is four-on-the-floor. Line 8 puts the kick on 2 and the \"and\" of 4 — count out loud so the snare does not pull the foot along.",
+        "Line 1 is the reference: kick on 1 and 3 locked to the hat. Lines 2 and 4 move the kick to the \"and\", line 3 and line 5 ask for two strokes in a row (the second one as loud as the first), line 7 is four-on-the-floor. Line 8 puts the kick on 2 and the \"and\" of 4 in its first bar — count out loud so the snare does not pull the foot along — and mixes 1, the \"and\" of 2, the \"a\" of 3 and 4 in its second bar.",
   ),
   TechniqueSection(
     title: "Where you hear it",
     body:
-        "AC/DC \"Back in Black\" with Phil Rudd (kick on 1 and 3, nothing more), Led Zeppelin \"When the Levee Breaks\" with John Bonham, and every four-on-the-floor dance track from disco to house.",
+        "AC/DC \"Back in Black\" with Phil Rudd, Led Zeppelin \"When the Levee Breaks\" with John Bonham, and every four-on-the-floor dance track from disco to house.",
   ),
 ];

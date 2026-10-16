@@ -180,6 +180,8 @@ class Orchestrate(unittest.TestCase):
             orchestrate('R4. L8 R4 R4', plan)  # R4. crosses into beat 2
         with self.assertRaises(ValueError):
             orchestrate('R4 R4 R4', plan)  # three quarters, not a bar
+        with self.assertRaisesRegex(ValueError, 'beat 2: plan entry is None'):
+            orchestrate('R4 R4 R4 R4', ['SN', None, 'SN', 'SN'])
 
 
 class FootSide(unittest.TestCase):

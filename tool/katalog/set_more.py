@@ -275,10 +275,20 @@ def _check_linear() -> None:
         fill_bars = {3} if i < 8 else {3, 7}
         if not is_linear(kl, fill_bars):
             raise ValueError(f'set_fill_linear {"challenge" if i == 8 else f"line {i + 1}"}: fill bar is not linear')
+    # Jeder Fill-Takt trägt eigene Kick-Sechzehntel: mindestens ein BD-Einsatz neben dem Viertelraster.
     for s in SHEETS[:2]:
-        for i, f in enumerate(s.lines):
-            if 'K16' not in f.split('BD:')[1].split('\n')[0]:
-                raise ValueError(f'{s.id} line {i + 1}: the fill has no kick of its own')
+        for i, kl in enumerate(s.parsed()):
+            bd = next(t for t in kl.tracks if t.key == 'BD')
+            for bar in ({3} if i < 8 else {3, 7}):
+                tick, off_grid = 0, False
+                for n in bd.notes:
+                    if not n.rest and tick // (4 * TPQ) == bar and tick % TPQ != 0:
+                        off_grid = True
+                    tick += n.ticks()
+                if not off_grid:
+                    where = 'challenge' if i == 8 else f'line {i + 1}'
+                    raise ValueError(f'{s.id} {where} bar {bar + 1}: the fill has no kick of its own '
+                                     '(no BD onset off the quarter grid)')
 
 
 if __name__ == '__main__':

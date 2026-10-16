@@ -66,7 +66,8 @@ Reihenfolge der Umsetzung: `feet` zuerst (Ulis Priorität), dann `set_more`.
 
 ## §3 Abnahme (ohne Set, im Emulator)
 
-- `python3 feet.py` / `python3 set_more.py` ok; Kurationsseiten mit Fußbuchstaben;
+- `python3 feet.py` / `python3 set_more.py` ok; Kurationsseiten ohne Fußbuchstaben
+  (nur der Legenden-Hinweis „Fußseiten R/L nur in der App", wie §1);
   Integritätstests grün (Fußseiten, Limbs, Form); Goldens: Pattern von
   `feet_double_bass_sixteenths` und `feet_kick_control`, ganzes Blatt
   `feet_double_bass_eighths` (Reihenhöhe 146, zwei Buchstabenzeilen).

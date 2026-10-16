@@ -813,6 +813,6 @@ const List<TechniqueSection> feetDoubleBassTripletsLesson = [
   TechniqueSection(
     title: "Where you hear it",
     body:
-        "John Bonham in Led Zeppelin \"Good Times Bad Times\" (his famous kick triplets), the shuffle feel of \"Fool in the Rain\", and the rolling triplet double bass of power metal.",
+        "John Bonham in Led Zeppelin \"Good Times Bad Times\" (his famous kick triplets — he played them with one foot; this sheet splits them between both feet), the shuffle feel of \"Fool in the Rain\", and the rolling triplet double bass of power metal.",
   ),
 ];

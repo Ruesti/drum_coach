@@ -58,7 +58,11 @@ extension _KitPainting on _StaffPainter {
     final feetBeamed =
         _paintLayerBeams(canvas, kit.feet, row, stemBottomY, up: false);
     _paintTuplets(canvas, kit.hands, row, y0 + _accentY);
-    _paintTuplets(canvas, kit.feet, row, stemBottomY + 14);
+    // With foot letters the feet bracket sits in the band between the feet
+    // beams (lowest beam at stemBottomY, 3 px thick) and the letter row
+    // (11 px bold centred at _footLetterY), so neither touches the numeral.
+    _paintTuplets(canvas, kit.feet, row,
+        footLetters ? stemBottomY + 6 : stemBottomY + 14);
 
     // Rests of the hands layer only — feet rests are left out, as drum
     // charts do.

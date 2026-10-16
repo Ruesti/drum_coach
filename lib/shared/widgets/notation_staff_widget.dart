@@ -139,6 +139,7 @@ class SheetStaffWidget extends StatelessWidget {
       final contentWidth = width - 2 * hPad;
       final geo = geometry ??
           computeSheetGeometry(rudiment, contentWidth, showCounts: showCounts);
+      final footLetters = rudiment.hasFootSides;
       final sheet = rudiment.sheet;
       return Container(
         width: double.infinity,
@@ -183,7 +184,7 @@ class SheetStaffWidget extends StatelessWidget {
                             : null,
                     dimmed: activeLine != null && activeLine != i,
                     showSticking: showSticking,
-                    footLetters: rudiment.hasFootSides,
+                    footLetters: footLetters,
                   ),
                 ),
               ),

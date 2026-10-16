@@ -119,8 +119,8 @@ FO_8 = {'RD': RIDE_SW_A, 'HP': HP24, 'BD': BD_SW, 'SR': SR4}
 LESSON_KICK_CONTROL = {
     'Why it matters': 'The kick is where the band feels the downbeat and where the bass player locks in. A kick that lands exactly under the hi-hat, at the same volume every time, makes even a simple groove sound expensive; a kick that drifts makes the whole band drift.',
     'How to play it': 'Heel up, the ball of the foot on the pedal, and let the leg drop from the hip so the beater strikes and comes straight back off the head — the hi-hat and snare stay exactly as they are while only the foot changes.',
-    'Practice tips': 'Line 1 is the reference: kick on 1 and 3 locked to the hat. Lines 2 and 4 move the kick to the "and", line 3 and line 5 ask for two strokes in a row (the second one as loud as the first), line 7 is four-on-the-floor. Line 8 puts the kick on 2 and the "and" of 4 — count out loud so the snare does not pull the foot along.',
-    'Where you hear it': 'AC/DC "Back in Black" with Phil Rudd (kick on 1 and 3, nothing more), Led Zeppelin "When the Levee Breaks" with John Bonham, and every four-on-the-floor dance track from disco to house.',
+    'Practice tips': 'Line 1 is the reference: kick on 1 and 3 locked to the hat. Lines 2 and 4 move the kick to the "and", line 3 and line 5 ask for two strokes in a row (the second one as loud as the first), line 7 is four-on-the-floor. Line 8 puts the kick on 2 and the "and" of 4 in its first bar — count out loud so the snare does not pull the foot along — and mixes 1, the "and" of 2, the "a" of 3 and 4 in its second bar.',
+    'Where you hear it': 'AC/DC "Back in Black" with Phil Rudd, Led Zeppelin "When the Levee Breaks" with John Bonham, and every four-on-the-floor dance track from disco to house.',
 }
 
 LESSON_KICK_SIXTEENTHS = {
@@ -148,7 +148,7 @@ LESSON_DB3 = {
     'Why it matters': 'Triplets between the feet give a rolling, galloping feel that straight sixteenths cannot: the accent wanders from foot to foot and the groove swings. Combined with the hands, triplets also give the famous Bonham trick of hands-hands-kick.',
     'How to play it': 'Alternate R L R, L R L so the leading foot changes every beat, both feet equally loud and heel up; for the Bonham triplet the hands play two triplet notes (R L) on the snare and the right foot finishes the group with the kick.',
     'Practice tips': 'Line 1 is the full triplet stream under a shuffle hat; line 2 rests the feet on 1 and 3, line 3 plays a foot shuffle (long-short). Line 4 is the Bonham triplet on its own — hands R L, kick — keep the three notes perfectly even. Lines 5 and 6 go to sextuplets: burst first, then the whole bar.',
-    'Where you hear it': 'John Bonham in Led Zeppelin "Good Times Bad Times" (his famous kick triplets), the shuffle feel of "Fool in the Rain", and the rolling triplet double bass of power metal.',
+    'Where you hear it': 'John Bonham in Led Zeppelin "Good Times Bad Times" (his famous kick triplets — he played them with one foot; this sheet splits them between both feet), the shuffle feel of "Fool in the Rain", and the rolling triplet double bass of power metal.',
 }
 
 LESSON_HIHAT_FOOT = {

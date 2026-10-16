@@ -56,8 +56,11 @@ def orchestrate(fill: str, plan: list[str | None]) -> dict[str, str]:
     if len(plan) != 4:
         raise ValueError(f'plan needs four beats: {plan}')
     if not has_feet:
+        for i in range(4):
+            if plan[i] is None and any(not n.rest for _, n, _ in beats[i]):
+                raise ValueError(f'beat {i + 1}: plan entry is None but the fill has hand notes there')
         out: dict[str, str] = {}
-        for drum in dict.fromkeys(plan):
+        for drum in dict.fromkeys(d for d in plan if d is not None):
             out[drum] = ' '.join(' '.join(raws[i]) if plan[i] == drum else '-4' for i in range(4))
         return out
 

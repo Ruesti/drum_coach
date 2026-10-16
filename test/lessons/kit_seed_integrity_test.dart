@@ -23,6 +23,10 @@ void main() {
               r.limbs.contains(Limb.doubleBass),
           isTrue,
           reason: r.id);
+      if (r.limbs.contains(Limb.doubleBass)) {
+        expect(r.hasFootSides, isTrue,
+            reason: '${r.id} is doubleBass without foot sides');
+      }
       // The PATTERN bar: one bar in every voice, sticking = its first voice.
       expect(
           kitBarsOrThrow(r.patternVoices,
