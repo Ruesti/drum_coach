@@ -44,18 +44,41 @@ List<KitSoundTrack> kitBackingTracks(List<Voice> voices, NoteGrid grid) => [
           ),
     ];
 
+/// What the pattern voice sounds while the band plays a kit unit's kick
+/// and hi-hat: the loudest of the other voices (snare, toms, cymbals) per
+/// tick, zero where only kick/hi-hat sound — those come from the samples.
+/// Same length as `buildVoicesPlayback(voices)`.
+List<double> kitPatternSound(List<Voice> voices, NoteGrid grid) {
+  final rest = [
+    for (final v in voices)
+      if (kitSoundOf(v.instrument) == null) v
+  ];
+  if (rest.isEmpty) {
+    return List<double>.filled(
+        buildVoicesPlayback(voices, grid).totalTicks, 0.0);
+  }
+  return buildVoicesPlayback(rest, grid).tickVolumes;
+}
+
 /// What the band plays: pad units get the automatic style with the band
 /// silent in voices the player covers (Brief B.4, unchanged); kit units
 /// get no style but their own kick/hi-hat tracks — all of them with
-/// Backing on, none with it off (click only).
-({String? styleId, bool kick, bool hihat, List<KitSoundTrack> kitTracks})
-    backingFor({
+/// Backing on, none with it off (click only); with Backing on the pattern
+/// voice sounds [kitPatternSound] instead of the merged voices.
+({
+  String? styleId,
+  bool kick,
+  bool hihat,
+  List<KitSoundTrack> kitTracks,
+  List<double>? patternSound,
+}) backingFor({
   required bool isKit,
   required bool backingOn,
   required String? styleId,
   required bool playsKick,
   required bool playsHihat,
   required List<KitSoundTrack> kitTracks,
+  List<double>? kitPatternSound,
 }) {
   if (isKit) {
     return (
@@ -63,6 +86,7 @@ List<KitSoundTrack> kitBackingTracks(List<Voice> voices, NoteGrid grid) => [
       kick: true,
       hihat: true,
       kitTracks: backingOn ? kitTracks : const <KitSoundTrack>[],
+      patternSound: backingOn ? kitPatternSound : null,
     );
   }
   return (
@@ -70,5 +94,6 @@ List<KitSoundTrack> kitBackingTracks(List<Voice> voices, NoteGrid grid) => [
     kick: !playsKick,
     hihat: !playsHihat,
     kitTracks: const <KitSoundTrack>[],
+    patternSound: null,
   );
 }

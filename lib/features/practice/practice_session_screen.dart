@@ -270,6 +270,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// is on (S23 test 16.10.). Built once per unit, so the engine sees the
   /// same list until the unit changes.
   List<KitSoundTrack> _kitTracks = const [];
+  List<double>? _kitPatternSound;
 
   /// The played unit as an ordinary exercise: playback, backing choice and
   /// analysis see only this (spec §2).
@@ -288,6 +289,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _kitTracks = _plan.isKit
         ? kitBackingTracks(_plan.voices, rudiment.gridUnit)
         : const [];
+    _kitPatternSound =
+        _plan.isKit ? kitPatternSound(_plan.voices, rudiment.gridUnit) : null;
   }
 
   /// Line or mode change: new unit, new loop, fresh beat log, position
@@ -676,12 +679,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         styleId: _backingStyleId,
         playsKick: _plan.playsKick,
         playsHihat: _plan.playsHihat,
-        kitTracks: _kitTracks);
+        kitTracks: _kitTracks,
+        kitPatternSound: _kitPatternSound);
     _metronomeNotifier.setBacking(b.styleId,
         beatsPerBar: _unit.beatsPerBar,
         backingKick: b.kick,
         backingHihat: b.hihat,
-        kitTracks: b.kitTracks);
+        kitTracks: b.kitTracks,
+        patternSound: b.patternSound);
   }
 
   /// Ask the platform for headphones, then re-apply the extras. Failure

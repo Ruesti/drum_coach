@@ -178,6 +178,7 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   bool _backingKick = true;
   bool _backingHihat = true;
   List<KitSoundTrack> _kitTracks = const [];
+  List<double>? _kitPatternSound;
 
   /// Headphone plug/unplug: reroute the engine and tell listening screens.
   @visibleForTesting
@@ -189,23 +190,27 @@ class MetronomeNotifier extends _$MetronomeNotifier {
 
   /// Backing loop next to a pattern (Engine part 1). Unknown ids mean off.
   /// [kitTracks]: a kit unit's own kick/hi-hat voices the band plays
-  /// instead of a style (S23 test 16.10.).
+  /// instead of a style (S23 test 16.10.); [patternSound] what the
+  /// pattern voice sounds meanwhile (null = the pattern volumes).
   void setBacking(String? styleId,
       {required int beatsPerBar,
       bool backingKick = true,
       bool backingHihat = true,
-      List<KitSoundTrack> kitTracks = const []}) {
+      List<KitSoundTrack> kitTracks = const [],
+      List<double>? patternSound}) {
     final style = backingStyleById(styleId);
     _beatsPerBar = beatsPerBar;
     _backingKick = backingKick;
     _backingHihat = backingHihat;
     _kitTracks = kitTracks;
+    _kitPatternSound = patternSound;
     _engine?.setBacking(style,
         level: state.backingLevel,
         beatsPerBar: beatsPerBar,
         backingKick: backingKick,
         backingHihat: backingHihat,
-        kitTracks: kitTracks);
+        kitTracks: kitTracks,
+        patternSound: patternSound);
     state = style == null
         ? state.copyWith(clearBackingStyle: true)
         : state.copyWith(backingStyleId: style.id);
@@ -218,7 +223,8 @@ class MetronomeNotifier extends _$MetronomeNotifier {
         beatsPerBar: _beatsPerBar,
         backingKick: _backingKick,
         backingHihat: _backingHihat,
-        kitTracks: _kitTracks);
+        kitTracks: _kitTracks,
+        patternSound: _kitPatternSound);
     state = state.copyWith(backingLevel: clamped);
   }
 

@@ -225,7 +225,8 @@ Spec: `docs/BRIEF_ETAPPE2_SET.md`, Phase B. Plan: `docs/superpowers/plans/2026-1
   own kick and hi-hat voices (incl. pedal) with the backing samples
   (`kitBackingTracks` → `setBacking(kitTracks:)` → `buildLoopPlan(kitTracks:)`), with it
   off nothing (click only); snare/toms/cymbals have no samples and stay in the pattern
-  sound. Pad units keep the automatic style (`backingFor`).
+  sound, which with Backing on is silent on ticks where only kick/hi-hat sound
+  (`kitPatternSound` → `buildLoopPlan(patternSound:)`; the clock keeps every onset). Pad units keep the automatic style (`backingFor`).
 - Measurement of kit exercises is **Phase B.3** (not yet): the practice screen opens
   no source for `isKit`, header `NOT MEASURABLE`, chip tooltip "Full-kit measurement
   is not available yet".

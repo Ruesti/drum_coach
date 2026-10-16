@@ -96,5 +96,52 @@ void main() {
       expect(
           kitBackingTracks([open], NoteGrid.eighth).single.tickVolumes[0], 1.0);
     });
+    test(
+        'Backing on: the pattern sound is silent where only kick/hi-hat '
+        'sound, the snare keeps it; the clock keeps every onset', () {
+      final r = kitShowcase();
+      final plan = SheetPlan.line(r, 0); // hat eighths, backbeat, kick 1 + 3
+      final playback = buildVoicesPlayback(plan.voices, r.gridUnit);
+      final sound = kitPatternSound(plan.voices, r.gridUnit);
+      expect(sound.length, playback.totalTicks);
+      expect(sound[0], 0.0); // hat + kick
+      expect(sound[12], 0.0); // hat alone
+      expect(sound[48], 0.0); // hat + kick on 3
+      expect(sound[24], greaterThan(0)); // snare on 2
+      expect(sound[72], greaterThan(0)); // snare on 4
+
+      ({
+        String? styleId,
+        bool kick,
+        bool hihat,
+        List<KitSoundTrack> kitTracks,
+        List<double>? patternSound
+      }) b(bool on) => backingFor(
+          isKit: true,
+          backingOn: on,
+          styleId: null,
+          playsKick: true,
+          playsHihat: true,
+          kitTracks: kitBackingTracks(plan.voices, r.gridUnit),
+          kitPatternSound: sound);
+      expect(b(true).patternSound, same(sound));
+      expect(b(false).patternSound, isNull); // Backing off: unchanged
+
+      final loop = buildLoopPlan(
+        patternVolumes: playback.tickVolumes,
+        patternLoud: const [0.5],
+        patternSoft: const [0.3],
+        factor: 24,
+        kickSound: const [0.9],
+        hihatLoud: const [0.6],
+        hihatSoft: const [0.4],
+        kitTracks: b(true).kitTracks,
+        patternSound: b(true).patternSound,
+      );
+      expect(loop.voices.first.tickVolumes[12], 0.0);
+      expect(loop.voices.first.tickVolumes[24], greaterThan(0));
+      expect(loop.patternVolumes[12], greaterThan(0)); // clock intact
+      expect(loop.patternVolumes, playback.tickVolumes);
+    });
   });
 }

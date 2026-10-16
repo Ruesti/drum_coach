@@ -72,6 +72,7 @@ class _BackingFlagsMetronomeNotifier extends MetronomeNotifier {
   ({bool kick, bool hihat})? last;
   String? lastStyleId;
   List<KitSoundTrack> lastKitTracks = const [];
+  List<double>? lastPatternSound;
   @override
   MetronomeState build() => const MetronomeState();
   @override
@@ -79,15 +80,18 @@ class _BackingFlagsMetronomeNotifier extends MetronomeNotifier {
       {required int beatsPerBar,
       bool backingKick = true,
       bool backingHihat = true,
-      List<KitSoundTrack> kitTracks = const []}) {
+      List<KitSoundTrack> kitTracks = const [],
+      List<double>? patternSound}) {
     last = (kick: backingKick, hihat: backingHihat);
     lastStyleId = styleId;
     lastKitTracks = kitTracks;
+    lastPatternSound = patternSound;
     super.setBacking(styleId,
         beatsPerBar: beatsPerBar,
         backingKick: backingKick,
         backingHihat: backingHihat,
-        kitTracks: kitTracks);
+        kitTracks: kitTracks,
+        patternSound: patternSound);
   }
 }
 
@@ -1196,9 +1200,14 @@ void main() {
       // Line 1 of the showcase: hi-hat, snare, kick → hi-hat + kick.
       expect(on.lastKitTracks.map((t) => t.sound),
           unorderedEquals([KitSound.hihat, KitSound.kick]));
+      // The pattern sound keeps only the snare: hat/kick ticks are silent.
+      expect(on.lastPatternSound![0], 0.0); // hat + kick
+      expect(on.lastPatternSound![12], 0.0); // hat alone
+      expect(on.lastPatternSound![24], greaterThan(0)); // snare on 2
       final off = await run(false);
       expect(off.lastStyleId, isNull);
       expect(off.lastKitTracks, isEmpty);
+      expect(off.lastPatternSound, isNull);
     });
 
     testWidgets('no microphone listens: the band plays on a phone without '

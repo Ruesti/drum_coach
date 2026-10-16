@@ -45,6 +45,10 @@ class LoopPlan {
 ///   played with [kickSound] / [hihatLoud] / [hihatSoft] at [backingLevel]
 ///   in place of a style (kit exercise with Backing on); they need no bar
 ///   clock, so the cycle stays the pattern.
+/// - [patternSound]: what the pattern voice *sounds* (same length as
+///   [patternVolumes]); null = the pattern volumes. Kit unit with Backing
+///   on: zero where only kick/hi-hat sound (the samples play those), so
+///   the clock ([LoopPlan.patternVolumes]) keeps every onset.
 LoopPlan buildLoopPlan({
   required List<double> patternVolumes,
   required List<double> patternLoud,
@@ -61,6 +65,7 @@ LoopPlan buildLoopPlan({
   bool backingKick = true,
   bool backingHihat = true,
   List<KitSoundTrack> kitTracks = const [],
+  List<double>? patternSound,
 }) {
   final patternTicks = patternVolumes.length;
   var cycle = patternTicks;
@@ -80,9 +85,15 @@ LoopPlan buildLoopPlan({
   final tiled = [
     for (var t = 0; t < cycle; t++) patternVolumes[t % patternTicks]
   ];
+  if (patternSound != null && patternSound.length != patternTicks) {
+    throw ArgumentError('pattern sound spans ${patternSound.length} ticks, '
+        'the pattern $patternTicks');
+  }
   final voices = <LoopVoice>[
     LoopVoice(
-      tickVolumes: tiled,
+      tickVolumes: patternSound == null
+          ? tiled
+          : [for (var t = 0; t < cycle; t++) patternSound[t % patternTicks]],
       loudSamples: patternLoud,
       softSamples: patternSoft,
       loudFrom: 1.2,
