@@ -42,12 +42,12 @@
 ### Task 1: Fußseite — DSL `foot(side:)`, `hasFootSides`, Notenschrift `r`/`l`
 
 **Files:**
-- Modify: `lib/features/lessons/data/etude_dsl.dart` (`foot`), `lib/features/lessons/models/rudiment.dart` (`hasFootSides`, `Rudiment.hasFootSides`)
+- Modify: `lib/features/lessons/data/etude_dsl.dart` (`foot`), `lib/features/lessons/models/rudiment.dart` (`voicesHaveFootSides`, `Rudiment.hasFootSides`)
 - Modify: `tool/katalog/sheetlang.py` (`_TOKEN`, `Note.side`, `_parse_token`, `note_to_dart`)
 - Test: `test/lessons/foot_side_test.dart`, `tool/katalog/test_kit.py` (Klasse `FootSide`)
 
 **Interfaces:**
-- Produces: `StrokeBeat foot(NoteValue v, {bool accent = false, bool ghost = false, bool dotted = false, Tuplet tuplet = Tuplet.none, Hand? side})` → `StrokeBeat(hand: side, …)`; `bool hasFootSides(Iterable<Voice> voices)` (irgendeine Fußstimme hat eine Nicht-Pausen-Note mit `hand != null`); `Rudiment.hasFootSides` (über `sheet` und `patternVoices`); Python `Note.side: str | None` (`'R'`/`'L'`), Token-Flags `r`/`l` nur auf `K`/`P`, `note_to_dart` ⇒ `foot(NoteValue.x[, …], side: R)`.
+- Produces: `StrokeBeat foot(NoteValue v, {bool accent = false, bool ghost = false, bool dotted = false, Tuplet tuplet = Tuplet.none, Hand? side})` → `StrokeBeat(hand: side, …)`; `bool voicesHaveFootSides(Iterable<Voice> voices)` (irgendeine Fußstimme hat eine Nicht-Pausen-Note mit `hand != null`); `Rudiment.hasFootSides` (über `sheet` und `patternVoices`); Python `Note.side: str | None` (`'R'`/`'L'`), Token-Flags `r`/`l` nur auf `K`/`P`, `note_to_dart` ⇒ `foot(NoteValue.x[, …], side: R)`.
 
 - [ ] **Step 1: Failing tests**
 
@@ -68,7 +68,7 @@ void main() {
     expect(foot(NoteValue.eighth, side: R, accent: true).isAccent, isTrue);
   });
 
-  test('hasFootSides: true only when a foot voice note carries a side', () {
+  test('voicesHaveFootSides: true only when a foot voice note carries a side', () {
     final hh = voice(KitInstrument.hiHatClosed, eighths([R, R, R, R, R, R, R, R]));
     final kickPlain = voice(KitInstrument.kick, [
       foot(NoteValue.quarter),
@@ -82,10 +82,10 @@ void main() {
         foot(NoteValue.eighth, side: L),
       ],
     ]);
-    expect(hasFootSides([hh, kickPlain]), isFalse);
-    expect(hasFootSides([hh, kickSided]), isTrue);
+    expect(voicesHaveFootSides([hh, kickPlain]), isFalse);
+    expect(voicesHaveFootSides([hh, kickSided]), isTrue);
     // A hand voice with hands is not a foot side.
-    expect(hasFootSides([hh]), isFalse);
+    expect(voicesHaveFootSides([hh]), isFalse);
   });
 
   test('Rudiment.hasFootSides looks at the sheet and the pattern voices', () {
@@ -170,11 +170,11 @@ StrokeBeat foot(NoteValue v,
 ```dart
 /// True when a foot voice carries a sided stroke (double bass, Nachtrag
 /// B.4c): the sheet then draws a second letter row under the feet stems.
-bool hasFootSides(Iterable<Voice> voices) => voices.any((v) =>
+bool voicesHaveFootSides(Iterable<Voice> voices) => voices.any((v) =>
     v.isFoot && v.beats.any((b) => !b.isRest && b.hand != null));
 ```
 
-und in `Rudiment`: `bool get hasFootSides => hasFootSides(patternVoices) || sheet.any((l) => hasFootSides(l.voices));` — Namenskollision vermeiden: die Top-Level-Funktion heißt `voicesHaveFootSides`, der Getter `hasFootSides`. (Tests entsprechend: `voicesHaveFootSides([...])`.)
+und in `Rudiment` (nach `isKit`): `/// A foot voice with sides (double bass): second letter row (B.4c).` `bool get hasFootSides => voicesHaveFootSides(patternVoices) || sheet.any((l) => voicesHaveFootSides(l.voices));`
 
 `sheetlang.py`: `_TOKEN = re.compile(r'^([RLKP])(32|16|8|4|2|1)([.>gfdrl]*)$')`; `Note` bekommt `side: str | None = None`; in `_parse_token` nach den Flags:
 
