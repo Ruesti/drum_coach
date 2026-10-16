@@ -16,7 +16,7 @@ import 'package:drum_coach/features/practice/backdrop.dart';
 import 'package:drum_coach/features/practice/practice_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:drum_coach/features/practice/widgets/pulse_bar.dart';
-import 'package:drum_coach/features/practice/widgets/sheet_window.dart';
+import 'package:drum_coach/features/practice/widgets/line_view.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:drum_coach/shared/widgets/app_badge.dart';
 import 'package:flutter/material.dart';
@@ -236,9 +236,9 @@ void main() {
       // the first twelve into sheets).
       await _pumpScreen(tester, screen: _screen(id: 'multiple_bounce_roll'));
       expect(find.byKey(const ValueKey('line-bar')), findsNothing);
-      expect(find.byType(SheetWindow), findsOneWidget);
+      expect(find.byType(LineView), findsOneWidget);
       // Uli 10.10.: the card nearly fills the width — 6 px margins.
-      final rect = tester.getRect(find.byType(SheetWindow));
+      final rect = tester.getRect(find.byType(LineView));
       expect(rect.left, 6);
       expect(rect.right, 360 - 6);
     });
@@ -283,6 +283,27 @@ void main() {
       metronome.tickTo(3 * 192);
       await tester.pump();
       expect(find.text('Sequence 2 of 2 · Line 3 · 2/2'), findsOneWidget);
+    });
+
+    testWidgets('one-line view: only the current line is drawn',
+        (tester) async {
+      final metronome = _TickingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: sheetId, lines: '1,3'),
+          metronome: () => metronome);
+      LineView view() => tester.widget<LineView>(find.byType(LineView));
+      expect(
+          find.descendant(
+              of: find.byType(LineView), matching: find.byType(CustomPaint)),
+          findsOneWidget);
+      expect(view().line, 0);
+      metronome.tickTo(2 * 192);
+      await tester.pump();
+      expect(view().line, 2);
+      expect(
+          find.descendant(
+              of: find.byType(LineView), matching: find.byType(CustomPaint)),
+          findsOneWidget);
     });
 
     testWidgets('› in a running sequence wraps and reloads', (tester) async {
@@ -490,11 +511,8 @@ void main() {
         tester,
         screen: const PracticeSessionScreen(
             rudimentId: 'six_stroke_roll', isFromRoutine: false));
-    // The window's clipped paper card is what the eye sees.
-    final sheet = tester.getRect(find
-        .descendant(
-            of: find.byType(SheetWindow), matching: find.byType(ClipRect))
-        .first);
+    // The one-line view's paper card is what the eye sees.
+    final sheet = tester.getRect(find.byType(LineView));
     final header = tester.getRect(find.text('Six Stroke Roll'));
     final tempo = tester.getRect(find.byType(TempoRow));
     final above = sheet.top - header.bottom;
@@ -981,7 +999,7 @@ void main() {
     await _pumpScreen(tester, screen: _screen());
     AnimatedOpacity sheet() => tester.widget<AnimatedOpacity>(find
         .ancestor(
-            of: find.byType(SheetWindow),
+            of: find.byType(LineView),
             matching: find.byType(AnimatedOpacity))
         .first);
     expect(sheet().opacity, 0.6);
@@ -1152,7 +1170,7 @@ void main() {
           metronome: () => rec,
           extraOverrides: kitCatalog());
       expect(rec.volumes.last, 2 * 96); // line 1: two bars
-      expect(find.byType(SheetWindow), findsOneWidget);
+      expect(find.byType(LineView), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -1163,15 +1181,14 @@ void main() {
           screen: _screen(id: 'kit_showcase'),
           metronome: () => metronome,
           extraOverrides: kitCatalog());
-      SheetWindow window() =>
-          tester.widget<SheetWindow>(find.byType(SheetWindow));
+      LineView view() => tester.widget<LineView>(find.byType(LineView));
       metronome.tickTo(0);
       await tester.pump();
-      expect((window().activeLine, window().activeTick), (0, 0));
-      expect(window().activeIndex, isNull);
+      expect((view().line, view().activeTick), (0, 0));
+      expect(view().activeIndex, isNull);
       metronome.tickTo(96); // bar 2, beat 1 (24 ticks per quarter)
       await tester.pump();
-      expect((window().activeLine, window().activeTick), (0, 96));
+      expect((view().line, view().activeTick), (0, 96));
       expect(tester.takeException(), isNull);
     });
 

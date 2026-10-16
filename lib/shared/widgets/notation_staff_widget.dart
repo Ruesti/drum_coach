@@ -100,6 +100,10 @@ class NotationStaffWidget extends StatelessWidget {
 /// [activeLine] / [activeIndex] place the cursor; every other line dims to
 /// 45 % (null = nothing dims, the info page). [onLineTap] reports the index
 /// of a tapped line.
+///
+/// [onlyLine] draws that one line alone (the practice screen's one-line
+/// view): its number box, title, repeat signs, clef, time signature and a
+/// final barline, never dimmed.
 class SheetStaffWidget extends StatelessWidget {
   final Rudiment rudiment;
   final int? activeLine;
@@ -113,7 +117,13 @@ class SheetStaffWidget extends StatelessWidget {
 
   /// Geometry computed by the caller for this content width (the practice
   /// window caches it across the per-note rebuilds); null computes it here.
+  /// With [onlyLine] the line's height comes from its own layout (it
+  /// carries the clef); pass `clefLine: onlyLine` to [computeSheetGeometry]
+  /// when the caller needs that height too.
   final SheetGeometry? geometry;
+
+  /// Draw only this line; null = the whole sheet.
+  final int? onlyLine;
 
   const SheetStaffWidget({
     super.key,
@@ -125,6 +135,7 @@ class SheetStaffWidget extends StatelessWidget {
     this.showCounts = true,
     this.onLineTap,
     this.geometry,
+    this.onlyLine,
   });
 
   static const hPad = 4.0;
@@ -137,10 +148,14 @@ class SheetStaffWidget extends StatelessWidget {
           ? constraints.maxWidth
           : MediaQuery.of(context).size.width;
       final contentWidth = width - 2 * hPad;
+      final only = onlyLine;
       final geo = geometry ??
-          computeSheetGeometry(rudiment, contentWidth, showCounts: showCounts);
+          computeSheetGeometry(rudiment, contentWidth,
+              showCounts: showCounts, clefLine: only ?? 0);
       final footLetters = rudiment.hasFootSides;
       final sheet = rudiment.sheet;
+      final shown =
+          only == null ? [for (var i = 0; i < sheet.length; i++) i] : [only];
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
@@ -150,13 +165,18 @@ class SheetStaffWidget extends StatelessWidget {
         ),
         child: Column(
           children: [
-            for (var i = 0; i < sheet.length; i++)
+            for (final i in shown)
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: onLineTap == null ? null : () => onLineTap!(i),
-                child: CustomPaint(
-                  size: Size(
-                      contentWidth, geo.layouts[i].rowCount * geo.rowPitch),
+                child: _linePaint(
+                  contentWidth: contentWidth,
+                  // A line drawn alone carries its own clef: take the
+                  // painter's height, whatever line the geometry put the
+                  // clef on.
+                  height: only == null
+                      ? geo.layouts[i].rowCount * geo.rowPitch
+                      : null,
                   painter: _StaffPainter(
                     beats: sheet[i].beats,
                     voices: sheet[i].isKit ? sheet[i].kitVoices : null,
@@ -168,9 +188,9 @@ class SheetStaffWidget extends StatelessWidget {
                     activeTick: activeLine == i ? activeTick : null,
                     lineNumber: i + 1,
                     repeat: sheet[i].repeat,
-                    finalBar: i == sheet.length - 1,
-                    showTimeSig: i == 0,
-                    showClef: i == 0,
+                    finalBar: only != null || i == sheet.length - 1,
+                    showTimeSig: only != null || i == 0,
+                    showClef: only != null || i == 0,
                     title: sheet[i].title,
                     countLabels:
                         showCounts && sheet[i].counts && !sheet[i].isKit
@@ -182,7 +202,8 @@ class SheetStaffWidget extends StatelessWidget {
                             ? kitCountLabelsFor(
                                 geo.kitLayouts[i]!, rudiment.gridUnit)
                             : null,
-                    dimmed: activeLine != null && activeLine != i,
+                    dimmed:
+                        only == null && activeLine != null && activeLine != i,
                     showSticking: showSticking,
                     footLetters: footLetters,
                   ),
@@ -193,6 +214,15 @@ class SheetStaffWidget extends StatelessWidget {
       );
     });
   }
+
+  static Widget _linePaint(
+          {required double contentWidth,
+          required double? height,
+          required _StaffPainter painter}) =>
+      CustomPaint(
+        size: Size(contentWidth, height ?? painter.computeHeight()),
+        painter: painter,
+      );
 }
 
 /// Bravura (SMuFL) codepoints used by the drum staff. See smufl.org.

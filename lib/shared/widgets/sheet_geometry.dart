@@ -109,8 +109,12 @@ class SheetGeometry {
 /// carries count syllables and [showCounts] is on — every row must stay the
 /// same height. Titles sit inside the staff band (under the staff, left),
 /// so they cost no height.
+///
+/// [clefLine] is the line that carries clef and time signature — line 0 on
+/// a whole sheet; the one-line view shows its line alone, so that line
+/// gets them (and the matching start room).
 SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
-    {required bool showCounts}) {
+    {required bool showCounts, int clefLine = 0}) {
   final sheet = r.sheet;
   final counts = showCounts && sheet.any((l) => l.counts);
   final kit = sheet.any((l) => l.isKit);
@@ -127,10 +131,10 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
     final systemPad = systemPadFor(
         repeat: l.repeat,
         graces: l.voices.any((v) => leadsWithGraces(v.beats)),
-        clef: i == 0,
-        // Same rules as the painter: clef and time signature on line 1 only.
-        kitBox: l.isKit && i != 0,
-        kitTimeSig: l.isKit && i == 0 && !l.repeat);
+        clef: i == clefLine,
+        // Same rules as the painter: clef and time signature on one line.
+        kitBox: l.isKit && i != clefLine,
+        kitTimeSig: l.isKit && i == clefLine && !l.repeat);
     if (l.isKit) {
       final kl = computeKitLineLayout(
         voices: l.kitVoices,

@@ -49,7 +49,7 @@ import 'practice_shortcuts.dart';
 import 'session_timer_provider.dart';
 import 'widgets/pulse_bar.dart';
 import 'widgets/result_sheet.dart';
-import 'widgets/sheet_window.dart';
+import 'widgets/line_view.dart';
 import 'widgets/tempo_row.dart';
 
 String _formatDuration(int seconds) {
@@ -1241,14 +1241,13 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 // The sheet draws its own paper card; only the margins are
                 // ours. 16 px at the sides costs a little note spacing versus
                 // the old 4 px, in exchange for the card reading as a card.
-                // Center: a short exercise (one row) must not leave the card
-                // glued to the top with a hole under it — the scroll view
-                // shrinks to the card here and still scrolls long sheets.
+                // Center: a short line (one row) must not leave the card
+                // glued to the top with a hole under it.
                 // Translucent while configuring so the backdrop photo reads
                 // (Uli 28.09.: the sheet hid it), solid once the session has
                 // started and the notes are what matters.
-                // The sheet window (Blattform, 30.09.): up to four rows, the
-                // played row on top, the next rows waiting below.
+                // The one-line view (Zeilen statt Blatt, 16.10.): only the
+                // line being played, the card as high as its rows.
                 // 6 px at the sides (was 16): the notes need the width
                 // more than the card needs a margin (Uli, 10.10.).
                 Expanded(
@@ -1259,9 +1258,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                         opacity: isPlaying || _elapsedSeconds > 0 ? 1.0 : 0.6,
                         duration: const Duration(milliseconds: 350),
                         curve: Curves.easeOut,
-                        child: SheetWindow(
+                        child: LineView(
                           rudiment: rudiment,
-                          activeLine: cursorLine,
+                          line: cursorLine,
                           activeIndex: loc?.index,
                           activeTick: tickLoc?.tick,
                           showSticking: SettingsService.showSticking,
@@ -1393,7 +1392,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
 // ── Line bar ───────────────────────────────────────────────────────────────────
 
-/// Under the sheet window: ‹ label › — "Line 3 of 8" or "Sequence 2 of 4 ·
+/// Under the one-line view: ‹ label › — "Line 3 of 8" or "Sequence 2 of 4 ·
 /// Line 5 · 1/2" (see [lineNavLabel]).
 class _LineBar extends StatelessWidget {
   final String label;
