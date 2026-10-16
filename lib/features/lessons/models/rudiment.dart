@@ -230,7 +230,7 @@ bool voicesHaveFootSides(Iterable<Voice> voices) => voices
 
 /// One line of a sheet (Blattform, 30.09.): a phrase of whole bars, drawn
 /// with a number box, repeat signs when [repeat], an optional [title] above
-/// the staff ("Challenge") and, when [counts], the count syllables under the
+/// the staff and, when [counts], the count syllables under the
 /// sticking letters.
 ///
 /// A pad line is one voice (`pad`) — [beats]. A kit line (Brief B.1) carries
