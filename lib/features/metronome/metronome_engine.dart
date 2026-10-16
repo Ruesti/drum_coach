@@ -70,6 +70,10 @@ double resolveTickVolume({
 // ── MetronomeEngine ───────────────────────────────────────────────────────────
 
 class MetronomeEngine {
+  MetronomeEngine({LoopWavRenderer renderLoop = renderLoopWavInIsolate})
+      : _renderLoop = renderLoop;
+
+  final LoopWavRenderer _renderLoop;
   final _beatCtrl = StreamController<BeatEvent>.broadcast();
   Stream<BeatEvent> get beatStream => _beatCtrl.stream;
 
@@ -221,7 +225,17 @@ class MetronomeEngine {
         pulseSound: pulseSamples(),
       );
     }
-    final wav = buildLoopWav(bpm: _bpm, factor: _factor, voices: plan.voices);
+    // Off the main isolate (a sequence loop renders for 200–400 ms); a
+    // rebuild or stop during the render supersedes it.
+    final wav = await renderLoopIfCurrent(
+      render: _renderLoop,
+      bpm: _bpm,
+      factor: _factor,
+      voices: plan.voices,
+      isCurrent: () =>
+          !_disposed && _isPlaying && generation == _loopGeneration,
+    );
+    if (wav == null) return;
     // Timeout-guarded: on a dead audio engine loadMem never answers — this
     // path must FAIL fast so the start supervisor can revive the engine,
     // instead of hanging forever before any watchdog exists.

@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:drum_coach/features/metronome/click_loop_renderer.dart';
+import 'package:drum_coach/features/metronome/loop_voices.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -153,6 +155,64 @@ void main() {
             reason: 'flat top at $i');
       }
       expect(pcm.every((s) => s >= -32768 && s <= 32767), isTrue);
+    });
+  });
+
+  group('off-isolate render', () {
+    LoopPlan smallPlan() => buildLoopPlan(
+          patternVolumes: const [2.0, 0.0, 0.85, 0.0, 0.85, 0.0, 0.85, 0.0],
+          patternLoud:
+              MetronomeEngine.synthSamples(SoundType.click, accent: true),
+          patternSoft:
+              MetronomeEngine.synthSamples(SoundType.click, accent: false),
+          factor: 2,
+          pulse: true,
+          pulseSound: MetronomeEngine.pulseSamples(),
+        );
+
+    test('the isolate render yields the same bytes as the direct render',
+        () async {
+      final voices = smallPlan().voices;
+      final direct = buildLoopWav(bpm: 100, factor: 2, voices: voices);
+      final viaIsolate =
+          await renderLoopWavInIsolate(bpm: 100, factor: 2, voices: voices);
+      expect(viaIsolate, orderedEquals(direct));
+    });
+
+    test('a render superseded while it runs is dropped, a current one kept',
+        () async {
+      final voices = smallPlan().voices;
+      final pending = <Completer<Uint8List>>[];
+      Future<Uint8List> runner({
+        required int bpm,
+        required int factor,
+        required List<LoopVoice> voices,
+      }) {
+        final c = Completer<Uint8List>();
+        pending.add(c);
+        return c.future;
+      }
+
+      var generation = 1;
+      final stale = renderLoopIfCurrent(
+          render: runner,
+          bpm: 100,
+          factor: 2,
+          voices: voices,
+          isCurrent: () => generation == 1);
+      generation = 2; // a tempo change starts a newer rebuild mid-render
+      final fresh = renderLoopIfCurrent(
+          render: runner,
+          bpm: 104,
+          factor: 2,
+          voices: voices,
+          isCurrent: () => generation == 2);
+      final bytes = buildLoopWav(bpm: 104, factor: 2, voices: voices);
+      for (final c in pending) {
+        c.complete(bytes);
+      }
+      expect(await stale, isNull);
+      expect(await fresh, same(bytes));
     });
   });
 
