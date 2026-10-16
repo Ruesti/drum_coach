@@ -129,6 +129,7 @@ class _MetaRow extends StatelessWidget {
           label: rudiment.difficulty.label,
           color: rudiment.difficulty.color,
         ),
+        if (rudiment.isKit) const AppBadge(label: 'KIT'),
         for (final skill in rudiment.skills)
           _InfoChip(
             icon: Icons.label_outline,

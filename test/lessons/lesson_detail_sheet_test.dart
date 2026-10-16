@@ -1,9 +1,13 @@
 import 'package:drum_coach/features/lessons/lesson_detail_screen.dart';
 import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
+import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
+import 'package:drum_coach/features/lessons/lessons_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+
+import '../helpers/kit_fixtures.dart';
 
 void main() {
   GoRouter buildRouter(String id) => GoRouter(
@@ -73,5 +77,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('practice:/practice/single_paradiddle?line=3'),
         findsOneWidget);
+  });
+
+  testWidgets('a kit exercise carries the KIT badge on the info page', (tester) async {
+    await tester.pumpWidget(ProviderScope(
+        overrides: [
+          rudimentsProvider
+              .overrideWithValue([...rudimentsSeedData, kitShowcase()]),
+        ],
+        child: MaterialApp.router(routerConfig: buildRouter('kit_showcase'))));
+    await tester.pumpAndSettle();
+    expect(find.text('KIT'), findsOneWidget);
+  });
+
+  testWidgets('a pad exercise has no KIT badge', (tester) async {
+    await pump(tester, 'single_paradiddle');
+    expect(find.text('KIT'), findsNothing);
   });
 }

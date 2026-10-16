@@ -3,19 +3,35 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/local/isar_service.dart';
 import '../../data/local/models/rudiment_progress.dart';
 import '../lessons/lessons_provider.dart';
+import '../lessons/models/rudiment.dart';
 import 'models/daily_routine.dart';
 
 part 'routine_provider.g.dart';
 
 const _maxItems = 5;
 
+/// The "one new rudiment" of the routine: easiest not-started exercise, ties
+/// in catalog (seed) order. Kit exercises are skipped until the routine has
+/// sensor-aware gates (B.3/B.5) — a pad user must not be sent to a groove.
+Rudiment? pickNewRudiment(List<Rudiment> catalog, Set<String> startedIds) {
+  final candidates = <(int, Rudiment)>[
+    for (var i = 0; i < catalog.length; i++)
+      if (!catalog[i].isKit && !startedIds.contains(catalog[i].id))
+        (i, catalog[i]),
+  ]..sort((a, b) {
+      final byDifficulty =
+          a.$2.difficulty.index.compareTo(b.$2.difficulty.index);
+      return byDifficulty != 0 ? byDifficulty : a.$1.compareTo(b.$1);
+    });
+  return candidates.firstOrNull?.$2;
+}
+
 @riverpod
 Future<List<DailyRoutineItem>> dailyRoutine(DailyRoutineRef ref) async {
   final allRudiments = ref.watch(rudimentsProvider);
-  final allProgress =
-      await IsarService.instance.rudimentProgress
-          .buildQuery<RudimentProgress>()
-          .findAll();
+  final allProgress = await IsarService.instance.rudimentProgress
+      .buildQuery<RudimentProgress>()
+      .findAll();
   final progressMap = {for (final p in allProgress) p.exerciseId: p};
   final today = DateTime.now();
   final items = <DailyRoutineItem>[];
@@ -54,11 +70,7 @@ Future<List<DailyRoutineItem>> dailyRoutine(DailyRoutineRef ref) async {
   // 3. One new rudiment
   if (items.length < _maxItems) {
     final startedIds = progressMap.keys.toSet();
-    final newRudiment = (allRudiments
-          .where((r) => !startedIds.contains(r.id))
-          .toList()
-        ..sort((a, b) => a.difficulty.index.compareTo(b.difficulty.index)))
-        .firstOrNull;
+    final newRudiment = pickNewRudiment(allRudiments, startedIds);
     if (newRudiment != null) {
       items.add(DailyRoutineItem(
         rudimentId: newRudiment.id,

@@ -1245,5 +1245,14 @@ void main() {
       expect(find.byTooltip('Full-kit measurement is not available yet'),
           findsOneWidget);
     });
+
+    testWidgets('options: the band is silent when the player covers its voices',
+        (tester) async {
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'), extraOverrides: kitCatalog());
+      await tester.tap(find.byIcon(Icons.more_horiz));
+      await tester.pumpAndSettle();
+      expect(find.text("Silent — you play the band's voices"), findsOneWidget);
+    });
   });
 }

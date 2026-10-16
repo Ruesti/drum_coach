@@ -1165,6 +1165,6 @@ const List<TechniqueSection> setFillSixteenthSinglesLesson = [
   TechniqueSection(
     title: "Where you hear it",
     body:
-        "The tom run before the chorus in nearly every rock and pop song; Phil Collins' famous break in \"In the Air Tonight\" is sixteenth notes down the toms.",
+        "The tom run before the chorus in nearly every rock and pop song; the tom break in \"In the Air Tonight\" is the famous example.",
   ),
 ];

@@ -731,6 +731,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               analysisMode: _analysisMode,
               backingEnabled: SettingsService.backingEnabled,
               backingStyleLabel: backingStyleById(_backingStyleId)?.label,
+              backingSilentKit: _plan.playsKick && _plan.playsHihat,
               backingLevel: SettingsService.backingLevel,
               extrasAllowed: _extrasAllowed,
               backingAllowed: _backingAllowed,
@@ -1818,6 +1819,7 @@ class _OptionsSheet extends StatefulWidget {
     required this.analysisMode,
     required this.backingEnabled,
     required this.backingStyleLabel,
+    required this.backingSilentKit,
     required this.backingLevel,
     required this.extrasAllowed,
     required this.backingAllowed,
@@ -1849,6 +1851,9 @@ class _OptionsSheet extends StatefulWidget {
 
   /// Label of the automatically chosen style, shown under the switch.
   final String? backingStyleLabel;
+
+  /// Kit unit covering both band voices: the band has nothing left to play.
+  final bool backingSilentKit;
   final double backingLevel;
 
   /// False while analysing without headphones: click track and backing are
@@ -1929,7 +1934,9 @@ class _OptionsSheetState extends State<_OptionsSheet> {
               subtitle: Text(
                 !widget.backingAllowed
                     ? 'Off while the mic listens without headphones — it would hear the band'
-                    : '${widget.backingStyleLabel ?? 'Off'} · automatic',
+                    : widget.backingSilentKit
+                        ? "Silent — you play the band's voices"
+                        : '${widget.backingStyleLabel ?? 'Off'} · automatic',
                 style: PracticeTypography.body
                     .copyWith(fontSize: 13, color: PracticeColors.textMuted),
               ),

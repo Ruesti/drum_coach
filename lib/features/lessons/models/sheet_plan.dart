@@ -116,7 +116,6 @@ class SheetPlan {
       }.contains(v.instrument));
 
   /// Sheet line and index within it for a note index of [beats].
-  /// Sheet line and index within it for a note index of [beats].
   ({int line, int index}) locate(int noteIndex) {
     var k = 0;
     while (k + 1 < lineStarts.length && lineStarts[k + 1] <= noteIndex) {

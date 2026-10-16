@@ -163,10 +163,6 @@ class AbcReadability(unittest.TestCase):
         self.assertIn(' f2', hands)
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 class Orchestrate(unittest.TestCase):
     def test_beats_go_to_their_drums_tuplets_stay_whole(self):
         from set_fills import orchestrate
@@ -184,3 +180,7 @@ class Orchestrate(unittest.TestCase):
             orchestrate('R4. L8 R4 R4', plan)  # R4. crosses into beat 2
         with self.assertRaises(ValueError):
             orchestrate('R4 R4 R4', plan)  # three quarters, not a bar
+
+
+if __name__ == '__main__':
+    unittest.main()

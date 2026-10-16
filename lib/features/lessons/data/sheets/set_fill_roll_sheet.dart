@@ -1483,7 +1483,7 @@ const List<TechniqueSection> setFillRollLesson = [
   TechniqueSection(
     title: "Why it matters",
     body:
-        "A roll that moves down the toms turns a crescendo into a fall. The pad sheet \"Roll Fill\" taught the closed thirty-second roll; on the kit it ends on a crash and the kick holds the time underneath.",
+        "A roll that moves down the toms turns a crescendo into a fall. The pad sheet \"Roll Fill\" taught the thirty-second double-stroke roll; on the kit it ends on a crash and the kick holds the time underneath.",
   ),
   TechniqueSection(
     title: "How to play it",

@@ -138,7 +138,7 @@ LESSON_SIXTEENTHS = {
     'Why it matters': 'At the pad ("Sixteenth Singles Fill") you learned to leave the groove and land on the one. On the kit the same singles travel over snare and toms, the kick keeps 1 and 3 going underneath, and the one after the fill is a crash with the kick: exactly what the band hears.',
     'How to play it': 'Three bars of rock eighths: hi-hat eighths, snare on 2 and 4, kick on 1 and 3; bar 1 starts with the crash instead of the hi-hat. In the fill bar both hands leave the hat. Line 1 plays two beats on the snare, beat 3 on the high tom, beat 4 on the floor tom, and the right hand starts every drum. The kick does not stop: 1 and 3, under the fill too.',
     'Practice tips': 'Line 2 walks down one drum per beat (snare, high tom, mid tom, floor tom) and doubles from eighths to sixteenths halfway. Line 4 puts the accents in threes across high tom and floor tom; line 7 visits all four toms and leaves holes. Line 8 plays the thirty-second burst on the floor tom and comes back to the snare for beat 4. If the crash is late, play the fill on the snare alone first, like the pad sheet, then add the toms. ' + _TOMS,
-    'Where you hear it': 'The tom run before the chorus in nearly every rock and pop song; Phil Collins\' famous break in "In the Air Tonight" is sixteenth notes down the toms.',
+    'Where you hear it': 'The tom run before the chorus in nearly every rock and pop song; the tom break in "In the Air Tonight" is the famous example.',
 }
 
 LESSON_DOUBLES = {
@@ -184,7 +184,7 @@ LESSON_SIX_GROUPS = {
 }
 
 LESSON_ROLL = {
-    'Why it matters': 'A roll that moves down the toms turns a crescendo into a fall. The pad sheet "Roll Fill" taught the closed thirty-second roll; on the kit it ends on a crash and the kick holds the time underneath.',
+    'Why it matters': 'A roll that moves down the toms turns a crescendo into a fall. The pad sheet "Roll Fill" taught the thirty-second double-stroke roll; on the kit it ends on a crash and the kick holds the time underneath.',
     'How to play it': 'Three bars of rock sixteenths: hi-hat sixteenths with accents on the quarters, backbeat on 2 and 4, kick on 1, 3 and the "and" of 3; bar 1 begins with the crash. In the fill bar the kick plays 1 and 3. Line 1 plays eighths on the snare and the high tom, then one beat of roll on the floor tom into the crash.',
     'Practice tips': 'Toms are softer than a snare: press a little more for an even roll. Line 2 rolls on the mid tom and the floor tom, line 4 breaks the roll with an accented release on the high tom and again on the floor tom, line 7 rolls the whole bar and moves one tom down every beat. Line 8 plays doubles on the floor tom and ends with single thirty-seconds on the snare. ' + _TOMS,
     'Where you hear it': 'The roll into a chorus, big-band and show drumming, and the rolling tom fall at the end of rock ballads.',

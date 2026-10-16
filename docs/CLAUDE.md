@@ -141,7 +141,7 @@ class Rudiment {
 }
 
 class StrokeBeat {
-  final Hand hand;       // enum: right, left
+  final Hand? hand;      // right/left; null for feet and rests
   final bool isAccent;   // shown as ● above the beat
   final bool isGhost;    // shown smaller and dimmed
 }

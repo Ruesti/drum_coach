@@ -89,7 +89,9 @@ SplayTreeMap<int, List<KitNote>> _columnsOf(List<Voice> voices, NoteGrid grid) {
 /// beat, so the track's ticks add up exactly and nothing drifts. The note
 /// carries the one hand of the column (null when the hands differ or
 /// there is none), an accent if any voice accents, the first hand voice's
-/// graces. Throws when a gap is a single tick (undrawable).
+/// graces. Throws whenever the greedy fill cannot complete a gap (a single
+/// tick, but also 5, 7, 10 or 13 ticks, which arise when 32nd and
+/// 32nd-triplet voices mix).
 KitLayer layerTrack(List<Voice> voices,
     {required NoteGrid grid,
     required int totalTicks,
