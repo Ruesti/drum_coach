@@ -42,19 +42,25 @@ BD_C_PA = '-8 K16 K16 -4 -8 K16 K16 -4'
 BD_C_A1 = '-8. K16 K4 -8. K16 K4'  # „a" von 1 in die 2, „a" von 3 in die 4
 # Double Bass (mit Seite)
 BD_R8 = 'K8r K8l K8r K8l K8r K8l K8r K8l'
-BD_R8_R4 = 'K8r K8l K8r K8l K8r K8l -4'  # Pause auf 4
+BD_L8 = 'K8l K8r K8l K8r K8l K8r K8l K8r'  # linker Fuß führt
+BD_R8_13 = 'K8r K8l -4 K8r K8l -4'  # Paare auf 1 und 3, Pause auf 2 und 4
+BD_R8_ANDS = '-8 K8r K8l -8 -8 K8r K8l -8'  # Paare ab „1 +" und „3 +" in die 2 und die 4
+BD_R8_332 = 'K8r> K8l K8r K8l> K8r K8l K8r> K8l'  # 3+3+2: Akzente auf 1, „2 +", 4
 BD_R8_H = 'K8r K8l K8r K8l K4r K4r'  # halber Takt Teppich, dann Viertel
 BD_R8_BURST = 'K4r -4 K8r K8l K8r K8l'  # Ausbruch auf 3–4
+HH_332 = 'R4.> R4.> R4>'  # Hi-Hat mit den 3+3+2-Akzenten der Füße
 BD_R16 = 'K16r K16l K16r K16l K16r K16l K16r K16l K16r K16l K16r K16l K16r K16l K16r K16l'
 BD_R16_H = 'K16r K16l K16r K16l K16r K16l K16r K16l K4r K4r'
 BD_R16_B3 = 'K4r K4r K16r K16l K16r K16l K4r'  # Burst auf 3
 BD_R16_GAP = 'K16r K16l K16r -16 K16r K16l K16r -16 K16r K16l K16r -16 K16r K16l K16r -16'  # Lücke auf „a"
 BD_R16_24 = 'K4r K16r K16l K16r K16l K4r K16r K16l K16r K16l'  # Teppich nur auf 2 und 4
+BD_GALLOP = 'K8r K16r K16l K8r K16r K16l K8r K16r K16l K8r K16r K16l'  # Galopp 8-16-16 je Zählzeit (R R L)
 BD_R3 = '3(K8r K8l K8r) 3(K8l K8r K8l) 3(K8r K8l K8r) 3(K8l K8r K8l)'
 BD_R3_24 = 'K4r 3(K8l K8r K8l) K4r 3(K8l K8r K8l)'
 BD_R6 = ('6(K16r K16l K16r K16l K16r K16l) 6(K16r K16l K16r K16l K16r K16l) '
          '6(K16r K16l K16r K16l K16r K16l) 6(K16r K16l K16r K16l K16r K16l)')
 BD_R6_B = 'K4r K4r 6(K16r K16l K16r K16l K16r K16l) K4r'  # Sextolen-Burst auf 3
+BD_R3_PAIR = '3(K8r K8l -8) 3(K8r K8l -8) 3(K8r K8l -8) 3(K8r K8l -8)'  # Paare auf 1 und „trip", Pause auf „let"
 BD_FSHUF = '3(K8r -8 K8l) 3(K8r -8 K8l) 3(K8r -8 K8l) 3(K8r -8 K8l)'  # Fuß-Shuffle
 BON_BD = '3(-8 -8 K8r) 3(-8 -8 K8r) 3(-8 -8 K8r) 3(-8 -8 K8r)'  # Bonham-Dreier: Kick auf der 3. Triole
 # Hi-hat-Fuß / Ostinati
@@ -85,11 +91,16 @@ KC_8 = (_hands(BD_GAPS), _hands(BD_MIX))
 KS = [_hands(BD_C_1E), _hands(BD_C_1A), _hands(BD_C_1PA), _hands(BD_C_EP),
       _hands(BD_C_EA, HH16), _hands(BD_C_ALL, HH16), _hands(BD_C_PA, HH16), _hands(BD_C_A1, HH16)]
 
-# Double Bass Eighths
-DB8_1 = {'HH': HHQ, 'SN': SN24, 'BD': BD_R8}
-DB8_2B = {'HH': HHQ, 'SN': SN24, 'BD': BD_R8_R4}
-DB8_5 = {'HH': HHQ, 'SN': SN3, 'BD': BD_R8}
-DB8_8 = {'C1~': C1_1, 'HH': HHQ_NO1, 'SN': SN24, 'BD': BD_R8}
+# Double Bass Eighths — jede Zeile eine eigene Idee (S23-Test 16.10.: „die Zeilen unterscheiden sich kaum")
+DB8_1 = {'HH': HHQ, 'SN': SN24, 'BD': BD_R8}  # Grundteppich, rechts führt
+DB8_2 = {'HH': HHQ, 'SN': SN24, 'BD': BD_L8}  # links führt
+DB8_3 = {'HH': HH8, 'SN': SN24, 'BD': BD_R8_13}  # Paare auf 1 und 3, Hi-Hat-Achtel
+DB8_4 = {'RD': RDQ, 'SN': SN24, 'BD': BD_R8_ANDS}  # Paare auf den „+", Ride
+DB8_5 = {'HH': HH_332, 'SN': SN24, 'BD': BD_R8_332}  # 3+3+2 mit Akzenten
+DB8_6 = {'RD': RDQ, 'SN': SN24, 'BD': BD_R8_H}  # halber Takt Teppich, dann Viertel, Ride
+DB8_7 = {'HH': HH8, 'SN': SN3, 'BD': BD_R8}  # Half-time: Snare nur auf 3
+DB8_8A = {'C1~': C1_1, 'HH': HHQ_NO1, 'SN': SN24, 'BD': BD13}  # Crash, schlichte 1 und 3
+DB8_8B = {'HH': HHQ, 'SN': SN24, 'BD': BD_R8_BURST}  # Ausbruch auf 3–4
 
 # Double Bass Sixteenths
 DB16_1 = {'HH': HHQ, 'SN': SN24, 'BD': BD_R16}
@@ -130,23 +141,23 @@ LESSON_KICK_SIXTEENTHS = {
 }
 
 LESSON_DB8 = {
-    'Why it matters': 'An even stream of eighths split between two feet is the first double bass skill: the right foot plays the beats, the left foot the "ands", and together they sound like one drummer with a very fast kick. Every faster double bass pattern grows out of this.',
-    'How to play it': 'Two pedals (or a double pedal), right foot leads: R on every beat, L on every "and", both feet at the same height and the same volume, heel up and loose, hands steady on quarters above.',
-    'Practice tips': 'Line 1 is the reference: if you cannot hear which foot is playing, it is right. Lines 2, 3 and 6 start and stop the stream so you practise getting in and out cleanly; line 4 moves the hand to the ride, line 5 is half-time, line 7 eighth hats over the feet, line 8 a crash on the one. Start slow — 60 is fine.',
+    'Why it matters': 'An even stream of eighths split between two feet is the first double bass skill: one foot plays the beats, the other the "ands", and together they sound like one drummer with a very fast kick. Every faster double bass pattern grows out of this, and the variations here teach you to start, stop, group and accent the stream with either foot.',
+    'How to play it': 'Two pedals (or a double pedal), heel up and loose, both feet at the same height and the same volume. Line 1 is the reference: right foot on every beat, left foot on every "and", hat quarters and the backbeat on 2 and 4 above. The R and L under the feet tell you which foot plays.',
+    'Practice tips': 'Line 2 is the same stream with the left foot leading — slow, until the left foot is as steady as the right. Line 3 plays a pair R L on 1 and 3 and rests on 2 and 4 under eighth hats; line 4 starts each pair on the "and" so it runs into the beat, with the right hand on the ride. Line 5 groups the eighths 3+3+2 with accents on 1, the "and" of 2 and 4, and the hat plays the same accents. Line 6 is half a bar of stream and two right-foot quarters on the ride, line 7 the full stream under a half-time snare on 3 and eighth hats, line 8 a crash with a plain 1 and 3 and then a burst on 3 and 4. Start slow — 60 is fine.',
     'Where you hear it': 'Motörhead "Overkill" with Phil Taylor, Judas Priest and Accept in the early-80s heavy metal era, and the steady double-bass choruses of countless metal songs before they speed up to sixteenths.',
 }
 
 LESSON_DB16 = {
     'Why it matters': 'Sixteenth double bass is the sound of thrash and modern metal: a rolling carpet under the riff that makes the music feel relentless. It is also the hardest stamina test for the feet, which is why it is practised in short bursts first.',
     'How to play it': 'R L R L on every sixteenth, right foot leads on each beat, both feet equally loud; heel up and let the ankles do most of the work at speed while the legs stay relaxed and the hands keep plain quarters and backbeats.',
-    'Practice tips': 'Lines 2, 3 and 8 are bursts — half a bar, one beat, or only on 2 and 4 — so the feet rest between them. Line 1 and line 5 are the full carpet; line 4 puts it under a half-time backbeat; line 7 leaves the "a" of every beat open, which trains the right foot to restart each group. Raise the tempo only when line 1 stays even for a whole minute.',
+    'Practice tips': 'Lines 2, 3 and 8 are bursts — half a bar, one beat, or only on 2 and 4 — so the feet rest between them. Line 1 and line 5 are the full carpet; line 4 puts it under a half-time backbeat; line 6 starts with a crash and gallops — an eighth and two sixteenths on every beat, R R L, so the left foot always leads into the next beat; line 7 leaves the "a" of every beat open, which trains the right foot to restart each group. Raise the tempo only when line 1 stays even for a whole minute.',
     'Where you hear it': 'Metallica "One" (the machine-gun outro with Lars Ulrich), Slayer with Dave Lombardo ("Raining Blood", "Angel of Death"), Dream Theater with Mike Portnoy, Pantera "Cowboys from Hell".',
 }
 
 LESSON_DB3 = {
     'Why it matters': 'Triplets between the feet give a rolling, galloping feel that straight sixteenths cannot: the accent wanders from foot to foot and the groove swings. Combined with the hands, triplets also give the famous Bonham trick of hands-hands-kick.',
     'How to play it': 'Alternate R L R, L R L so the leading foot changes every beat, both feet equally loud and heel up; for the Bonham triplet the hands play two triplet notes (R L) on the snare and the right foot finishes the group with the kick.',
-    'Practice tips': 'Line 1 is the full triplet stream under a shuffle hat; line 2 rests the feet on 1 and 3, line 3 plays a foot shuffle (long-short). Line 4 is the Bonham triplet on its own — hands R L, kick — keep the three notes perfectly even. Lines 5 and 6 go to sextuplets: burst first, then the whole bar.',
+    'Practice tips': 'Line 1 is the full triplet stream under a shuffle hat; line 2 rests the feet on 1 and 3, line 3 plays a foot shuffle (long-short). Line 4 is the Bonham triplet on its own — hands R L, kick — keep the three notes perfectly even. Lines 5 and 6 go to sextuplets: burst first, then the whole bar. Line 7 plays pairs R L on the first two triplet notes of every beat and rests on the third, under quarter hats and a half-time snare on 3; line 8 is the full stream with a crash on the one.',
     'Where you hear it': 'John Bonham in Led Zeppelin "Good Times Bad Times" (his famous kick triplets — he played them with one foot; this sheet splits them between both feet), the shuffle feel of "Fool in the Rain", and the rolling triplet double bass of power metal.',
 }
 
@@ -187,19 +198,19 @@ SHEETS: list[Sheet] = [
         id='feet_double_bass_eighths', name='Double Bass Eighths', min_bpm=60, target_bpm=160,
         difficulty='intermediate', skills=['endurance', 'coordination'], genres=['metal'], grid='eighth',
         limbs=('doubleBass',),
-        description='Eighth notes split between two feet, right on the beat and left on the "and", under quarter hats and a backbeat.',
+        description='Eighth notes split between two feet: either foot leading, pairs, 3+3+2 accents, half-time and bursts under hat or ride and a backbeat.',
         pattern=kit(DB8_1),
         lines=[
             two(DB8_1),
-            kit(DB8_1, DB8_2B),
-            two({'HH': HHQ, 'SN': SN24, 'BD': BD_R8_H}),
-            two({'RD': RDQ, 'SN': SN24, 'BD': BD_R8}),
+            two(DB8_2),
+            two(DB8_3),
+            two(DB8_4),
             two(DB8_5),
-            kit({'HH': HHQ, 'SN': SN24, 'BD': BD13}, {'HH': HHQ, 'SN': SN24, 'BD': BD_R8_BURST}),
-            two({'HH': HH8, 'SN': SN24, 'BD': BD_R8}),
-            two(DB8_8),
+            two(DB8_6),
+            two(DB8_7),
+            kit(DB8_8A, DB8_8B),
         ],
-        challenge=kit(DB8_1, DB8_1, DB8_1, DB8_2B, DB8_5, DB8_5, DB8_8, DB8_8),
+        challenge=kit(DB8_1, DB8_1, DB8_3, DB8_3, DB8_5, DB8_5, DB8_8A, DB8_8B),
         lesson=LESSON_DB8,
     ),
     feet_sheet(
@@ -214,7 +225,7 @@ SHEETS: list[Sheet] = [
             two(DB16_3),
             two(DB16_4),
             two({'HH': HH8, 'SN': SN24, 'BD': BD_R16}),
-            kit({'C1~': C1_1, 'HH': HHQ_NO1, 'SN': SN24, 'BD': BD_R16}, DB16_1),
+            kit({'C1~': C1_1, 'HH': HHQ_NO1, 'SN': SN24, 'BD': BD_GALLOP}, {'HH': HHQ, 'SN': SN24, 'BD': BD_GALLOP}),
             two({'HH': HHQ, 'SN': SN24, 'BD': BD_R16_GAP}),
             two(DB16_8),
         ],
@@ -234,7 +245,7 @@ SHEETS: list[Sheet] = [
             two(DB3_4),
             two({'HH': SHUF, 'SN': SN24, 'BD': BD_R6_B}),
             two({'HH': HHQ, 'SN': SN24, 'BD': BD_R6}),
-            kit({'HH': SHUF, 'SN': SN24, 'BD': BD13}, DB3_1),
+            two({'HH': HHQ, 'SN': SN3, 'BD': BD_R3_PAIR}),
             two(DB3_8),
         ],
         challenge=kit(DB3_1, DB3_1, DB3_3, DB3_3, DB3_4, DB3_4, DB3_8, DB3_8),

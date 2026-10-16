@@ -78,6 +78,7 @@ LIN_5 = lin('K h g h | S g h K | h g K h | S g h h')  # Ghost nach jedem Backbea
 LIN_6A = lin('K h h g | S h h g | K h h g | S h K h')  # Hat-Paare, Ghost auf jedem „a"
 LIN_6B = lin('K h g h | S h K K | h h g h | S g K h')  # Kick-Doppel „2 +", „2 a"
 LIN_7 = lin('K g h g | S h K h | K g h g | h K h g')  # Backbeat nur auf 2, Ghosts um die Kick
+LIN_8A = lin('K H h g | S g H K | H h g K | S g H h')  # Hat-Akzente auf den Off-Sechzehnteln
 LIN_8 = lin('K h g h | S h h K | h h g h | S h K o')  # Abschluss: offene Hat auf „4 a"
 
 LINEAR_LINES = [
@@ -88,7 +89,7 @@ LINEAR_LINES = [
     two(LIN_5),
     kit(LIN_6A, LIN_6B),
     two(LIN_7),
-    kit(LIN_A, LIN_8),
+    kit(LIN_8A, LIN_8),
 ]
 
 # ── Kick-Sechzehntel-Grooves ─────────────────────────────────────────────────
@@ -96,6 +97,7 @@ BD_K16A = 'K4 -8. K16 K4 -8. K16'  # 1, „2 a", 3, „4 a"
 BD_K16E = 'K4 -16 K16 -8 K4 -16 K16 -8'  # 1, „2 e", 3, „4 e"
 BD_K16B = 'K8. K16 -4 K8. K16 -4'  # 1, „1 a", 3, „3 a"
 BD_K16C = 'K4 -4 K8. K16 -8 K8'  # 1, 3, „3 a", „4 +"
+BD_K16D = 'K8. K16 -16 K16 -8 K8. K16 -4'  # 1, „1 a", „2 e", 3, „3 a"
 
 K16_1 = {'HH': HH8, 'SN': SN24, 'BD': BD_K16A}
 K16_2 = {'HH': HH8, 'SN': SN24, 'BD': BD_K16E}
@@ -104,8 +106,8 @@ K16_4 = {'HH': HH8, 'SN': SN24, 'BD': BD_K16C}
 K16_5 = {'HH': HH16R, 'SN': SN24G, 'BD': BD_K16A}
 K16_6 = {'HH': HH16R, 'SN': SN24G3, 'BD': BD_K16E}
 K16_7 = {'HH': HH8, 'SN': SN3, 'BD': BD_K16C}
-K16_8A = {'C1~': C1_1, 'HH': HH8_NO1, 'SN': SN24, 'BD': BD_K16A}
-K16_8B = {'HH': HH8, 'SN': SN24, 'BD': BD_K16B}
+K16_8A = {'C1~': C1_1, 'HH': HH8_NO1, 'SN': SN24, 'BD': BD_K16D}
+K16_8B = {'HH': HH16R, 'SN': SN24G, 'BD': BD_K16D}
 
 # ── Half-time Shuffle ────────────────────────────────────────────────────────
 HTS_HH = '3(R8 -8 R8) 3(R8 -8 R8) 3(R8 -8 R8) 3(R8 -8 R8)'
@@ -121,7 +123,9 @@ HTS_HO_4L = '-2. 3(-8 -8 R8)'
 HTS_1 = {'HH': HTS_HH, 'SN': HTS_SN, 'BD': HTS_BD}
 HTS_2 = {'HH': HTS_HH, 'SN': SN3, 'BD': HTS_BD}
 HTS_4 = {'HH': HTS_HH, 'SN': HTS_SN, 'BD': HTS_BD_4L}
-HTS_8A = {'C1~': C1_1, 'HH': SHUF_NO1, 'SN': HTS_SN, 'BD': HTS_BD}
+HTS_BD_LETS = '3(K8 -8 K8) 3(-8 -8 K8) -4 3(-8 -8 K8)'  # 1, „let" von 1, 2 und 4
+HTS_8A = {'C1~': C1_1, 'HH': SHUF_NO1, 'SN': HTS_SN, 'BD': HTS_BD_LETS}
+HTS_8B = {'HH': HTS_HH, 'SN': HTS_SN_DENSE, 'BD': HTS_BD_LETS}
 
 # ── Fills mit eigenen Füßen ──────────────────────────────────────────────────
 _X4 = lambda s: ' '.join([s] * 4)  # noqa: E731
@@ -190,21 +194,21 @@ LESSON_DOUBLE_BASS_FILL = {
 LESSON_LINEAR_GROOVE = {
     'Why it matters': 'A linear groove never stacks two sounds: hi-hat, snare and kick each get their own sixteenths. The result is transparent and busy at once, with every note audible, and it is the heart of the funk drumming of the 70s. It also trains you to place every limb exactly, because nothing hides behind a unison.',
     'How to play it': 'Line 1: kick on 1 and the "a" of 2, backbeat on 2 and 4, ghost notes on the "and" of 1 and of 3, and the right hand on the hi-hat on every sixteenth that is left. The hi-hat does not play with the kick or the snare; the left hand plays only the snare.',
-    'Practice tips': 'Count sixteenths out loud ("1 e and a") and play line 1 at 60 until it flows. Lines 2 and 3 move the kick ("and" of 2, doubles on "1 e"), line 4 leaves only one backbeat, on 4, line 5 puts a ghost right after each backbeat. Line 6 is two different bars, line 7 keeps the backbeat on 2 only and surrounds the kicks with ghosts, line 8 ends on an open hi-hat on the "a" of 4; close it with the foot on the next one. Ghosts stay barely audible, backbeats loud.',
+    'Practice tips': 'Count sixteenths out loud ("1 e and a") and play line 1 at 60 until it flows. Lines 2 and 3 move the kick ("and" of 2, doubles on "1 e"), line 4 leaves only one backbeat, on 4, line 5 puts a ghost right after each backbeat. Line 6 is two different bars, line 7 keeps the backbeat on 2 only and surrounds the kicks with ghosts, line 8 accents the hi-hat between the beats in its first bar (kick on 1, the "a" of 2 and the "a" of 3) and ends on an open hi-hat on the "a" of 4; close it with the foot on the next one. Ghosts stay barely audible, backbeats loud.',
     'Where you hear it': 'David Garibaldi with Tower of Power ("Oakland Stroke", "What Is Hip?"), Steve Gadd\'s sticking-based grooves such as "50 Ways to Leave Your Lover", and funk and fusion drumming ever since.',
 }
 
 LESSON_KICK16_GROOVE = {
     'Why it matters': 'Rock and funk grooves get their personality from where the kick falls between the eighths. Moving one kick to the "e" or the "a" of a beat changes the whole feel while the hands stay the same, and each of these patterns is one you will meet on records.',
     'How to play it': 'Hi-hat eighths and backbeat on 2 and 4 stay fixed. Line 1 puts the kick on 1, the "a" of 2, 3 and the "a" of 4; each "a" is the sixteenth right before the next beat and falls between two hi-hat notes. Heel up, short strokes, and land the "a" exactly halfway between the hat strokes.',
-    'Practice tips': 'Line 2 moves the extra kicks to the "e" of 2 and 4, line 3 doubles them on 1 and 3 ("1 a", "3 a"), line 4 plays 1, 3, the "a" of 3 and the "and" of 4. Lines 5 and 6 switch to sixteenth hats, played with the right hand alone so the left hand is free for the ghost notes on the snare, and every kick has a hat partner. Line 7 is half-time with the backbeat on 3, line 8 opens with a crash. Count the sixteenths aloud before you play a line.',
+    'Practice tips': 'Line 2 moves the extra kicks to the "e" of 2 and 4, line 3 doubles them on 1 and 3 ("1 a", "3 a"), line 4 plays 1, 3, the "a" of 3 and the "and" of 4. Lines 5 and 6 switch to sixteenth hats, played with the right hand alone so the left hand is free for the ghost notes on the snare, and every kick has a hat partner. Line 7 is half-time with the backbeat on 3. Line 8 opens with a crash and puts the kick on 1, the "a" of 1, the "e" of 2, 3 and the "a" of 3; its second bar plays the same kick under sixteenth hats with a ghost note. Count the sixteenths aloud before you play a line.',
     'Where you hear it': 'Rock and funk records everywhere: Zigaboo Modeliste with the Meters, Jeff Porcaro with Toto, John Bonham with Led Zeppelin and Chad Smith with the Red Hot Chili Peppers all lean on kicks on the "e" and the "a".',
 }
 
 LESSON_HALFTIME_SHUFFLE = {
     'Why it matters': 'The half-time shuffle is one of the hardest and most famous grooves on the kit: a shuffle hi-hat, the backbeat only on 3, and ghost notes on the middle triplet notes that fill every gap. When it sits, it rolls like nothing else; when it does not, everyone hears it.',
     'How to play it': 'Right hand on the hi-hat: the first and last note of every triplet, never the middle. Left hand: a soft ghost on the middle triplet note of every beat, except on 3, where it plays the loud backbeat on the beat and a ghost on the "let". The kick plays 1 and the "let" of 2. Ghosts at the lowest height the stick can manage.',
-    'Practice tips': 'Line 2 drops the ghosts so you hear the frame: shuffle hat, kick, backbeat on 3. Line 3 makes the ghosts denser, also on the "let" with the hat. Line 4 adds a kick on the "let" of 4, line 5 opens the hi-hat on the "let" of 4, line 6 moves the right hand to the ride while the foot closes the hat on 2 and 4, line 7 plays the backbeat as a flam (the hat skips beat 3, because the right hand plays the grace note), line 8 begins with a crash. Practise the hands alone until the ghosts are even.',
+    'Practice tips': 'Line 2 drops the ghosts so you hear the frame: shuffle hat, kick, backbeat on 3. Line 3 makes the ghosts denser, also on the "let" with the hat. Line 4 adds a kick on the "let" of 4, line 5 opens the hi-hat on the "let" of 4, line 6 moves the right hand to the ride while the foot closes the hat on 2 and 4, line 7 plays the backbeat as a flam (the hat skips beat 3, because the right hand plays the grace note), line 8 begins with a crash and adds kicks on the "let" of 1 and of 4, with the dense ghosts of line 3 in its second bar. Practise the hands alone until the ghosts are even.',
     'Where you hear it': 'Bernard Purdie on Steely Dan "Babylon Sisters" (the Purdie shuffle), Jeff Porcaro on Toto "Rosanna", John Bonham on Led Zeppelin "Fool in the Rain".',
 }
 
@@ -229,7 +233,7 @@ SHEETS: list[Sheet] = [
         description='Hi-hat, snare and kick never play together: every sixteenth belongs to one voice, with ghost notes between the backbeats.',
         pattern=kit(LIN_A),
         lines=LINEAR_LINES,
-        challenge=kit(LIN_A, LIN_A, LIN_3, LIN_3, LIN_5, LIN_5, LIN_A, LIN_8),
+        challenge=kit(LIN_A, LIN_A, LIN_3, LIN_3, LIN_5, LIN_5, LIN_8A, LIN_8),
         lesson=LESSON_LINEAR_GROOVE,
     ),
     groove(
@@ -255,9 +259,9 @@ SHEETS: list[Sheet] = [
             two({'HH': HTS_HH_O4, 'HO': HTS_HO_4L, 'SN': HTS_SN, 'BD': HTS_BD}),
             two({'RD': HTS_HH, 'HP': HP24, 'SN': HTS_SN, 'BD': HTS_BD}),
             two({'HH': HTS_HH_NO3, 'SN': HTS_SN_FLAM, 'BD': HTS_BD}),
-            kit(HTS_8A, HTS_1),
+            kit(HTS_8A, HTS_8B),
         ],
-        challenge=kit(HTS_1, HTS_1, HTS_2, HTS_2, HTS_4, HTS_4, HTS_8A, HTS_1),
+        challenge=kit(HTS_1, HTS_1, HTS_2, HTS_2, HTS_4, HTS_4, HTS_8A, HTS_8B),
         lesson=LESSON_HALFTIME_SHUFFLE,
     ),
 ]
