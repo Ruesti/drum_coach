@@ -94,4 +94,12 @@ void main() {
     final first = g.layouts[1].placements.first.xCenter;
     expect(first, lessThan(g.layouts[0].placements.first.xCenter));
   });
+
+  test('a pad sheet has no kit layouts and keeps the pad pitch', () {
+    final g = computeSheetGeometry(r, 360, showCounts: false);
+    expect(g.isKit, isFalse);
+    expect(g.kitLayouts, [null, null, null]);
+    expect(g.rowPitch, sheetRowPitch);
+    expect(g.rowOfTick(2, 0), 2);
+  });
 }

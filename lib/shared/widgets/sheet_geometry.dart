@@ -1,4 +1,5 @@
 import '../../features/lessons/models/rudiment.dart';
+import 'kit_layout.dart';
 import 'staff_layout.dart';
 
 // Row and margin metrics shared by the staff painter, the sheet widget and
@@ -12,6 +13,10 @@ import 'staff_layout.dart';
 const double sheetRowPitch = 104; // the staff band
 const double sheetCountBand = 14; // count syllables under the letters
 const double sheetRowPitchWithCounts = sheetRowPitch + sheetCountBand;
+
+/// A kit row (Brief B.2): five lines with stems up (hands) and down (feet)
+/// need more height than the pad row. One pitch for the whole sheet.
+const double kitRowPitch = 132;
 const double sheetLeftPad = 8;
 const double sheetNumberBox = 18; // box size; it sits above the staff, left
 const double sheetRightPad = 4; // = the left margin (staff starts at 4)
@@ -46,12 +51,24 @@ class SheetGeometry {
   /// Global index of each line's first row.
   final List<int> rowStart;
   final int totalRows;
-  const SheetGeometry(
-      this.layouts, this.rowPitch, this.rowStart, this.totalRows);
 
-  /// Global row of note [index] in [line].
+  /// Per line: the kit layout of a kit line, null for a pad line.
+  final List<KitLineLayout?> kitLayouts;
+  const SheetGeometry(
+      this.layouts, this.rowPitch, this.rowStart, this.totalRows,
+      {this.kitLayouts = const []});
+
+  bool get isKit => kitLayouts.any((k) => k != null);
+
+  /// Global row of note [index] in [line] (pad lines).
   int rowOf(int line, int index) =>
       rowStart[line] + layouts[line].placements[index].row;
+
+  /// Global row of [tick] in [line] (kit lines); a pad line's first row.
+  int rowOfTick(int line, int tick) {
+    final kit = line < kitLayouts.length ? kitLayouts[line] : null;
+    return rowStart[line] + (kit?.rowOfTick(tick) ?? 0);
+  }
 
   /// The line a global [row] belongs to.
   int lineOfRow(int row) {
@@ -74,26 +91,52 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
     {required bool showCounts}) {
   final sheet = r.sheet;
   final counts = showCounts && sheet.any((l) => l.counts);
+  final kit = sheet.any((l) => l.isKit);
   final layouts = <StaffLayout>[];
+  final kitLayouts = <KitLineLayout?>[];
   final starts = <int>[];
   var rows = 0;
   for (var i = 0; i < sheet.length; i++) {
     final l = sheet[i];
     starts.add(rows);
-    final layout = computeStaffLayout(
-      beats: l.beats,
-      grid: r.gridUnit,
-      beatsPerBar: r.beatsPerBar,
-      maxWidth: maxWidth,
-      leftPad: leftPadFor(numbered: true),
-      rightPad: rightPadFor(repeat: l.repeat),
-      systemPad: systemPadFor(
-          repeat: l.repeat, graces: leadsWithGraces(l.beats), clef: i == 0),
-      barGap: sheetBarGap,
-    );
-    layouts.add(layout);
-    rows += layout.rowCount;
+    final leftPad = leftPadFor(numbered: true);
+    final rightPad = rightPadFor(repeat: l.repeat);
+    final systemPad = systemPadFor(
+        repeat: l.repeat,
+        graces: l.voices.any((v) => leadsWithGraces(v.beats)),
+        clef: i == 0);
+    if (l.isKit) {
+      final kl = computeKitLineLayout(
+        voices: l.kitVoices,
+        grid: r.gridUnit,
+        beatsPerBar: r.beatsPerBar,
+        maxWidth: maxWidth,
+        leftPad: leftPad,
+        rightPad: rightPad,
+        systemPad: systemPad,
+        barGap: sheetBarGap,
+      );
+      layouts.add(kl.hands);
+      kitLayouts.add(kl);
+      rows += kl.rowCount;
+    } else {
+      final layout = computeStaffLayout(
+        beats: l.beats,
+        grid: r.gridUnit,
+        beatsPerBar: r.beatsPerBar,
+        maxWidth: maxWidth,
+        leftPad: leftPad,
+        rightPad: rightPad,
+        systemPad: systemPad,
+        barGap: sheetBarGap,
+      );
+      layouts.add(layout);
+      kitLayouts.add(null);
+      rows += layout.rowCount;
+    }
   }
+  final base = kit ? kitRowPitch : sheetRowPitch;
   return SheetGeometry(
-      layouts, counts ? sheetRowPitchWithCounts : sheetRowPitch, starts, rows);
+      layouts, counts ? base + sheetCountBand : base, starts, rows,
+      kitLayouts: kitLayouts);
 }
