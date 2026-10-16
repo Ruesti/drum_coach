@@ -288,11 +288,15 @@ def line_to_abc(line: Line, beats_per_bar: int = 4,
 # ── abcjs, Kit: zwei Stimmen auf einem Schlagzeug-System ─────────────────────
 
 _ABC_PITCH = {'HP': 'D', 'BD': 'F', 'F2': 'G', 'F1': 'A', 'SN': 'c', 'SR': 'c', 'T2': 'd', 'T1': 'e',
-              'RD': 'f', 'RB': 'f', 'HH': 'g', 'HO': 'g', 'C1': 'a', 'C2': 'a', 'CH': 'a', 'SP': 'a'}
+              'RD': 'f', 'RB': '^f', 'HH': 'g', 'HO': 'g', 'C1': 'a', 'C2': 'a', 'CH': 'a', 'SP': 'a'}
+# Glocke: eigene Tonhöhe `^f` (gleiche Linie wie die Ride, abcjs zeichnet im perc-Schlüssel mit
+# percmap kein Kreuz) mit Rautenkopf (`harmonic`); offene Hat: „o" darüber.
+_ABC_DECO = {'HO': '!open!'}
 KIT_ABC_HEADER = ('X:1\nT:\nM:4/4\nL:1/8\nK:perc\n%%stretchlast 1\n%%staffsep 110\n'
                   '%%score (H F)\nV:H clef=perc stem=up\nV:F clef=perc stem=down\n'
                   '%%percmap D 44 x\n%%percmap F 36\n%%percmap G 43\n%%percmap A 45\n%%percmap c 38\n'
-                  '%%percmap d 47\n%%percmap e 48\n%%percmap f 51 x\n%%percmap g 42 x\n%%percmap a 49 x\n')
+                  '%%percmap d 47\n%%percmap e 48\n%%percmap f 51 x\n%%percmap ^f 53 harmonic\n'
+                  '%%percmap g 42 x\n%%percmap a 49 x\n')
 
 # Lücke (Ticks, am Schlag gedeckelt) → (Wert, punktiert, Tuplet), größter passender Wert.
 _GAP_VALUES = [(24, 4, False, 0), (18, 8, True, 0), (16, 4, False, 3), (12, 8, False, 0), (9, 16, True, 0),
@@ -331,9 +335,10 @@ def _layer_tokens(tracks: list[Track], total: int, *, feet: bool) -> list[tuple[
     def note_token(tick: int, length: str) -> str:
         notes = by_tick[tick]
         deco = '!>!' if any(n.accent for _, n in notes) else ''
+        deco += ''.join(sorted({_ABC_DECO[t.key] for t, _ in notes if t.key in _ABC_DECO}))
         grace = '{B}' if any(n.graces for _, n in notes) else ''
-        pitches = ''.join(sorted({_ABC_PITCH[t.key] for t, _ in notes}, key=lambda p: (p.islower(), p)))
-        body = pitches if len(pitches) == 1 else f'[{pitches}]'
+        pitch_set = sorted({_ABC_PITCH[t.key] for t, _ in notes}, key=lambda p: (p[-1].islower(), p[-1], p))
+        body = pitch_set[0] if len(pitch_set) == 1 else f'[{"".join(pitch_set)}]'
         return f'{grace}{deco}{body}{length}'
 
     out: list[tuple[int, str]] = []
@@ -380,8 +385,16 @@ def kit_line_to_abc(kl: KitLine, beats_per_bar: int = 4, marks: dict[int, str] |
             b = tick // bar_ticks
             if marks and tick % bar_ticks == 0 and b in marks:
                 tok = f'"^{marks[b]}"' + tok
-            bars[b].append(tok)
-        body = ' | '.join(' '.join(b) for b in bars)
+            bars[b].append((tick // TPQ, tok))
+
+        def bar_text(bar: list[tuple[int, str]]) -> str:
+            # Eine Zählzeit ohne Leerzeichen = ein Balken (ABC bricht Balken an Leerzeichen).
+            beats: dict[int, list[str]] = {}
+            for beat, tok in bar:
+                beats.setdefault(beat, []).append(tok)
+            return ' '.join(''.join(toks) for toks in beats.values())
+
+        body = ' | '.join(bar_text(b) for b in bars)
         return f'|: {body} :|' if kl.repeat else f'{body} |'
 
     hands = _layer_tokens([t for t in kl.tracks if not t.foot], total, feet=False)

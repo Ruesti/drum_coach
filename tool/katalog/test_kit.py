@@ -88,18 +88,19 @@ class AbcOutput(unittest.TestCase):
 
 
 def _abc_ticks(bar: str) -> float:
-    """Ticks eines ABC-Takts aus dem Text (L:1/8 = 12 Ticks); versteht `(3` und `(6:4:6`."""
+    """Ticks eines ABC-Takts aus dem Text (L:1/8 = 12 Ticks); versteht `(3` und `(6:4:6`.
+
+    Zählzeiten stehen ohne Leerzeichen (Balken), daher Token per Regex statt `split()`."""
     import re
     total, scale, left = 0.0, 1.0, 0
-    for tok in bar.split():
-        m = re.match(r'^\(([36])(?::(\d):\d)?', tok)
+    tokens = re.findall(r'(\(\d(?::\d:\d)?)?(?:\{[^}]*\}|!.*?!|"[^"]*")*'
+                        r'(?:\[[^\]]*\]|[_^]?[A-Ga-gzx])(\d+/\d+|\d+|/+)?', bar)
+    for tup, ln in tokens:
+        m = re.match(r'^\(([36])(?::(\d):\d)?', tup)
         if m:
             p = int(m.group(1))
             q = int(m.group(2)) if m.group(2) else 2
             scale, left = q / p, p
-            tok = tok[m.end():]
-        tok = re.sub(r'\{.*?\}|!.*?!|"[^"]*"', '', tok)
-        ln = re.search(r'(\d+/\d+|\d+|/+)?$', tok).group(1) or ''
         units = {'': 1.0, '/': 0.5, '//': 0.25}.get(ln)
         if units is None:
             units = float(ln) if ln.isdigit() else eval(ln)
@@ -116,12 +117,12 @@ class AbcTuplets(unittest.TestCase):
 
     def test_triplet_hands(self):
         hands, _ = self.voices('HH: 3(R8 R8 R8) -4 -4 -4\nBD: K4 -4 -4 -4')
-        self.assertIn('(3g g g', hands)
+        self.assertIn('(3ggg', hands)
         self.assertEqual(_abc_ticks(hands.split('|:')[1].split(':|')[0]), 96)
 
     def test_sextuplet_feet(self):
         hands, feet = self.voices('HH: -1\nBD: 6(K16 K16 K16 K16 K16 K16) -4 -4 -4')
-        self.assertIn('(6:4:6F/ F/ F/ F/ F/ F/', feet)
+        self.assertIn('(6:4:6F/F/F/F/F/F/', feet)
         self.assertEqual(_abc_ticks(feet.split('|:')[1].split(':|')[0]), 96)
 
     def test_shuffle_hat(self):
@@ -133,8 +134,33 @@ class AbcTuplets(unittest.TestCase):
     def test_foot_triplet_rest_is_visible(self):
         # abcjs 6.4.4 bricht bei einer unsichtbaren Pause `x` in einer Triole ab (TypeError …'top').
         _, feet = self.voices('HH: -1\nBD: 3(K8 -8 K8) -4 -4 -4')
-        self.assertIn('(3F z F', feet)
-        self.assertNotIn('(3F x', feet)
+        self.assertIn('(3FzF', feet)
+        self.assertNotIn('(3Fx', feet)
+
+
+class AbcReadability(unittest.TestCase):
+    def voices(self, text):
+        abc = kit_line_to_abc(parse_kit_line(text))
+        return abc.split('[V:H]')[1].split('[V:F]')[0], abc.split('[V:F]')[1]
+
+    def test_beat_groups_joined_without_spaces(self):
+        # ABC bricht Balken an Leerzeichen: je Zählzeit ein Token-Block, Leerzeichen nur zwischen Zählzeiten.
+        hands, _ = self.voices('HH: R8 R8 R8 R8 R16 R16 R16 R16 R8 R8\nBD: K4 -4 K4 -4')
+        body = hands.split('|:')[1].split(':|')[0].split()
+        self.assertEqual(body, ['gg', 'gg', 'g/g/g/g/', 'gg'])
+        self.assertEqual(_abc_ticks(' '.join(body)), 96)
+
+    def test_open_hat_has_open_decoration(self):
+        hands, _ = self.voices('HH: R8 R8 R8 -8 -2\nHO: -4 -8 R8 -2\nBD: K4 -4 -2')
+        self.assertIn('g!open!g', hands)
+        self.assertEqual(hands.count('!open!'), 1)
+
+    def test_ride_bell_own_pitch_with_diamond(self):
+        from sheetlang import KIT_ABC_HEADER
+        self.assertIn('%%percmap ^f 53 harmonic\n', KIT_ABC_HEADER)
+        hands, _ = self.voices('RB: R4 -4 -2\nRD: -4 R4 -2\nSN: R4 -4 -2\nBD: K4 -4 -2')
+        self.assertIn('[c^f]2', hands)
+        self.assertIn(' f2', hands)
 
 
 if __name__ == '__main__':
