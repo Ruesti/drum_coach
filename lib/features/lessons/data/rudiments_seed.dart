@@ -27,6 +27,15 @@ import 'sheets/groove_shuffle_sheet.dart';
 import 'sheets/groove_swing_sheet.dart';
 import 'sheets/groove_funk16_sheet.dart';
 import 'sheets/groove_hihat_open_sheet.dart';
+import 'sheets/set_fill_sixteenth_singles_sheet.dart';
+import 'sheets/set_fill_doubles_sheet.dart';
+import 'sheets/set_fill_paradiddle_sheet.dart';
+import 'sheets/set_fill_triplets_sheet.dart';
+import 'sheets/set_fill_flams_sheet.dart';
+import 'sheets/set_fill_sextuplets_sheet.dart';
+import 'sheets/set_fill_six_groups_sheet.dart';
+import 'sheets/set_fill_roll_sheet.dart';
+import 'sheets/set_around_the_kit_sheet.dart';
 
 // A plain list (not const) since 30.09.: the sample sheet is built with the
 // étude DSL, which is not const-constructible.
@@ -1808,5 +1817,177 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveHihatOpenPattern,
     technique: grooveHihatOpenLesson,
     lines: grooveHihatOpenSheet,
+  ),
+  // ─── PHASE B.4: kit fills ──────────────────────────────────────────────────
+
+  Rudiment(
+    id: 'set_fill_sixteenth_singles',
+    name: "Sixteenth Singles Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad fill spread over snare and toms, with three bars of rock groove before it and a crash on the one after it.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillSixteenthSinglesPatternVoices,
+    sticking: setFillSixteenthSinglesPattern,
+    technique: setFillSixteenthSinglesLesson,
+    lines: setFillSixteenthSinglesSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_doubles',
+    name: "Doubles Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad doubles over snare and toms: two notes per drum, then move on, crash on the one.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillDoublesPatternVoices,
+    sticking: setFillDoublesPattern,
+    technique: setFillDoublesLesson,
+    lines: setFillDoublesSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_paradiddle',
+    name: "Paradiddle Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad paradiddles over snare and toms after a funk groove, with the kick simplifying to 1 and 3 under the fill.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillParadiddlePatternVoices,
+    sticking: setFillParadiddlePattern,
+    technique: setFillParadiddleLesson,
+    lines: setFillParadiddleSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_triplets',
+    name: "Triplet Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad triplets rolling over snare and toms out of a shuffle groove, crash on the one.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillTripletsPatternVoices,
+    sticking: setFillTripletsPattern,
+    technique: setFillTripletsLesson,
+    lines: setFillTripletsSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_flams',
+    name: "Flam Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad flams spread over snare and toms after a rock groove: big notes, slow hands, crash on the one.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillFlamsPatternVoices,
+    sticking: setFillFlamsPattern,
+    technique: setFillFlamsLesson,
+    lines: setFillFlamsSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_sextuplets',
+    name: "Sextuplet Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad sextuplets running down snare and toms over a rock groove, the kick on 1 and 3 underneath.",
+    minBpm: 50,
+    targetBpm: 100,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenthTriplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillSextupletsPatternVoices,
+    sticking: setFillSextupletsPattern,
+    technique: setFillSextupletsLesson,
+    lines: setFillSextupletsSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_six_groups',
+    name: "Six-Note Groups Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad groups of six over snare and toms after a funk groove: the accents drift while the drums change on the beat.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillSixGroupsPatternVoices,
+    sticking: setFillSixGroupsPattern,
+    technique: setFillSixGroupsLesson,
+    lines: setFillSixGroupsSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_roll',
+    name: "Roll Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad rolls moving down snare and toms after a rock sixteenths groove, into a crash on the one.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.thirtySecond,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillRollPatternVoices,
+    sticking: setFillRollPattern,
+    technique: setFillRollLesson,
+    lines: setFillRollSheet,
+  ),
+
+  Rudiment(
+    id: 'set_around_the_kit',
+    name: "Around the Kit",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "Simple stickings around all four toms, one drum per beat, with crash, china or ride bell on the one.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setAroundTheKitPatternVoices,
+    sticking: setAroundTheKitPattern,
+    technique: setAroundTheKitLesson,
+    lines: setAroundTheKitSheet,
   ),
 ];

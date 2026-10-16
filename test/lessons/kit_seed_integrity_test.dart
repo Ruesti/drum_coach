@@ -96,4 +96,51 @@ void main() {
         isTrue,
         reason: 'every hi-hat line opens or pedals');
   });
+
+  test('the eight set fills: 3 bars of groove + 1 bar of fill per line, the '
+      'one after the fill on a crash, kick under the fill; around the kit', () {
+    const ids = [
+      'set_fill_sixteenth_singles',
+      'set_fill_doubles',
+      'set_fill_paradiddle',
+      'set_fill_triplets',
+      'set_fill_flams',
+      'set_fill_sextuplets',
+      'set_fill_six_groups',
+      'set_fill_roll',
+    ];
+    for (final id in ids) {
+      final r = rudimentsSeedData.firstWhere((r) => r.id == id);
+      expect(r.sheet.length, 9, reason: id);
+      expect(sheetBars(r), 40, reason: id);
+      expect(r.skills.contains(Skill.fill), isTrue, reason: id);
+      for (var i = 0; i < 8; i++) {
+        final l = r.sheet[i];
+        final crash = l.kitVoices.where(
+            (v) => InstrumentClass.anyCrash.members.contains(v.instrument));
+        expect(crash, isNotEmpty, reason: '$id line ${i + 1}: no crash');
+        expect(crash.first.accepts, InstrumentClass.anyCrash, reason: id);
+        expect(crash.first.beats.first.isRest, isFalse,
+            reason: '$id line ${i + 1}: the crash is the one');
+        final toms = l.kitVoices.where(
+            (v) => InstrumentClass.anyTom.members.contains(v.instrument));
+        expect(toms.every((v) => v.accepts == InstrumentClass.anyTom), isTrue,
+            reason: '$id line ${i + 1}: toms accept any tom');
+        expect(l.kitVoices.any((v) => v.instrument == KitInstrument.kick), isTrue,
+            reason: '$id line ${i + 1}: no kick');
+      }
+    }
+    final around = rudimentsSeedData.firstWhere((r) => r.id == 'set_around_the_kit');
+    expect(around.sheet.length, 9);
+    expect(sheetBars(around), 24);
+    final cymbals = {
+      for (final l in around.sheet)
+        ...l.kitVoices
+            .map((v) => v.instrument)
+            .where((i) => InstrumentClass.anyCymbal.members.contains(i))
+    };
+    expect(cymbals.contains(KitInstrument.china), isTrue);
+    expect(cymbals.contains(KitInstrument.rideBell), isTrue);
+    expect(cymbals.contains(KitInstrument.crash1), isTrue);
+  });
 }

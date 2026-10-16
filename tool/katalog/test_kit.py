@@ -133,3 +133,22 @@ class AbcTuplets(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class Orchestrate(unittest.TestCase):
+    def test_beats_go_to_their_drums_tuplets_stay_whole(self):
+        from set_fills import orchestrate
+        out = orchestrate('R16 L16 R16 L16 R8 L8 3(R8 L8 R8) R4>', ['SN', 'T1~', 'F1~', 'SN'])
+        self.assertEqual(out['SN'], 'R16 L16 R16 L16 -4 -4 R4>')
+        self.assertEqual(out['T1~'], '-4 R8 L8 -4 -4')
+        self.assertEqual(out['F1~'], '-4 -4 3(R8 L8 R8) -4')
+        self.assertEqual(set(out), {'SN', 'T1~', 'F1~'})
+
+    def test_a_beat_split_across_tokens_is_refused(self):
+        from set_fills import orchestrate
+        plan = ['SN', 'T1~', 'F1~', 'SN']
+        self.assertEqual(orchestrate('R8. L16 R8. L16 R4 R4', plan)['SN'], 'R8. L16 -4 -4 R4')
+        with self.assertRaises(ValueError):
+            orchestrate('R4. L8 R4 R4', plan)  # R4. crosses into beat 2
+        with self.assertRaises(ValueError):
+            orchestrate('R4 R4 R4', plan)  # three quarters, not a bar

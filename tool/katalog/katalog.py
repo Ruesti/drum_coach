@@ -12,6 +12,7 @@ from dataclasses import dataclass
 import fills
 import grooves
 import rudimente
+import set_fills
 from blatt import Sheet
 
 
@@ -52,6 +53,16 @@ SETS: list[SheetSet] = [
              'Zeilennummer, was raus, anders oder länger soll.',
         seed_marker='PHASE B.4: kit grooves',
         sheets=grooves.SHEETS,
+    ),
+    SheetSet(
+        key='set_fills', step='B.4b', title='Acht Fill-Blätter am Set und Rund ums Set',
+        lead='Phase B.4: die acht Fill-Blätter vom Pad jetzt am Set — drei Takte Groove, im Fill-Takt wandern die '
+             'Hände Zählzeit für Zählzeit über Snare und Toms, die Kick hält 1 und 3, und die Eins danach ist ein '
+             'Crash. Dazu „Rund ums Set": einfache Stickings über alle vier Toms, je Zeile Crash, China oder '
+             'Ride-Glocke auf der Eins. Toms und Crash mit ~ nehmen jedes Tom bzw. Crash. Sag mir je Blatt und '
+             'Zeilennummer, was raus, anders oder länger soll.',
+        seed_marker='PHASE B.4: kit fills',
+        sheets=set_fills.SHEETS,
     ),
 ]
 
