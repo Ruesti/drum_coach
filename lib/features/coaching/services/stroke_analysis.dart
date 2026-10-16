@@ -258,12 +258,13 @@ SessionAnalysis analyzeStrokes({
             : beatLog[noteByOnset[j]!.noteIndex].beatIndex,
         hand: noteByOnset[j] == null || !gateOpen
             ? null
-            : (sticking[beatLog[noteByOnset[j]!.noteIndex].beatIndex %
-                            sticking.length]
-                        .hand ==
-                    Hand.right
-                ? 'R'
-                : 'L'),
+            : switch (sticking[beatLog[noteByOnset[j]!.noteIndex].beatIndex %
+                        sticking.length]
+                    .hand) {
+                Hand.right => 'R',
+                Hand.left => 'L',
+                null => null,
+              },
         deviationMs: noteByOnset[j]?.deviationMs,
         instrument: mainStrokes[j].instrument.name,
         rawNote: mainStrokes[j].rawNote,

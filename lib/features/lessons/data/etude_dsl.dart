@@ -1,3 +1,4 @@
+import '../../coaching/midi/kit_instrument.dart';
 import '../models/rudiment.dart';
 
 const Hand R = Hand.right;
@@ -66,4 +67,44 @@ int barCountOrThrow(List<StrokeBeat> beats,
         '$quarters quarters is not a whole number of $beatsPerBar/4 bars');
   }
   return rounded;
+}
+
+/// A foot stroke (kick, hi-hat pedal): no hand (Brief B.1).
+StrokeBeat foot(NoteValue v,
+        {bool accent = false,
+        bool ghost = false,
+        bool dotted = false,
+        Tuplet tuplet = Tuplet.none}) =>
+    StrokeBeat(
+        hand: null,
+        value: v,
+        isAccent: accent,
+        isGhost: ghost,
+        dotted: dotted,
+        tuplet: tuplet);
+
+/// One voice of a kit line.
+Voice voice(KitInstrument instrument, List<StrokeBeat> beats,
+        {InstrumentClass? accepts}) =>
+    Voice(instrument, beats, accepts: accepts);
+
+/// One kit line (Brief B.1): voices of equal length, whole bars —
+/// `kitBarsOrThrow` guards it in the integrity test.
+ExerciseLine kitLine(List<Voice> voices,
+        {bool repeat = true, String? title, bool counts = false}) =>
+    ExerciseLine.kit(voices, repeat: repeat, title: title, counts: counts);
+
+/// Bar count of a kit line; throws unless every voice fills the same
+/// positive whole number of bars.
+int kitBarsOrThrow(List<Voice> voices,
+    {required int beatsPerBar, required NoteGrid grid}) {
+  if (voices.isEmpty) throw ArgumentError('kit line without voices');
+  final bars = [
+    for (final v in voices)
+      barCountOrThrow(v.beats, beatsPerBar: beatsPerBar, grid: grid),
+  ];
+  if (bars.any((b) => b != bars.first)) {
+    throw ArgumentError('voices differ in length: $bars bars');
+  }
+  return bars.first;
 }

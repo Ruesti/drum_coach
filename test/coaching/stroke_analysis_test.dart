@@ -274,4 +274,46 @@ void main() {
     expect(a.timing!.overallDeviationMs, closeTo(10, 0.5));
     expect(a.events.first.instrument, 'pad');
   });
+
+  test('a beat without a hand (foot voice) yields a hit without hand letter',
+      () {
+    final t0 = DateTime(2026, 1, 1, 12).microsecondsSinceEpoch / 1000.0;
+    final sticking = [
+      const StrokeBeat(hand: null, value: NoteValue.quarter),
+      const StrokeBeat(hand: null, value: NoteValue.quarter),
+      const StrokeBeat(hand: null, value: NoteValue.quarter),
+      const StrokeBeat(hand: null, value: NoteValue.quarter),
+    ];
+    final beatLog = [
+      for (var i = 0; i < 8; i++)
+        (
+          beatIndex: i % 4,
+          timestamp: DateTime.fromMicrosecondsSinceEpoch(
+              ((t0 + i * 500) * 1000).round()),
+        ),
+    ];
+    final events = [
+      for (var i = 0; i < 8; i++)
+        StrokeEvent(
+            timeMs: t0 + i * 500 + 3,
+            instrument: KitInstrument.kick,
+            velocity: 0.8,
+            rawNote: 36,
+            source: StrokeSourceKind.midi),
+    ];
+    final a = analyzeStrokes(
+      events: events,
+      beatLog: beatLog,
+      sticking: sticking,
+      source: StrokeSourceKind.midi,
+      expectedInstrument: KitInstrument.kick,
+      analysisMode: true,
+    );
+    expect(a.alignment!.hitCount, 8);
+    expect(a.events.where((e) => e.notePosition != null).length, 8);
+    expect(a.events.every((e) => e.hand == null), isTrue);
+    // Per-hand values exist but carry nothing: no hand was assigned.
+    expect(a.timing!.rightHandDeviationMs, 0);
+    expect(a.timing!.leftHandDeviationMs, 0);
+  });
 }

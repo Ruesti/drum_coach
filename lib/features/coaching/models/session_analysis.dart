@@ -233,7 +233,8 @@ class MatchedHit {
   final DateTime hitTimestamp;
   final double amplitude;
   final double deviationMs;
-  final Hand hand;
+  /// Playing hand from the sticking; null for a foot voice.
+  final Hand? hand;
 
   const MatchedHit({
     required this.hitTimestamp,

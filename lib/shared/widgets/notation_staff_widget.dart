@@ -524,9 +524,13 @@ class _StaffPainter extends CustomPainter {
         _drawDot(canvas, Offset(x, staffY), headColor);
       }
 
-      // R/L letter.
-      if (showSticking) {
-        final letter = beat.hand == Hand.right ? 'R' : 'L';
+      // R/L letter — hand voices only (foot strokes have none).
+      final letter = switch (beat.hand) {
+        Hand.right => 'R',
+        Hand.left => 'L',
+        null => null,
+      };
+      if (showSticking && letter != null) {
         _drawText(canvas, letter, Offset(x, y0 + _letterY), _dim(_letterColor),
             12,
             bold: true);
