@@ -73,7 +73,7 @@ def _update(src: str, at: int, c: str) -> str:
 def patch(path: pathlib.Path) -> None:
     src = path.read_text()
     imports = ''.join(f"import 'sheets/{s.id}_sheet.dart';\n" for s in all_sheets())
-    src = re.sub(r"(import 'sheets/[a-z_]+_sheet\.dart';\n)+", '', src)
+    src = re.sub(r"(import 'sheets/[a-z0-9_]+_sheet\.dart';\n)+", '', src)
     src = src.replace("import '../models/rudiment.dart';\n", "import '../models/rudiment.dart';\n" + imports, 1)
 
     if any(s.kit for s in all_sheets()) and "coaching/services/stroke_source.dart" not in src:

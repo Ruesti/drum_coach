@@ -677,7 +677,7 @@ const List<TechniqueSection> grooveShuffleLesson = [
   TechniqueSection(
     title: "Practice tips",
     body:
-        "Count \"1-trip-let, 2-trip-let\" and only play \"1\" and \"let\". Line 3 doubles the kick into the shuffle rhythm, line 4 adds a ghost on the \"a\" of 3, line 6 moves the right hand to the ride while the foot closes the hi-hat on 2 and 4.",
+        "Count \"1-trip-let, 2-trip-let\" and only play \"1\" and \"let\". Line 3 doubles the kick into the shuffle rhythm, line 4 adds a ghost on the \"let\" of 3, line 6 moves the right hand to the ride while the foot closes the hi-hat on 2 and 4.",
   ),
   TechniqueSection(
     title: "Where you hear it",

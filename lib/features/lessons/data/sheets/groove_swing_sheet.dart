@@ -620,7 +620,7 @@ const List<TechniqueSection> grooveSwingLesson = [
   TechniqueSection(
     title: "Practice tips",
     body:
-        "Lines 1 and 6 are ride, hat and feathered kick only — get them light and steady first. Lines 2, 3, 5 and 7 add single snare comments; keep them conversational, not a backbeat. Line 8 accents the ride on 1 and 3 and answers on the \"a\" of 2 and 4.",
+        "Line 1 is ride, hat and feathered kick only — get it light and steady first; line 6 adds one real kick on the \"let\" of 4 as a pickup into the next bar. Lines 2, 3, 5 and 7 add single snare comments; keep them conversational, not a backbeat. Line 8 accents the ride on 1 and 3 and answers on the \"a\" of 2 and 4.",
   ),
   TechniqueSection(
     title: "Where you hear it",

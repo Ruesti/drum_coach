@@ -762,6 +762,6 @@ const List<TechniqueSection> grooveRock16Lesson = [
   TechniqueSection(
     title: "Where you hear it",
     body:
-        "The Doobie Brothers \"Long Train Runnin'\", Boz Scaggs \"Lowdown\" with Jeff Porcaro, and a great many 70s and 80s soft-rock and pop tracks ride on two-handed sixteenth hats.",
+        "The Doobie Brothers \"Long Train Runnin'\", Boz Scaggs \"Lowdown\" with Jeff Porcaro, and a great many 70s and 80s soft-rock and pop sixteenth-hat grooves.",
   ),
 ];

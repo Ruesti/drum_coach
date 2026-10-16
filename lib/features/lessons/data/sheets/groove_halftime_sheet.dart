@@ -573,6 +573,6 @@ const List<TechniqueSection> grooveHalftimeLesson = [
   TechniqueSection(
     title: "Where you hear it",
     body:
-        "Toto \"Rosanna\" (Jeff Porcaro's half-time shuffle), the big half-time choruses of Foo Fighters, countless metal breakdowns and the slow, wide drops of modern pop.",
+        "The Police \"Walking on the Moon\" (Stewart Copeland's backbeat on 3), the big half-time choruses of Foo Fighters, countless metal breakdowns and the slow, wide drops of modern pop.",
   ),
 ];

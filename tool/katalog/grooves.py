@@ -34,12 +34,12 @@ HH8_DISCO = 'R8 -8 R8 -8 R8 -8 R8 -8'  # jedes „+" offen
 HH16 = 'R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16'
 HH16A = 'R16> L16 R16 L16 R16> L16 R16 L16 R16> L16 R16 L16 R16> L16 R16 L16'
 HH16_NO1 = '-16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16'
-HH16_O = 'R16 L16 R16 -16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 -16'  # „a" von 2 und 4 offen
+HH16_O = 'R16 L16 R16 L16 R16 L16 R16 -16 R16 L16 R16 L16 R16 L16 R16 -16'  # „a" von 2 und 4 offen
 HO_4A = '-2 -4 -8 R8'
 HO_2A4A = '-4 -8 R8 -4 -8 R8'
 HO_ALL = '-8 R8 -8 R8 -8 R8 -8 R8'
 HO_1 = 'R4 -2.'
-HO_16 = '-8. R16 -2 -8. R16'  # „a" von 2 und 4
+HO_16 = '-4 -8. R16 -4 -8. R16'  # „a" von 2 und 4
 SHUF = '3(R8 -8 R8) 3(R8 -8 R8) 3(R8 -8 R8) 3(R8 -8 R8)'
 SHUF_A = '3(R8> -8 R8) 3(R8> -8 R8) 3(R8> -8 R8) 3(R8> -8 R8)'
 SHUF_NO1 = '3(-8 -8 R8) 3(R8 -8 R8) 3(R8 -8 R8) 3(R8 -8 R8)'
@@ -57,7 +57,7 @@ SN24G2 = '-8 L16g -16 L4> -8 L16g -16 L4>'  # Ghosts auf „+" von 1 und 3
 SN24G3 = '-16 L16g -8 L4> -16 L16g -8 L4>'  # Ghosts auf „e" von 1 und 3
 SN_FUNK = '-4 L4> -8 L16g L16g L4>'  # Ghosts auf „3 +" und „3 a"
 SN3G = '-4 -8 L16g L16g L4> -4'  # Ghosts vor der 3
-SN24_T = '-4 L4> 3(-8 -8 L8g) L4>'  # Shuffle: Ghost auf „3 a"
+SN24_T = '-4 L4> 3(-8 -8 L8g) L4>'  # Shuffle: Ghost auf „3 let"
 SN_SW4 = '-2 -4 3(-8 -8 L8)'  # Swing: „a" von 4
 SN_SW2 = '-4 3(-8 -8 L8) -2'  # Swing: „a" von 2
 SN_SW3 = '-2 3(L8 -8 L8) -4'
@@ -80,7 +80,7 @@ BD_FUNK2 = 'K4 -8. K16 -4 K8 K8'  # 1, „2 a", 4, „4 +"
 BD_FUNK3 = 'K8 -8 K8 -8 -4 K8. K16'  # 1, 2, 4, „4 a"
 BD_DBL = 'K8 K8 -4 K8 K8 -4'
 BD_ALL = 'K4 K4 K4 K4'
-BD_SHUF13 = 'K4 -4 3(K8 -8 K8) -4'  # 1, 3, „3 a"
+BD_SHUF13 = 'K4 -4 3(K8 -8 K8) -4'  # 1, 3, „3 let"
 BD_SHUF_ALL = '3(K8 -8 K8) -4 3(K8 -8 K8) -4'
 BD_SW = 'K4g K4g K4g K4g'  # feathered: leise Viertel
 BD_SW4 = 'K4g K4g K4g 3(K8g -8 K8)'
@@ -152,27 +152,27 @@ LESSON_ROCK16 = {
     'Why it matters': 'Sixteenths on the hi-hat fill every gap the eighth groove leaves open, so the same backbeat suddenly drives harder. It is the groove of mid-tempo rock and pop where the song needs motion without more speed.',
     'How to play it': 'Alternate R L on the hi-hat. On 2 and 4 the left hand hits the snare together with the right-hand hat note, then jumps straight back for the next sixteenth on the hat. The kick plays 1, 3 and the "and" of 3, always together with a right-hand hi-hat note.',
     'Practice tips': 'Start line 1 slowly enough that the hi-hat stays even through the backbeat; the stroke before and after the snare tends to go quiet. Line 3 accents the quarters on the hat, line 8 puts the kick on "e" and "a" — count the sixteenths out loud before you play it.',
-    'Where you hear it': 'The Doobie Brothers "Long Train Runnin\'", Boz Scaggs "Lowdown" with Jeff Porcaro, and a great many 70s and 80s soft-rock and pop tracks ride on two-handed sixteenth hats.',
+    'Where you hear it': 'The Doobie Brothers "Long Train Runnin\'", Boz Scaggs "Lowdown" with Jeff Porcaro, and a great many 70s and 80s soft-rock and pop sixteenth-hat grooves.',
 }
 
 LESSON_HALFTIME = {
     'Why it matters': 'Half-time keeps the tempo but puts one backbeat in the bar instead of two, on 3. The song suddenly feels twice as wide and heavy without anyone slowing down — the classic move for a big chorus or a slow, crushing riff.',
     'How to play it': 'Hi-hat eighths with an accent on 1 and 3, the snare only on 3, hard and full. The kick plays 1 and the "and" of 2 and leaves the back half of the bar open so the snare can breathe.',
     'Practice tips': 'The danger is rushing the snare on 3: let the space before it hang. Line 4 swaps the backbeat for a cross-stick, line 5 adds ghost notes in front of it, line 8 doubles the hi-hat to sixteenths over the same slow backbeat — big feel, busy surface.',
-    'Where you hear it': 'Toto "Rosanna" (Jeff Porcaro\'s half-time shuffle), the big half-time choruses of Foo Fighters, countless metal breakdowns and the slow, wide drops of modern pop.',
+    'Where you hear it': 'The Police "Walking on the Moon" (Stewart Copeland\'s backbeat on 3), the big half-time choruses of Foo Fighters, countless metal breakdowns and the slow, wide drops of modern pop.',
 }
 
 LESSON_SHUFFLE = {
     'Why it matters': 'The shuffle swings the eighths: each beat is a triplet with the middle note left out, long-short, long-short. It is the bounce of blues, boogie and roadhouse rock, and a straight drummer sounds stiff the moment the band starts to shuffle.',
     'How to play it': 'Right hand on the hi-hat plays the first and third note of every triplet, never the middle. Snare on 2 and 4 on the first triplet note, kick on 1 and 3. Keep the short note light so the long one carries.',
-    'Practice tips': 'Count "1-trip-let, 2-trip-let" and only play "1" and "let". Line 3 doubles the kick into the shuffle rhythm, line 4 adds a ghost on the "a" of 3, line 6 moves the right hand to the ride while the foot closes the hi-hat on 2 and 4.',
+    'Practice tips': 'Count "1-trip-let, 2-trip-let" and only play "1" and "let". Line 3 doubles the kick into the shuffle rhythm, line 4 adds a ghost on the "let" of 3, line 6 moves the right hand to the ride while the foot closes the hi-hat on 2 and 4.',
     'Where you hear it': 'Stevie Ray Vaughan "Pride and Joy" with Chris Layton, ZZ Top "La Grange" with Frank Beard, early Fleetwood Mac blues records and every twelve-bar blues jam.',
 }
 
 LESSON_SWING = {
     'Why it matters': 'In jazz the ride cymbal is the time: "ding, ding-a-ding" carries the whole band, the hi-hat foot locks 2 and 4, and the snare is free to talk. This is the groove of small-group jazz and big-band swing.',
     'How to play it': 'Ride on every quarter, plus the last triplet note after 2 and after 4 — "ding, ding-a ding, ding-a". The left foot closes the hi-hat on 2 and 4 with a crisp "chick", the kick feathers soft quarters you feel more than hear.',
-    'Practice tips': 'Lines 1 and 6 are ride, hat and feathered kick only — get them light and steady first. Lines 2, 3, 5 and 7 add single snare comments; keep them conversational, not a backbeat. Line 8 accents the ride on 1 and 3 and answers on the "a" of 2 and 4.',
+    'Practice tips': 'Line 1 is ride, hat and feathered kick only — get it light and steady first; line 6 adds one real kick on the "let" of 4 as a pickup into the next bar. Lines 2, 3, 5 and 7 add single snare comments; keep them conversational, not a backbeat. Line 8 accents the ride on 1 and 3 and answers on the "a" of 2 and 4.',
     'Where you hear it': 'Miles Davis "So What" with Jimmy Cobb, Art Blakey and the Jazz Messengers, Count Basie with Sonny Payne, Dave Brubeck "Take Five" in its own 5/4 way — the ride pattern is the same language.',
 }
 
@@ -187,7 +187,7 @@ LESSON_HIHAT_OPEN = {
     'Why it matters': 'The hi-hat is two instruments in one: closed it ticks, open it washes. Opening it on the right note and closing it exactly on the next makes a plain beat breathe — the difference between a drum machine and a drummer.',
     'How to play it': 'Lift the left foot just before the open note so the cymbals ring loosely, then press it down again on the next count so the "chick" lands in time. The open note gets the stick, the close gets the foot; both matter as much as the snare.',
     'Practice tips': 'Line 1 opens only on the "and" of 4, line 2 on both "ands" of 2 and 4, line 3 is the disco beat with every "and" open over four-on-the-floor. Lines 4 and 5 practise the foot alone: a pedal "chick" on 1, then the foot keeping quarters under a ride.',
-    'Where you hear it': 'Disco on every offbeat (Chic "Le Freak", Gloria Gaynor "I Will Survive"), Phil Rudd\'s open "tsss" into the backbeat with AC/DC, and Stewart Copeland\'s splashy hats in the Police.',
+    'Where you hear it': 'Disco on every offbeat (Chic "Le Freak", Gloria Gaynor "I Will Survive"), the hi-hat barks in AC/DC\'s rock grooves, and Stewart Copeland\'s splashy hats in the Police.',
 }
 
 SHEETS: list[Sheet] = [
