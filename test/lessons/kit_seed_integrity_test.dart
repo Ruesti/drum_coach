@@ -17,7 +17,10 @@ void main() {
       expect(r.voicing, ExerciseVoicing.kit, reason: r.id);
       expect(r.patternVoices, isNotEmpty, reason: r.id);
       expect(r.backing, isNull, reason: '${r.id}: the player is the band');
-      expect(r.limbs.contains(Limb.allFour) || r.limbs.contains(Limb.feet),
+      expect(
+          r.limbs.contains(Limb.allFour) ||
+              r.limbs.contains(Limb.feet) ||
+              r.limbs.contains(Limb.doubleBass),
           isTrue,
           reason: r.id);
       // The PATTERN bar: one bar in every voice, sticking = its first voice.
@@ -142,5 +145,47 @@ void main() {
     expect(cymbals.contains(KitInstrument.china), isTrue);
     expect(cymbals.contains(KitInstrument.rideBell), isTrue);
     expect(cymbals.contains(KitInstrument.crash1), isTrue);
+  });
+
+  test(
+      'the seven feet sheets: form, limbs, foot sides where double bass, '
+      'whole-sheet units build', () {
+    const ids = {
+      'feet_kick_control': Limb.feet,
+      'feet_kick_sixteenths': Limb.feet,
+      'feet_double_bass_eighths': Limb.doubleBass,
+      'feet_double_bass_sixteenths': Limb.doubleBass,
+      'feet_double_bass_triplets': Limb.doubleBass,
+      'feet_hihat_foot': Limb.feet,
+      'feet_ostinatos': Limb.allFour,
+    };
+    for (final e in ids.entries) {
+      final r = rudimentsSeedData.firstWhere((r) => r.id == e.key);
+      expect(r.sheet.length, 9, reason: e.key);
+      expect(sheetBars(r), 24, reason: e.key);
+      expect(r.limbs.contains(e.value), isTrue, reason: e.key);
+      expect(r.hasFootSides, e.value == Limb.doubleBass, reason: e.key);
+      expect(() => SheetPlan.wholeSheet(r), returnsNormally, reason: e.key);
+      expect(
+          r.technique.map((s) => s.title),
+          [
+            'Why it matters',
+            'How to play it',
+            'Practice tips',
+            'Where you hear it'
+          ],
+          reason: e.key);
+      // Every line has a foot voice (kick or pedal): these sheets train the feet.
+      for (var i = 0; i < r.lines.length; i++) {
+        expect(r.lines[i].kitVoices.any((v) => v.isFoot), isTrue,
+            reason: '${e.key} line ${i + 1} has no foot voice');
+      }
+    }
+    final db = rudimentsSeedData
+        .firstWhere((r) => r.id == 'feet_double_bass_sixteenths');
+    final kick = db.lines.first.kitVoices
+        .firstWhere((v) => v.instrument == KitInstrument.kick);
+    expect(kick.beats.take(4).map((b) => b.hand).toList(),
+        [Hand.right, Hand.left, Hand.right, Hand.left]);
   });
 }

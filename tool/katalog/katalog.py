@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import feet
 import fills
 import grooves
 import rudimente
@@ -63,6 +64,14 @@ SETS: list[SheetSet] = [
              'Zeilennummer, was raus, anders oder länger soll.',
         seed_marker='PHASE B.4: kit fills',
         sheets=set_fills.SHEETS,
+    ),
+    SheetSet(
+        key='feet', step='B.4c', title='Füße: Kick, Double Bass, Hi-hat-Fuß',
+        lead='Nachtrag B.4c: Fußübungen am Set — Kick-Kontrolle, Sechzehntel-Kombinationen, Double Bass '
+             '(Fußseiten R/L nur in der App), Hi-hat-Fuß, Ostinati. Sag mir je Blatt und Zeilennummer, was raus, '
+             'anders oder länger soll.',
+        seed_marker='PHASE B.4c: feet',
+        sheets=feet.SHEETS,
     ),
 ]
 

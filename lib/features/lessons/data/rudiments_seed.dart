@@ -36,6 +36,13 @@ import 'sheets/set_fill_sextuplets_sheet.dart';
 import 'sheets/set_fill_six_groups_sheet.dart';
 import 'sheets/set_fill_roll_sheet.dart';
 import 'sheets/set_around_the_kit_sheet.dart';
+import 'sheets/feet_kick_control_sheet.dart';
+import 'sheets/feet_kick_sixteenths_sheet.dart';
+import 'sheets/feet_double_bass_eighths_sheet.dart';
+import 'sheets/feet_double_bass_sixteenths_sheet.dart';
+import 'sheets/feet_double_bass_triplets_sheet.dart';
+import 'sheets/feet_hihat_foot_sheet.dart';
+import 'sheets/feet_ostinatos_sheet.dart';
 
 // A plain list (not const) since 30.09.: the sample sheet is built with the
 // étude DSL, which is not const-constructible.
@@ -1989,5 +1996,143 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setAroundTheKitPattern,
     technique: setAroundTheKitLesson,
     lines: setAroundTheKitSheet,
+  ),
+  // ─── PHASE B.4c: feet ──────────────────────────────────────────────────────
+
+  Rudiment(
+    id: 'feet_kick_control',
+    name: "Kick Control",
+    skills: {Skill.coordination},
+    description:
+        "The hands keep a plain rock beat while the kick moves: on and off the beat, doubles, four-on-the-floor.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.feet},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetKickControlPatternVoices,
+    sticking: feetKickControlPattern,
+    technique: feetKickControlLesson,
+    lines: feetKickControlSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_kick_sixteenths',
+    name: "Kick Sixteenths",
+    skills: {Skill.coordination, Skill.control},
+    description:
+        "Eight sixteenth-note kick combinations on 1 and 3 under a steady backbeat, first with eighth hats, then with sixteenths.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.feet},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetKickSixteenthsPatternVoices,
+    sticking: feetKickSixteenthsPattern,
+    technique: feetKickSixteenthsLesson,
+    lines: feetKickSixteenthsSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_double_bass_eighths',
+    name: "Double Bass Eighths",
+    skills: {Skill.endurance, Skill.coordination},
+    genres: {Genre.metal},
+    description:
+        "Eighth notes split between two feet, right on the beat and left on the \"and\", under quarter hats and a backbeat.",
+    minBpm: 60,
+    targetBpm: 160,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.doubleBass},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetDoubleBassEighthsPatternVoices,
+    sticking: feetDoubleBassEighthsPattern,
+    technique: feetDoubleBassEighthsLesson,
+    lines: feetDoubleBassEighthsSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_double_bass_sixteenths',
+    name: "Double Bass Sixteenths",
+    skills: {Skill.endurance, Skill.coordination},
+    genres: {Genre.metal},
+    description:
+        "Sixteenth-note double bass, right foot leading, from short bursts to a full rolling carpet under the backbeat.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.doubleBass},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetDoubleBassSixteenthsPatternVoices,
+    sticking: feetDoubleBassSixteenthsPattern,
+    technique: feetDoubleBassSixteenthsLesson,
+    lines: feetDoubleBassSixteenthsSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_double_bass_triplets',
+    name: "Double Bass Triplets",
+    skills: {Skill.endurance, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "Triplets and sextuplets between the feet under a shuffle hat, plus the Bonham triplet of hands and kick.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.doubleBass},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetDoubleBassTripletsPatternVoices,
+    sticking: feetDoubleBassTripletsPattern,
+    technique: feetDoubleBassTripletsLesson,
+    lines: feetDoubleBassTripletsSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_hihat_foot',
+    name: "Hi-hat Foot",
+    skills: {Skill.independence, Skill.coordination},
+    description:
+        "The left foot closes the hi-hat on 2 and 4, on every quarter or on every \"and\" while the ride, snare and kick keep a groove.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.feet},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetHihatFootPatternVoices,
+    sticking: feetHihatFootPattern,
+    technique: feetHihatFootLesson,
+    lines: feetHihatFootSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_ostinatos',
+    name: "Foot Ostinatos",
+    skills: {Skill.independence, Skill.groove},
+    genres: {Genre.latin, Genre.jazz},
+    description:
+        "Foot patterns that never change — bossa nova, samba and jazz — while the hands play clave, samba sticking and ride on top.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetOstinatosPatternVoices,
+    sticking: feetOstinatosPattern,
+    technique: feetOstinatosLesson,
+    lines: feetOstinatosSheet,
   ),
 ];
