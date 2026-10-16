@@ -49,8 +49,13 @@ class _LineListScreenState extends ConsumerState<LineListScreen> {
     if (mounted) setState(() {});
   }
 
+  // Unticking the last line leaves selection mode (no dead "0 selected").
   void _toggle(int i) => setState(() {
-        if (!_selected.remove(i)) _selected.add(i);
+        if (!_selected.remove(i)) {
+          _selected.add(i);
+        } else if (_selected.isEmpty) {
+          _selecting = false;
+        }
       });
 
   void _leaveSelection() => setState(() {

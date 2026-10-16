@@ -295,7 +295,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       // old unit and would count as extra strokes against the new one.
       if (_measuring) unawaited(_restartMeasuring());
     }
-    SettingsService.setLastLine(widget.rudimentId, _plan.lineIndex);
+    // Only a single line is remembered; moving within a sequence is not.
+    if (!_plan.isSequence) {
+      SettingsService.setLastLine(widget.rudimentId, _plan.lineIndex);
+    }
   }
 
   /// Set by [_applyUnitChange] while playing; cleared by the first tick of
@@ -389,7 +392,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     }
     // A single line is remembered as soon as it opens (the line list marks
     // the line actually practised); a sequence stores nothing.
-    if (!_plan.isSequence) {
+    if (!_plan.isSequence && rudiment.sheet.length > 1) {
       SettingsService.setLastLine(widget.rudimentId, _plan.lineIndex);
     }
 

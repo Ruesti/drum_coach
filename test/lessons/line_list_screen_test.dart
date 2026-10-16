@@ -135,6 +135,19 @@ void main() {
     expect(find.byType(LineListScreen), findsOneWidget);
   });
 
+  testWidgets('unticking the last line leaves selection mode', (tester) async {
+    await pump(tester);
+    await tester.longPress(card(1));
+    await tester.pumpAndSettle();
+    expect(find.text('1 selected'), findsOneWidget);
+    expect(find.text('Play 1 line'), findsOneWidget);
+    await tester.tap(card(1));
+    await tester.pumpAndSettle();
+    expect(find.byType(Checkbox), findsNothing);
+    expect(find.byKey(const ValueKey('play-selected')), findsNothing);
+    expect(find.byKey(const ValueKey('select-mode')), findsOneWidget);
+  });
+
   testWidgets('the last practised line is marked', (tester) async {
     await pump(tester);
     expect(find.byKey(const ValueKey('line-card-last')), findsNothing);

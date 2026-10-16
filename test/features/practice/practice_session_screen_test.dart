@@ -378,6 +378,22 @@ void main() {
       b.dispose();
     });
 
+    testWidgets('› inside a sequence leaves the stored line alone', (
+      tester,
+    ) async {
+      await SettingsService.setLastLine(sheetId, 6);
+      await _pumpScreen(tester, screen: _screen(id: sheetId, lines: '1,3'));
+      await tester.tap(find.byKey(const ValueKey('line-next')));
+      await tester.pump();
+      expect(find.text('Sequence 2 of 2 · Line 3 · 1/2'), findsOneWidget);
+      expect(SettingsService.lastLineFor(sheetId), 6);
+    });
+
+    testWidgets('a one-line exercise stores no line', (tester) async {
+      await _pumpScreen(tester, screen: _screen(id: 'multiple_bounce_roll'));
+      expect(SettingsService.lastLineFor('multiple_bounce_roll'), isNull);
+    });
+
     testWidgets('switching lines while playing reloads the loop at once',
         (tester) async {
       final rec = _RecordingPlayingMetronomeNotifier();
