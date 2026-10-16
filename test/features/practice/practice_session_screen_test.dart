@@ -359,6 +359,25 @@ void main() {
       b.dispose();
     });
 
+    testWidgets('opening one line remembers it; a sequence remembers nothing', (
+      tester,
+    ) async {
+      final a = await _pumpScreen(
+        tester,
+        screen: _screen(id: sheetId, lines: '3'),
+      );
+      expect(SettingsService.lastLineFor(sheetId), 2);
+      a.dispose();
+      await tester.pumpWidget(const SizedBox());
+      await SettingsService.setLastLine(sheetId, 6);
+      final b = await _pumpScreen(
+        tester,
+        screen: _screen(id: sheetId, lines: '1,3'),
+      );
+      expect(SettingsService.lastLineFor(sheetId), 6);
+      b.dispose();
+    });
+
     testWidgets('switching lines while playing reloads the loop at once',
         (tester) async {
       final rec = _RecordingPlayingMetronomeNotifier();

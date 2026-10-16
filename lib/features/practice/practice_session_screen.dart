@@ -387,6 +387,11 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       _start = _plan.start;
       SettingsService.clearPracticeSnapshot();
     }
+    // A single line is remembered as soon as it opens (the line list marks
+    // the line actually practised); a sequence stores nothing.
+    if (!_plan.isSequence) {
+      SettingsService.setLastLine(widget.rudimentId, _plan.lineIndex);
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final metronome = _metronomeNotifier
@@ -771,10 +776,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 // this screen lives on the top-level /practice route (outside
                 // the bottom-nav shell), and pushing a shell-branch route from
                 // there caused a duplicate-page-key crash.
-                Navigator.of(screenContext).push(MaterialPageRoute(
-                  builder: (_) =>
-                      LessonDetailScreen(rudimentId: widget.rudimentId),
-                ));
+                Navigator.of(screenContext).push(
+                  MaterialPageRoute(
+                    builder: (_) => LessonDetailScreen(
+                      rudimentId: widget.rudimentId,
+                      showStart: false,
+                    ),
+                  ),
+                );
               },
             );
           },

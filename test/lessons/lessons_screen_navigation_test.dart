@@ -1,4 +1,7 @@
 import 'package:drum_coach/features/learning/suggested_bpm_provider.dart';
+import 'package:drum_coach/features/lessons/data/etudes.dart';
+import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
+import 'package:drum_coach/features/lessons/exercise_entry.dart';
 import 'package:drum_coach/features/lessons/lessons_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +25,12 @@ void main() {
             ],
           ),
           GoRoute(
+            path: '/exercise/:id',
+            builder: (_, state) => Scaffold(
+              body: Text('lines:${state.pathParameters['id']}'),
+            ),
+          ),
+          GoRoute(
             path: '/practice/:id',
             builder: (_, state) => Scaffold(
               body: Text('practice:${state.pathParameters['id']}'),
@@ -30,8 +39,17 @@ void main() {
         ],
       );
 
-  testWidgets('tapping a lesson tile goes straight to practice, not the explanation',
-      (tester) async {
+  test('opensLineList: sheets yes, one-line etudes no', () {
+    expect(
+      opensLineList(
+        rudimentsSeedData.firstWhere((r) => r.id == 'single_stroke_roll'),
+      ),
+      isTrue,
+    );
+    expect(opensLineList(allEtudes.first), isFalse);
+  });
+
+  testWidgets('tapping a sheet tile opens its line list', (tester) async {
     final router = buildRouter();
     await tester.pumpWidget(
       ProviderScope(
@@ -48,7 +66,8 @@ void main() {
     await tester.tap(find.text('Single Stroke Roll'));
     await tester.pumpAndSettle();
 
-    expect(_textStartingWith('practice:'), findsOneWidget);
+    expect(find.text('lines:single_stroke_roll'), findsOneWidget);
+    expect(_textStartingWith('practice:'), findsNothing);
     expect(_textStartingWith('explanation:'), findsNothing);
   });
 

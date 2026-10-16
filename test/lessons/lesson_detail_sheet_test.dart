@@ -1,6 +1,8 @@
 import 'package:drum_coach/features/lessons/lesson_detail_screen.dart';
 import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
+import 'package:drum_coach/features/lessons/data/etudes.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
+import 'package:drum_coach/features/learning/suggested_bpm_provider.dart';
 import 'package:drum_coach/features/lessons/lessons_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,54 +31,83 @@ void main() {
 
   Future<void> pump(WidgetTester tester, String id) async {
     await tester.pumpWidget(ProviderScope(
+        overrides: [suggestedBpmProvider(id).overrideWith((ref) async => 80)],
         child: MaterialApp.router(routerConfig: buildRouter(id))));
     await tester.pumpAndSettle();
   }
 
-  Finder paints() => find.descendant(
-      of: find.byType(SheetStaffWidget), matching: find.byType(CustomPaint));
-
   testWidgets(
-      'the sample sheet page shows the pattern box, THE SHEET and the lesson',
-      (tester) async {
-    await pump(tester, 'single_paradiddle');
-    expect(find.text('PATTERN'), findsOneWidget);
-    expect(find.byType(NotationStaffWidget), findsOneWidget);
-    expect(find.text('THE SHEET'), findsOneWidget);
-    expect(find.byType(SheetStaffWidget), findsOneWidget);
-    expect(find.text('LESSON'), findsOneWidget);
-    for (final t in [
-      'Why it matters',
-      'How to play it',
-      'Practice tips',
-      'Where you hear it'
-    ]) {
-      await tester.scrollUntilVisible(find.text(t), 200,
-          scrollable: find.byType(Scrollable).first);
-      expect(find.text(t), findsOneWidget);
+    'the sample sheet page shows the pattern box and the lesson, no sheet',
+    (tester) async {
+      await pump(tester, 'single_paradiddle');
+      expect(find.text('PATTERN'), findsOneWidget);
+      expect(find.byType(NotationStaffWidget), findsOneWidget);
+      expect(find.text('THE SHEET'), findsNothing);
+      expect(find.byType(SheetStaffWidget), findsNothing);
+      expect(find.text('LESSON'), findsOneWidget);
+      for (final t in [
+        'Why it matters',
+        'How to play it',
+        'Practice tips',
+        'Where you hear it',
+      ]) {
+        await tester.scrollUntilVisible(
+          find.text(t),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.text(t), findsOneWidget);
+      }
+    },
+  );
+
+  testWidgets('a one-line exercise shows its pattern', (tester) async {
+    // A legacy basic rudiment without authored lines, and an etude.
+    for (final id in ['multiple_bounce_roll', allEtudes.first.id]) {
+      await pump(tester, id);
+      expect(find.text('THE SHEET'), findsNothing);
+      expect(find.text('PATTERN'), findsOneWidget);
+      expect(find.byType(NotationStaffWidget), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
     }
   });
 
-  testWidgets('a one-line exercise shows the sheet only, no pattern box',
-      (tester) async {
-    // A legacy basic rudiment without authored lines.
-    await pump(tester, 'multiple_bounce_roll');
-    expect(find.text('THE SHEET'), findsOneWidget);
-    expect(find.byType(SheetStaffWidget), findsOneWidget);
-    expect(find.text('PATTERN'), findsNothing);
-    expect(find.byType(NotationStaffWidget), findsNothing);
+  testWidgets('Start Practice plays all lines', (tester) async {
+    await pump(tester, 'single_paradiddle');
+    final start = find.text('Start Practice');
+    await tester.scrollUntilVisible(
+      start,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(start);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('practice:/practice/single_paradiddle?lines=all&bpm=80'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('tapping line 3 of the sheet starts practice on it',
-      (tester) async {
-    await pump(tester, 'single_paradiddle');
-    final third = paints().at(2);
-    await tester.scrollUntilVisible(third, 200,
-        scrollable: find.byType(Scrollable).first);
-    await tester.tap(third);
+  testWidgets('showStart: false hides Start Practice', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: LessonDetailScreen(
+            rudimentId: 'single_paradiddle',
+            showStart: false,
+          ),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
-    expect(find.text('practice:/practice/single_paradiddle?line=3'),
-        findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('LESSON'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -3000));
+    await tester.pumpAndSettle();
+    expect(find.text('Start Practice'), findsNothing);
   });
 
   testWidgets('a kit exercise carries the KIT badge on the info page', (tester) async {
