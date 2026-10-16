@@ -37,9 +37,8 @@ tragen weder Flam noch Drag. `~` am Kopf (`T1~:`) setzt die Instrument-Klasse
 Dart: `kitLine([voice(KitInstrument.x, [...]) …])`, Füße als `foot(...)`; `xPatternVoices`
 ist der Pattern-Takt aller Stimmen, `xPattern` ist `xPatternVoices.first.beats` (dasselbe
 Objekt). ABC: zwei Stimmen `[V:H]` (Hände, Hals oben) und `[V:F]` (Füße, Hals unten) auf
-einem Schlagzeug-System, Akkorde `[cg]`. Bekannte Vereinfachung der Kurationsseite (kein
-App-Verhalten): Triolen/Sextolen stehen in den Schichten ohne `(3`-Klammer, die Längen
-stimmen, abcjs zeigt sie als punktierte/kurze Werte.
+einem Schlagzeug-System, Akkorde `[cg]`. Triolen/Sextolen der Schichten bekommen `(3`/`(6:4:6`-Klammern wie die Pad-Zeilen
+(eine Klammer je Zählzeit, Lücken als Pausen auf dem Tuplet-Raster).
 
 ## Blatt-Felder (blatt.py)
 

@@ -87,5 +87,49 @@ class AbcOutput(unittest.TestCase):
         self.assertTrue(abc.strip().endswith(':|') or abc.strip().endswith('|'))
 
 
+def _abc_ticks(bar: str) -> float:
+    """Ticks eines ABC-Takts aus dem Text (L:1/8 = 12 Ticks); versteht `(3` und `(6:4:6`."""
+    import re
+    total, scale, left = 0.0, 1.0, 0
+    for tok in bar.split():
+        m = re.match(r'^\(([36])(?::(\d):\d)?', tok)
+        if m:
+            p = int(m.group(1))
+            q = int(m.group(2)) if m.group(2) else 2
+            scale, left = q / p, p
+            tok = tok[m.end():]
+        tok = re.sub(r'\{.*?\}|!.*?!|"[^"]*"', '', tok)
+        ln = re.search(r'(\d+/\d+|\d+|/+)?$', tok).group(1) or ''
+        units = {'': 1.0, '/': 0.5, '//': 0.25}.get(ln)
+        if units is None:
+            units = float(ln) if ln.isdigit() else eval(ln)
+        total += units * 12 * (scale if left else 1.0)
+        if left:
+            left -= 1
+    return total
+
+
+class AbcTuplets(unittest.TestCase):
+    def voices(self, text):
+        abc = kit_line_to_abc(parse_kit_line(text))
+        return abc.split('[V:H]')[1].split('[V:F]')[0], abc.split('[V:F]')[1]
+
+    def test_triplet_hands(self):
+        hands, _ = self.voices('HH: 3(R8 R8 R8) -4 -4 -4\nBD: K4 -4 -4 -4')
+        self.assertIn('(3g g g', hands)
+        self.assertEqual(_abc_ticks(hands.split('|:')[1].split(':|')[0]), 96)
+
+    def test_sextuplet_feet(self):
+        hands, feet = self.voices('HH: -1\nBD: 6(K16 K16 K16 K16 K16 K16) -4 -4 -4')
+        self.assertIn('(6:4:6F/ F/ F/ F/ F/ F/', feet)
+        self.assertEqual(_abc_ticks(feet.split('|:')[1].split(':|')[0]), 96)
+
+    def test_shuffle_hat(self):
+        hands, _ = self.voices('HH: ' + ' '.join(['3(R8 -8 R8)'] * 4) + '\nBD: K4 -4 -4 -4')
+        self.assertEqual(hands.count('(3'), 4)
+        self.assertEqual(hands.count('z'), 4)
+        self.assertEqual(_abc_ticks(hands.split('|:')[1].split(':|')[0]), 96)
+
+
 if __name__ == '__main__':
     unittest.main()

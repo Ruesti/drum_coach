@@ -289,8 +289,6 @@ def line_to_abc(line: Line, beats_per_bar: int = 4,
 
 _ABC_PITCH = {'HP': 'D', 'BD': 'F', 'F2': 'G', 'F1': 'A', 'SN': 'c', 'SR': 'c', 'T2': 'd', 'T1': 'e',
               'RD': 'f', 'RB': 'f', 'HH': 'g', 'HO': 'g', 'C1': 'a', 'C2': 'a', 'CH': 'a', 'SP': 'a'}
-_ABC_HEAD = {'HH': 'x', 'HO': 'x', 'HP': 'x', 'SR': 'x', 'RD': 'x', 'C1': 'x', 'C2': 'x', 'SP': 'x',
-             'RB': 'diamond', 'CH': 'x'}
 KIT_ABC_HEADER = ('X:1\nT:\nM:4/4\nL:1/8\nK:perc\n%%stretchlast 1\n%%staffsep 110\n'
                   '%%score (H F)\nV:H clef=perc stem=up\nV:F clef=perc stem=down\n'
                   '%%percmap D 44 x\n%%percmap F 36\n%%percmap G 43\n%%percmap A 45\n%%percmap c 38\n'
@@ -309,39 +307,64 @@ def _value_for_gap(ticks: int) -> tuple[int, int, bool, int]:
 
 
 def _layer_tokens(tracks: list[Track], total: int, *, feet: bool) -> list[tuple[int, str]]:
-    """(Tick, ABC-Token) je Einsatz/Pause einer Schicht — Akkord je Spalte, Pausen bis zum nächsten Einsatz."""
+    """(Tick, ABC-Token) je Einsatz/Pause einer Schicht — Akkord je Spalte, Pausen bis zum nächsten Einsatz.
+
+    Je Zählzeit gerechnet (Lücken sind am Schlag gedeckelt). Eine Zählzeit mit Triolen/Sextolen
+    wird auf das Tuplet-Raster (8 bzw. 4 Ticks) gelegt, Pausen füllen die Lücken, und der erste
+    Token trägt die ABC-Klammer `(3` bzw. `(6:4:6` (wie `line_to_abc` bei den Pad-Zeilen)."""
     by_tick: dict[int, list[tuple[Track, Note]]] = {}
+    tuplet_of: dict[int, int] = {}  # Zählzeit → Tuplet (0 = gerade)
     for t in tracks:
         tick = 0
         for n in t.notes:
             if not n.rest:
                 by_tick.setdefault(tick, []).append((t, n))
+                beat = tick // TPQ
+                if n.tuplet and tuplet_of.get(beat, n.tuplet) != n.tuplet:
+                    raise ValueError(f'beat {beat + 1}: triplets and sextuplets mixed in one layer')
+                if n.tuplet:
+                    tuplet_of[beat] = n.tuplet
             tick += n.ticks()
-    ticks = sorted(by_tick)
-    out: list[tuple[int, str]] = []
-    cursor = 0
+    rest_ch = 'x' if feet else 'z'
 
-    def rests(up_to: int) -> None:
-        nonlocal cursor
-        while cursor < up_to:
-            beat_end = (cursor // TPQ + 1) * TPQ
-            g, value, dotted, _ = _value_for_gap(min(up_to, beat_end) - cursor)
-            out.append((cursor, ('x' if feet else 'z') + _abc_len(value, dotted)))
-            cursor += g
-
-    for i, tick in enumerate(ticks):
-        rests(tick)
-        nxt = ticks[i + 1] if i + 1 < len(ticks) else total
-        beat_end = (tick // TPQ + 1) * TPQ
-        g, value, dotted, tuplet = _value_for_gap(min(nxt, beat_end) - tick)
+    def note_token(tick: int, length: str) -> str:
         notes = by_tick[tick]
         deco = '!>!' if any(n.accent for _, n in notes) else ''
         grace = '{B}' if any(n.graces for _, n in notes) else ''
         pitches = ''.join(sorted({_ABC_PITCH[t.key] for t, _ in notes}, key=lambda p: (p.islower(), p)))
         body = pitches if len(pitches) == 1 else f'[{pitches}]'
-        out.append((tick, f'{grace}{deco}{body}{_abc_len(value, dotted)}'))
-        cursor = tick + g
-    rests(total)
+        return f'{grace}{deco}{body}{length}'
+
+    out: list[tuple[int, str]] = []
+    for beat in range(total // TPQ):
+        start, end = beat * TPQ, (beat + 1) * TPQ
+        tup = tuplet_of.get(beat, 0)
+        first = len(out)
+        if tup:
+            unit = TPQ // tup
+            value = 8 if tup == 3 else 16
+            for tick in range(start, end, unit):
+                length = _abc_len(value, False)
+                out.append((tick, note_token(tick, length) if tick in by_tick else rest_ch + length))
+            out[first] = (start, ('(3' if tup == 3 else '(6:4:6') + out[first][1])
+            continue
+        ticks = [t for t in sorted(by_tick) if start <= t < end]
+        cursor = start
+
+        def rests(up_to: int) -> None:
+            nonlocal cursor
+            while cursor < up_to:
+                g, value, dotted, _ = _value_for_gap(up_to - cursor)
+                out.append((cursor, rest_ch + _abc_len(value, dotted)))
+                cursor += g
+
+        for i, tick in enumerate(ticks):
+            rests(tick)
+            nxt = ticks[i + 1] if i + 1 < len(ticks) else end
+            g, value, dotted, _ = _value_for_gap(nxt - tick)
+            out.append((tick, note_token(tick, _abc_len(value, dotted))))
+            cursor = tick + g
+        rests(end)
     return out
 
 
