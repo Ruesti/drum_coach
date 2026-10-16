@@ -13,8 +13,7 @@ import '../../lessons/models/rudiment.dart';
 /// and repeat signs; a line change swaps the card's content.
 ///
 /// A line taller than the space it gets (a long étude on a short screen)
-/// shows as many whole rows as fit and turns the page when the cursor
-/// leaves them.
+/// shows as many whole rows as fit, the played row on top.
 class LineView extends StatefulWidget {
   final Rudiment rudiment;
 
@@ -70,14 +69,32 @@ class _LineViewState extends State<LineView> {
     return geo;
   }
 
-  /// Row of the cursor within [line] (0 before the start).
+  /// Last row the cursor was on, and the line and sheet it belongs to.
+  int _lastRow = 0;
+  int _lastRowLine = -1;
+  Rudiment? _lastRowRudiment;
+
+  /// Row of the cursor within [line]. Without a cursor (before the start,
+  /// or the gap after a unit change) the last shown row stays — row 0 on a
+  /// new line or sheet.
   int _activeRow(SheetGeometry geo, int line) {
+    if (_lastRowLine != line || !identical(_lastRowRudiment, widget.rudiment)) {
+      _lastRow = 0;
+      _lastRowLine = line;
+      _lastRowRudiment = widget.rudiment;
+    }
+    final rows = geo.layouts[line].rowCount;
     final kit = line < geo.kitLayouts.length ? geo.kitLayouts[line] : null;
-    if (kit != null) return kit.rowOfTick(widget.activeTick ?? 0);
     final placements = geo.layouts[line].placements;
-    if (placements.isEmpty) return 0;
-    return placements[(widget.activeIndex ?? 0).clamp(0, placements.length - 1)]
-        .row;
+    if (kit != null && widget.activeTick != null) {
+      _lastRow = kit.rowOfTick(widget.activeTick!);
+    } else if (kit == null &&
+        widget.activeIndex != null &&
+        placements.isNotEmpty) {
+      _lastRow =
+          placements[widget.activeIndex!.clamp(0, placements.length - 1)].row;
+    }
+    return _lastRow.clamp(0, rows - 1);
   }
 
   @override
@@ -103,29 +120,26 @@ class _LineViewState extends State<LineView> {
       if (!c.maxHeight.isFinite || height <= c.maxHeight) {
         return SizedBox(height: height, child: sheet);
       }
-      // Too tall: a window of whole rows, paged by the cursor.
+      // Too tall: a window of whole rows — the played row on top, the next
+      // rows below (as the old sheet window), the last rows stay together.
       final visible =
           ((c.maxHeight - 2 * pad) / geo.rowPitch).floor().clamp(1, rows);
-      final top =
-          math.min(_activeRow(geo, line) ~/ visible * visible, rows - visible);
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Container(
-          height: visible * geo.rowPitch + 2 * pad,
-          color: AppColors.paper,
-          child: Stack(
-            children: [
-              Positioned(
-                  top: -top * geo.rowPitch,
-                  left: 0,
-                  right: 0,
-                  child: SizedBox(height: height, child: sheet)),
-              // Paper bands hide the slivers of the rows above and below.
-              const Positioned(top: 0, left: 0, right: 0, child: _PaperBand()),
-              const Positioned(
-                  bottom: 0, left: 0, right: 0, child: _PaperBand()),
-            ],
-          ),
+      final top = math.min(_activeRow(geo, line), rows - visible);
+      return Container(
+        height: visible * geo.rowPitch + 2 * pad,
+        clipBehavior: Clip.antiAlias,
+        decoration: SheetStaffWidget.cardDecoration,
+        child: Stack(
+          children: [
+            Positioned(
+                top: -top * geo.rowPitch,
+                left: 0,
+                right: 0,
+                child: SizedBox(height: height, child: sheet)),
+            // Paper bands hide the slivers of the rows above and below.
+            const Positioned(top: 0, left: 0, right: 0, child: _PaperBand()),
+            const Positioned(bottom: 0, left: 0, right: 0, child: _PaperBand()),
+          ],
         ),
       );
     });

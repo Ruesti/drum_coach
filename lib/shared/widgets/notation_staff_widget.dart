@@ -141,6 +141,12 @@ class SheetStaffWidget extends StatelessWidget {
   static const hPad = 4.0;
   static const vPad = 16.0;
 
+  /// The paper card the sheet sits on (also the one-line view's window).
+  static final cardDecoration = BoxDecoration(
+    color: AppColors.paper,
+    borderRadius: BorderRadius.circular(AppRadius.card),
+  );
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
@@ -159,10 +165,7 @@ class SheetStaffWidget extends StatelessWidget {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
-        decoration: BoxDecoration(
-          color: AppColors.paper,
-          borderRadius: BorderRadius.circular(AppRadius.card),
-        ),
+        decoration: cardDecoration,
         child: Column(
           children: [
             for (final i in shown)

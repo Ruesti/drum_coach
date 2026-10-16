@@ -54,13 +54,13 @@ void main() {
   });
 
   testWidgets(
-      'a line taller than its space shows whole rows, paged by the '
-      'cursor', (tester) async {
+      'a line taller than its space: the played row on top, the next row '
+      'below, the last rows stay together', (tester) async {
     final geo = computeSheetGeometry(fill, 360 - 2 * SheetStaffWidget.hPad,
         showCounts: true);
     // Room for two of the four rows.
     final room = 2.5 * geo.rowPitch + 2 * SheetStaffWidget.vPad;
-    Future<void> at(int tick) => tester.pumpWidget(MaterialApp(
+    Future<void> at(int? tick) => tester.pumpWidget(MaterialApp(
         home: Scaffold(
             body: Center(
                 child: SizedBox(
@@ -76,11 +76,32 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(tester.getSize(find.byType(LineView)).height,
         2 * geo.rowPitch + 2 * SheetStaffWidget.vPad);
-    expect(offset(), 0);
-    await at(96); // bar 2: still the first page
-    expect(offset(), 0);
-    await at(2 * 96); // bar 3: the next page
+    expect(offset(), 0); // rows 1 + 2
+    // Bar 2 plays in the last visible row: the window moves on, so bar 3
+    // shows below it.
+    await at(96);
+    expect(offset(), -geo.rowPitch); // rows 2 + 3
+    await at(3 * 96); // bar 4: the window stops at the end
+    expect(offset(), -2 * geo.rowPitch); // rows 3 + 4
+    // No cursor (the gap after a unit change): the window stays.
+    await at(null);
     expect(offset(), -2 * geo.rowPitch);
+  });
+
+  testWidgets('a line with foot letters uses the taller kit rows',
+      (tester) async {
+    final feet =
+        rudimentsSeedData.firstWhere((r) => r.id == 'feet_double_bass_eighths');
+    expect(feet.hasFootSides, isTrue);
+    await pump(tester, LineView(rudiment: feet, line: 0, showCounts: false));
+    expect(tester.takeException(), isNull);
+    final geo = computeSheetGeometry(feet, 360 - 2 * SheetStaffWidget.hPad,
+        showCounts: false);
+    expect(geo.rowPitch, kitRowPitchWithFeet);
+    expect(
+        tester.getSize(find.byType(LineView)).height,
+        geo.layouts[0].rowCount * kitRowPitchWithFeet +
+            2 * SheetStaffWidget.vPad);
   });
 
   testWidgets('golden: a four-bar fill line, one bar per row', (tester) async {
