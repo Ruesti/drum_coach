@@ -52,4 +52,26 @@ void main() {
     final c = countLabelsFor(beats, NoteGrid.eighth, 4);
     expect(c.sublist(8), ['1', null, 'e', null, '+', '2', '3']);
   });
+
+  test('countLabelAtTick: beat number, e + a binary, + a ternary', () {
+    expect(countLabelAtTick(0, ternary: false), '1');
+    expect(countLabelAtTick(30, ternary: false), 'e');
+    expect(countLabelAtTick(36, ternary: false), '+');
+    expect(countLabelAtTick(42, ternary: false), 'a');
+    expect(countLabelAtTick(72, ternary: false), '4');
+    expect(countLabelAtTick(8, ternary: true), '+');
+    expect(countLabelAtTick(16, ternary: true), 'a');
+    expect(countLabelAtTick(6, ternary: true), isNull);
+    expect(countLabelAtTick(3, ternary: false), isNull);
+  });
+  test('countLabelsForTicks: one label per tick, bars start at 1 again', () {
+    expect(countLabelsForTicks([0, 12, 48, 96, 102], NoteGrid.eighth, 4),
+        ['1', '+', '3', '1', 'e']);
+    expect(
+        countLabelsForTicks([0, 8, 16], NoteGrid.triplet, 4), ['1', '+', 'a']);
+    expect(
+        countLabelsForTicks([0, 8, 16], NoteGrid.eighth, 4,
+            ternaryAt: (t) => true),
+        ['1', '+', 'a']);
+  });
 }

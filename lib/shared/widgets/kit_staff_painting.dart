@@ -68,9 +68,16 @@ extension _KitPainting on _StaffPainter {
           _dim(_StaffPainter._ghostColor));
     }
 
-    for (final col in kit.columns) {
+    for (var c = 0; c < kit.columns.length; c++) {
+      final col = kit.columns[c];
       if (kit.rowOfTick(col.tick) != row) continue;
       final x = kit.xOfTick(col.tick);
+      // Counts per column, so a beat only the feet play is counted too.
+      final count = kitCountLabels?[c];
+      if (count != null) {
+        _drawText(canvas, count, Offset(x, y0 + _countY),
+            _dim(_StaffPainter._letterColor), 10);
+      }
       final active = col.tick == activeTick;
       _paintLayerColumn(canvas, col.hands.toList(), x, y0, staffY,
           up: true,
@@ -128,7 +135,7 @@ extension _KitPainting on _StaffPainter {
 
   /// One layer at one column: heads on their steps, one stem from the
   /// farthest head to the layer's stem end, flag when not beamed, accent,
-  /// ghost parentheses, dot, letter and count (hands only).
+  /// ghost parentheses, dot and letter (hands only).
   void _paintLayerColumn(
       Canvas canvas, List<KitNote> notes, double x, double y0, double staffY,
       {required bool up,
@@ -210,13 +217,6 @@ extension _KitPainting on _StaffPainter {
       _drawText(canvas, letter, Offset(x, y0 + _letterY),
           _dim(_StaffPainter._letterColor), 12,
           bold: true);
-    }
-    final count = countLabels == null || index >= countLabels!.length
-        ? null
-        : countLabels![index];
-    if (count != null) {
-      _drawText(canvas, count, Offset(x, y0 + _countY),
-          _dim(_StaffPainter._letterColor), 10);
     }
   }
 

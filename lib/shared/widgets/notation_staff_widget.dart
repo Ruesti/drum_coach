@@ -166,15 +166,16 @@ class SheetStaffWidget extends StatelessWidget {
                     showTimeSig: i == 0,
                     showClef: i == 0,
                     title: sheet[i].title,
-                    countLabels: showCounts && sheet[i].counts
-                        ? countLabelsFor(
-                            geo.kitLayouts.length > i &&
-                                    geo.kitLayouts[i] != null
-                                ? geo.kitLayouts[i]!.handsTrack
-                                : sheet[i].beats,
-                            rudiment.gridUnit,
-                            rudiment.beatsPerBar)
-                        : null,
+                    countLabels:
+                        showCounts && sheet[i].counts && !sheet[i].isKit
+                            ? countLabelsFor(sheet[i].beats,
+                                rudiment.gridUnit, rudiment.beatsPerBar)
+                            : null,
+                    kitCountLabels:
+                        showCounts && sheet[i].counts && sheet[i].isKit
+                            ? kitCountLabelsFor(
+                                geo.kitLayouts[i]!, rudiment.gridUnit)
+                            : null,
                     dimmed: activeLine != null && activeLine != i,
                     showSticking: showSticking,
                   ),
@@ -249,6 +250,10 @@ class _StaffPainter extends CustomPainter {
   /// Count syllable per note (null entries = none); null = no count row.
   final List<String?>? countLabels;
 
+  /// Kit line: count syllable per column, parallel to the kit layout's
+  /// columns (`kitCountLabelsFor`); null = no count row.
+  final List<String?>? kitCountLabels;
+
   /// Whole line at 45 % — it is not the one being played.
   final bool dimmed;
   final bool showSticking;
@@ -269,6 +274,7 @@ class _StaffPainter extends CustomPainter {
     this.showClef = true,
     this.title,
     this.countLabels,
+    this.kitCountLabels,
     this.dimmed = false,
     this.showSticking = true,
   });
@@ -282,7 +288,9 @@ class _StaffPainter extends CustomPainter {
       graces: isKit
           ? voices!.any((v) => leadsWithGraces(v.beats))
           : leadsWithGraces(beats),
-      clef: showClef);
+      clef: showClef,
+      kitBox: isKit && !showClef,
+      kitTimeSig: isKit && showTimeSig && !repeat);
 
   /// Kit line geometry: both layers on one scale; null for a pad line.
   late final KitLineLayout? _kit = !isKit
@@ -890,6 +898,7 @@ class _StaffPainter extends CustomPainter {
       // The label list is rebuilt per build; compare by content so a line
       // with counts does not repaint on every note of another line.
       !listEquals(old.countLabels, countLabels) ||
+      !listEquals(old.kitCountLabels, kitCountLabels) ||
       old.dimmed != dimmed ||
       old.showSticking != showSticking ||
       old.voices != voices ||

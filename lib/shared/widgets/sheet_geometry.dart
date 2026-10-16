@@ -27,6 +27,14 @@ const double sheetRepeatSystemPad = 22; // "|:" after the clef / line start
 const double sheetGraceSystemPad = 14; // flam/drag graces before note 1
 const double sheetBarGap = 12;
 
+/// Kit lines without a clef: the number box would sit on the first hands
+/// beam (kit stems reach higher), so the line starts right of the box.
+const double kitBoxPad = sheetNumberBox + 4;
+
+/// Kit line with the time signature and no start repeat: the kick under
+/// beat 1 and the hi-hat above it would touch the digits.
+const double kitTimeSigPad = 10;
+
 /// The number box no longer takes a column — kept so callers read alike.
 double leftPadFor({required bool numbered}) => sheetLeftPad;
 double rightPadFor({required bool repeat}) =>
@@ -35,9 +43,19 @@ double rightPadFor({required bool repeat}) =>
 /// Room before the first note: clef and time signature on the first line
 /// only ([clef]), the start repeat's own width, and extra space when the
 /// line opens with a flam or drag so the grace heads clear the repeat dots.
-double systemPadFor({required bool repeat, bool graces = false, bool clef = true}) =>
+/// Kit lines only: [kitBox] keeps a clef-less line clear of the number box
+/// ([kitBoxPad]), [kitTimeSig] adds room after the time signature
+/// ([kitTimeSigPad]).
+double systemPadFor(
+        {required bool repeat,
+        bool graces = false,
+        bool clef = true,
+        bool kitBox = false,
+        bool kitTimeSig = false}) =>
     (clef ? sheetSystemPad : sheetNoClefPad) +
-    (repeat ? sheetRepeatSystemPad + (graces ? sheetGraceSystemPad : 0) : 0);
+    (repeat ? sheetRepeatSystemPad + (graces ? sheetGraceSystemPad : 0) : 0) +
+    (kitBox ? kitBoxPad : 0) +
+    (kitTimeSig ? kitTimeSigPad : 0);
 
 /// True when the first note of [beats] carries grace notes.
 bool leadsWithGraces(List<StrokeBeat> beats) =>
@@ -104,7 +122,10 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
     final systemPad = systemPadFor(
         repeat: l.repeat,
         graces: l.voices.any((v) => leadsWithGraces(v.beats)),
-        clef: i == 0);
+        clef: i == 0,
+        // Same rules as the painter: clef and time signature on line 1 only.
+        kitBox: l.isKit && i != 0,
+        kitTimeSig: l.isKit && i == 0 && !l.repeat);
     if (l.isKit) {
       final kl = computeKitLineLayout(
         voices: l.kitVoices,

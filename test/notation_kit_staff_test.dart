@@ -2,6 +2,10 @@ import 'dart:io';
 
 import 'package:drum_coach/app/design_tokens.dart';
 import 'package:drum_coach/features/coaching/midi/kit_instrument.dart';
+import 'package:drum_coach/features/lessons/data/etude_dsl.dart';
+import 'package:drum_coach/features/lessons/models/rudiment.dart';
+import 'package:drum_coach/shared/widgets/count_labels.dart';
+import 'package:drum_coach/shared/widgets/kit_layout.dart';
 import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
 import 'package:drum_coach/shared/widgets/sheet_geometry.dart';
 import 'package:flutter/material.dart';
@@ -131,6 +135,54 @@ void main() {
       expect(tester.takeException(), isNull);
       await expectLater(find.byType(NotationStaffWidget),
           matchesGoldenFile('goldens/kit_staff_pattern.png'));
+    });
+  });
+
+  group('kit counts and line start', () {
+    test('counts come from every column: a lone kick on 1 and 3 counts too',
+        () {
+      final voices = [
+        voice(KitInstrument.hiHatClosed, [
+          for (var i = 0; i < 4; i++) ...[
+            rest(NoteValue.eighth),
+            note(R, NoteValue.eighth),
+          ],
+        ]),
+        voice(KitInstrument.kick, [
+          foot(NoteValue.quarter),
+          rest(NoteValue.quarter),
+          foot(NoteValue.quarter),
+          rest(NoteValue.quarter),
+        ]),
+      ];
+      final kit = computeKitLineLayout(
+          voices: voices, grid: NoteGrid.eighth, beatsPerBar: 4, maxWidth: 352);
+      final ticks = [for (final c in kit.columns) c.tick];
+      final labels = countLabelsForTicks(ticks, NoteGrid.eighth, 4);
+      final byTick = {
+        for (var i = 0; i < ticks.length; i++) ticks[i]: labels[i]
+      };
+      expect(byTick[0], '1');
+      expect(byTick[12], '+');
+      expect(byTick[48], '3');
+      final kl = kitCountLabelsFor(kit, NoteGrid.eighth);
+      expect(kl.length, kit.columns.length);
+      expect(kl.first, '1');
+    });
+
+    test('kit lines without clef keep the number box free; pad unchanged', () {
+      expect(systemPadFor(repeat: false, clef: false, kitBox: true),
+          sheetNoClefPad + kitBoxPad);
+      expect(systemPadFor(repeat: false, clef: false), sheetNoClefPad);
+      final g = computeSheetGeometry(kitShowcase(), 352, showCounts: true);
+      // Line 2 has no clef: its first column sits right of the box.
+      expect(g.kitLayouts[1]!.xOfTick(0), greaterThan(sheetNumberBox + 4));
+    });
+
+    test('kit pattern box: room after the time signature', () {
+      expect(systemPadFor(repeat: false, kitTimeSig: true),
+          sheetSystemPad + kitTimeSigPad);
+      expect(systemPadFor(repeat: false), sheetSystemPad);
     });
   });
 }
