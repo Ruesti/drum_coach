@@ -16,37 +16,139 @@ from grooves import (BD13, BD_FUNK, BD_ROCK16, C1_1, HH16A, HH16_NO1, HH8, HH8_N
 from sheetlang import TPQ, _parse_token
 
 
-def orchestrate(fill: str, plan: list[str]) -> dict[str, str]:
+def orchestrate(fill: str, plan: list[str | None]) -> dict[str, str]:
     """Verteilt einen Fill-Takt beat-weise auf Trommeln: plan[i] = Spur der Zählzeit i (z. B. 'T1~').
 
-    Tuplet-Gruppen bleiben zusammen (sie füllen genau eine Zählzeit); eine Note, die eine
-    Zählzeit überschreitet, wird abgelehnt.
+    Tuplet-Gruppen bleiben zusammen (sie liegen in einer Zählzeit); eine Note, die eine
+    Zählzeit überschreitet, wird abgelehnt. Fuß-Tokens gehen auf eigene Spuren (`K`→'BD',
+    `P`→'HP', Seiten bleiben); Hand-Tokens auf plan[i]. Eine Spur bekommt in einer Zählzeit
+    nur dann Noten, wenn sie dort spielt, sonst `-4`; in einer gemischten Tuplet-Gruppe
+    werden die fremden Tokens zu Pausen gleichen Werts. Ohne Fuß-Tokens: Verhalten wie
+    in Teil 1 (jede Plan-Spur, Tokens unverändert).
     """
-    beats: list[list[str]] = [[] for _ in range(4)]
+    beats: list[list[tuple[str, object, int]]] = [[] for _ in range(4)]  # (Token, Note, Gruppe)
+    raws: list[list[str]] = [[] for _ in range(4)]
     tick = 0
     tuplet = 0
+    group = 0
+    has_feet = False
     for raw in fill.split():
         tok = raw
         if tok.startswith(('3(', '6(')):
             tuplet, tok = int(tok[0]), tok[2:]
+            group += 1
         closing = tok.endswith(')')
         if closing:
             tok = tok[:-1]
         n = _parse_token(tok)
         n.tuplet = tuplet
+        has_feet = has_feet or n.is_foot
         beat, in_beat = divmod(tick, TPQ)
         if beat > 3 or in_beat + n.ticks() > TPQ:
             raise ValueError(f'{tok} crosses beat {beat + 1} in: {fill}')
-        beats[beat].append(raw)
+        beats[beat].append((tok, n, group if tuplet else 0))
+        raws[beat].append(raw)
         tick += n.ticks()
         if closing:
             tuplet = 0
     if tick != 4 * TPQ:
         raise ValueError(f'fill is {tick / TPQ:g} quarters long: {fill}')
-    out: dict[str, str] = {}
-    for drum in dict.fromkeys(plan):
-        out[drum] = ' '.join(' '.join(beats[i]) if plan[i] == drum else '-4' for i in range(4))
+    if len(plan) != 4:
+        raise ValueError(f'plan needs four beats: {plan}')
+    if not has_feet:
+        out: dict[str, str] = {}
+        for drum in dict.fromkeys(plan):
+            out[drum] = ' '.join(' '.join(raws[i]) if plan[i] == drum else '-4' for i in range(4))
+        return out
+
+    groups = [{g for _, _, g in b if g} for b in beats]
+    if any(groups[i] & groups[j] for i in range(4) for j in range(i + 1, 4)):
+        raise ValueError(f'a tuplet group straddles a beat in: {fill}')
+
+    def track_of(i: int, n) -> str | None:
+        if n.rest:
+            return None
+        if n.is_foot:
+            return 'BD' if n.hand == 'K' else 'HP'
+        if not plan[i]:
+            raise ValueError(f'beat {i + 1} has hand notes but no drum in plan {plan}: {fill}')
+        return plan[i]
+
+    playing = [{track_of(i, n) for _, n, _ in beats[i]} - {None} for i in range(4)]
+    order = [plan[i] for i in range(4) if plan[i] in playing[i]]
+    order += [t for t in ('BD', 'HP') if any(t in p for p in playing)]
+    out = {}
+    for track in dict.fromkeys(order):
+        bars = []
+        for i in range(4):
+            if track not in playing[i]:
+                bars.append('-4')
+                continue
+            bars.append(_beat_for(track, i, beats[i], track_of))
+        out[track] = ' '.join(bars)
     return out
+
+
+_RESTS = [(24, '-4'), (18, '-8.'), (12, '-8'), (9, '-16.'), (6, '-16'), (3, '-32')]
+
+
+def _rest_tokens(pos: int, length: int) -> list[str]:
+    """Pausen für `length` Ticks ab Position `pos` in der Zählzeit, möglichst wenige Zeichen."""
+    out = []
+    while length:
+        for v, tok in _RESTS:
+            aligned = {24: pos % 24 == 0, 18: pos % 24 in (0, 6), 12: pos % 6 == 0, 6: pos % 6 == 0}.get(v, True)
+            if v <= length and aligned:
+                out.append(tok)
+                pos += v
+                length -= v
+                break
+        else:
+            raise ValueError(f'no rest for {length} ticks at {pos}')
+    return out
+
+
+def _beat_for(track: str, i: int, items, track_of) -> str:
+    """Eine Zählzeit für eine Spur: eigene Tokens, fremde als Pausen (außerhalb von Tuplets verschmolzen)."""
+    out: list[str] = []
+    pos = 0
+    rest = 0  # angesammelte Pause (Ticks) außerhalb von Tuplets
+
+    def flush():
+        nonlocal rest
+        if rest:
+            out.extend(_rest_tokens(pos - rest, rest))
+            rest = 0
+
+    k = 0
+    while k < len(items):
+        tok, n, g = items[k]
+        if g:
+            members = []
+            while k < len(items) and items[k][2] == g:
+                members.append(items[k])
+                k += 1
+            ticks = sum(m[1].ticks() for m in members)
+            if any(track_of(i, m[1]) == track for m in members):
+                flush()
+                toks = [m[0] if track_of(i, m[1]) == track else
+                        ('-' + str(m[1].value) + ('.' if m[1].dotted else '')) for m in members]
+                toks[0] = f'{n.tuplet}(' + toks[0]
+                toks[-1] += ')'
+                out.extend(toks)
+            else:
+                rest += ticks
+            pos += ticks
+            continue
+        if track_of(i, n) == track:
+            flush()
+            out.append(tok)
+        else:
+            rest += n.ticks()
+        pos += n.ticks()
+        k += 1
+    flush()
+    return ' '.join(out)
 
 
 # Trommel-Pläne je Zeile (Zählzeit 1–4). Toms und Crash immer mit `~` (Instrument-Klasse).
@@ -70,18 +172,23 @@ GROOVES: dict[str, tuple[dict[str, str], dict[str, str]]] = {  # (Takt 1 mit Cra
 }
 
 
-def phrase(groove: str, fill: str, plan: list[str]) -> str:
+def fill_bar(fill: str, plan: list[str | None]) -> dict[str, str]:
+    """Der Fill-Takt als Spuren; hat der Fill keine eigene Kick, hält der Fuß 1 und 3."""
+    bar = orchestrate(fill, plan)
+    if 'BD' not in bar:
+        bar['BD'] = BD13
+    return bar
+
+
+def phrase(groove: str, fill: str, plan: list[str | None]) -> str:
     first, time = GROOVES[groove]
-    fill_bar = {**orchestrate(fill, plan), 'BD': BD13}
-    return kit(first, time, time, fill_bar)
+    return kit(first, time, time, fill_bar(fill, plan))
 
 
-def challenge(groove: str, fill_a: str, plan_a: list[str], fill_b: str, plan_b: list[str]) -> str:
+def challenge(groove: str, fill_a: str, plan_a: list[str | None], fill_b: str, plan_b: list[str | None]) -> str:
     """Acht Takte in einem kit(...)-Aufruf: zweimal drei Time-Takte und ein Fill."""
     first, time = GROOVES[groove]
-    a = {**orchestrate(fill_a, plan_a), 'BD': BD13}
-    b = {**orchestrate(fill_b, plan_b), 'BD': BD13}
-    return kit(first, time, time, a, first, time, time, b)
+    return kit(first, time, time, fill_bar(fill_a, plan_a), first, time, time, fill_bar(fill_b, plan_b))
 
 
 _PAD = {s.id: s for s in fills.SHEETS}

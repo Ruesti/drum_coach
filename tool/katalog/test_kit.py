@@ -201,5 +201,35 @@ class FootSide(unittest.TestCase):
         self.assertEqual([n.side for n in kl.tracks[1].notes][:4], ['R', 'L', 'R', 'L'])
 
 
+class OrchestrateFeet(unittest.TestCase):
+    def test_foot_tokens_go_to_bd(self):
+        from set_fills import orchestrate
+        out = orchestrate('R16 L16 K16 K16 R16 L16 K16 K16 R16 L16 K16 K16 R16 L16 K16 K16',
+                          ['SN', 'T1~', 'F1~', 'SN'])
+        self.assertEqual(out['BD'], '-8 K16 K16 -8 K16 K16 -8 K16 K16 -8 K16 K16')
+        self.assertEqual(out['SN'], 'R16 L16 -8 -4 -4 R16 L16 -8')
+        self.assertEqual(out['T1~'], '-4 R16 L16 -8 -4 -4')
+        self.assertNotIn('HP', out)
+
+    def test_sided_feet_keep_their_side(self):
+        from set_fills import orchestrate
+        out = orchestrate('R16 L16 R16 L16 R16 L16 R16 L16 K16r K16l K16r K16l K16r K16l K16r K16l',
+                          ['SN', 'T1~', 'F1~', 'SN'])
+        self.assertEqual(out['BD'], '-4 -4 K16r K16l K16r K16l K16r K16l K16r K16l')
+        self.assertNotIn('F1~', out)  # no hand token on beats 3–4 → no F1 track
+
+    def test_mixed_tuplet_group_is_split_with_rests(self):
+        from set_fills import orchestrate
+        out = orchestrate('6(R16 L16 K16 R16 L16 K16) R4 R4 R4', ['SN', 'SN', 'SN', 'SN'])
+        self.assertEqual(out['SN'].split(' ', 2)[:2], ['6(R16', 'L16'])
+        self.assertIn('6(-16 -16 K16 -16 -16 K16)', out['BD'])
+        self.assertIn('6(R16 L16 -16 R16 L16 -16)', out['SN'])
+
+    def test_linear_check(self):
+        from set_more import is_linear
+        self.assertTrue(is_linear(parse_kit_line('HH: R8 -8 R8 -8 R8 -8 R8 -8\nSN: -8 L8 -8 L8 -8 L8 -8 L8')))
+        self.assertFalse(is_linear(parse_kit_line('HH: R8 R8 R8 R8 R8 R8 R8 R8\nSN: -4 L4 -4 L4')))
+
+
 if __name__ == '__main__':
     unittest.main()

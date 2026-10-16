@@ -188,4 +188,26 @@ void main() {
     expect(kick.beats.take(4).map((b) => b.hand).toList(),
         [Hand.right, Hand.left, Hand.right, Hand.left]);
   });
+
+  test('set_more: linear sheets are linear, fills carry their own feet', () {
+    bool linear(ExerciseLine l) {
+      final ticks = <int>{};
+      for (final v in l.kitVoices) {
+        for (final o in onsetsOf(v.beats, NoteGrid.sixteenth)) {
+          if (!ticks.add(o.tick)) return false;
+        }
+      }
+      return true;
+    }
+    final lin = rudimentsSeedData.firstWhere((r) => r.id == 'groove_linear');
+    expect(lin.sheet.length, 9);
+    expect(lin.lines.every(linear), isTrue, reason: 'groove_linear is not linear');
+    final fill = rudimentsSeedData.firstWhere((r) => r.id == 'set_fill_linear');
+    expect(sheetBars(fill), 40);
+    final db = rudimentsSeedData.firstWhere((r) => r.id == 'set_fill_double_bass');
+    expect(db.hasFootSides, isTrue);
+    expect(db.limbs.contains(Limb.doubleBass), isTrue);
+    final k16 = rudimentsSeedData.firstWhere((r) => r.id == 'groove_kick_sixteenths');
+    expect(sheetBars(k16), 24);
+  });
 }

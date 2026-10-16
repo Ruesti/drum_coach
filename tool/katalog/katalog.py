@@ -14,6 +14,7 @@ import fills
 import grooves
 import rudimente
 import set_fills
+import set_more
 from blatt import Sheet
 
 
@@ -72,6 +73,15 @@ SETS: list[SheetSet] = [
              'anders oder länger soll.',
         seed_marker='PHASE B.4c: feet',
         sheets=feet.SHEETS,
+    ),
+    SheetSet(
+        key='set_more', step='B.4c', title='Linear, Double-Bass-Fill, Kick-Sechzehntel, Half-time Shuffle',
+        lead='Nachtrag B.4c: zwei Fill-Blätter, deren Füße mitspielen — Linear Fill (Hände und Kick abwechselnd, '
+             'nie gleichzeitig) und Double Bass Fill (Hände beginnen, beide Füße beenden den Takt) —, dazu der '
+             'Linear Groove (kein Sechzehntel doppelt belegt), der Sixteenth Kick Groove und der Half-time '
+             'Shuffle. Sag mir je Blatt und Zeilennummer, was raus, anders oder länger soll.',
+        seed_marker='PHASE B.4c: more fills and grooves',
+        sheets=set_more.SHEETS,
     ),
 ]
 

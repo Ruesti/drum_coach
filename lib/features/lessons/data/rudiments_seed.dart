@@ -43,6 +43,11 @@ import 'sheets/feet_double_bass_sixteenths_sheet.dart';
 import 'sheets/feet_double_bass_triplets_sheet.dart';
 import 'sheets/feet_hihat_foot_sheet.dart';
 import 'sheets/feet_ostinatos_sheet.dart';
+import 'sheets/set_fill_linear_sheet.dart';
+import 'sheets/set_fill_double_bass_sheet.dart';
+import 'sheets/groove_linear_sheet.dart';
+import 'sheets/groove_kick_sixteenths_sheet.dart';
+import 'sheets/groove_halftime_shuffle_sheet.dart';
 
 // A plain list (not const) since 30.09.: the sample sheet is built with the
 // étude DSL, which is not const-constructible.
@@ -2134,5 +2139,105 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: feetOstinatosPattern,
     technique: feetOstinatosLesson,
     lines: feetOstinatosSheet,
+  ),
+  // ─── PHASE B.4c: more fills and grooves ────────────────────────────────────
+
+  Rudiment(
+    id: 'set_fill_linear',
+    name: "Linear Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "Hands and kick take turns, one note per sixteenth, around snare and toms after a rock sixteenths groove.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillLinearPatternVoices,
+    sticking: setFillLinearPattern,
+    technique: setFillLinearLesson,
+    lines: setFillLinearSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_double_bass',
+    name: "Double Bass Fill (Kit)",
+    skills: {Skill.fill, Skill.endurance},
+    genres: {Genre.metal},
+    description:
+        "The hands start the fill on snare and toms and both feet finish it with a sixteenth-note roll, crash on the one.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.doubleBass},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillDoubleBassPatternVoices,
+    sticking: setFillDoubleBassPattern,
+    technique: setFillDoubleBassLesson,
+    lines: setFillDoubleBassSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_linear',
+    name: "Linear Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "Hi-hat, snare and kick never play together: every sixteenth belongs to one voice, with ghost notes between the backbeats.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveLinearPatternVoices,
+    sticking: grooveLinearPattern,
+    technique: grooveLinearLesson,
+    lines: grooveLinearSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_kick_sixteenths',
+    name: "Sixteenth Kick Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock, Genre.funk},
+    description:
+        "A steady rock backbeat with the kick on the \"e\" and \"a\" between the eighths, from eighth to sixteenth hats.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveKickSixteenthsPatternVoices,
+    sticking: grooveKickSixteenthsPattern,
+    technique: grooveKickSixteenthsLesson,
+    lines: grooveKickSixteenthsSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_halftime_shuffle',
+    name: "Half-time Shuffle",
+    skills: {Skill.groove, Skill.control},
+    genres: {Genre.rock, Genre.funk},
+    description:
+        "Shuffle hi-hat, backbeat on 3 and ghost notes on the middle triplet notes: the Purdie shuffle.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveHalftimeShufflePatternVoices,
+    sticking: grooveHalftimeShufflePattern,
+    technique: grooveHalftimeShuffleLesson,
+    lines: grooveHalftimeShuffleSheet,
   ),
 ];
