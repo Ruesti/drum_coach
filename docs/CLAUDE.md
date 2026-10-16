@@ -214,10 +214,18 @@ Spec: `docs/BRIEF_ETAPPE2_SET.md`, Phase B. Plan: `docs/superpowers/plans/2026-1
   `kit_layout.dart`: onset value = gap to the next onset capped at the beat, rests
   fill the rest) laid out on one `StaffScale`, so equal ticks share x. Rows are
   `kitRowPitch` (132) high. Cursor by tick (`activeTick`), `SheetGeometry.rowOfTick`.
+  Sticking letters (S23 test 16.10.): only for a voice that alternates its limb pair in
+  the line (any R and any L; feet: both sides) — `KitLineLayout.handLetters` /
+  `footLetters` (`kitLettersOf`); where two such voices coincide the earlier one wins.
+  Kit sheets carry no count syllables (`count_lines` must be 0, `blatt.py` checks).
 - Playback: `buildVoicesPlayback` mixes the voices (loudest per tick), onsets = union
   of sounding columns; `SheetPlan.voices` concatenates per instrument (rests where a
-  line lacks the voice). The band keeps quiet in the voices the player plays
-  (`backingKick`/`backingHihat` on `setBacking`).
+  line lacks the voice). Backing on a kit unit (S23 test 16.10.,
+  `practice/kit_backing.dart`): no style — with Backing on the band plays the unit's
+  own kick and hi-hat voices (incl. pedal) with the backing samples
+  (`kitBackingTracks` → `setBacking(kitTracks:)` → `buildLoopPlan(kitTracks:)`), with it
+  off nothing (click only); snare/toms/cymbals have no samples and stay in the pattern
+  sound. Pad units keep the automatic style (`backingFor`).
 - Measurement of kit exercises is **Phase B.3** (not yet): the practice screen opens
   no source for `isKit`, header `NOT MEASURABLE`, chip tooltip "Full-kit measurement
   is not available yet".

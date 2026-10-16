@@ -9,6 +9,7 @@ import 'package:drum_coach/features/lessons/models/pattern_playback.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/lessons/models/sheet_plan.dart';
 import 'package:drum_coach/features/metronome/backing_styles.dart';
+import 'package:drum_coach/features/metronome/loop_voices.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
 import 'package:drum_coach/features/practice/backdrop.dart';
@@ -70,19 +71,23 @@ class _RecordingPlayingMetronomeNotifier extends _RecordingMetronomeNotifier {
 class _BackingFlagsMetronomeNotifier extends MetronomeNotifier {
   ({bool kick, bool hihat})? last;
   String? lastStyleId;
+  List<KitSoundTrack> lastKitTracks = const [];
   @override
   MetronomeState build() => const MetronomeState();
   @override
   void setBacking(String? styleId,
       {required int beatsPerBar,
       bool backingKick = true,
-      bool backingHihat = true}) {
+      bool backingHihat = true,
+      List<KitSoundTrack> kitTracks = const []}) {
     last = (kick: backingKick, hihat: backingHihat);
     lastStyleId = styleId;
+    lastKitTracks = kitTracks;
     super.setBacking(styleId,
         beatsPerBar: beatsPerBar,
         backingKick: backingKick,
-        backingHihat: backingHihat);
+        backingHihat: backingHihat,
+        kitTracks: kitTracks);
   }
 }
 
@@ -1171,14 +1176,29 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('mutes the band voices the player covers', (tester) async {
-      final rec = _BackingFlagsMetronomeNotifier();
-      await _pumpScreen(tester,
-          screen: _screen(id: 'kit_showcase'),
-          metronome: () => rec,
-          extraOverrides: kitCatalog());
-      await tester.pump();
-      expect(rec.last, (kick: false, hihat: false));
+    testWidgets(
+        'Backing on: the band plays the line\'s own kick and hi-hat, '
+        'no style; off: nothing (S23 test 16.10.)', (tester) async {
+      Future<_BackingFlagsMetronomeNotifier> run(bool on) async {
+        await SettingsService.setBackingEnabled(on);
+        final rec = _BackingFlagsMetronomeNotifier();
+        await _pumpScreen(tester,
+            screen: _screen(id: 'kit_showcase'),
+            metronome: () => rec,
+            extraOverrides: kitCatalog());
+        await tester.pump();
+        await tester.pumpWidget(const SizedBox());
+        return rec;
+      }
+
+      final on = await run(true);
+      expect(on.lastStyleId, isNull);
+      // Line 1 of the showcase: hi-hat, snare, kick → hi-hat + kick.
+      expect(on.lastKitTracks.map((t) => t.sound),
+          unorderedEquals([KitSound.hihat, KitSound.kick]));
+      final off = await run(false);
+      expect(off.lastStyleId, isNull);
+      expect(off.lastKitTracks, isEmpty);
     });
 
     testWidgets('no microphone listens: the band plays on a phone without '
@@ -1201,8 +1221,7 @@ void main() {
       }
 
       final kit = await run('kit_showcase');
-      expect(kit.lastStyleId, isNotNull);
-      expect(kit.last, (kick: false, hihat: false));
+      expect(kit.lastKitTracks, isNotEmpty);
       final pad = await run(rudimentsSeedData.first.id);
       expect(pad.lastStyleId, isNull);
       expect(tester.takeException(), isNull);
@@ -1246,13 +1265,18 @@ void main() {
           findsOneWidget);
     });
 
-    testWidgets('options: the band is silent when the player covers its voices',
-        (tester) async {
+    testWidgets(
+        'options: Backing on = the band plays kick and hi-hat with you, '
+        'off = click only', (tester) async {
       await _pumpScreen(tester,
           screen: _screen(id: 'kit_showcase'), extraOverrides: kitCatalog());
       await tester.tap(find.byIcon(Icons.more_horiz));
       await tester.pumpAndSettle();
-      expect(find.text("Silent — you play the band's voices"), findsOneWidget);
+      expect(find.text('Band plays kick and hi-hat with you'), findsOneWidget);
+      await tester.tap(find.widgetWithText(SwitchListTile, 'Backing'));
+      await tester.pumpAndSettle();
+      expect(find.text('Click only'), findsOneWidget);
+      expect(SettingsService.backingEnabled, isFalse);
     });
   });
 }

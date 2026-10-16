@@ -206,6 +206,7 @@ class MetronomeEngine {
         hihatSoft: _hihatSoftPcm,
         backingKick: _backingKick,
         backingHihat: _backingHihat,
+        kitTracks: hasPattern ? _kitTracks : const [],
       );
     } catch (e) {
       // A broken backing must never silence the exercise: render without it.
@@ -569,6 +570,7 @@ class MetronomeEngine {
   double _backingLevel = 0.7;
   bool _backingKick = true;
   bool _backingHihat = true;
+  List<KitSoundTrack> _kitTracks = const [];
   int _beatsPerBar = 4;
   static final List<double> _kickPcm = kickSamples();
   static final List<double> _hihatLoudPcm = hihatSamples(accent: true);
@@ -578,14 +580,17 @@ class MetronomeEngine {
       {required double level,
       required int beatsPerBar,
       bool backingKick = true,
-      bool backingHihat = true}) {
+      bool backingHihat = true,
+      List<KitSoundTrack> kitTracks = const []}) {
     if (_backing == style &&
         _backingLevel == level &&
         _beatsPerBar == beatsPerBar &&
         _backingKick == backingKick &&
-        _backingHihat == backingHihat) {
+        _backingHihat == backingHihat &&
+        identical(_kitTracks, kitTracks)) {
       return;
     }
+    _kitTracks = kitTracks;
     _backing = style;
     _backingLevel = level;
     _beatsPerBar = beatsPerBar;

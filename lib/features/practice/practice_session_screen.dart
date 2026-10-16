@@ -18,6 +18,7 @@ import '../../data/local/session_log_service.dart';
 import '../coaching/models/session_analysis.dart';
 import 'analysis_announcement.dart';
 import 'auto_backing.dart';
+import 'kit_backing.dart';
 import 'backdrop.dart';
 import '../coaching/services/recording_setup.dart';
 import '../coaching/services/ai_coaching_service.dart';
@@ -37,6 +38,7 @@ import '../lessons/models/pattern_playback.dart';
 import '../lessons/models/rudiment.dart';
 import '../lessons/models/sheet_plan.dart';
 import '../metronome/backing_styles.dart';
+import '../metronome/loop_voices.dart' show KitSoundTrack;
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import '../program/program_provider.dart';
@@ -264,6 +266,11 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// The exercise is a kit sheet: no measurement in Teil 1.
   bool _kitExercise = false;
 
+  /// Kit unit: its own kick/hi-hat voices, played by the band when Backing
+  /// is on (S23 test 16.10.). Built once per unit, so the engine sees the
+  /// same list until the unit changes.
+  List<KitSoundTrack> _kitTracks = const [];
+
   /// The played unit as an ordinary exercise: playback, backing choice and
   /// analysis see only this (spec §2).
   late Rudiment _unit;
@@ -278,6 +285,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _playback = _plan.isKit
         ? buildVoicesPlayback(_plan.voices, rudiment.gridUnit)
         : PatternPlayback.forRudiment(_unit);
+    _kitTracks = _plan.isKit
+        ? kitBackingTracks(_plan.voices, rudiment.gridUnit)
+        : const [];
   }
 
   /// Line or mode change: new unit, new loop, fresh beat log, position
@@ -659,12 +669,19 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _backingStyleId = autoBackingStyle(_unit, bpm: bpm);
     final backingOn = SettingsService.backingEnabled && _backingAllowed;
     _metronomeNotifier
-      ..setClickTrack(SettingsService.clickTrackEnabled && _extrasAllowed)
-      ..setBacking(backingOn ? _backingStyleId : null,
-          beatsPerBar: _unit.beatsPerBar,
-          // Brief B.4: the band keeps quiet in the voices the player plays.
-          backingKick: !_plan.playsKick,
-          backingHihat: !_plan.playsHihat);
+        .setClickTrack(SettingsService.clickTrackEnabled && _extrasAllowed);
+    final b = backingFor(
+        isKit: _plan.isKit,
+        backingOn: backingOn,
+        styleId: _backingStyleId,
+        playsKick: _plan.playsKick,
+        playsHihat: _plan.playsHihat,
+        kitTracks: _kitTracks);
+    _metronomeNotifier.setBacking(b.styleId,
+        beatsPerBar: _unit.beatsPerBar,
+        backingKick: b.kick,
+        backingHihat: b.hihat,
+        kitTracks: b.kitTracks);
   }
 
   /// Ask the platform for headphones, then re-apply the extras. Failure
@@ -731,7 +748,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               analysisMode: _analysisMode,
               backingEnabled: SettingsService.backingEnabled,
               backingStyleLabel: backingStyleById(_backingStyleId)?.label,
-              backingSilentKit: _plan.playsKick && _plan.playsHihat,
+              backingKit: _plan.isKit,
               backingLevel: SettingsService.backingLevel,
               extrasAllowed: _extrasAllowed,
               backingAllowed: _backingAllowed,
@@ -1819,7 +1836,7 @@ class _OptionsSheet extends StatefulWidget {
     required this.analysisMode,
     required this.backingEnabled,
     required this.backingStyleLabel,
-    required this.backingSilentKit,
+    required this.backingKit,
     required this.backingLevel,
     required this.extrasAllowed,
     required this.backingAllowed,
@@ -1852,8 +1869,9 @@ class _OptionsSheet extends StatefulWidget {
   /// Label of the automatically chosen style, shown under the switch.
   final String? backingStyleLabel;
 
-  /// Kit unit covering both band voices: the band has nothing left to play.
-  final bool backingSilentKit;
+  /// Kit unit: the band plays the unit's own kick and hi-hat (on) or
+  /// nothing (off), never a style.
+  final bool backingKit;
   final double backingLevel;
 
   /// False while analysing without headphones: click track and backing are
@@ -1934,8 +1952,10 @@ class _OptionsSheetState extends State<_OptionsSheet> {
               subtitle: Text(
                 !widget.backingAllowed
                     ? 'Off while the mic listens without headphones — it would hear the band'
-                    : widget.backingSilentKit
-                        ? "Silent — you play the band's voices"
+                    : widget.backingKit
+                        ? (_backingOn
+                            ? 'Band plays kick and hi-hat with you'
+                            : 'Click only')
                         : '${widget.backingStyleLabel ?? 'Off'} · automatic',
                 style: PracticeTypography.body
                     .copyWith(fontSize: 13, color: PracticeColors.textMuted),

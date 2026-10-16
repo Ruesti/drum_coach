@@ -50,8 +50,8 @@ SETS: list[SheetSet] = [
     ),
     SheetSet(
         key='grooves', step='B.4a', title='Sechs Grooves und Open Hi-hat',
-        lead='Phase B.4: der Groove der Band-Stimme als Blatt — Hi-Hat, Snare, Kick spielst du jetzt selbst, die Band '
-             'schweigt in den Stimmen, die du spielst. Hände Hals oben, Füße Hals unten. Sag mir je Blatt und '
+        lead='Phase B.4: der Groove der Band-Stimme als Blatt — Hi-Hat, Snare, Kick spielst du jetzt selbst; mit '
+             'Backing spielt die App Kick und Hi-Hat der Zeile mit, ohne nur den Click. Hände Hals oben, Füße Hals unten. Sag mir je Blatt und '
              'Zeilennummer, was raus, anders oder länger soll.',
         seed_marker='PHASE B.4: kit grooves',
         sheets=grooves.SHEETS,

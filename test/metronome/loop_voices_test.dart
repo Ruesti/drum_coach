@@ -98,8 +98,7 @@ void main() {
     expect(pulseSamples().length, (44100 * 0.012).round());
   });
 
-  test('backing voices the player covers are muted one by one (Brief B.4)',
-      () {
+  test('backing voices the player covers are muted one by one (Brief B.4)', () {
     final rock = backingStyleById('rock8');
     final both = plan(backing: rock, pattern: List.filled(96, 0.85));
     expect(both.voices.length, 3); // pattern, kick, hi-hat
@@ -130,5 +129,44 @@ void main() {
     );
     expect(none.voices.length, 1);
     expect(none.cycleTicks, 96);
+  });
+  test("kit tracks: the unit's own kick and hi-hat, tiled, at the band level",
+      () {
+    final kickVols = [for (var t = 0; t < 96; t++) t % 48 == 0 ? 0.7 : 0.0];
+    final hhVols = [for (var t = 0; t < 96; t++) t % 12 == 0 ? 1.0 : 0.0];
+    final p = buildLoopPlan(
+      patternVolumes: List.filled(96, 0.85),
+      patternLoud: loud,
+      patternSoft: soft,
+      factor: 24,
+      backingLevel: 0.6,
+      kickSound: kick,
+      hihatLoud: hh,
+      hihatSoft: soft,
+      kitTracks: [
+        KitSoundTrack(kickVols, KitSound.kick),
+        KitSoundTrack(hhVols, KitSound.hihat),
+      ],
+    );
+    expect(p.voices.length, 3); // pattern, kick, hi-hat
+    expect(p.cycleTicks, 96);
+    expect(p.voices[1].loudSamples, same(kick));
+    expect(p.voices[1].tickVolumes, kickVols);
+    expect(p.voices[1].gain, 0.6);
+    expect(p.voices[2].loudSamples, same(hh));
+    expect(p.voices[2].softSamples, same(soft));
+    expect(p.voices[2].loudFrom, 0.9);
+    expect(
+        () => buildLoopPlan(
+              patternVolumes: List.filled(96, 0.85),
+              patternLoud: loud,
+              patternSoft: soft,
+              factor: 24,
+              kickSound: kick,
+              hihatLoud: hh,
+              hihatSoft: hh,
+              kitTracks: [KitSoundTrack(List.filled(48, 0.0), KitSound.kick)],
+            ),
+        throwsArgumentError);
   });
 }

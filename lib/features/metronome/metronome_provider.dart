@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/local/settings_service.dart';
 import '../coaching/services/recording_setup.dart';
 import 'backing_styles.dart';
+import 'loop_voices.dart';
 import 'metronome_engine.dart';
 
 part 'metronome_provider.g.dart';
@@ -176,6 +177,7 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   int _beatsPerBar = 4;
   bool _backingKick = true;
   bool _backingHihat = true;
+  List<KitSoundTrack> _kitTracks = const [];
 
   /// Headphone plug/unplug: reroute the engine and tell listening screens.
   @visibleForTesting
@@ -186,19 +188,24 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   }
 
   /// Backing loop next to a pattern (Engine part 1). Unknown ids mean off.
+  /// [kitTracks]: a kit unit's own kick/hi-hat voices the band plays
+  /// instead of a style (S23 test 16.10.).
   void setBacking(String? styleId,
       {required int beatsPerBar,
       bool backingKick = true,
-      bool backingHihat = true}) {
+      bool backingHihat = true,
+      List<KitSoundTrack> kitTracks = const []}) {
     final style = backingStyleById(styleId);
     _beatsPerBar = beatsPerBar;
     _backingKick = backingKick;
     _backingHihat = backingHihat;
+    _kitTracks = kitTracks;
     _engine?.setBacking(style,
         level: state.backingLevel,
         beatsPerBar: beatsPerBar,
         backingKick: backingKick,
-        backingHihat: backingHihat);
+        backingHihat: backingHihat,
+        kitTracks: kitTracks);
     state = style == null
         ? state.copyWith(clearBackingStyle: true)
         : state.copyWith(backingStyleId: style.id);
@@ -210,7 +217,8 @@ class MetronomeNotifier extends _$MetronomeNotifier {
         level: clamped,
         beatsPerBar: _beatsPerBar,
         backingKick: _backingKick,
-        backingHihat: _backingHihat);
+        backingHihat: _backingHihat,
+        kitTracks: _kitTracks);
     state = state.copyWith(backingLevel: clamped);
   }
 
