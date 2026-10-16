@@ -44,6 +44,8 @@ class _LineListScreenState extends ConsumerState<LineListScreen> {
     final id = widget.rudimentId;
     final bpm = await ref.read(suggestedBpmProvider(id).future);
     if (!mounted) return;
+    // Coming back from practice shows the normal list, not the selection.
+    if (_selecting) _leaveSelection();
     await context.push('/practice/$id?lines=$lines&bpm=$bpm');
     // The practice screen remembers the line it played: re-read the mark.
     if (mounted) setState(() {});
@@ -134,7 +136,9 @@ class _LineListScreenState extends ConsumerState<LineListScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _framed(
-                    marked: i == last,
+                    // No accent frame while selecting: it would read as a
+                    // selection.
+                    marked: !_selecting && i == last,
                     child: _card(rudiment, geo, i),
                   ),
                 ),

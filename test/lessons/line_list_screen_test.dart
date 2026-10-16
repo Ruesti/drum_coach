@@ -185,4 +185,38 @@ void main() {
           matchesGoldenFile('../goldens/line_list_$rid.png'));
     });
   }
+
+  testWidgets('playing a selection leaves selection mode for the way back',
+      (tester) async {
+    await pump(tester);
+    await tester.longPress(card(1));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('play-selected')));
+    await tester.pumpAndSettle();
+    expect(find.text('practice:/practice/$id?lines=1&bpm=80'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(Checkbox), findsNothing);
+    expect(find.byKey(const ValueKey('select-mode')), findsOneWidget);
+    // Play all from selection mode, too.
+    await tester.tap(find.byKey(const ValueKey('select-mode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('play-all')));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(Checkbox), findsNothing);
+  });
+
+  testWidgets('no last-practised frame while selecting', (tester) async {
+    await SettingsService.setLastLine(id, 0);
+    await pump(tester);
+    expect(find.byKey(const ValueKey('line-card-last')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('select-mode')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('line-card-last')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('selection-close')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('line-card-last')), findsOneWidget);
+  });
 }
