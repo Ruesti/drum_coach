@@ -44,6 +44,10 @@ void main() {
   }
 
   testWidgets('golden: the whole Rock 8ths sheet', (tester) async {
+    tester.view.physicalSize = const Size(360, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final r = rudimentsSeedData.firstWhere((r) => r.id == 'groove_rock8');
     await tester.pumpWidget(MaterialApp(
         home: Scaffold(
