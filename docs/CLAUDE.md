@@ -77,6 +77,8 @@ lib/
 │       └── next_step_provider.dart
 ├── shared/
 │   ├── widgets/             # Reusable UI components
+│   │   ├── kit_layout.dart          # kit line geometry: hands/feet tracks, shared x per tick
+│   │   └── kit_staff_painting.dart  # five-line kit notation (part of notation_staff_widget.dart)
 │   └── extensions/
 └── data/
     ├── local/
@@ -197,6 +199,32 @@ enum Hand { right, left }
   optional set name. The band is per exercise ("one sheet, one feel"): the
   sextuplet sheet sets `backing: 'rock8'` explicitly, the triplet sheet
   lives in the shuffle, paradiddle and six-note groups are funk.
+
+### Kit exercises (Etappe 2, Phase B.1/B.2/B.4)
+Spec: `docs/BRIEF_ETAPPE2_SET.md`, Phase B. Plan: `docs/superpowers/plans/2026-10-15-etappe2-phase-b1-set-mehrstimmig.md`.
+- A kit line is `ExerciseLine.kit(voices)`: one `Voice(instrument, beats, {accepts})` per
+  instrument, all of the same tick length; `beats` is the first voice. Foot voices
+  (kick, hi-hat pedal) carry `hand: null` (`foot(...)` in the DSL); rests carry none.
+  `Rudiment.patternVoices` is the PATTERN bar; `isKit` = `voicing == kit`;
+  `requiredSensor: midi`. `InstrumentClass` (`anyTom`, `anyCrash`, `anyCymbal`) widens
+  the *measured* instrument (B.3), drawing and playback use the voice's own.
+- Notation (`kit_staff_painting.dart`, part of `notation_staff_widget.dart`): five
+  lines, heads per `kitStaffStep` (B.2 table), hands stems up / feet stems down, one
+  stem per layer and column; both layers are rhythm tracks (`layerTrack`,
+  `kit_layout.dart`: onset value = gap to the next onset capped at the beat, rests
+  fill the rest) laid out on one `StaffScale`, so equal ticks share x. Rows are
+  `kitRowPitch` (132) high. Cursor by tick (`activeTick`), `SheetGeometry.rowOfTick`.
+- Playback: `buildVoicesPlayback` mixes the voices (loudest per tick), onsets = union
+  of sounding columns; `SheetPlan.voices` concatenates per instrument (rests where a
+  line lacks the voice). The band keeps quiet in the voices the player plays
+  (`backingKick`/`backingHihat` on `setBacking`).
+- Measurement of kit exercises is **Phase B.3** (not yet): the practice screen opens
+  no source for `isKit`, header `NOT MEASURABLE`, chip tooltip "Full-kit measurement
+  is not available yet".
+- Catalog: `tool/katalog/grooves.py` (six grooves + Open Hi-hat) and `set_fills.py`
+  (eight fills with real time, Around the Kit) in the track notation (`HH: … / SN: … /
+  BD: …`, `K`/`P` for feet, `~` = instrument class, see `tool/katalog/README.md`);
+  generated like the pad sheets. Goldens: `test/goldens/kit_*.png`.
 
 ## Rudiment Tag Axes & Seed Data
 Rudiments are no longer organized in a single category tree — a rudiment can

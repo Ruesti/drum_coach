@@ -1,6 +1,6 @@
 # DrumCoach
 
-A Flutter app (Android, Linux desktop) for practicing drum rudiments on a practice pad or an electronic kit (MIDI). Metronome,
+A Flutter app (Android, Linux desktop) for practicing drum rudiments on a practice pad and, with an electronic kit via MIDI, on the full kit (grooves and fills in standard drum notation). Metronome,
 sticking notation, spaced-repetition routine, a 12-week Stick Control
 program, and optional AI coaching feedback from a phone microphone.
 
