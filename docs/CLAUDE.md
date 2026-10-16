@@ -225,6 +225,19 @@ Spec: `docs/BRIEF_ETAPPE2_SET.md`, Phase B. Plan: `docs/superpowers/plans/2026-1
   (eight fills with real time, Around the Kit) in the track notation (`HH: … / SN: … /
   BD: …`, `K`/`P` for feet, `~` = instrument class, see `tool/katalog/README.md`);
   generated like the pad sheets. Goldens: `test/goldens/kit_*.png`.
+- Foot sides (Nachtrag B.4c): `foot(v, side: R)` / `K16r` give a foot stroke its foot;
+  a sheet with any sided foot stroke (`Rudiment.hasFootSides`) uses `kitRowPitchWithFeet`
+  (146) and draws a second letter row under the feet stems (`_footLetterY`, hand
+  letters below it). Measurement ignores sides; the catalog page shows no foot sides
+  (its legend says "Fußseiten R/L nur in der App"). Sets: `tool/katalog/feet.py` (7:
+  `feet_kick_control`, `feet_kick_sixteenths`, `feet_double_bass_eighths`,
+  `feet_double_bass_sixteenths`, `feet_double_bass_triplets`, `feet_hihat_foot`,
+  `feet_ostinatos`) and `set_more.py` (5: `set_fill_linear`, `set_fill_double_bass`,
+  `groove_linear`, `groove_kick_sixteenths`, `groove_halftime_shuffle`); `orchestrate`
+  routes `K`/`P` tokens to the `BD`/`HP` tracks. `Sheet.parsed()` runs `check_hands`
+  (`sheetlang.py`) on every kit line: one hand never plays two drums on the same tick
+  (same letter R/L on two hand tracks is an error; feet are exempt, a flam/drag grace
+  counts as the other hand on its main note's tick).
 
 ## Rudiment Tag Axes & Seed Data
 Rudiments are no longer organized in a single category tree — a rudiment can

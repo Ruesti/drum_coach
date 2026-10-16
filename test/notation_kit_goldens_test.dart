@@ -28,6 +28,8 @@ void main() {
     'set_fill_sixteenth_singles',
     'set_fill_paradiddle',
     'set_fill_triplets',
+    'feet_double_bass_sixteenths',
+    'feet_kick_control',
   ];
 
   for (final id in ids) {
@@ -57,5 +59,22 @@ void main() {
     expect(tester.takeException(), isNull);
     await expectLater(find.byType(SheetStaffWidget),
         matchesGoldenFile('goldens/kit_sheet_groove_rock8.png'));
+  });
+
+  testWidgets('golden: the whole Double Bass Eighths sheet', (tester) async {
+    tester.view.physicalSize = const Size(360, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final r =
+        rudimentsSeedData.firstWhere((r) => r.id == 'feet_double_bass_eighths');
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: SingleChildScrollView(
+                child: SizedBox(
+                    width: 360, child: SheetStaffWidget(rudiment: r))))));
+    expect(tester.takeException(), isNull);
+    await expectLater(find.byType(SheetStaffWidget),
+        matchesGoldenFile('goldens/kit_sheet_feet_double_bass_eighths.png'));
   });
 }
