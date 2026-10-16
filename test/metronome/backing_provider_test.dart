@@ -50,4 +50,12 @@ void main() {
     n.notifyAudioRouteChanged();
     expect(container.read(metronomeNotifierProvider).audioRouteChanges, 2);
   });
+
+  test('setBacking accepts mute flags without touching the state', () {
+    final n = container.read(metronomeNotifierProvider.notifier);
+    n.setBacking('rock8', beatsPerBar: 4, backingKick: false, backingHihat: false);
+    expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock8');
+    n.setBackingLevel(0.5);
+    expect(container.read(metronomeNotifierProvider).backingLevel, 0.5);
+  });
 }

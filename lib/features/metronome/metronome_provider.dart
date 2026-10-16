@@ -174,6 +174,8 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   }
 
   int _beatsPerBar = 4;
+  bool _backingKick = true;
+  bool _backingHihat = true;
 
   /// Headphone plug/unplug: reroute the engine and tell listening screens.
   @visibleForTesting
@@ -184,11 +186,19 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   }
 
   /// Backing loop next to a pattern (Engine part 1). Unknown ids mean off.
-  void setBacking(String? styleId, {required int beatsPerBar}) {
+  void setBacking(String? styleId,
+      {required int beatsPerBar,
+      bool backingKick = true,
+      bool backingHihat = true}) {
     final style = backingStyleById(styleId);
     _beatsPerBar = beatsPerBar;
+    _backingKick = backingKick;
+    _backingHihat = backingHihat;
     _engine?.setBacking(style,
-        level: state.backingLevel, beatsPerBar: beatsPerBar);
+        level: state.backingLevel,
+        beatsPerBar: beatsPerBar,
+        backingKick: backingKick,
+        backingHihat: backingHihat);
     state = style == null
         ? state.copyWith(clearBackingStyle: true)
         : state.copyWith(backingStyleId: style.id);
@@ -197,7 +207,10 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   void setBackingLevel(double level) {
     final clamped = level.clamp(0.0, 1.0).toDouble();
     _engine?.setBacking(backingStyleById(state.backingStyleId),
-        level: clamped, beatsPerBar: _beatsPerBar);
+        level: clamped,
+        beatsPerBar: _beatsPerBar,
+        backingKick: _backingKick,
+        backingHihat: _backingHihat);
     state = state.copyWith(backingLevel: clamped);
   }
 

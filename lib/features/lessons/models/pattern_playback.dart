@@ -104,3 +104,42 @@ PatternPlayback buildPatternPlayback(
     onsetTicks: onsetTicks,
   );
 }
+
+/// A kit unit (Brief B.1): every voice on the same tick grid, mixed — a
+/// tick is as loud as its loudest voice (grace ticks included); the onset
+/// ticks are the union of the voices' *sounding* onsets, so the cursor
+/// steps per column, not per note. All voices must have the same length.
+PatternPlayback buildVoicesPlayback(
+  List<Voice> voices,
+  NoteGrid grid, {
+  int ticksPerQuarter = 24,
+  double Function(StrokeBeat) volumeOf = defaultBeatVolume,
+}) {
+  if (voices.isEmpty) throw ArgumentError('kit unit without voices');
+  final parts = [
+    for (final v in voices)
+      buildPatternPlayback(v.beats, grid,
+          ticksPerQuarter: ticksPerQuarter, volumeOf: volumeOf),
+  ];
+  final total = parts.first.totalTicks;
+  final lengths = [for (final p in parts) p.totalTicks];
+  if (lengths.any((l) => l != total)) {
+    throw ArgumentError('voices differ in length: $lengths ticks');
+  }
+  final vols = List<double>.filled(total, 0.0);
+  final onsets = <int>{};
+  for (final p in parts) {
+    for (var t = 0; t < total; t++) {
+      if (p.tickVolumes[t] > vols[t]) vols[t] = p.tickVolumes[t];
+    }
+    for (final t in p.onsetTicks) {
+      if (p.tickVolumes[t] > 0) onsets.add(t);
+    }
+  }
+  return PatternPlayback(
+    ticksPerQuarter: ticksPerQuarter,
+    totalTicks: total,
+    tickVolumes: vols,
+    onsetTicks: onsets.toList()..sort(),
+  );
+}

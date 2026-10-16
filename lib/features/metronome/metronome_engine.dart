@@ -204,6 +204,8 @@ class MetronomeEngine {
         kickSound: _kickPcm,
         hihatLoud: _hihatLoudPcm,
         hihatSoft: _hihatSoftPcm,
+        backingKick: _backingKick,
+        backingHihat: _backingHihat,
       );
     } catch (e) {
       // A broken backing must never silence the exercise: render without it.
@@ -565,21 +567,30 @@ class MetronomeEngine {
   /// 24-tick pattern clock. Sounds are synthesised once per process.
   BackingStyle? _backing;
   double _backingLevel = 0.7;
+  bool _backingKick = true;
+  bool _backingHihat = true;
   int _beatsPerBar = 4;
   static final List<double> _kickPcm = kickSamples();
   static final List<double> _hihatLoudPcm = hihatSamples(accent: true);
   static final List<double> _hihatSoftPcm = hihatSamples(accent: false);
 
   void setBacking(BackingStyle? style,
-      {required double level, required int beatsPerBar}) {
+      {required double level,
+      required int beatsPerBar,
+      bool backingKick = true,
+      bool backingHihat = true}) {
     if (_backing == style &&
         _backingLevel == level &&
-        _beatsPerBar == beatsPerBar) {
+        _beatsPerBar == beatsPerBar &&
+        _backingKick == backingKick &&
+        _backingHihat == backingHihat) {
       return;
     }
     _backing = style;
     _backingLevel = level;
     _beatsPerBar = beatsPerBar;
+    _backingKick = backingKick;
+    _backingHihat = backingHihat;
     _scheduleLoopRebuild();
   }
 

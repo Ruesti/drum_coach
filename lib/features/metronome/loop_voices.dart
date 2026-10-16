@@ -27,6 +27,8 @@ class LoopPlan {
 /// - [backing]: kick + hi-hat from a style, tiled per bar, only on the
 ///   24-tick pattern clock (`factor == 24`); the cycle then grows to
 ///   `lcm(pattern, bar)` and the pattern repeats to fill it.
+/// - [backingKick] / [backingHihat]: false mutes that band voice (Brief B.4:
+///   the band keeps quiet in the voices the player plays).
 LoopPlan buildLoopPlan({
   required List<double> patternVolumes,
   required List<double> patternLoud,
@@ -40,6 +42,8 @@ LoopPlan buildLoopPlan({
   List<double>? kickSound,
   List<double>? hihatLoud,
   List<double>? hihatSoft,
+  bool backingKick = true,
+  bool backingHihat = true,
 }) {
   final patternTicks = patternVolumes.length;
   var cycle = patternTicks;
@@ -82,21 +86,25 @@ LoopPlan buildLoopPlan({
     final kickPcm = kickSound!;
     final hhLoud = hihatLoud!;
     final hhSoft = hihatSoft!;
-    voices.add(LoopVoice(
-      tickVolumes: tileBackingHits(style.kick,
-          beatsPerBar: beatsPerBar, cycleTicks: cycle),
-      loudSamples: kickPcm,
-      softSamples: kickPcm,
-      gain: backingLevel,
-    ));
-    voices.add(LoopVoice(
-      tickVolumes: tileBackingHits(style.hihat,
-          beatsPerBar: beatsPerBar, cycleTicks: cycle),
-      loudSamples: hhLoud,
-      softSamples: hhSoft,
-      loudFrom: 0.9,
-      gain: backingLevel,
-    ));
+    if (backingKick) {
+      voices.add(LoopVoice(
+        tickVolumes: tileBackingHits(style.kick,
+            beatsPerBar: beatsPerBar, cycleTicks: cycle),
+        loudSamples: kickPcm,
+        softSamples: kickPcm,
+        gain: backingLevel,
+      ));
+    }
+    if (backingHihat) {
+      voices.add(LoopVoice(
+        tickVolumes: tileBackingHits(style.hihat,
+            beatsPerBar: beatsPerBar, cycleTicks: cycle),
+        loudSamples: hhLoud,
+        softSamples: hhSoft,
+        loudFrom: 0.9,
+        gain: backingLevel,
+      ));
+    }
   }
   return LoopPlan(cycleTicks: cycle, patternVolumes: tiled, voices: voices);
 }

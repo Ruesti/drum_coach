@@ -97,4 +97,38 @@ void main() {
     expect(rimSamples(accent: false).length, (44100 * 0.10).round());
     expect(pulseSamples().length, (44100 * 0.012).round());
   });
+
+  test('backing voices the player covers are muted one by one (Brief B.4)',
+      () {
+    final rock = backingStyleById('rock8');
+    final both = plan(backing: rock, pattern: List.filled(96, 0.85));
+    expect(both.voices.length, 3); // pattern, kick, hi-hat
+    final noKick = buildLoopPlan(
+      patternVolumes: List.filled(96, 0.85),
+      patternLoud: loud,
+      patternSoft: soft,
+      factor: 24,
+      backing: rock,
+      kickSound: kick,
+      hihatLoud: hh,
+      hihatSoft: hh,
+      backingKick: false,
+    );
+    expect(noKick.voices.length, 2);
+    expect(noKick.voices.last.loudSamples, same(hh));
+    final none = buildLoopPlan(
+      patternVolumes: List.filled(96, 0.85),
+      patternLoud: loud,
+      patternSoft: soft,
+      factor: 24,
+      backing: rock,
+      kickSound: kick,
+      hihatLoud: hh,
+      hihatSoft: hh,
+      backingKick: false,
+      backingHihat: false,
+    );
+    expect(none.voices.length, 1);
+    expect(none.cycleTicks, 96);
+  });
 }

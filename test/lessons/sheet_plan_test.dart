@@ -1,3 +1,4 @@
+import 'package:drum_coach/features/coaching/midi/kit_instrument.dart';
 import 'package:drum_coach/features/lessons/data/etude_dsl.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/lessons/models/sheet_plan.dart';
@@ -67,5 +68,90 @@ void main() {
     expect(barsOf(eighths([R, L, R]), grid: NoteGrid.eighth, beatsPerBar: 4), 1);
     expect(barsOf(const [], grid: NoteGrid.eighth, beatsPerBar: 4), 0);
     expect(sheetBars(r), 4);
+  });
+
+  group('kit units (Brief B.1)', () {
+    List<StrokeBeat> hh8() => eighths([R, R, R, R, R, R, R, R]);
+    List<StrokeBeat> q4(StrokeBeat Function() b) =>
+        [b(), rest(NoteValue.quarter), b(), rest(NoteValue.quarter)];
+    final groove = kitLine([
+      voice(KitInstrument.hiHatClosed, hh8()),
+      voice(KitInstrument.snare, q4(() => note(L, NoteValue.quarter))),
+      voice(KitInstrument.kick, q4(() => foot(NoteValue.quarter))),
+    ]);
+    // Line 2 adds a tom and drops the kick.
+    final fill = kitLine([
+      voice(KitInstrument.hiHatClosed, hh8()),
+      voice(KitInstrument.snare, q4(() => note(L, NoteValue.quarter))),
+      voice(KitInstrument.tom1, q4(() => note(R, NoteValue.quarter)),
+          accepts: InstrumentClass.anyTom),
+    ], repeat: false);
+    final kit = Rudiment(
+        id: 'k',
+        name: 'K',
+        description: '',
+        minBpm: 60,
+        targetBpm: 100,
+        difficulty: Difficulty.beginner,
+        sticking: hh8(),
+        voicing: ExerciseVoicing.kit,
+        lines: [groove, fill]);
+
+    test('a pad plan is one pad voice and not a kit', () {
+      final p = SheetPlan.line(r, 0);
+      expect(p.isKit, isFalse);
+      expect(p.voices.single.instrument, KitInstrument.pad);
+      expect(p.voices.single.beats, same(l1.beats));
+      expect(p.totalTicks, 96);
+      expect(p.lineTickStarts, [0]);
+      expect(p.playsKick, isFalse);
+      expect(p.playsHihat, isFalse);
+    });
+
+    test('a kit line plan carries the voices, ticks and band flags', () {
+      final p = SheetPlan.line(kit, 0);
+      expect(p.isKit, isTrue);
+      expect(p.beats, same(groove.beats));
+      expect(p.voices.map((v) => v.instrument), [
+        KitInstrument.hiHatClosed,
+        KitInstrument.snare,
+        KitInstrument.kick,
+      ]);
+      expect(p.totalTicks, 96);
+      expect(p.playsKick, isTrue);
+      expect(p.playsHihat, isTrue);
+      expect(SheetPlan.line(kit, 1).playsKick, isFalse);
+    });
+
+    test('whole sheet: one voice per instrument, missing voices filled with '
+        'rests, accepts kept', () {
+      final p = SheetPlan.wholeSheet(kit);
+      expect(p.isKit, isTrue);
+      expect(p.totalTicks, 192);
+      expect(p.lineTickStarts, [0, 96]);
+      expect(p.voices.map((v) => v.instrument), [
+        KitInstrument.hiHatClosed,
+        KitInstrument.snare,
+        KitInstrument.kick,
+        KitInstrument.tom1,
+      ]);
+      final kick = p.voices[2];
+      expect(kick.beats.length, 4 + 4); // its line + four quarter rests
+      expect(kick.beats.sublist(4).every((b) => b.isRest), isTrue);
+      final tom = p.voices[3];
+      expect(tom.accepts, InstrumentClass.anyTom);
+      expect(tom.beats.take(4).every((b) => b.isRest), isTrue);
+      expect(tom.beats.length, 8);
+      expect(p.playsKick, isTrue);
+    });
+
+    test('locateTick maps a unit tick to line and tick in line', () {
+      final p = SheetPlan.wholeSheet(kit);
+      expect(p.locateTick(0), (line: 0, tick: 0));
+      expect(p.locateTick(95), (line: 0, tick: 95));
+      expect(p.locateTick(96), (line: 1, tick: 0));
+      expect(p.locateTick(150), (line: 1, tick: 54));
+      expect(SheetPlan.line(kit, 1).locateTick(30), (line: 1, tick: 30));
+    });
   });
 }
