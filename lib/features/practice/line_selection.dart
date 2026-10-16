@@ -31,8 +31,9 @@ List<int> initialLineSelection({
 /// The `?lines=` value for a selection: 1-based, comma separated.
 String linesQuery(List<int> zeroBased) => zeroBased.map((i) => i + 1).join(',');
 
-/// The line bar's label: "Line 3 of 8" for one line, "Step 2 of 4 ·
-/// Line 5 · 1/2" inside a sequence ([line], [step], [pass] 0-based).
+/// The line bar's label: "Line 3 of 8" for one line, "Line 5 · 2 of 4 ·
+/// 1/2" inside a sequence: line, place in the selection, pass ([line],
+/// [step], [pass] 0-based).
 String lineNavLabel({
   required int line,
   required int lineCount,
@@ -43,7 +44,7 @@ String lineNavLabel({
 }) =>
     steps <= 1
         ? 'Line ${line + 1} of $lineCount'
-        : 'Step ${step + 1} of $steps · Line ${line + 1} · '
+        : 'Line ${line + 1} · ${step + 1} of $steps · '
             '${pass + 1}/$repeats';
 
 /// Session-log fields for the played unit: the 1-based line for one line;

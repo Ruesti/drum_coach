@@ -1405,8 +1405,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
 // ── Line bar ───────────────────────────────────────────────────────────────────
 
-/// Under the one-line view: ‹ label › — "Line 3 of 8" or "Step 2 of 4 ·
-/// Line 5 · 1/2" (see [lineNavLabel]).
+/// Under the one-line view: ‹ label › — "Line 3 of 8" or "Line 5 · 2 of 4 ·
+/// 1/2" (see [lineNavLabel]).
 class _LineBar extends StatelessWidget {
   final String label;
   final bool canPrev;

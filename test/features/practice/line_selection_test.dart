@@ -43,7 +43,7 @@ void main() {
     expect(
         lineNavLabel(
             line: 4, lineCount: 8, step: 1, steps: 4, pass: 0, repeats: 2),
-        'Step 2 of 4 · Line 5 · 1/2');
+        'Line 5 · 2 of 4 · 1/2');
   });
   test('sessionLogSheetFields: line number for one line, selection for a '
       'sequence', () {

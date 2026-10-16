@@ -200,7 +200,7 @@ enum Hand { right, left }
 - Practice screen: `LineView` shows only the current line (one bar per
   row on phones; the window scrolls row by row with the played row on
   top). Header bar `‹ Line 3 of 8 ›` for a single line, or
-  `Step 2 of 4 · Line 5 · 1/2` for a sequence; ‹/› in a sequence turns
+  `Line 5 · 2 of 4 · 1/2` for a sequence; ‹/› in a sequence turns
   its start point. Route params `?lines=all|1,3,5` (1-based), `?line=N` as
   alias, `?mode=` is ignored. Last practised line per exercise
   `SettingsService.lastLineFor`; repeats per line
