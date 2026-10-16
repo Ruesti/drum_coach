@@ -310,7 +310,8 @@ def _layer_tokens(tracks: list[Track], total: int, *, feet: bool) -> list[tuple[
     """(Tick, ABC-Token) je Einsatz/Pause einer Schicht — Akkord je Spalte, Pausen bis zum nächsten Einsatz.
 
     Je Zählzeit gerechnet (Lücken sind am Schlag gedeckelt). Eine Zählzeit mit Triolen/Sextolen
-    wird auf das Tuplet-Raster (8 bzw. 4 Ticks) gelegt, Pausen füllen die Lücken, und der erste
+    wird auf das Tuplet-Raster (8 bzw. 4 Ticks) gelegt, Pausen füllen die Lücken (in Tuplets auch bei den
+    Füßen sichtbar `z`, weil abcjs eine unsichtbare `x` dort nicht setzen kann), und der erste
     Token trägt die ABC-Klammer `(3` bzw. `(6:4:6` (wie `line_to_abc` bei den Pad-Zeilen)."""
     by_tick: dict[int, list[tuple[Track, Note]]] = {}
     tuplet_of: dict[int, int] = {}  # Zählzeit → Tuplet (0 = gerade)
@@ -345,7 +346,8 @@ def _layer_tokens(tracks: list[Track], total: int, *, feet: bool) -> list[tuple[
             value = 8 if tup == 3 else 16
             for tick in range(start, end, unit):
                 length = _abc_len(value, False)
-                out.append((tick, note_token(tick, length) if tick in by_tick else rest_ch + length))
+                # In Tuplets immer sichtbare Pause: abcjs 6.4.4 bricht bei `x` in `(3…` ab.
+                out.append((tick, note_token(tick, length) if tick in by_tick else 'z' + length))
             out[first] = (start, ('(3' if tup == 3 else '(6:4:6') + out[first][1])
             continue
         ticks = [t for t in sorted(by_tick) if start <= t < end]

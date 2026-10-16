@@ -130,6 +130,12 @@ class AbcTuplets(unittest.TestCase):
         self.assertEqual(hands.count('z'), 4)
         self.assertEqual(_abc_ticks(hands.split('|:')[1].split(':|')[0]), 96)
 
+    def test_foot_triplet_rest_is_visible(self):
+        # abcjs 6.4.4 bricht bei einer unsichtbaren Pause `x` in einer Triole ab (TypeError …'top').
+        _, feet = self.voices('HH: -1\nBD: 3(K8 -8 K8) -4 -4 -4')
+        self.assertIn('(3F z F', feet)
+        self.assertNotIn('(3F x', feet)
+
 
 if __name__ == '__main__':
     unittest.main()
