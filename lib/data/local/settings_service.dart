@@ -193,17 +193,18 @@ class SettingsService {
   static bool get showCounts => _prefs.getBool('show_counts') ?? true;
   static Future<void> setShowCounts(bool v) => _prefs.setBool('show_counts', v);
 
-  /// Last line (0-based) and mode played per exercise; the practice screen
-  /// resumes there.
-  static ({int line, bool sheet}) sheetPositionFor(String exerciseId) => (
-        line: _prefs.getInt('sheet_line_$exerciseId') ?? 0,
-        sheet: _prefs.getBool('sheet_mode_$exerciseId') ?? false,
-      );
-  static Future<void> setSheetPosition(String exerciseId,
-      {required int line, required bool sheet}) async {
-    await _prefs.setInt('sheet_line_$exerciseId', line);
-    await _prefs.setBool('sheet_mode_$exerciseId', sheet);
-  }
+  /// Last line (0-based) played per exercise; null = never practised.
+  /// The practice screen opens there when the route names no lines.
+  static int? lastLineFor(String exerciseId) =>
+      _prefs.getInt('sheet_line_$exerciseId');
+  static Future<void> setLastLine(String exerciseId, int line) =>
+      _prefs.setInt('sheet_line_$exerciseId', line);
+
+  /// Passes per line in a sequence of selected lines (1–4, default 2).
+  static int get sequenceRepeats =>
+      (_prefs.getInt('sequence_repeats') ?? 2).clamp(1, 4);
+  static Future<void> setSequenceRepeats(int n) =>
+      _prefs.setInt('sequence_repeats', n.clamp(1, 4));
 
   // ── Practice-session snapshot ────────────────────────────────────────────
   // Written when the app goes to background mid-session so the timer survives
@@ -214,14 +215,14 @@ class SettingsService {
     required int elapsedSeconds,
     int? goalSeconds,
     int sessionSeconds = 0,
-    int line = 0,
-    bool sheet = false,
+    List<int> lines = const [0],
+    int start = 0,
   }) async {
     await _prefs.setString('practice_snap_id', rudimentId);
     await _prefs.setInt('practice_snap_elapsed', elapsedSeconds);
     await _prefs.setInt('practice_snap_session', sessionSeconds);
-    await _prefs.setInt('practice_snap_line', line);
-    await _prefs.setBool('practice_snap_sheet', sheet);
+    await _prefs.setString('practice_snap_lines', lines.join(','));
+    await _prefs.setInt('practice_snap_start', start);
     if (goalSeconds != null) {
       await _prefs.setInt('practice_snap_goal', goalSeconds);
     } else {
@@ -237,8 +238,8 @@ class SettingsService {
     int elapsedSeconds,
     int? goalSeconds,
     int sessionSeconds,
-    int line,
-    bool sheet,
+    List<int> lines,
+    int start,
   })? practiceSnapshotFor(
     String rudimentId, {
     Duration maxAge = const Duration(hours: 1),
@@ -249,12 +250,20 @@ class SettingsService {
     if (time == null || DateTime.now().difference(time) > maxAge) return null;
     final elapsed = _prefs.getInt('practice_snap_elapsed');
     if (elapsed == null || elapsed <= 0) return null;
+    // Before 16.10. a snapshot held one line (`practice_snap_line`).
+    final stored = _prefs.getString('practice_snap_lines');
+    final lines = stored == null
+        ? [_prefs.getInt('practice_snap_line') ?? 0]
+        : [
+            for (final p in stored.split(','))
+              if (int.tryParse(p) != null) int.parse(p),
+          ];
     return (
       elapsedSeconds: elapsed,
       goalSeconds: _prefs.getInt('practice_snap_goal'),
       sessionSeconds: _prefs.getInt('practice_snap_session') ?? 0,
-      line: _prefs.getInt('practice_snap_line') ?? 0,
-      sheet: _prefs.getBool('practice_snap_sheet') ?? false,
+      lines: lines.isEmpty ? const [0] : lines,
+      start: _prefs.getInt('practice_snap_start') ?? 0,
     );
   }
 
@@ -266,5 +275,7 @@ class SettingsService {
     await _prefs.remove('practice_snap_time');
     await _prefs.remove('practice_snap_line');
     await _prefs.remove('practice_snap_sheet');
+    await _prefs.remove('practice_snap_lines');
+    await _prefs.remove('practice_snap_start');
   }
 }

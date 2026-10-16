@@ -11,13 +11,13 @@ void main() {
       durationMinutes: 8,
     );
     expect(practiceRouteFor(block),
-        '/practice/single_paradiddle?bpm=84&min=8&ladder=1');
+        '/practice/single_paradiddle?lines=all&bpm=84&min=8&ladder=1');
   });
 
   test('omits empty parameters', () {
     const block =
         ExerciseBlock(type: BlockType.warmup, exerciseKey: 'single_stroke_roll');
-    expect(practiceRouteFor(block), '/practice/single_stroke_roll');
+    expect(practiceRouteFor(block), '/practice/single_stroke_roll?lines=all');
   });
 
   test('carries the program phase for the practice backdrop', () {
@@ -41,7 +41,8 @@ void main() {
     );
     final route =
         practiceRouteFor(block, ctx: 'Day 9 · Step 2 of 3 · 84 BPM');
-    expect(route, startsWith('/practice/single_paradiddle?bpm=84&min=8&ctx='));
+    expect(route,
+        startsWith('/practice/single_paradiddle?lines=all&bpm=84&min=8&ctx='));
     expect(Uri.parse(route).queryParameters['ctx'],
         'Day 9 · Step 2 of 3 · 84 BPM');
   });

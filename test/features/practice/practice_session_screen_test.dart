@@ -19,7 +19,6 @@ import 'package:drum_coach/features/practice/widgets/pulse_bar.dart';
 import 'package:drum_coach/features/practice/widgets/sheet_window.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:drum_coach/shared/widgets/app_badge.dart';
-import 'package:drum_coach/shared/widgets/sheet_geometry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -154,7 +153,7 @@ PracticeSessionScreen _screen({
   String? contextLine,
   int? phase,
   int? line,
-  String? mode,
+  String? lines,
 }) =>
     PracticeSessionScreen(
       rudimentId: id ?? rudimentsSeedData.first.id,
@@ -165,7 +164,7 @@ PracticeSessionScreen _screen({
       contextLine: contextLine,
       phase: phase,
       line: line,
-      mode: mode,
+      lines: lines,
     );
 
 String _backdropOf(WidgetTester tester) => (tester
@@ -201,41 +200,6 @@ void _mockMicPermission(WidgetTester tester) {
 }
 
 void main() {
-  group('initialSheetPosition', () {
-    const none = (line: 0, sheet: false);
-    test('route params win, clamped and parsed leniently', () {
-      expect(
-          initialSheetPosition(
-              lineCount: 11, paramLine: 3, paramMode: 'sheet', remembered: none),
-          (line: 2, sheet: true));
-      expect(
-          initialSheetPosition(
-                  lineCount: 11, paramLine: 99, paramMode: null, remembered: none)
-              .line,
-          0);
-      expect(
-          initialSheetPosition(
-              lineCount: 11, paramLine: 0, paramMode: 'bogus', remembered: none),
-          (line: 0, sheet: false));
-    });
-    test('else the remembered position, clamped into the sheet', () {
-      expect(
-          initialSheetPosition(
-              lineCount: 11,
-              paramLine: null,
-              paramMode: null,
-              remembered: (line: 4, sheet: false)),
-          (line: 4, sheet: false));
-      expect(
-          initialSheetPosition(
-              lineCount: 3,
-              paramLine: null,
-              paramMode: null,
-              remembered: (line: 7, sheet: true)),
-          (line: 0, sheet: true));
-    });
-  });
-
   group('staleTickAfterUnitChange', () {
     final changed = DateTime(2026, 10, 1, 12, 0, 0);
     test('every tick of the old loop is stale until a downbeat after the '
@@ -262,7 +226,7 @@ void main() {
     });
   });
 
-  group('sheet (Blattform)', () {
+  group('lines and sequences', () {
     const sheetId = 'single_paradiddle';
     Rudiment sheetRudiment() =>
         rudimentsSeedData.firstWhere((r) => r.id == sheetId);
@@ -280,67 +244,98 @@ void main() {
     });
 
     testWidgets(
-        'a sheet opens on line 1 with the line bar; › moves to line 2 and '
-        'reloads the loop', (tester) async {
+        'a sheet opens on the remembered line, › moves to line 2 and reloads',
+        (tester) async {
       final rec = _RecordingMetronomeNotifier();
       await _pumpScreen(tester,
           screen: _screen(id: sheetId), metronome: () => rec);
-      expect(find.text('Line 1 / 8'), findsOneWidget);
+      expect(find.text('Line 1 of 8'), findsOneWidget);
       final line2 = SheetPlan.line(sheetRudiment(), 1);
       await tester.tap(find.byKey(const ValueKey('line-next')));
       await tester.pump();
-      expect(find.text('Line 2 / 8'), findsOneWidget);
+      expect(find.text('Line 2 of 8'), findsOneWidget);
       expect(
           rec.volumes.last,
           PatternPlayback.forRudiment(sheetRudiment().withSticking(line2.beats))
               .totalTicks);
-      expect(SettingsService.sheetPositionFor(sheetId),
-          (line: 1, sheet: false));
+      expect(SettingsService.lastLineFor(sheetId), 1);
     });
 
-    testWidgets('Sheet mode plays every line once and shows the bar count',
-        (tester) async {
+    testWidgets('?lines=1,3 plays a sequence: each line twice', (tester) async {
       final rec = _RecordingMetronomeNotifier();
       await _pumpScreen(tester,
-          screen: _screen(id: sheetId), metronome: () => rec);
-      await tester.tap(find.byKey(const ValueKey('mode-sheet')));
-      await tester.pump();
-      expect(find.text('Sheet · 16 bars'), findsOneWidget);
-      expect(find.byKey(const ValueKey('line-next')), findsNothing);
-      expect(rec.volumes.last, 16 * 96);
-      expect(
-          SettingsService.sheetPositionFor(sheetId), (line: 0, sheet: true));
+          screen: _screen(id: sheetId, lines: '1,3'), metronome: () => rec);
+      // Two 2-bar lines, each twice.
+      expect(rec.volumes.last, 2 * 2 * 2 * 96);
+      expect(find.text('Sequence 1 of 2 · Line 1 · 1/2'), findsOneWidget);
+      expect(find.byKey(const ValueKey('mode-line')), findsNothing);
+      expect(find.byKey(const ValueKey('mode-sheet')), findsNothing);
     });
 
-    testWidgets('?line=3 opens line 3; out of range opens line 1',
+    testWidgets('the sequence advances with the cursor', (tester) async {
+      final metronome = _TickingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: sheetId, lines: '1,3'),
+          metronome: () => metronome);
+      metronome.tickTo(2 * 192);
+      await tester.pump();
+      expect(find.text('Sequence 2 of 2 · Line 3 · 1/2'), findsOneWidget);
+      metronome.tickTo(3 * 192);
+      await tester.pump();
+      expect(find.text('Sequence 2 of 2 · Line 3 · 2/2'), findsOneWidget);
+    });
+
+    testWidgets('› in a running sequence wraps and reloads', (tester) async {
+      final rec = _RecordingPlayingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: sheetId, lines: '1,3'), metronome: () => rec);
+      final before = rec.volumes.length;
+      await tester.tap(find.byKey(const ValueKey('line-next')));
+      await tester.pump();
+      expect(find.text('Sequence 2 of 2 · Line 3 · 1/2'), findsOneWidget);
+      expect(rec.volumes.length, before + 1);
+      await tester.tap(find.byKey(const ValueKey('line-next')));
+      await tester.pump();
+      expect(find.text('Sequence 1 of 2 · Line 1 · 1/2'), findsOneWidget);
+      expect(find.text('Stop'), findsOneWidget);
+    });
+
+    testWidgets('the repeats setting is used and capped', (tester) async {
+      await SettingsService.setSequenceRepeats(3);
+      final rec = _RecordingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: 'fill_sixteenth_singles', lines: 'all'),
+          metronome: () => rec);
+      // 8 lines × 4 bars × 3 = 96 bars > 64: two passes each.
+      expect(rec.volumes.last, 64 * 96);
+      expect(find.textContaining(RegExp(r'· 1/2$')), findsOneWidget);
+    });
+
+    testWidgets('lines=all on a one-line exercise plays it alone',
         (tester) async {
+      await _pumpScreen(tester,
+          screen: _screen(id: 'multiple_bounce_roll', lines: 'all'));
+      expect(find.byKey(const ValueKey('line-bar')), findsNothing);
+      expect(find.textContaining('Sequence'), findsNothing);
+    });
+
+    testWidgets('?line=3 opens line 3; ?mode=sheet is ignored', (tester) async {
       final a =
           await _pumpScreen(tester, screen: _screen(id: sheetId, line: 3));
-      expect(find.text('Line 3 / 8'), findsOneWidget);
+      expect(find.text('Line 3 of 8'), findsOneWidget);
       a.dispose();
       // A fresh State: the same widget type in the same place would keep
       // the old one (and its line) alive.
       await tester.pumpWidget(const SizedBox());
-      final b =
-          await _pumpScreen(tester, screen: _screen(id: sheetId, line: 40));
-      expect(find.text('Line 1 / 8'), findsOneWidget);
+      await SettingsService.setLastLine(sheetId, 4);
+      final b = await _pumpScreen(tester,
+          screen: const PracticeSessionScreen(
+              rudimentId: sheetId,
+              isFromRoutine: false,
+              lines: null,
+              line: null));
+      expect(find.text('Line 5 of 8'), findsOneWidget);
       b.dispose();
-    });
-
-    testWidgets('the remembered position is restored', (tester) async {
-      await SettingsService.setSheetPosition(sheetId, line: 4, sheet: false);
-      await _pumpScreen(tester, screen: _screen(id: sheetId));
-      expect(find.text('Line 5 / 8'), findsOneWidget);
-    });
-
-    testWidgets('tapping a line in the window selects it', (tester) async {
-      await _pumpScreen(tester, screen: _screen(id: sheetId));
-      final clip = tester.getRect(find.byType(ClipRect).first);
-      // Row 1 of the window = line 2 (line 1 is one row).
-      await tester.tapAt(Offset(clip.center.dx,
-          clip.top + sheetWindowPad + 1.5 * sheetRowPitchWithCounts));
-      await tester.pump();
-      expect(find.text('Line 2 / 8'), findsOneWidget);
     });
 
     testWidgets('switching lines while playing reloads the loop at once',
@@ -353,7 +348,7 @@ void main() {
       await tester.pump();
       expect(rec.volumes.length, before + 1);
       expect(find.text('Stop'), findsOneWidget);
-      expect(find.text('Line 2 / 8'), findsOneWidget);
+      expect(find.text('Line 2 of 8'), findsOneWidget);
     });
 
     testWidgets('options: sticking letters and count hints switches',

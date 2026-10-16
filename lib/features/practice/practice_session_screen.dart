@@ -43,6 +43,7 @@ import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import '../program/program_provider.dart';
 import 'ladder_plan.dart';
+import 'line_selection.dart';
 import 'practice_provider.dart';
 import 'practice_shortcuts.dart';
 import 'session_timer_provider.dart';
@@ -82,10 +83,11 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   /// Null (free practice) picks it by the exercise's difficulty.
   final int? phase;
 
-  /// Sheet line to open (1-based, `?line=`) and mode (`?mode=line|sheet`).
-  /// Null both: the remembered position of this exercise, else line 1.
+  /// Lines to play, raw from `?lines=` (`all` or 1-based `1,3,5`; see
+  /// [initialLineSelection]) and the single-line alias `?line=` (1-based).
+  /// Null both: the remembered line of this exercise, else line 1.
+  final String? lines;
   final int? line;
-  final String? mode;
 
   /// MIDI port access; null = the real plugin (test seam).
   final MidiPortService? ports;
@@ -99,33 +101,14 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
     this.isLadder = false,
     this.contextLine,
     this.phase,
+    this.lines,
     this.line,
-    this.mode,
     this.ports,
   });
 
   @override
   ConsumerState<PracticeSessionScreen> createState() =>
       _PracticeSessionScreenState();
-}
-
-/// Where a sheet opens: route params (`?line=` 1-based, `?mode=`) win, else
-/// the remembered position, else line 1 in line mode. Anything outside the
-/// sheet falls back to line 1 — never an error (spec §10).
-({int line, bool sheet}) initialSheetPosition({
-  required int lineCount,
-  required int? paramLine,
-  required String? paramMode,
-  required ({int line, bool sheet}) remembered,
-}) {
-  int clampLine(int l) => (l >= 0 && l < lineCount) ? l : 0;
-  if (paramLine != null || paramMode != null) {
-    return (
-      line: clampLine((paramLine ?? 1) - 1),
-      sheet: paramMode == 'sheet',
-    );
-  }
-  return (line: clampLine(remembered.line), sheet: remembered.sheet);
 }
 
 /// Click track rule (27.09., Brief A.5): silent only while the *microphone*
@@ -255,11 +238,15 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// the metronome's per-tick volumes and map the playback cursor to a note.
   late PatternPlayback _playback;
 
-  // Sheet (Blattform, 30.09.): which line is selected, whether the whole
-  // sheet plays, and the resulting unit.
-  late int _lineIndex;
-  late bool _sheetMode;
+  // Lines (16.10.): the selected sheet lines (0-based, play order), the
+  // selection index the loop starts at, and the resulting unit.
+  late List<int> _selection;
+  late int _start;
   late SheetPlan _plan;
+
+  /// Selection step the cursor is on (0 before the start); set in [build]
+  /// without setState, read by ‹ ›.
+  int _shownStep = 0;
 
   /// The exercise is a kit sheet: no measurement in Teil 1.
   bool _kitExercise = false;
@@ -276,11 +263,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
   void _buildUnit(Rudiment rudiment) {
     _kitExercise = rudiment.isKit;
-    _plan = _sheetMode
-        ? SheetPlan.sequence(
-            rudiment, [for (var i = 0; i < rudiment.sheet.length; i++) i],
-            repeats: 1)
-        : SheetPlan.line(rudiment, _lineIndex);
+    _plan = SheetPlan.sequence(rudiment, _selection,
+        repeats: SettingsService.sequenceRepeats, start: _start);
     _unit = rudiment.withSticking(_plan.beats);
     // A kit unit mixes its voices; the cursor then steps per column.
     _playback = _plan.isKit
@@ -293,7 +277,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         _plan.isKit ? kitPatternSound(_plan.voices, rudiment.gridUnit) : null;
   }
 
-  /// Line or mode change: new unit, new loop, fresh beat log, position
+  /// Line or start change: new unit, new loop, fresh beat log, line
   /// remembered. While playing the engine rebuilds and the new unit starts
   /// on its "1" (spec §5).
   void _applyUnitChange() {
@@ -311,8 +295,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       // old unit and would count as extra strokes against the new one.
       if (_measuring) unawaited(_restartMeasuring());
     }
-    SettingsService.setSheetPosition(widget.rudimentId,
-        line: _lineIndex, sheet: _sheetMode);
+    SettingsService.setLastLine(widget.rudimentId, _plan.lineIndex);
   }
 
   /// Set by [_applyUnitChange] while playing; cleared by the first tick of
@@ -341,18 +324,19 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     await _startMeasuring();
   }
 
-  void _selectLine(int i) {
-    final count =
-        ref.read(rudimentByIdProvider(widget.rudimentId)).sheet.length;
-    if (i < 0 || i >= count || (i == _lineIndex && !_sheetMode)) return;
-    _lineIndex = i;
-    _sheetMode = false;
-    _applyUnitChange();
-  }
-
-  void _setSheetMode(bool on) {
-    if (on == _sheetMode) return;
-    _sheetMode = on;
+  /// ‹ › — one line: the neighbouring line (nothing at the ends); a
+  /// sequence: the loop restarts at the previous/next selected line from
+  /// the one the cursor is on, wrapping round.
+  void _step(int delta) {
+    if (_plan.isSequence) {
+      _start = (_shownStep + delta) % _selection.length;
+    } else {
+      final count =
+          ref.read(rudimentByIdProvider(widget.rudimentId)).sheet.length;
+      final i = _plan.lineIndex + delta;
+      if (i < 0 || i >= count) return;
+      _selection = [i];
+    }
     _applyUnitChange();
   }
 
@@ -371,13 +355,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _metronomeNotifier = ref.read(metronomeNotifierProvider.notifier);
     _sessionTimerNotifier = ref.read(sessionTimerNotifierProvider.notifier);
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
-    final pos = initialSheetPosition(
+    _selection = initialLineSelection(
         lineCount: rudiment.sheet.length,
-        paramLine: widget.line,
-        paramMode: widget.mode,
-        remembered: SettingsService.sheetPositionFor(widget.rudimentId));
-    _lineIndex = pos.line;
-    _sheetMode = pos.sheet;
+        linesParam: widget.lines,
+        lineParam: widget.line,
+        rememberedLine: SettingsService.lastLineFor(widget.rudimentId));
+    _start = 0;
     _buildUnit(rudiment);
 
     if (widget.targetMinutes != null) {
@@ -395,10 +378,13 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     if (snap != null) {
       _elapsedSeconds = snap.elapsedSeconds;
       _goalSeconds = snap.goalSeconds ?? _goalSeconds;
-      // Resume on the same line and in the same mode.
-      _lineIndex = snap.line.clamp(0, rudiment.sheet.length - 1);
-      _sheetMode = snap.sheet;
+      // Resume with the same lines and start (lines outside the sheet are
+      // dropped by SheetPlan.sequence).
+      _selection = snap.lines;
+      _start = snap.start;
       _buildUnit(rudiment);
+      _selection = _plan.selection;
+      _start = _plan.start;
       SettingsService.clearPracticeSnapshot();
     }
 
@@ -453,8 +439,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         elapsedSeconds: _elapsedSeconds,
         goalSeconds: _goalSeconds,
         sessionSeconds: ref.read(sessionTimerNotifierProvider),
-        line: _lineIndex,
-        sheet: _sheetMode,
+        lines: _selection,
+        start: _start,
       );
     }
   }
@@ -667,7 +653,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// analysis-mode rule (spec §6): both silent while analysing without
   /// headphones, the mic would hear them.
   void _applyExtras() {
-    // The style follows the played unit (a triplet challenge gets shuffle).
+    // The style follows the played unit (a triplet line gets shuffle).
     final bpm = ref.read(metronomeNotifierProvider).bpm;
     _backingStyleId = autoBackingStyle(_unit, bpm: bpm);
     final backingOn = SettingsService.backingEnabled && _backingAllowed;
@@ -786,15 +772,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                 // the bottom-nav shell), and pushing a shell-branch route from
                 // there caused a duplicate-page-key crash.
                 Navigator.of(screenContext).push(MaterialPageRoute(
-                  builder: (_) => LessonDetailScreen(
-                    rudimentId: widget.rudimentId,
-                    // A line tapped on the sheet there selects it here
-                    // instead of stacking a second practice screen.
-                    onLineTap: (i) {
-                      Navigator.of(screenContext).pop();
-                      _selectLine(i);
-                    },
-                  ),
+                  builder: (_) =>
+                      LessonDetailScreen(rudimentId: widget.rudimentId),
                 ));
               },
             );
@@ -1007,8 +986,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         midiDevice: _midiDeviceName,
         kitMapping: _openedMapping?.encode(),
         mode: _analysisMode ? 'analysis' : 'learn',
-        sheetLine: _sheetMode ? null : _lineIndex + 1,
-        sheetMode: _sheetMode ? 'sheet' : 'line',
+        sheetLine: sessionLogSheetFields(_plan).line,
+        sheetMode: sessionLogSheetFields(_plan).mode,
       );
       await SessionLogService.save(log);
       if (!mounted) return;
@@ -1157,6 +1136,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         activeBeat == null || !_plan.isKit || _playback.onsetTicks.isEmpty
             ? null
             : _plan.locateTick(_playback.onsetTicks[activeBeat]);
+    // Slot, line and selection step under the cursor (slot 0 before the
+    // start) — for the line bar and for ‹ › in a sequence.
+    final cursorSlot = tickLoc?.slot ?? loc?.slot ?? 0;
+    final cursorLine = _plan.lines[cursorSlot];
+    final cursorStep = _plan.stepOf(cursorSlot);
+    _shownStep = cursorStep.step;
     final isPlaying =
         ref.watch(metronomeNotifierProvider.select((s) => s.isPlaying));
     final bpm = ref.watch(metronomeNotifierProvider.select((s) => s.bpm));
@@ -1276,14 +1261,11 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                         curve: Curves.easeOut,
                         child: SheetWindow(
                           rudiment: rudiment,
-                          activeLine:
-                              tickLoc?.line ?? loc?.line ?? _plan.lineIndex,
+                          activeLine: cursorLine,
                           activeIndex: loc?.index,
                           activeTick: tickLoc?.tick,
-                          sheetMode: _sheetMode,
                           showSticking: SettingsService.showSticking,
                           showCounts: SettingsService.showCounts,
-                          onLineTap: _sheetMode ? null : _selectLine,
                         ),
                       ),
                     ),
@@ -1293,13 +1275,18 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                     child: _LineBar(
-                      lineIndex: _lineIndex,
-                      lineCount: rudiment.sheet.length,
-                      sheetMode: _sheetMode,
-                      sheetBars: sheetBars(rudiment),
-                      onPrev: () => _selectLine(_lineIndex - 1),
-                      onNext: () => _selectLine(_lineIndex + 1),
-                      onMode: _setSheetMode,
+                      label: lineNavLabel(
+                          line: cursorLine,
+                          lineCount: rudiment.sheet.length,
+                          step: cursorStep.step,
+                          steps: _plan.selection.length,
+                          pass: cursorStep.pass,
+                          repeats: _plan.repeats),
+                      canPrev: _plan.isSequence || _plan.lineIndex > 0,
+                      canNext: _plan.isSequence ||
+                          _plan.lineIndex < rudiment.sheet.length - 1,
+                      onPrev: () => _step(-1),
+                      onNext: () => _step(1),
                     ),
                   ),
                 // The pulse bar (decided 27.09., instead of the digit
@@ -1404,75 +1391,54 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   late final String _backdrop = nextBackdrop();
 }
 
-// ── Line bar (Blattform) ───────────────────────────────────────────────────────
+// ── Line bar ───────────────────────────────────────────────────────────────────
 
-/// Under the sheet window: ‹ Line 3 / 11 › and the Line | Sheet switch. In
-/// sheet mode the arrows go away and the middle shows the sheet's length.
+/// Under the sheet window: ‹ label › — "Line 3 of 8" or "Sequence 2 of 4 ·
+/// Line 5 · 1/2" (see [lineNavLabel]).
 class _LineBar extends StatelessWidget {
-  final int lineIndex;
-  final int lineCount;
-  final bool sheetMode;
-  final int sheetBars;
+  final String label;
+  final bool canPrev;
+  final bool canNext;
   final VoidCallback onPrev;
   final VoidCallback onNext;
-  final ValueChanged<bool> onMode;
 
   const _LineBar({
-    required this.lineIndex,
-    required this.lineCount,
-    required this.sheetMode,
-    required this.sheetBars,
+    required this.label,
+    required this.canPrev,
+    required this.canNext,
     required this.onPrev,
     required this.onNext,
-    required this.onMode,
   });
 
   @override
   Widget build(BuildContext context) {
-    final label = sheetMode
-        ? 'Sheet · $sheetBars bars'
-        : 'Line ${lineIndex + 1} / $lineCount';
     return SizedBox(
       key: const ValueKey('line-bar'),
       height: 44,
       child: Row(
         children: [
-          if (!sheetMode)
-            IconButton(
-              key: const ValueKey('line-prev'),
-              icon: const Icon(Icons.chevron_left),
-              color: PracticeColors.textPrimary,
-              disabledColor: PracticeColors.textFaint,
-              onPressed: lineIndex > 0 ? onPrev : null,
-            ),
+          IconButton(
+            key: const ValueKey('line-prev'),
+            icon: const Icon(Icons.chevron_left),
+            color: PracticeColors.textPrimary,
+            disabledColor: PracticeColors.textFaint,
+            onPressed: canPrev ? onPrev : null,
+          ),
           Expanded(
             child: Center(
               child: Text(label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: PracticeTypography.label
                       .copyWith(color: PracticeColors.textPrimary)),
             ),
           ),
-          if (!sheetMode)
-            IconButton(
-              key: const ValueKey('line-next'),
-              icon: const Icon(Icons.chevron_right),
-              color: PracticeColors.textPrimary,
-              disabledColor: PracticeColors.textFaint,
-              onPressed: lineIndex < lineCount - 1 ? onNext : null,
-            ),
-          const SizedBox(width: 6),
-          AppSelectableChip(
-            key: const ValueKey('mode-line'),
-            label: 'Line',
-            selected: !sheetMode,
-            onTap: () => onMode(false),
-          ),
-          const SizedBox(width: 6),
-          AppSelectableChip(
-            key: const ValueKey('mode-sheet'),
-            label: 'Sheet',
-            selected: sheetMode,
-            onTap: () => onMode(true),
+          IconButton(
+            key: const ValueKey('line-next'),
+            icon: const Icon(Icons.chevron_right),
+            color: PracticeColors.textPrimary,
+            disabledColor: PracticeColors.textFaint,
+            onPressed: canNext ? onNext : null,
           ),
         ],
       ),
