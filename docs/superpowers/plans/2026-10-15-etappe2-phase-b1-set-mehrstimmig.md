@@ -2147,8 +2147,6 @@ git commit -m "feat(notation): Standard-Schlagzeugnotation — Köpfe je Instrum
       final tom = p.voices[3];
       expect(tom.accepts, InstrumentClass.anyTom);
       expect(tom.beats.take(4).every((b) => b.isRest), isTrue);
-      expect(tom.beats.sublist(4), same(fill.kitVoices[2].beats) ,
-          skip: 'identity is not required');
       expect(tom.beats.length, 8);
       expect(p.playsKick, isTrue);
     });
@@ -2163,8 +2161,6 @@ git commit -m "feat(notation): Standard-Schlagzeugnotation — Köpfe je Instrum
     });
   });
 ```
-
-(Die `skip`-Zeile weglassen — sie steht hier nur, um zu sagen: Identität der Listen ist nicht gefordert, nur Inhalt. Also schlicht `expect(tom.beats.length, 8);`.)
 
 `test/metronome/loop_voices_test.dart`, Test dazu:
 
@@ -3021,7 +3017,7 @@ from sheetlang import KitLine, Line, check_sheet, parse_kit_line, parse_line
     pat = sheet.pattern_line()
     if sheet.kit:
         body = '\n'.join(kit_line_to_dart(ln) for ln in lines)
-        pattern = '\n'.join('  ' + note_to_dart(n) + ',' for n in pat.tracks[0].notes)
+        pattern = None  # kit: `{c}Pattern` is `{c}PatternVoices.first.beats` (one object, see below)
         voices = '\n'.join(voice_to_dart(t, '') for t in pat.tracks)
         extra_import = "import '../../../coaching/midi/kit_instrument.dart';\n"
         pattern_voices = (f'\n/// {sheet.name}: the PATTERN bar, every voice (Brief B.1).\n'
@@ -3035,7 +3031,7 @@ from sheetlang import KitLine, Line, check_sheet, parse_kit_line, parse_line
             else '8 lines of four bars (three bars of time, one bar of fill)')
 ```
 
-   Vorlage: `extra_import` nach `import '../../models/rudiment.dart';`, `pattern_voices` nach dem `{c}Pattern`-Block. Doc der Pattern-Liste für Kit: „the first voice of the PATTERN bar — see {c}PatternVoices".
+   Vorlage: `extra_import` nach `import '../../models/rudiment.dart';`, `pattern_voices` **vor** dem `{c}Pattern`-Block; für Kit-Blätter lautet der Pattern-Block `final List<StrokeBeat> {c}Pattern = {c}PatternVoices.first.beats;` (dasselbe Objekt wie die erste Stimme — der Seed-Integritätstest prüft `same`), Doc „the first voice of the PATTERN bar — see {c}PatternVoices".
 
 `patch_seed.py`, `_entry(s)`:
 
