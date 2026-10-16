@@ -150,6 +150,41 @@ KitLayer layerTrack(List<Voice> voices,
   return KitLayer(track, index);
 }
 
+/// Whether [v] alternates its limb pair somewhere in the line: any right
+/// and any left among its onsets (graces excluded — they live in
+/// `StrokeBeat.graces`, not in `hand`). A hand voice played by one hand
+/// only (hat all R, snare all L) or a foot voice with one side only
+/// carries no letters (Uli, S23 test 16.10.: "R/L only where it changes").
+bool voiceAlternates(Voice v) {
+  var right = false;
+  var left = false;
+  for (final b in v.beats) {
+    if (b.isRest) continue;
+    if (b.hand == Hand.right) right = true;
+    if (b.hand == Hand.left) left = true;
+    if (right && left) return true;
+  }
+  return false;
+}
+
+/// Sticking letters of one layer per tick: at each column the hand of the
+/// first note (layer order = voice order) whose voice alternates; columns
+/// without such a note get none. Computed once per line.
+Map<int, Hand> kitLettersOf(List<KitColumn> columns, {required bool feet}) {
+  final carries = <Voice, bool>{};
+  final out = <int, Hand>{};
+  for (final col in columns) {
+    for (final n in feet ? col.feet : col.hands) {
+      final hand = n.beat.hand;
+      if (hand == null) continue;
+      if (!(carries[n.voice] ??= voiceAlternates(n.voice))) continue;
+      out[col.tick] = hand;
+      break;
+    }
+  }
+  return out;
+}
+
 /// Layout of one kit line: both layers, their shared scale, the columns.
 class KitLineLayout {
   final StaffScale scale;
@@ -163,6 +198,11 @@ class KitLineLayout {
   final Map<int, int> handsIndexOfTick;
   final Map<int, int> feetIndexOfTick;
   final List<KitColumn> columns;
+
+  /// Sticking letters (hands) and foot sides (feet) per tick, only for
+  /// voices that alternate in this line (`kitLettersOf`).
+  final Map<int, Hand> handLetters;
+  final Map<int, Hand> footLetters;
   const KitLineLayout({
     required this.scale,
     required this.beatsPerBar,
@@ -175,6 +215,8 @@ class KitLineLayout {
     required this.handsIndexOfTick,
     required this.feetIndexOfTick,
     required this.columns,
+    required this.handLetters,
+    required this.footLetters,
   });
 
   double xOfTick(int tick) => hands.xOfTick(tick);
@@ -251,5 +293,7 @@ KitLineLayout computeKitLineLayout({
     handsIndexOfTick: handsLayer.indexOfTick,
     feetIndexOfTick: feetLayer.indexOfTick,
     columns: columns,
+    handLetters: kitLettersOf(columns, feet: false),
+    footLetters: kitLettersOf(columns, feet: true),
   );
 }

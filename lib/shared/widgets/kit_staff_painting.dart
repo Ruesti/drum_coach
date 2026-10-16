@@ -86,19 +86,19 @@ extension _KitPainting on _StaffPainter {
       _paintLayerColumn(canvas, col.hands.toList(), x, y0, staffY,
           up: true,
           stemEndY: stemTopY,
-          track: kit.handsTrack,
           layout: kit.hands,
           index: kit.handsIndexOfTick[col.tick],
           beamed: handsBeamed,
-          active: active);
+          active: active,
+          letterHand: kit.handLetters[col.tick]);
       _paintLayerColumn(canvas, col.feet.toList(), x, y0, staffY,
           up: false,
           stemEndY: stemBottomY,
-          track: kit.feetTrack,
           layout: kit.feet,
           index: kit.feetIndexOfTick[col.tick],
           beamed: feetBeamed,
-          active: active);
+          active: active,
+          letterHand: kit.footLetters[col.tick]);
     }
   }
 
@@ -139,18 +139,18 @@ extension _KitPainting on _StaffPainter {
 
   /// One layer at one column: heads on their steps, one stem from the
   /// farthest head to the layer's stem end, flag when not beamed, accent,
-  /// ghost parentheses, dot and letter (hands only).
+  /// ghost parentheses, dot and letter ([letterHand]: the sticking letter or
+  /// foot side, null = none; see `kitLettersOf`).
   void _paintLayerColumn(
       Canvas canvas, List<KitNote> notes, double x, double y0, double staffY,
       {required bool up,
       required double stemEndY,
-      required List<StrokeBeat> track,
       required StaffLayout layout,
       required int? index,
       required Set<int> beamed,
-      required bool active}) {
+      required bool active,
+      required Hand? letterHand}) {
     if (notes.isEmpty || index == null) return;
-    final drawn = track[index];
     final resolved = layout.placements[index].resolved;
     var topY = double.infinity;
     var bottomY = double.negativeInfinity;
@@ -212,8 +212,9 @@ extension _KitPainting on _StaffPainter {
           _dim(_StaffPainter._accentColor));
     }
     if (!up) {
-      // Foot side (double bass): the one side of the column, under the stems.
-      final side = switch (drawn.hand) {
+      // Foot side (double bass): only for a foot voice that alternates
+      // sides in the line (`KitLineLayout.footLetters`), under the stems.
+      final side = switch (letterHand) {
         Hand.right => 'R',
         Hand.left => 'L',
         null => null,
@@ -225,7 +226,7 @@ extension _KitPainting on _StaffPainter {
       }
       return;
     }
-    final letter = switch (drawn.hand) {
+    final letter = switch (letterHand) {
       Hand.right => 'R',
       Hand.left => 'L',
       null => null,

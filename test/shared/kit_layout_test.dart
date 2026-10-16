@@ -239,5 +239,58 @@ void main() {
       expect(kl.scale.pxPerQuarter, 36);
       expect(kl.scale.barsPerRow, 1);
     });
+    group('sticking letters only where a limb pair alternates', () {
+      KitLineLayout lay(List<Voice> voices) => computeKitLineLayout(
+          voices: voices, grid: NoteGrid.eighth, beatsPerBar: 4, maxWidth: 360);
+      final hhq = voice(KitInstrument.hiHatClosed,
+          [for (var i = 0; i < 4; i++) note(R, NoteValue.quarter)]);
+
+      test('one-hand voices (hat all R, snare all L) carry no letters', () {
+        final kl = lay([hhq, sn(), bd()]);
+        expect(kl.handLetters, isEmpty);
+        expect(kl.footLetters, isEmpty);
+        // The merged track still knows the hand of solo columns.
+        expect(kl.handsTrack.first.hand, Hand.right);
+      });
+
+      test(
+          'an alternating 16th hat shows its letter on every column, '
+          'also under the snare on 2 and 4', () {
+        final hh16 = voice(KitInstrument.hiHatClosed,
+            sixteenths([for (var i = 0; i < 16; i++) i.isEven ? R : L]));
+        final kl = lay([hh16, sn(), bd()]);
+        expect(kl.handLetters.length, 16);
+        expect(kl.handLetters[24], Hand.right); // beat 2, snare L there too
+        expect(kl.handLetters[72], Hand.right); // beat 4
+        expect(kl.handLetters[6], Hand.left);
+      });
+
+      test('of two alternating voices on one tick the earlier one wins', () {
+        final a =
+            voice(KitInstrument.hiHatClosed, eighths([R, L, R, L, R, L, R, L]));
+        final b = voice(KitInstrument.snare, eighths([L, R, L, R, L, R, L, R]));
+        final kl = lay([a, b]);
+        expect(kl.handLetters[0], Hand.right);
+        expect(kl.handLetters[12], Hand.left);
+      });
+
+      test('a foot voice with both sides gets side letters', () {
+        final db = voice(KitInstrument.kick, [
+          for (var i = 0; i < 8; i++)
+            foot(NoteValue.eighth, side: i.isEven ? R : L)
+        ]);
+        final kl = lay([hhq, db]);
+        expect(kl.footLetters.length, 8);
+        expect(kl.footLetters[0], Hand.right);
+        expect(kl.footLetters[12], Hand.left);
+        expect(kl.handLetters, isEmpty);
+      });
+
+      test('a foot voice with one side only gets none', () {
+        final right = voice(KitInstrument.kick,
+            [for (var i = 0; i < 8; i++) foot(NoteValue.eighth, side: R)]);
+        expect(lay([hhq, right]).footLetters, isEmpty);
+      });
+    });
   });
 }
