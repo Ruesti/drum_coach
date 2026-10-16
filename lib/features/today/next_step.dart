@@ -48,7 +48,7 @@ PathStep computeNextStep({
         title: nameOf(item.rudimentId),
         detail: '$label · ${item.suggestedBpm} BPM',
         minutes: item.suggestedDurationMinutes,
-        route: '/routine/${item.rudimentId}?bpm=${item.suggestedBpm}',
+        route: '/routine/${item.rudimentId}?bpm=${item.suggestedBpm}&lines=all',
       );
     }
     return const PathStep(

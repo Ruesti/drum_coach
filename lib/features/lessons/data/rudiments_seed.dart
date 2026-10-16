@@ -1,5 +1,53 @@
+import '../../coaching/services/stroke_source.dart';
 import '../models/rudiment.dart';
+import 'sheets/single_stroke_roll_sheet.dart';
+import 'sheets/double_stroke_roll_sheet.dart';
 import 'sheets/single_paradiddle_sheet.dart';
+import 'sheets/double_paradiddle_sheet.dart';
+import 'sheets/paradiddle_diddle_sheet.dart';
+import 'sheets/flam_sheet.dart';
+import 'sheets/flam_accent_sheet.dart';
+import 'sheets/flam_tap_sheet.dart';
+import 'sheets/single_drag_sheet.dart';
+import 'sheets/five_stroke_roll_sheet.dart';
+import 'sheets/seven_stroke_roll_sheet.dart';
+import 'sheets/swiss_army_triplet_sheet.dart';
+import 'sheets/fill_sixteenth_singles_sheet.dart';
+import 'sheets/fill_doubles_sheet.dart';
+import 'sheets/fill_paradiddle_sheet.dart';
+import 'sheets/fill_triplets_sheet.dart';
+import 'sheets/fill_flams_sheet.dart';
+import 'sheets/fill_sextuplets_sheet.dart';
+import 'sheets/fill_six_groups_sheet.dart';
+import 'sheets/fill_roll_sheet.dart';
+import 'sheets/groove_rock8_sheet.dart';
+import 'sheets/groove_rock16_sheet.dart';
+import 'sheets/groove_halftime_sheet.dart';
+import 'sheets/groove_shuffle_sheet.dart';
+import 'sheets/groove_swing_sheet.dart';
+import 'sheets/groove_funk16_sheet.dart';
+import 'sheets/groove_hihat_open_sheet.dart';
+import 'sheets/set_fill_sixteenth_singles_sheet.dart';
+import 'sheets/set_fill_doubles_sheet.dart';
+import 'sheets/set_fill_paradiddle_sheet.dart';
+import 'sheets/set_fill_triplets_sheet.dart';
+import 'sheets/set_fill_flams_sheet.dart';
+import 'sheets/set_fill_sextuplets_sheet.dart';
+import 'sheets/set_fill_six_groups_sheet.dart';
+import 'sheets/set_fill_roll_sheet.dart';
+import 'sheets/set_around_the_kit_sheet.dart';
+import 'sheets/feet_kick_control_sheet.dart';
+import 'sheets/feet_kick_sixteenths_sheet.dart';
+import 'sheets/feet_double_bass_eighths_sheet.dart';
+import 'sheets/feet_double_bass_sixteenths_sheet.dart';
+import 'sheets/feet_double_bass_triplets_sheet.dart';
+import 'sheets/feet_hihat_foot_sheet.dart';
+import 'sheets/feet_ostinatos_sheet.dart';
+import 'sheets/set_fill_linear_sheet.dart';
+import 'sheets/set_fill_double_bass_sheet.dart';
+import 'sheets/groove_linear_sheet.dart';
+import 'sheets/groove_kick_sixteenths_sheet.dart';
+import 'sheets/groove_halftime_shuffle_sheet.dart';
 
 // A plain list (not const) since 30.09.: the sample sheet is built with the
 // étude DSL, which is not const-constructible.
@@ -16,45 +64,9 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     minBpm: 60,
     targetBpm: 200,
     difficulty: Difficulty.beginner,
-    sticking: [
-      StrokeBeat(hand: Hand.right, isAccent: true),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-    ],
-    technique: [
-      TechniqueSection(
-        title: 'Motion',
-        body:
-            'Let the stick rebound naturally after impact — no active lifting. '
-            'The motion comes from the wrist; keep the arm relaxed. '
-            'Both hands should look and sound identical.',
-      ),
-      TechniqueSection(
-        title: 'Common Mistakes',
-        body:
-            '• Gripping too tightly on the rebound — the stick needs room to move\n'
-            '• Uneven volume between right and left\n'
-            '• Raising the shoulders at higher tempos',
-      ),
-      TechniqueSection(
-        title: 'Practice Plan',
-        body:
-            'Start at 60 BPM in eighth notes. Only speed up once both hands '
-            'sound like one. Use a metronome and listen for gaps or rushing. '
-            'Practice in front of a mirror to compare hand positions.',
-      ),
-      TechniqueSection(
-        title: 'Musical Application',
-        body:
-            'The foundation for everything — fills, hi-hat patterns, ghost note grooves. '
-            'Without a solid single stroke roll, no other rudiment works.',
-      ),
-    ],
+    sticking: singleStrokeRollPattern,
+    technique: singleStrokeRollLesson,
+    lines: singleStrokeRollSheet,
   ),
 
   Rudiment(
@@ -67,47 +79,9 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     minBpm: 60,
     targetBpm: 180,
     difficulty: Difficulty.beginner,
-    sticking: [
-      StrokeBeat(hand: Hand.right, isAccent: true),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left, isAccent: true),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right, isAccent: true),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left, isAccent: true),
-      StrokeBeat(hand: Hand.left),
-    ],
-    technique: [
-      TechniqueSection(
-        title: 'Motion',
-        body:
-            'First stroke: full stick height, active wrist throw. '
-            'Second stroke: controlled rebound — the stick "falls" back. '
-            'At slow tempos: two deliberate strokes. At speed: '
-            'the rebound takes over the second stroke automatically.',
-      ),
-      TechniqueSection(
-        title: 'Common Mistakes',
-        body:
-            '• Second stroke quieter than the first\n'
-            '• Not enough finger control — the fingers assist the rebound\n'
-            '• Strokes evenly spaced instead of close together',
-      ),
-      TechniqueSection(
-        title: 'Practice Plan',
-        body:
-            'First practice each double stroke extremely slowly as two separate, '
-            'deliberate motions. Increase the tempo step by step. '
-            'The "click-click" should start to feel like a single "clack".',
-      ),
-      TechniqueSection(
-        title: 'Musical Application',
-        body:
-            'The core of the buzz roll at top speed. '
-            'Double strokes on snare and toms for fills. '
-            'Important in Latin rhythms (conga transfers).',
-      ),
-    ],
+    sticking: doubleStrokeRollPattern,
+    technique: doubleStrokeRollLesson,
+    lines: doubleStrokeRollSheet,
   ),
 
   Rudiment(
@@ -129,30 +103,26 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Motion',
-        body:
-            'Press the stick lightly into the head — a guided press, not a '
+        body: 'Press the stick lightly into the head — a guided press, not a '
             'clamped grip. The stick bounces multiple times freely. '
             'The pressure controls the density of the bounces. '
             'Alternate hands so that no gap is audible.',
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Lifting the stick between strokes (audible gaps)\n'
+        body: '• Lifting the stick between strokes (audible gaps)\n'
             '• Too much or too little pressure\n'
             '• Uneven hand-to-hand transitions',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'First find the right amount of pressure with one hand. '
+        body: 'First find the right amount of pressure with one hand. '
             'Then practice each hand separately. Only combine them once '
             'each hand produces an even buzz on its own.',
       ),
       TechniqueSection(
         title: 'Musical Application',
-        body:
-            'Crescendo rolls and fermata strokes. Essential in orchestral '
+        body: 'Crescendo rolls and fermata strokes. Essential in orchestral '
             'and marching band playing. Gives snare solos dramatic expression.',
       ),
     ],
@@ -170,16 +140,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     minBpm: 60,
     targetBpm: 120,
     difficulty: Difficulty.beginner,
-    sticking: [
-      StrokeBeat(hand: Hand.right, isAccent: true),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left, isAccent: true),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.left),
-    ],
+    sticking: singleParadiddlePattern,
     technique: singleParadiddleLesson,
     lines: singleParadiddleSheet,
   ),
@@ -194,49 +155,9 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     minBpm: 50,
     targetBpm: 100,
     difficulty: Difficulty.intermediate,
-    sticking: [
-      StrokeBeat(hand: Hand.right, isAccent: true),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left, isAccent: true),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.left),
-    ],
-    technique: [
-      TechniqueSection(
-        title: 'Motion',
-        body:
-            '12 notes per cycle: RLRLRR / LRLRLL. '
-            'Four single strokes, then a double stroke. '
-            'The accent on note 1 alternates automatically between R and L. '
-            'Think: "Para-para-diddle".',
-      ),
-      TechniqueSection(
-        title: 'Common Mistakes',
-        body:
-            '• Losing track of which hand is leading\n'
-            '• Uneven subdivisions\n'
-            '• The double stroke breaking the flow of the groove',
-      ),
-      TechniqueSection(
-        title: 'Practice Plan',
-        body:
-            'Count "1-e-+-a-2-+" to place the 12-note group in a 12/8 feel. '
-            'Start extremely slowly with accents, then build the tempo.',
-      ),
-      TechniqueSection(
-        title: 'Musical Application',
-        body:
-            'Sits naturally over triplet rhythms (12/8, shuffle). '
-            'Common in jazz and fusion. Great for fills across three beats.',
-      ),
-    ],
+    sticking: doubleParadiddlePattern,
+    technique: doubleParadiddleLesson,
+    lines: doubleParadiddleSheet,
   ),
 
   Rudiment(
@@ -249,48 +170,9 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     minBpm: 60,
     targetBpm: 100,
     difficulty: Difficulty.intermediate,
-    sticking: [
-      StrokeBeat(hand: Hand.right, isAccent: true),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.left, isAccent: true),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.right),
-    ],
-    technique: [
-      TechniqueSection(
-        title: 'Motion',
-        body:
-            '6 notes: R-L-RR-LL. Think: "Para-did-dle-did-dle". '
-            'The pattern splits into three groups of two, which creates '
-            'a 3-over-2 polyrhythm when repeated.',
-      ),
-      TechniqueSection(
-        title: 'Common Mistakes',
-        body:
-            '• Double strokes at different volumes\n'
-            '• Rushing the second double stroke (LL)\n'
-            '• Losing the accent at higher tempos',
-      ),
-      TechniqueSection(
-        title: 'Practice Plan',
-        body:
-            'Think in groups of six. Practice as triplets (3+3 over 4/4) '
-            'to develop the polyrhythmic feel.',
-      ),
-      TechniqueSection(
-        title: 'Musical Application',
-        body:
-            'Creates a polyrhythmic feel at speed. '
-            'Very effective in drum solos and for complex fills.',
-      ),
-    ],
+    sticking: paradiddleDiddlePattern,
+    technique: paradiddleDiddleLesson,
+    lines: paradiddleDiddleSheet,
   ),
 
   // ─── FLAMS ────────────────────────────────────────────────────────────────
@@ -305,46 +187,9 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     minBpm: 60,
     targetBpm: 120,
     difficulty: Difficulty.intermediate,
-    sticking: [
-      // Each flam is one quarter-note stroke with a grace note struck just
-      // before it (see StrokeBeat.graces) — not two separate, evenly-spaced
-      // beats. 4 quarters = 1 bar, same total length as before.
-      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, graces: [Hand.left]),
-      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, graces: [Hand.right]),
-      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, graces: [Hand.left]),
-      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, graces: [Hand.right]),
-    ],
-    technique: [
-      TechniqueSection(
-        title: 'Stick Heights',
-        body:
-            'Grace note hand: hold the stick 2–3 cm above the head. '
-            'Primary stroke hand: stick 20–25 cm high. '
-            'Both sticks land almost together — the grace note just before. '
-            'After the flam, the hands swap heights.',
-      ),
-      TechniqueSection(
-        title: 'Common Mistakes',
-        body:
-            '• Grace note too loud — sounds like two separate strokes\n'
-            '• Both hands at the same height\n'
-            '• Flam too "open" (too much time between grace note and primary stroke)',
-      ),
-      TechniqueSection(
-        title: 'Practice Plan',
-        body:
-            'Practice extremely slowly. Keep the grace note hand close to the head '
-            'and move only the primary stroke hand. '
-            'Accept an "open" flam at first and tighten it up gradually.',
-      ),
-      TechniqueSection(
-        title: 'Musical Application',
-        body:
-            'Adds weight and texture to snare accents. '
-            'A classic in rock, rudimental, and marching drumming. '
-            'Makes fills more dramatic and "fatter".',
-      ),
-    ],
+    sticking: flamPattern,
+    technique: flamLesson,
+    lines: flamSheet,
   ),
 
   Rudiment(
@@ -357,44 +202,9 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     minBpm: 50,
     targetBpm: 100,
     difficulty: Difficulty.intermediate,
-    sticking: [
-      // Flam as one quarter-note stroke with a grace note, followed by two
-      // eighth-note taps — same 2-quarters-per-group length as before.
-      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, graces: [Hand.left]),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, graces: [Hand.right]),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left),
-    ],
-    technique: [
-      TechniqueSection(
-        title: 'Motion',
-        body:
-            'Each group: a flam (lR or rL) followed by two taps. '
-            'The flam is the accent; the two taps stay quiet. '
-            'Say: "FLAM-tap-tap, FLAM-tap-tap".',
-      ),
-      TechniqueSection(
-        title: 'Common Mistakes',
-        body:
-            '• Taps after the flam too loud\n'
-            '• Flam not tight enough\n'
-            '• Tempo collapsing after the flam',
-      ),
-      TechniqueSection(
-        title: 'Practice Plan',
-        body:
-            'First practice each group in isolation: flam, tap, tap — rest. '
-            'Then connect them. Accent the flam strongly and play the taps very softly.',
-      ),
-      TechniqueSection(
-        title: 'Musical Application',
-        body:
-            'A classic rudimental pattern. Ideal for snare solos and fills. '
-            'Ubiquitous in marching percussion.',
-      ),
-    ],
+    sticking: flamAccentPattern,
+    technique: flamAccentLesson,
+    lines: flamAccentSheet,
   ),
 
   Rudiment(
@@ -410,11 +220,19 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: [
       // Flam as one quarter-note stroke with a grace note, followed by the
       // paradiddle's remaining three eighth-note taps — same length as before.
-      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, graces: [Hand.left]),
+      StrokeBeat(
+          hand: Hand.right,
+          isAccent: true,
+          value: NoteValue.quarter,
+          graces: [Hand.left]),
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.right),
       StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, graces: [Hand.right]),
+      StrokeBeat(
+          hand: Hand.left,
+          isAccent: true,
+          value: NoteValue.quarter,
+          graces: [Hand.right]),
       StrokeBeat(hand: Hand.right),
       StrokeBeat(hand: Hand.left),
       StrokeBeat(hand: Hand.left),
@@ -422,29 +240,25 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Motion',
-        body:
-            'A paradiddle with a flam on the first stroke of each group. '
+        body: 'A paradiddle with a flam on the first stroke of each group. '
             'lRLRR: grace note left, primary stroke right, then continue L-R-R. '
             'The grace note must stay tight to the flam despite the following strokes.',
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Grace note getting lost in the rest of the pattern\n'
+        body: '• Grace note getting lost in the rest of the pattern\n'
             '• Unstable tempo after the flam\n'
             '• Losing control of the double stroke at the end',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Master the single paradiddle without the flam first. '
+        body: 'Master the single paradiddle without the flam first. '
             'Then slowly add the grace note. '
             'Very slow practice (40 BPM) is essential here.',
       ),
       TechniqueSection(
         title: 'Musical Application',
-        body:
-            'A high level of stick control. Impressive texture for '
+        body: 'A high level of stick control. Impressive texture for '
             'drum solos and complex fills. Requires solid paradiddle and flam control.',
       ),
     ],
@@ -462,43 +276,9 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     minBpm: 50,
     targetBpm: 100,
     difficulty: Difficulty.intermediate,
-    sticking: [
-      // A drag is two grace notes struck just before the accented main
-      // stroke (see StrokeBeat.graces), not three separate, evenly-spaced
-      // beats. Dotted quarter (1.5 quarters) matches the old 3-eighths length.
-      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, dotted: true, graces: [Hand.left, Hand.left]),
-      StrokeBeat(hand: Hand.left, isAccent: true, value: NoteValue.quarter, dotted: true, graces: [Hand.right, Hand.right]),
-    ],
-    technique: [
-      TechniqueSection(
-        title: 'What Is a Drag?',
-        body:
-            'A drag is two ghost notes (ll or rr) placed right before '
-            'the primary stroke. They sound like a miniature double stroke. '
-            'The drag should feel like a single event, not three.',
-      ),
-      TechniqueSection(
-        title: 'Motion',
-        body:
-            'Play the two ghost notes very tight and soft, almost together. '
-            'Then the primary stroke at full volume. '
-            'Think: "drr-HIT, drr-HIT", not "l-l-R".',
-      ),
-      TechniqueSection(
-        title: 'Common Mistakes',
-        body:
-            '• Drag notes too loud or too far apart\n'
-            '• Drag sounding like three separate strokes\n'
-            '• The drag pushing the primary stroke off time',
-      ),
-      TechniqueSection(
-        title: 'Practice Plan',
-        body:
-            'First practice only the drag (ll) without the primary stroke. '
-            'Then add the primary stroke. The drag should sound "crushed" — '
-            'packed tight against the accent.',
-      ),
-    ],
+    sticking: singleDragPattern,
+    technique: singleDragLesson,
+    lines: singleDragSheet,
   ),
 
   Rudiment(
@@ -514,37 +294,43 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: [
       // Drag (two grace notes) + accent as one dotted-quarter stroke,
       // followed by a tap — same 2-quarters-per-group length as before.
-      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, dotted: true, graces: [Hand.left, Hand.left]),
+      StrokeBeat(
+          hand: Hand.right,
+          isAccent: true,
+          value: NoteValue.quarter,
+          dotted: true,
+          graces: [Hand.left, Hand.left]),
       StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right, isAccent: true, value: NoteValue.quarter, dotted: true, graces: [Hand.left, Hand.left]),
+      StrokeBeat(
+          hand: Hand.right,
+          isAccent: true,
+          value: NoteValue.quarter,
+          dotted: true,
+          graces: [Hand.left, Hand.left]),
       StrokeBeat(hand: Hand.left),
     ],
     technique: [
       TechniqueSection(
         title: 'Structure',
-        body:
-            'Drag + accent + tap, then repeat: llR L / llR L. '
+        body: 'Drag + accent + tap, then repeat: llR L / llR L. '
             'Four strokes per group in total: two ghost notes, one accent, one tap. '
             'The tap after the accent sits at medium volume.',
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Rushing after the drag\n'
+        body: '• Rushing after the drag\n'
             '• Tap after the accent too loud or too quiet\n'
             '• Drags opening up at higher tempos',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Count in groups of four. The drag takes almost no time — '
+        body: 'Count in groups of four. The drag takes almost no time — '
             'it gets "squeezed" in right before beat 1. '
             'Practice the drag separately until it locks in automatically.',
       ),
       TechniqueSection(
         title: 'Musical Application',
-        body:
-            'A complex rudimental pattern. Appears in snare drum etudes '
+        body: 'A complex rudimental pattern. Appears in snare drum etudes '
             'and drum corps music.',
       ),
     ],
@@ -579,8 +365,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Origin',
-        body:
-            '"Lesson 25" comes from traditional drum corps instruction. '
+        body: '"Lesson 25" comes from traditional drum corps instruction. '
             'Two drags followed by a double stroke: llR llR R. '
             'The name refers to lesson no. 25 in classic method books.',
       ),
@@ -593,15 +378,13 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Closing double stroke too loud or too quiet\n'
+        body: '• Closing double stroke too loud or too quiet\n'
             '• Drags getting wider and louder under pressure\n'
             '• Timing drifting on the second drag',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'This pattern takes time. '
+        body: 'This pattern takes time. '
             'Start at 40 BPM and only speed up after weeks of practice. '
             'Work on each drag separately until it locks in.',
       ),
@@ -634,8 +417,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'The Concept',
-        body:
-            'Ghost notes are so quiet they are barely audible — '
+        body: 'Ghost notes are so quiet they are barely audible — '
             'they "feel" the groove rather than define it. '
             'The dynamic difference between accent and ghost note '
             'must be dramatic: accents from 20–25 cm stick height, '
@@ -643,22 +425,19 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Motion',
-        body:
-            'Accent hand: the wrist snaps down from full height. '
+        body: 'Accent hand: the wrist snaps down from full height. '
             'Ghost note hand: the stick hovers just above the head — '
             'minimal motion, no wrist throw.',
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Ghost notes too loud — they dominate the groove\n'
+        body: '• Ghost notes too loud — they dominate the groove\n'
             '• Stick height too low on accents\n'
             '• Imprecise ghost note timing',
       ),
       TechniqueSection(
         title: 'Musical Application',
-        body:
-            'The foundation of funk and R&B drumming. '
+        body: 'The foundation of funk and R&B drumming. '
             'Ghost notes give the groove depth and "feel". '
             'Think Steve Gadd, Vinnie Colaiuta, Questlove.',
       ),
@@ -689,16 +468,14 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Core Principle',
-        body:
-            'Volume comes from stick height, not from force. '
+        body: 'Volume comes from stick height, not from force. '
             'Forte = high stick (20–25 cm), relaxed wrist, '
             'fast throw. Piano = low stick (2–3 cm), '
             'controlled, small motion.',
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Controlling volume with grip pressure (wrong!)\n'
+        body: '• Controlling volume with grip pressure (wrong!)\n'
             '• Forte strokes too tense\n'
             '• Piano strokes shaky or uneven',
       ),
@@ -711,8 +488,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Why It Matters',
-        body:
-            'Dynamic control is musicality. If you can control volume, '
+        body: 'Dynamic control is musicality. If you can control volume, '
             'you can serve any style — from quiet jazz to hard rock. '
             'It is the most fundamental means of expression on the drums.',
       ),
@@ -747,29 +523,25 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'What Does Linear Mean?',
-        body:
-            'Linear means only one hand strikes at a time. '
+        body: 'Linear means only one hand strikes at a time. '
             'No unison hits. The hands fill each other\'s gaps, '
             'creating a flowing, even stream of notes.',
       ),
       TechniqueSection(
         title: 'Motion',
-        body:
-            'Accents from 20 cm, taps from 10 cm, ghost notes from 2 cm. '
+        body: 'Accents from 20 cm, taps from 10 cm, ghost notes from 2 cm. '
             'The different heights within the pattern give it '
             'depth and groove. No two strokes are alike.',
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Hesitating between notes — the pattern must flow\n'
+        body: '• Hesitating between notes — the pattern must flow\n'
             '• Every note at the same volume\n'
             '• Tempo breaking on R-to-R or L-to-L transitions',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Start at 50 BPM and play the pattern until it feels automatic. '
+        body: 'Start at 50 BPM and play the pattern until it feels automatic. '
             'Then speed up. To move it onto the drum set, '
             'assign each hand to a different instrument.',
       ),
@@ -780,8 +552,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     id: 'linear_beat_2',
     name: 'Linear Beat 2',
     skills: {Skill.coordination, Skill.fill},
-    description:
-        'A second linear combination exploring a different grouping. '
+    description: 'A second linear combination exploring a different grouping. '
         'Practice slowly to internalize the pattern before building speed. '
         'Ghost notes add texture without disturbing the groove.',
     minBpm: 60,
@@ -802,31 +573,27 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Structure',
-        body:
-            'A different grouping than Linear Beat 1. '
+        body: 'A different grouping than Linear Beat 1. '
             'Same-hand doubles (RR, LL) are allowed — '
             'that sets it apart from a purely alternating linear pattern. '
             'Accents on positions 1, 5, and 9 create a 10-note phrase.',
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Doubles (RR, LL) too loud or uneven\n'
+        body: '• Doubles (RR, LL) too loud or uneven\n'
             '• Losing the accent pattern\n'
             '• Ghost notes missing or too loud',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Learn the accent pattern on its own first. '
+        body: 'Learn the accent pattern on its own first. '
             'Then add the ghost notes and taps. '
             'Count the 10-note group deliberately to find your entry point '
             'when looping.',
       ),
       TechniqueSection(
         title: 'Musical Application',
-        body:
-            'Funk and fusion grooves. Creates complexity without heaviness. '
+        body: 'Funk and fusion grooves. Creates complexity without heaviness. '
             'Sources of inspiration: Tony Williams, Vinnie Colaiuta.',
       ),
     ],
@@ -859,8 +626,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Start at 50–60 BPM. Only speed up once both hands truly '
+        body: 'Start at 50–60 BPM. Only speed up once both hands truly '
             'sound the same. Practice with your eyes closed too.',
       ),
     ],
@@ -870,8 +636,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     id: 'akzent_zwei_vier',
     name: 'Accents on 2 and 4',
     skills: {Skill.control},
-    description:
-        'Backbeat training: accent the strokes on beats 2 and 4 while '
+    description: 'Backbeat training: accent the strokes on beats 2 and 4 while '
         '1 and 3 stay quiet. The foundation for snare backbeats.',
     minBpm: 50,
     targetBpm: 160,
@@ -885,14 +650,12 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Goal',
-        body:
-            'Internalize the backbeat. The accent on 2 and 4 must land '
+        body: 'Internalize the backbeat. The accent on 2 and 4 must land '
             'automatically, without thinking. It is the basis of every rock and pop groove.',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Count "1-2-3-4" out loud while you play. Feel the pulse on '
+        body: 'Count "1-2-3-4" out loud while you play. Feel the pulse on '
             '2 and 4. Many drum students train this daily.',
       ),
     ],
@@ -963,8 +726,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Ghost notes too loud (uncontrolled rebound)\n'
+        body: '• Ghost notes too loud (uncontrolled rebound)\n'
             '• Accents too quiet (afraid of losing the rhythm)\n'
             '• Tempo wavering on transitions between ghost and accent',
       ),
@@ -1011,8 +773,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Musical Application',
-        body:
-            'Perfect for triplet fills. Spread across three toms, RLRRLL '
+        body: 'Perfect for triplet fills. Spread across three toms, RLRRLL '
             'becomes an ascending phrase. Popular in fusion and Latin.',
       ),
     ],
@@ -1022,8 +783,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     id: 'six_stroke_roll',
     name: 'Six Stroke Roll',
     skills: {Skill.control},
-    description:
-        'RLLRRL — six strokes with two doubles in the middle. '
+    description: 'RLLRRL — six strokes with two doubles in the middle. '
         'Combines single and double strokes into one flowing pattern.',
     minBpm: 50,
     targetBpm: 160,
@@ -1039,14 +799,12 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Motion',
-        body:
-            'The first and last strokes are accents with a full throw. '
+        body: 'The first and last strokes are accents with a full throw. '
             'The four middle strokes (LLRR) use rebound and stay quieter.',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Start slowly: accent — double — double — accent. '
+        body: 'Start slowly: accent — double — double — accent. '
             'Then raise the tempo until the transitions feel seamless.',
       ),
     ],
@@ -1056,8 +814,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     id: 'gleichmaessigkeit_16tel',
     name: 'Evenness — Sixteenth Notes',
     skills: {Skill.control},
-    description:
-        'Sixteenth notes in strict alternation, no accents. '
+    description: 'Sixteenth notes in strict alternation, no accents. '
         'Pure control and endurance training for both hands.',
     minBpm: 60,
     targetBpm: 200,
@@ -1124,15 +881,13 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Actively lifting the arm instead of letting it fall\n'
+        body: '• Actively lifting the arm instead of letting it fall\n'
             '• Taps too loud (no contrast with the accent volume)\n'
             '• Starting too fast — slow is harder here',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Start extremely slowly (40 BPM). Only raise the tempo once the '
+        body: 'Start extremely slowly (40 BPM). Only raise the tempo once the '
             'motion feels like it happens "by itself". Five minutes daily.',
       ),
     ],
@@ -1167,8 +922,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Start slowly (50 BPM) and focus on a clean second stroke. '
+        body: 'Start slowly (50 BPM) and focus on a clean second stroke. '
             'Only speed up once both strokes sound even.',
       ),
     ],
@@ -1212,8 +966,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Increase in 5 BPM steps. Hold each step for one minute. Write '
+        body: 'Increase in 5 BPM steps. Hold each step for one minute. Write '
             'down your current top tempo and compare over the weeks.',
       ),
     ],
@@ -1249,8 +1002,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
       ),
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• Staying tense during the rest\n'
+        body: '• Staying tense during the rest\n'
             '• Rushing the burst and playing it unevenly',
       ),
     ],
@@ -1260,8 +1012,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     id: 'speed_doubles',
     name: 'Double Stroke Speed',
     skills: {Skill.control},
-    description:
-        'Fast double strokes (RRLL) as sixteenths. Speed is built on '
+    description: 'Fast double strokes (RRLL) as sixteenths. Speed is built on '
         'clean rebound — not on force.',
     minBpm: 60,
     targetBpm: 170,
@@ -1288,14 +1039,12 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Motion',
-        body:
-            'At high tempos the second stroke comes almost entirely from the '
+        body: 'At high tempos the second stroke comes almost entirely from the '
             'rebound. Use finger pressure instead of arm strength.',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Start slowly with equally loud strokes. Only raise the tempo if '
+        body: 'Start slowly with equally loud strokes. Only raise the tempo if '
             'the second stroke does not drop in volume.',
       ),
     ],
@@ -1305,8 +1054,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     id: 'ausdauer_dauerlauf',
     name: 'Sixteenth-Note Marathon',
     skills: {Skill.endurance},
-    description:
-        'Continuous sixteenths for several minutes without a break. '
+    description: 'Continuous sixteenths for several minutes without a break. '
         'Builds stamina and consistent sound quality.',
     minBpm: 70,
     targetBpm: 150,
@@ -1333,14 +1081,12 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Goal',
-        body:
-            'Stay equally loud and even for the entire duration. '
+        body: 'Stay equally loud and even for the entire duration. '
             'Notice the moment your hands start to tire.',
       ),
       TechniqueSection(
         title: 'Practice Plan',
-        body:
-            'Start with 2 minutes and extend weekly. When quality drops, '
+        body: 'Start with 2 minutes and extend weekly. When quality drops, '
             'consciously relax instead of stopping.',
       ),
     ],
@@ -1350,8 +1096,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     id: 'ausdauer_doubles',
     name: 'Double Stroke Endurance',
     skills: {Skill.endurance},
-    description:
-        'Continuous double strokes (RRLL) to build forearm and finger '
+    description: 'Continuous double strokes (RRLL) to build forearm and finger '
         'endurance while keeping the sound consistent.',
     minBpm: 60,
     targetBpm: 140,
@@ -1378,8 +1123,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Common Mistakes',
-        body:
-            '• The second stroke getting quieter as fatigue sets in\n'
+        body: '• The second stroke getting quieter as fatigue sets in\n'
             '• Tensing up in the forearm — keep the shoulders loose',
       ),
       TechniqueSection(
@@ -1500,8 +1244,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Goal',
-        body:
-            'All three triplet notes spaced exactly evenly. Count '
+        body: 'All three triplet notes spaced exactly evenly. Count '
             '"1-trip-let, 2-trip-let" and place the accent right on the beat.',
       ),
       TechniqueSection(
@@ -1545,8 +1288,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Goal',
-        body:
-            'The first stroke is long (an eighth), followed by two quick '
+        body: 'The first stroke is long (an eighth), followed by two quick '
             'sixteenths. The "da-da-dum" feel must stay even.',
       ),
       TechniqueSection(
@@ -1565,8 +1307,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     name: 'Eight on a Hand',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
-    description:
-        'Eight sixteenths per hand with an accent on every beat. '
+    description: 'Eight sixteenths per hand with an accent on every beat. '
         'A fundamental marching warm-up for control and an even stroke.',
     minBpm: 60,
     targetBpm: 160,
@@ -1594,8 +1335,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Goal',
-        body:
-            'Even sixteenths with a clear accent on 1, 2, 3, 4. '
+        body: 'Even sixteenths with a clear accent on 1, 2, 3, 4. '
             'The unaccented notes stay low and relaxed.',
       ),
       TechniqueSection(
@@ -1612,8 +1352,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     name: 'Flam Accent',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
-    description:
-        'A flam on the accented beat, followed by two tap notes — '
+    description: 'A flam on the accented beat, followed by two tap notes — '
         'in a triplet feel. A cornerstone of the marching rudiments.',
     minBpm: 50,
     targetBpm: 140,
@@ -1631,8 +1370,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Motion',
-        body:
-            'The flam lands as a strong accent; the two following taps '
+        body: 'The flam lands as a strong accent; the two following taps '
             'stay low. Hands switch after every triplet.',
       ),
     ],
@@ -1643,32 +1381,16 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     name: 'Flam Tap',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
-    description:
-        'A flam followed by a tap with the same hand: lR-R rL-L. '
+    description: 'A flam followed by a tap with the same hand: lR-R rL-L. '
         'Trains the down-up stroke and double strokes with a flam.',
     minBpm: 50,
     targetBpm: 150,
     difficulty: Difficulty.intermediate,
     gridUnit: NoteGrid.eighth,
     beatsPerBar: 4,
-    sticking: [
-      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
-      StrokeBeat(hand: Hand.left),
-      StrokeBeat(hand: Hand.right, isAccent: true, graces: [Hand.left]),
-      StrokeBeat(hand: Hand.right),
-      StrokeBeat(hand: Hand.left, isAccent: true, graces: [Hand.right]),
-      StrokeBeat(hand: Hand.left),
-    ],
-    technique: [
-      TechniqueSection(
-        title: 'Down-Up',
-        body:
-            'The flam is a down stroke (loud, staying low); the tap is a '
-            'low up stroke that prepares the next hand.',
-      ),
-    ],
+    sticking: flamTapPattern,
+    technique: flamTapLesson,
+    lines: flamTapSheet,
   ),
 
   Rudiment(
@@ -1676,8 +1398,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     name: 'Flamacue',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
-    description:
-        'A flam, then an accent on the second note, two taps, and a '
+    description: 'A flam, then an accent on the second note, two taps, and a '
         'closing flam. A classic, expressive rudiment.',
     minBpm: 50,
     targetBpm: 130,
@@ -1697,8 +1418,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Accent',
-        body:
-            'The accent is not on the flam but on the note right after it. '
+        body: 'The accent is not on the flam but on the note right after it. '
             'Exactly this shift is what defines the flamacue.',
       ),
     ],
@@ -1709,8 +1429,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     name: 'Flam Paradiddle',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
-    description:
-        'A paradiddle whose first note is an accented flam: '
+    description: 'A paradiddle whose first note is an accented flam: '
         'lR-L-R-R rL-R-L-L. Combines flam control with double strokes.',
     minBpm: 50,
     targetBpm: 140,
@@ -1730,8 +1449,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Tip',
-        body:
-            'The flam accent opens each paradiddle; the closing '
+        body: 'The flam accent opens each paradiddle; the closing '
             'diddle (RR or LL) stays low and controlled.',
       ),
     ],
@@ -1742,8 +1460,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     name: 'Cheese (Flam Diddle)',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
-    description:
-        'A flam followed immediately by a diddle: lR-R rL-L. '
+    description: 'A flam followed immediately by a diddle: lR-R rL-L. '
         'A hybrid rudiment that merges flam and double stroke into one motion.',
     minBpm: 50,
     targetBpm: 130,
@@ -1763,8 +1480,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Idea',
-        body:
-            'The flam and the first diddle stroke almost merge into a single '
+        body: 'The flam and the first diddle stroke almost merge into a single '
             'sound. Stay loose — the diddle comes from the fingers.',
       ),
     ],
@@ -1775,8 +1491,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     name: 'Inverted Flam Tap',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
-    description:
-        'A flam tap where the flam falls on the offbeat: R lR L rL. '
+    description: 'A flam tap where the flam falls on the offbeat: R lR L rL. '
         'A demanding variation for timing and hand-to-hand control.',
     minBpm: 50,
     targetBpm: 130,
@@ -1796,11 +1511,733 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: [
       TechniqueSection(
         title: 'Watch Out',
-        body:
-            'The flam sits on the "and" of the beat. Practice very slowly at '
+        body: 'The flam sits on the "and" of the beat. Practice very slowly at '
             'first so the displaced accent lands cleanly.',
       ),
     ],
   ),
-];
+  // ─── KATALOG 3a: new base rudiments ─────────────────────────────────────
 
+  Rudiment(
+    id: 'five_stroke_roll',
+    name: "Five Stroke Roll",
+    skills: {Skill.control},
+    genres: {Genre.drumCorps},
+    description:
+        "Two doubles and an accent: R R L L R, L L R R L. The shortest roll that already sounds like a roll.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fiveStrokeRollPattern,
+    technique: fiveStrokeRollLesson,
+    lines: fiveStrokeRollSheet,
+  ),
+
+  Rudiment(
+    id: 'seven_stroke_roll',
+    name: "Seven Stroke Roll",
+    skills: {Skill.control},
+    genres: {Genre.drumCorps},
+    description:
+        "Three doubles and an accent: R R L L R R L. Six fast notes into one landing.",
+    minBpm: 50,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenthTriplet,
+    sticking: sevenStrokeRollPattern,
+    technique: sevenStrokeRollLesson,
+    lines: sevenStrokeRollSheet,
+  ),
+
+  Rudiment(
+    id: 'swiss_army_triplet',
+    name: "Swiss Army Triplet",
+    skills: {Skill.control, Skill.coordination},
+    genres: {Genre.drumCorps},
+    description:
+        "A flam, a tap with the same hand, then the other hand: lR R L, as triplets. Fast and oddly comfortable.",
+    minBpm: 50,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.triplet,
+    sticking: swissArmyTripletPattern,
+    technique: swissArmyTripletLesson,
+    lines: swissArmyTripletSheet,
+  ),
+  // ─── KATALOG 3b: fill stickings ────────────────────────────────────────────
+
+  Rudiment(
+    id: 'fill_sixteenth_singles',
+    name: "Sixteenth Singles Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Three bars of time, then a bar of sixteenth-note singles into the one. The first fill every drummer plays, and the one that has to sound the cleanest.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillSixteenthSinglesPattern,
+    technique: fillSixteenthSinglesLesson,
+    lines: fillSixteenthSinglesSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_doubles',
+    name: "Doubles Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Three bars of time and a bar of R R L L. Doubles make a fill sound twice as fast as the hands move, and they are easy to spread over two drums.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillDoublesPattern,
+    technique: fillDoublesLesson,
+    lines: fillDoublesSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_paradiddle',
+    name: "Paradiddle Fill",
+    skills: {Skill.fill, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "Paradiddles as a fill over a funk band. The double inside each group moves the lead hand, so the fill wanders between the hands without you steering it.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillParadiddlePattern,
+    technique: fillParadiddleLesson,
+    lines: fillParadiddleSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_triplets',
+    name: "Triplet Fill",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "Triplet fills over a shuffle band. The time is shuffle hands or plain quarters, the fill rolls in threes and lands on the one.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    sticking: fillTripletsPattern,
+    technique: fillTripletsLesson,
+    lines: fillTripletsSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_flams',
+    name: "Flam Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Fills built from flams: fat single notes instead of fast ones. A flam fill is slow in the hands and big in the ear.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillFlamsPattern,
+    technique: fillFlamsLesson,
+    lines: fillFlamsSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_sextuplets',
+    name: "Sextuplet Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Six notes per beat over a straight band. The sextuplet fill is the fast, rolling fill of rock and fusion; the time around it stays plain eighths.",
+    minBpm: 50,
+    targetBpm: 100,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenthTriplet,
+    backing: 'rock8',
+    sticking: fillSextupletsPattern,
+    technique: fillSextupletsLesson,
+    lines: fillSextupletsSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_six_groups',
+    name: "Six-Note Groups Fill",
+    skills: {Skill.fill, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "Sixteenth-note fills phrased in groups of six: 6 + 6 + 4 over the bar. The accents drift across the beat and pull the listener along.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    sticking: fillSixGroupsPattern,
+    technique: fillSixGroupsLesson,
+    lines: fillSixGroupsSheet,
+  ),
+
+  Rudiment(
+    id: 'fill_roll',
+    name: "Roll Fill",
+    skills: {Skill.fill, Skill.control},
+    description:
+        "Closed rolls as fills: thirty-second-note doubles that swell into the one. The classic \"snare roll into the chorus\".",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.thirtySecond,
+    sticking: fillRollPattern,
+    technique: fillRollLesson,
+    lines: fillRollSheet,
+  ),
+  // ─── PHASE B.4: kit grooves ────────────────────────────────────────────────
+
+  Rudiment(
+    id: 'groove_rock8',
+    name: "Rock 8ths Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "Hi-hat eighths, backbeat on 2 and 4, kick on 1 and 3 — the groove the band played for you at the pad. Now you are the band.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveRock8PatternVoices,
+    sticking: grooveRock8Pattern,
+    technique: grooveRock8Lesson,
+    lines: grooveRock8Sheet,
+  ),
+
+  Rudiment(
+    id: 'groove_rock16',
+    name: "Rock 16ths Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "Sixteenth notes on the hi-hat with both hands over a rock backbeat — the same groove, twice the motion.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveRock16PatternVoices,
+    sticking: grooveRock16Pattern,
+    technique: grooveRock16Lesson,
+    lines: grooveRock16Sheet,
+  ),
+
+  Rudiment(
+    id: 'groove_halftime',
+    name: "Half-time Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "One backbeat per bar, on 3: the tempo stays, the groove feels twice as big.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveHalftimePatternVoices,
+    sticking: grooveHalftimePattern,
+    technique: grooveHalftimeLesson,
+    lines: grooveHalftimeSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_shuffle',
+    name: "Shuffle Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "Long-short triplet eighths on the hi-hat, backbeat on 2 and 4 — the bounce of blues and boogie rock.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveShufflePatternVoices,
+    sticking: grooveShufflePattern,
+    technique: grooveShuffleLesson,
+    lines: grooveShuffleSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_swing',
+    name: "Swing Ride",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.jazz},
+    description:
+        "The jazz ride pattern with the hi-hat foot on 2 and 4 and a feathered kick, plus snare comments in between.",
+    minBpm: 60,
+    targetBpm: 180,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveSwingPatternVoices,
+    sticking: grooveSwingPattern,
+    technique: grooveSwingLesson,
+    lines: grooveSwingSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_funk16',
+    name: "Funk 16ths Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "Accented sixteenth hats, a syncopated kick and ghost notes around a backbeat that never moves.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveFunk16PatternVoices,
+    sticking: grooveFunk16Pattern,
+    technique: grooveFunk16Lesson,
+    lines: grooveFunk16Sheet,
+  ),
+
+  Rudiment(
+    id: 'groove_hihat_open',
+    name: "Open Hi-hat",
+    skills: {Skill.groove, Skill.control},
+    genres: {Genre.rock},
+    description:
+        "Open the hi-hat on the offbeats and close it with the foot right on the next count — from one open note per bar to the disco beat.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveHihatOpenPatternVoices,
+    sticking: grooveHihatOpenPattern,
+    technique: grooveHihatOpenLesson,
+    lines: grooveHihatOpenSheet,
+  ),
+  // ─── PHASE B.4: kit fills ──────────────────────────────────────────────────
+
+  Rudiment(
+    id: 'set_fill_sixteenth_singles',
+    name: "Sixteenth Singles Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad fill spread over snare and toms, with three bars of rock groove before it and a crash on the one after it.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillSixteenthSinglesPatternVoices,
+    sticking: setFillSixteenthSinglesPattern,
+    technique: setFillSixteenthSinglesLesson,
+    lines: setFillSixteenthSinglesSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_doubles',
+    name: "Doubles Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad doubles over snare and toms: two notes per drum, then move on, crash on the one.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillDoublesPatternVoices,
+    sticking: setFillDoublesPattern,
+    technique: setFillDoublesLesson,
+    lines: setFillDoublesSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_paradiddle',
+    name: "Paradiddle Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad paradiddles over snare and toms after a funk groove, with the kick simplifying to 1 and 3 under the fill.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillParadiddlePatternVoices,
+    sticking: setFillParadiddlePattern,
+    technique: setFillParadiddleLesson,
+    lines: setFillParadiddleSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_triplets',
+    name: "Triplet Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad triplets rolling over snare and toms out of a shuffle groove, crash on the one.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillTripletsPatternVoices,
+    sticking: setFillTripletsPattern,
+    technique: setFillTripletsLesson,
+    lines: setFillTripletsSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_flams',
+    name: "Flam Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad flams spread over snare and toms after a rock groove: big notes, slow hands, crash on the one.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillFlamsPatternVoices,
+    sticking: setFillFlamsPattern,
+    technique: setFillFlamsLesson,
+    lines: setFillFlamsSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_sextuplets',
+    name: "Sextuplet Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad sextuplets running down snare and toms over a rock groove, the kick on 1 and 3 underneath.",
+    minBpm: 50,
+    targetBpm: 100,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenthTriplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillSextupletsPatternVoices,
+    sticking: setFillSextupletsPattern,
+    technique: setFillSextupletsLesson,
+    lines: setFillSextupletsSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_six_groups',
+    name: "Six-Note Groups Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad groups of six over snare and toms after a funk groove: the accents drift while the drums change on the beat.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillSixGroupsPatternVoices,
+    sticking: setFillSixGroupsPattern,
+    technique: setFillSixGroupsLesson,
+    lines: setFillSixGroupsSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_roll',
+    name: "Roll Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "The pad rolls moving down snare and toms after a rock sixteenths groove, into a crash on the one.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.thirtySecond,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillRollPatternVoices,
+    sticking: setFillRollPattern,
+    technique: setFillRollLesson,
+    lines: setFillRollSheet,
+  ),
+
+  Rudiment(
+    id: 'set_around_the_kit',
+    name: "Around the Kit",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "Simple stickings around all four toms, one drum per beat, with crash, china or ride bell on the one.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setAroundTheKitPatternVoices,
+    sticking: setAroundTheKitPattern,
+    technique: setAroundTheKitLesson,
+    lines: setAroundTheKitSheet,
+  ),
+  // ─── PHASE B.4c: feet ──────────────────────────────────────────────────────
+
+  Rudiment(
+    id: 'feet_kick_control',
+    name: "Kick Control",
+    skills: {Skill.coordination},
+    description:
+        "The hands keep a plain rock beat while the kick moves: on and off the beat, doubles, four-on-the-floor.",
+    minBpm: 60,
+    targetBpm: 130,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.feet},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetKickControlPatternVoices,
+    sticking: feetKickControlPattern,
+    technique: feetKickControlLesson,
+    lines: feetKickControlSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_kick_sixteenths',
+    name: "Kick Sixteenths",
+    skills: {Skill.coordination, Skill.control},
+    description:
+        "Eight sixteenth-note kick combinations on 1 and 3 under a steady backbeat, first with eighth hats, then with sixteenths.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.feet},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetKickSixteenthsPatternVoices,
+    sticking: feetKickSixteenthsPattern,
+    technique: feetKickSixteenthsLesson,
+    lines: feetKickSixteenthsSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_double_bass_eighths',
+    name: "Double Bass Eighths",
+    skills: {Skill.endurance, Skill.coordination},
+    genres: {Genre.metal},
+    description:
+        "Eighth notes split between two feet, right on the beat and left on the \"and\", under quarter hats and a backbeat.",
+    minBpm: 60,
+    targetBpm: 160,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.doubleBass},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetDoubleBassEighthsPatternVoices,
+    sticking: feetDoubleBassEighthsPattern,
+    technique: feetDoubleBassEighthsLesson,
+    lines: feetDoubleBassEighthsSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_double_bass_sixteenths',
+    name: "Double Bass Sixteenths",
+    skills: {Skill.endurance, Skill.coordination},
+    genres: {Genre.metal},
+    description:
+        "Sixteenth-note double bass, right foot leading, from short bursts to a full rolling carpet under the backbeat.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.doubleBass},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetDoubleBassSixteenthsPatternVoices,
+    sticking: feetDoubleBassSixteenthsPattern,
+    technique: feetDoubleBassSixteenthsLesson,
+    lines: feetDoubleBassSixteenthsSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_double_bass_triplets',
+    name: "Double Bass Triplets",
+    skills: {Skill.endurance, Skill.coordination},
+    genres: {Genre.rock},
+    description:
+        "Triplets and sextuplets between the feet under a shuffle hat, plus the Bonham triplet of hands and kick.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.doubleBass},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetDoubleBassTripletsPatternVoices,
+    sticking: feetDoubleBassTripletsPattern,
+    technique: feetDoubleBassTripletsLesson,
+    lines: feetDoubleBassTripletsSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_hihat_foot',
+    name: "Hi-hat Foot",
+    skills: {Skill.independence, Skill.coordination},
+    description:
+        "The left foot closes the hi-hat on 2 and 4, on every quarter or on every \"and\" while the ride, snare and kick keep a groove.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.eighth,
+    limbs: {Limb.feet},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetHihatFootPatternVoices,
+    sticking: feetHihatFootPattern,
+    technique: feetHihatFootLesson,
+    lines: feetHihatFootSheet,
+  ),
+
+  Rudiment(
+    id: 'feet_ostinatos',
+    name: "Foot Ostinatos",
+    skills: {Skill.independence, Skill.groove},
+    genres: {Genre.latin, Genre.jazz},
+    description:
+        "Foot patterns that never change — bossa nova, samba and jazz — while the hands play clave, samba sticking and ride on top.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: feetOstinatosPatternVoices,
+    sticking: feetOstinatosPattern,
+    technique: feetOstinatosLesson,
+    lines: feetOstinatosSheet,
+  ),
+  // ─── PHASE B.4c: more fills and grooves ────────────────────────────────────
+
+  Rudiment(
+    id: 'set_fill_linear',
+    name: "Linear Fill (Kit)",
+    skills: {Skill.fill, Skill.coordination},
+    description:
+        "Hands and kick take turns, one note per sixteenth, around snare and toms after a rock sixteenths groove.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillLinearPatternVoices,
+    sticking: setFillLinearPattern,
+    technique: setFillLinearLesson,
+    lines: setFillLinearSheet,
+  ),
+
+  Rudiment(
+    id: 'set_fill_double_bass',
+    name: "Double Bass Fill (Kit)",
+    skills: {Skill.fill, Skill.endurance},
+    genres: {Genre.metal},
+    description:
+        "The hands start the fill on snare and toms and both feet finish it with a sixteenth-note roll, crash on the one.",
+    minBpm: 60,
+    targetBpm: 140,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.doubleBass},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: setFillDoubleBassPatternVoices,
+    sticking: setFillDoubleBassPattern,
+    technique: setFillDoubleBassLesson,
+    lines: setFillDoubleBassSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_linear',
+    name: "Linear Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "Hi-hat, snare and kick never play together: every sixteenth belongs to one voice, with ghost notes between the backbeats.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveLinearPatternVoices,
+    sticking: grooveLinearPattern,
+    technique: grooveLinearLesson,
+    lines: grooveLinearSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_kick_sixteenths',
+    name: "Sixteenth Kick Groove",
+    skills: {Skill.groove, Skill.coordination},
+    genres: {Genre.rock, Genre.funk},
+    description:
+        "A steady rock backbeat with the kick on the \"e\" and \"a\" between the eighths, from eighth to sixteenth hats.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveKickSixteenthsPatternVoices,
+    sticking: grooveKickSixteenthsPattern,
+    technique: grooveKickSixteenthsLesson,
+    lines: grooveKickSixteenthsSheet,
+  ),
+
+  Rudiment(
+    id: 'groove_halftime_shuffle',
+    name: "Half-time Shuffle",
+    skills: {Skill.groove, Skill.control},
+    genres: {Genre.rock, Genre.funk},
+    description:
+        "Shuffle hi-hat, backbeat on 3 and ghost notes on the middle triplet notes: the Purdie shuffle.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.advanced,
+    gridUnit: NoteGrid.triplet,
+    limbs: {Limb.allFour},
+    voicing: ExerciseVoicing.kit,
+    requiredSensor: SensorLevel.midi,
+    patternVoices: grooveHalftimeShufflePatternVoices,
+    sticking: grooveHalftimeShufflePattern,
+    technique: grooveHalftimeShuffleLesson,
+    lines: grooveHalftimeShuffleSheet,
+  ),
+];

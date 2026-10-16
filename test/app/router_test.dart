@@ -1,6 +1,7 @@
 import 'package:drum_coach/app/router.dart';
 import 'package:drum_coach/app/theme.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
+import 'package:drum_coach/features/lessons/line_list_screen.dart';
 import 'package:drum_coach/features/stats/stats_provider.dart';
 import 'package:drum_coach/features/today/next_step.dart';
 import 'package:drum_coach/features/today/next_step_provider.dart';
@@ -61,5 +62,13 @@ void main() {
     router.go('/lessons');
     await tester.pumpAndSettle();
     expect(router.routerDelegate.currentConfiguration.uri.path, '/library');
+  });
+
+  testWidgets('/exercise/:id opens the line list', (tester) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+    router.go('/exercise/single_paradiddle');
+    await tester.pumpAndSettle();
+    expect(find.byType(LineListScreen), findsOneWidget);
   });
 }

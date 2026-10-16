@@ -12,6 +12,7 @@ import '../../shared/widgets/app_badge.dart';
 import '../../shared/widgets/app_card.dart';
 import '../coaching/midi/midi_port_service.dart';
 import 'measurement_section.dart';
+import 'sequence_repeats_row.dart';
 
 const _donationUrl = 'https://ko-fi.com/drumcoach';
 
@@ -24,6 +25,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late int _targetMin;
+  late int _repeats;
   late bool _haptics;
   late bool _reminders;
   final _apiKeyController = TextEditingController();
@@ -36,6 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _targetMin = SettingsService.practiceTargetMinutes;
+    _repeats = SettingsService.sequenceRepeats;
     _haptics = SettingsService.hapticsEnabled;
     _reminders = SettingsService.reminderEnabled;
     _apiKeyController.text = SettingsService.claudeApiKey;
@@ -50,6 +53,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setTarget(int min) async {
     await SettingsService.setPracticeTargetMinutes(min);
     setState(() => _targetMin = min);
+  }
+
+  Future<void> _setRepeats(int n) async {
+    await SettingsService.setSequenceRepeats(n);
+    setState(() => _repeats = n);
   }
 
   Future<void> _setHaptics(bool v) async {
@@ -111,6 +119,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SectionLabel('DAILY PRACTICE GOAL'),
           const SizedBox(height: 10),
           _TargetRow(value: _targetMin, onChanged: _setTarget),
+          const SizedBox(height: 28),
+
+          // ── Zeilenfolgen ──────────────────────────────────────────────
+          _SectionLabel('LINE SEQUENCES'),
+          const SizedBox(height: 10),
+          SequenceRepeatsRow(value: _repeats, onChanged: _setRepeats),
+          const SizedBox(height: 6),
+          Text('Each selected line plays this many times before the next one.',
+              style: AppTypography.label.copyWith(color: AppColors.textMuted)),
           const SizedBox(height: 28),
 
           // ── Gerät ─────────────────────────────────────────────────────

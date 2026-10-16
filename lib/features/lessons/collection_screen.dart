@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
-import '../learning/suggested_bpm_provider.dart';
+import 'exercise_entry.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
 
@@ -98,10 +97,7 @@ class _EtudeTile extends ConsumerWidget {
         style: AppTypography.label.copyWith(color: AppColors.textMuted),
       ),
       trailing: const Icon(Icons.chevron_right, color: AppColors.textFaint),
-      onTap: () async {
-        final bpm = await ref.read(suggestedBpmProvider(rudiment.id).future);
-        if (context.mounted) context.push('/practice/${rudiment.id}?bpm=$bpm');
-      },
+      onTap: () => openExercise(context, ref, rudiment),
     );
   }
 }

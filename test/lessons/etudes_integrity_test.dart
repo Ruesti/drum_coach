@@ -16,7 +16,9 @@ void main() {
     expect(dupes, isEmpty, reason: 'duplicate ids: $dupes');
   });
 
-  test('every étude fills whole bars and is a rudimentEtudes/techniqueStudies member', () {
+  test(
+      'every étude fills whole bars and is a rudimentEtudes/techniqueStudies member',
+      () {
     for (final r in allEtudes) {
       expect(r.collection, isNotNull, reason: '${r.id} has no collection');
       expect(
@@ -59,18 +61,103 @@ void main() {
             reason: '${r.id} sheet too long');
       }
     });
-    test('the sample sheet: 11 lines, challenge last without repeat', () {
-      final r =
-          rudimentsSeedData.firstWhere((r) => r.id == 'single_paradiddle');
-      expect(r.sheet.length, 11);
-      expect(r.sheet.take(10).every((l) => l.repeat), isTrue);
-      expect(r.sheet.last.repeat, isFalse);
-      expect(r.sheet.last.title, 'Challenge');
-      expect(r.sheet.first.counts, isTrue);
-      expect(r.sticking.length, 8,
-          reason: 'the plain pattern stays for the How box');
-      expect(r.technique.map((s) => s.title),
-          ['Why it matters', 'How to play it', 'Practice tips', 'Song examples']);
+    test('the twelve rudiment sheets: 8 lines, lesson sections', () {
+      // Katalog 3a: the twelve rudiments composed as sheets.
+      const ids = [
+        'single_stroke_roll',
+        'double_stroke_roll',
+        'single_paradiddle',
+        'double_paradiddle',
+        'paradiddle_diddle',
+        'flam',
+        'flam_accent',
+        'flam_tap',
+        'single_drag',
+        'five_stroke_roll',
+        'seven_stroke_roll',
+        'swiss_army_triplet',
+      ];
+      const beginner = [
+        'single_stroke_roll',
+        'double_stroke_roll',
+        'single_paradiddle'
+      ];
+      for (final id in ids) {
+        final r = rudimentsSeedData.firstWhere((r) => r.id == id);
+        expect(r.sheet.length, 8, reason: id);
+        expect(r.sheet.every((l) => l.repeat), isTrue, reason: id);
+        expect(r.sheet.every((l) => l.beats.isNotEmpty), isTrue);
+        expect(sheetBars(r), 16, reason: id);
+        // The plain pattern is one whole bar — the PATTERN box.
+        expect(
+            barCountOrThrow(r.sticking,
+                beatsPerBar: r.beatsPerBar, grid: r.gridUnit),
+            1,
+            reason: id);
+        expect(
+            r.technique.map((s) => s.title),
+            [
+              'Why it matters',
+              'How to play it',
+              'Practice tips',
+              'Where you hear it'
+            ],
+            reason: id);
+        final counts = r.sheet.take(2).every((l) => l.counts);
+        expect(counts, beginner.contains(id), reason: '$id count hints');
+      }
+    });
+    test(
+        'the eight fill sheets: 3 bars of time + 1 bar of fill per line, '
+        'the one after the fill accented, fill tag', () {
+      // Katalog 3b, Brief §3.2: four-bar phrases looped, the band runs on
+      // through the fill bar, success = the fill and the one after it.
+      const ids = [
+        'fill_sixteenth_singles',
+        'fill_doubles',
+        'fill_paradiddle',
+        'fill_triplets',
+        'fill_flams',
+        'fill_sextuplets',
+        'fill_six_groups',
+        'fill_roll',
+      ];
+      const beginner = ['fill_sixteenth_singles', 'fill_doubles'];
+      for (final id in ids) {
+        final r = rudimentsSeedData.firstWhere((r) => r.id == id);
+        expect(r.skills, contains(Skill.fill), reason: id);
+        expect(r.sheet.length, 8, reason: id);
+        expect(r.sheet.every((l) => l.repeat), isTrue, reason: id);
+        for (var i = 0; i < 8; i++) {
+          final l = r.sheet[i];
+          expect(l.repeat, isTrue, reason: '$id line ${i + 1}');
+          expect(
+              barCountOrThrow(l.beats,
+                  beatsPerBar: r.beatsPerBar, grid: r.gridUnit),
+              4,
+              reason: '$id line ${i + 1} is not a four-bar phrase');
+          expect(l.beats.first.isAccent, isTrue,
+              reason: '$id line ${i + 1} lands without an accent on the one');
+        }
+        expect(sheetBars(r), 32, reason: id);
+        // The PATTERN box shows the fill bar of line 1 — one whole bar.
+        expect(
+            barCountOrThrow(r.sticking,
+                beatsPerBar: r.beatsPerBar, grid: r.gridUnit),
+            1,
+            reason: id);
+        expect(
+            r.technique.map((s) => s.title),
+            [
+              'Why it matters',
+              'How to play it',
+              'Practice tips',
+              'Where you hear it'
+            ],
+            reason: id);
+        final counts = r.sheet.take(2).every((l) => l.counts);
+        expect(counts, beginner.contains(id), reason: '$id count hints');
+      }
     });
   });
 

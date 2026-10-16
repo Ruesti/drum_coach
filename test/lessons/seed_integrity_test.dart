@@ -24,4 +24,13 @@ void main() {
       }
     }
   });
+
+  test('every authored sheet has eight lines and no Challenge', () {
+    for (final r in rudimentsSeedData) {
+      if (r.lines.isEmpty) continue;
+      expect(r.lines.length, 8, reason: r.id);
+      expect(r.lines.any((l) => l.title == 'Challenge'), isFalse, reason: r.id);
+      expect(r.lines.every((l) => l.repeat), isTrue, reason: r.id);
+    }
+  });
 }

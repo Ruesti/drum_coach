@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../coaching/midi/kit_instrument.dart';
 import '../../coaching/services/stroke_source.dart';
 
 enum Hand { right, left }
@@ -105,8 +106,7 @@ enum ExerciseSource { generated, authored, excerpt }
 
 /// Which renderer/playback mode an exercise targets. `pad` = single-line
 /// sticking notation + click, fully offline (practice pad, on the go).
-/// `kit` = full kit notation with per-instrument voicing and synthetic
-/// drum sounds (at home).
+/// `kit` = full kit notation, one voice per instrument (Etappe 2, Phase B).
 enum ExerciseVoicing { pad, kit }
 
 /// Tag axis: what the exercise trains. Multiple values per exercise are
@@ -163,7 +163,8 @@ enum Limb {
 /// [graces] are grace notes (flam = 1, drag = 2) drawn small *before* the main
 /// note; they share this cell's tick and do not consume their own grid slot.
 class StrokeBeat {
-  final Hand hand;
+  /// Playing hand; null for foot strokes (kick, hi-hat pedal) and rests.
+  final Hand? hand;
   final bool isAccent;
   final bool isGhost;
   final bool isRest;
@@ -186,12 +187,12 @@ class StrokeBeat {
     this.tuplet = Tuplet.none,
   });
 
-  /// A silent grid cell (rest). [hand] is ignored when rendering.
+  /// A silent grid cell (rest): no hand.
   const StrokeBeat.rest({
     this.value,
     this.dotted = false,
     this.tuplet = Tuplet.none,
-  })  : hand = Hand.right,
+  })  : hand = null,
         isAccent = false,
         isGhost = false,
         isRest = true,
@@ -204,17 +205,59 @@ class TechniqueSection {
   const TechniqueSection({required this.title, required this.body});
 }
 
+/// One voice of a kit line (Brief B.1): what a whole pad exercise is today
+/// — a beat list on the 24-tick grid — plus the instrument it is played on.
+/// [accepts] widens the *measured* instrument to a class (B.3: a fill over
+/// any tom); drawing and playback use [instrument]. Foot voices carry beats
+/// without a hand.
+class Voice {
+  final KitInstrument instrument;
+  final InstrumentClass? accepts;
+  final List<StrokeBeat> beats;
+  const Voice(this.instrument, this.beats, {this.accepts});
+
+  bool get isFoot => instrument.isFoot;
+
+  /// Whether a stroke on [played] belongs to this voice.
+  bool matches(KitInstrument played) =>
+      accepts?.members.contains(played) ?? played == instrument;
+}
+
+/// True when a foot voice carries a sided stroke (double bass, Nachtrag
+/// B.4c): the sheet then draws a second letter row under the feet stems.
+bool voicesHaveFootSides(Iterable<Voice> voices) => voices
+    .any((v) => v.isFoot && v.beats.any((b) => !b.isRest && b.hand != null));
+
 /// One line of a sheet (Blattform, 30.09.): a phrase of whole bars, drawn
 /// with a number box, repeat signs when [repeat], an optional [title] above
-/// the staff ("Challenge") and, when [counts], the count syllables under the
+/// the staff and, when [counts], the count syllables under the
 /// sticking letters.
+///
+/// A pad line is one voice (`pad`) — [beats]. A kit line (Brief B.1) carries
+/// [kitVoices], one per instrument, all of the same tick length; [beats] is
+/// then the first voice so every single-voice reader (bar count, library
+/// meta) keeps working.
 class ExerciseLine {
   final List<StrokeBeat> beats;
+  final List<Voice> kitVoices;
   final bool repeat;
   final String? title;
   final bool counts;
   const ExerciseLine(this.beats,
-      {this.repeat = true, this.title, this.counts = false});
+      {this.repeat = true, this.title, this.counts = false})
+      : kitVoices = const [];
+
+  ExerciseLine.kit(List<Voice> voices,
+      {this.repeat = true, this.title, this.counts = false})
+      : assert(voices.isNotEmpty, 'a kit line needs at least one voice'),
+        kitVoices = List.unmodifiable(voices),
+        beats = voices.first.beats;
+
+  bool get isKit => kitVoices.isNotEmpty;
+
+  /// The voices of this line: the kit voices, or the pad voice of a pad line.
+  List<Voice> get voices =>
+      isKit ? kitVoices : [Voice(KitInstrument.pad, beats)];
 }
 
 class Rudiment {
@@ -271,6 +314,10 @@ class Rudiment {
   /// [sticking] then is the one and only line — see [sheet].
   final List<ExerciseLine> lines;
 
+  /// The PATTERN bar of a kit exercise (Brief B.1/B.2): one bar, every
+  /// voice. [sticking] is then its first voice. Empty for pad exercises.
+  final List<Voice> patternVoices;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -293,12 +340,21 @@ class Rudiment {
     this.backing,
     this.requiredSensor = SensorLevel.mic,
     this.lines = const [],
+    this.patternVoices = const [],
   });
 
   /// The sheet: [lines] when authored, else the plain [sticking] as one
   /// repeating line — every legacy exercise is a one-line sheet.
   List<ExerciseLine> get sheet =>
       lines.isNotEmpty ? lines : [ExerciseLine(sticking)];
+
+  /// Kit exercise: full-kit notation, MIDI only (Brief B).
+  bool get isKit => voicing == ExerciseVoicing.kit;
+
+  /// A foot voice with sides (double bass): second letter row (B.4c).
+  bool get hasFootSides =>
+      voicesHaveFootSides(patternVoices) ||
+      sheet.any((l) => voicesHaveFootSides(l.voices));
 
   /// A copy carrying [beats] as its sticking and no lines: the practice
   /// screen hands the currently played unit (one line or the whole sheet) to
@@ -324,5 +380,6 @@ class Rudiment {
         collection: collection,
         collectionGroup: collectionGroup,
         backing: backing,
+        patternVoices: patternVoices,
       );
 }

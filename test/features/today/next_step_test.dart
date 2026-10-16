@@ -59,7 +59,7 @@ void main() {
     expect(step.detail, 'Day 9 · Step 2 of 3 · 84 BPM');
     expect(step.minutes, 8);
     expect(step.route,
-        startsWith('/practice/single_paradiddle?bpm=84&min=8&ctx='));
+        startsWith('/practice/single_paradiddle?lines=all&bpm=84&min=8&ctx='));
     expect(Uri.parse(step.route!).queryParameters['ctx'], step.detail);
     // The practice backdrop continues Today's phase picture.
     expect(Uri.parse(step.route!).queryParameters['phase'], '1');
@@ -113,7 +113,7 @@ void main() {
         routine: const [item],
         nameOf: _name);
     expect(withRoutine.kind, PathStepKind.exercise);
-    expect(withRoutine.route, '/routine/single_paradiddle?bpm=90');
+    expect(withRoutine.route, '/routine/single_paradiddle?bpm=90&lines=all');
     expect(withRoutine.detail, 'Review · 90 BPM');
     expect(withRoutine.minutes, 6);
     expect(withRoutine.phase, isNull);

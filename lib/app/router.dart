@@ -8,6 +8,7 @@ import '../features/learning/daily_routine_screen.dart';
 import '../features/lessons/collection_screen.dart';
 import '../features/lessons/lesson_detail_screen.dart';
 import '../features/lessons/lessons_screen.dart';
+import '../features/lessons/line_list_screen.dart';
 import '../features/lessons/models/rudiment.dart';
 import '../features/metronome/metronome_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
@@ -96,8 +97,8 @@ final router = GoRouter(
             rudimentId: state.pathParameters['rudimentId']!,
             isFromRoutine: true,
             targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
+            lines: state.uri.queryParameters['lines'],
             line: int.tryParse(state.uri.queryParameters['line'] ?? ''),
-            mode: state.uri.queryParameters['mode'],
           ),
         ),
       ],
@@ -131,6 +132,14 @@ final router = GoRouter(
         return CollectionScreen(collection: collection);
       },
     ),
+    // An exercise's line list (Zeilen statt Blatt): top-level like
+    // /practice, pushed from the library over the shell.
+    GoRoute(
+      path: '/exercise/:rudimentId',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, state) =>
+          LineListScreen(rudimentId: state.pathParameters['rudimentId']!),
+    ),
     // Top-level (outside the bottom-nav shell) so it can be pushed from any
     // route — collection, program, lessons — without go_router raising a
     // duplicate page-key assertion for a shell-branch route pushed from the
@@ -146,8 +155,8 @@ final router = GoRouter(
         isLadder: state.uri.queryParameters['ladder'] == '1',
         contextLine: state.uri.queryParameters['ctx'],
         phase: int.tryParse(state.uri.queryParameters['phase'] ?? ''),
+        lines: state.uri.queryParameters['lines'],
         line: int.tryParse(state.uri.queryParameters['line'] ?? ''),
-        mode: state.uri.queryParameters['mode'],
       ),
     ),
     GoRoute(

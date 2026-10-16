@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
 import '../../shared/widgets/app_badge.dart';
-import '../learning/suggested_bpm_provider.dart';
 import '../practice/backdrop.dart';
+import 'exercise_entry.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
 import 'models/sheet_plan.dart';
@@ -249,6 +249,10 @@ class _RudimentTile extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (rudiment.isKit) ...[
+            const AppBadge(label: 'KIT'),
+            const SizedBox(width: 6),
+          ],
           AppBadge(
             label: rudiment.difficulty.label,
             color: rudiment.difficulty.color,
@@ -260,13 +264,10 @@ class _RudimentTile extends ConsumerWidget {
           ),
         ],
       ),
-      // Straight into practice, matching the Routine/Program entry points —
-      // the explanation is available on demand via the info button above
-      // instead of forced before every start.
-      onTap: () async {
-        final bpm = await ref.read(suggestedBpmProvider(rudiment.id).future);
-        if (context.mounted) context.push('/practice/${rudiment.id}?bpm=$bpm');
-      },
+      // Sheets open their line list; one-line exercises go straight to
+      // practice. The explanation is available on demand via the info
+      // button above instead of forced before every start.
+      onTap: () => openExercise(context, ref, rudiment),
     );
   }
 }

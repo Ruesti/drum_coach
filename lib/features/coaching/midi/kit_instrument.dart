@@ -58,6 +58,45 @@ enum KitInstrument {
   }
 }
 
+/// Kick and hi-hat pedal are played with the feet: their voices carry no
+/// hand, their stems point down (Brief B.1/B.2).
+extension KitInstrumentFoot on KitInstrument {
+  bool get isFoot =>
+      this == KitInstrument.kick || this == KitInstrument.hiHatPedal;
+}
+
+/// A class of instruments a voice may accept instead of one (Brief B.3): a
+/// fill over "any tom" is not wrong because the drummer chose the other
+/// tom. Drawing and playback still use the voice's own instrument.
+enum InstrumentClass {
+  anyTom('Any tom', {
+    KitInstrument.tom1,
+    KitInstrument.tom2,
+    KitInstrument.floorTom1,
+    KitInstrument.floorTom2,
+  }),
+  anyCrash('Any crash', {
+    KitInstrument.crash1,
+    KitInstrument.crash2,
+    KitInstrument.china,
+    KitInstrument.splash,
+  }),
+  anyCymbal('Any cymbal', {
+    KitInstrument.crash1,
+    KitInstrument.crash2,
+    KitInstrument.china,
+    KitInstrument.splash,
+    KitInstrument.ride,
+    KitInstrument.rideBell,
+    KitInstrument.hiHatClosed,
+    KitInstrument.hiHatOpen,
+  });
+
+  const InstrumentClass(this.label, this.members);
+  final String label;
+  final Set<KitInstrument> members;
+}
+
 /// Which MIDI notes a module sends for each instrument. A pad may send
 /// several notes (head and rim zones); a note belongs to at most one
 /// instrument. Immutable: every change returns a new mapping.

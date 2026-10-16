@@ -13,14 +13,16 @@ import 'models/rudiment.dart';
 class LessonDetailScreen extends ConsumerWidget {
   final String rudimentId;
 
-  /// Called with the index of a tapped sheet line. Default: push the
-  /// practice route on that line. The practice screen passes its own
-  /// handler so a tap selects the line there instead of stacking a second
-  /// practice screen over the running one.
-  final ValueChanged<int>? onLineTap;
+  /// Whether the page ends with "Start Practice" (all lines). Off when the
+  /// page is opened from the running practice screen (Options → About), so
+  /// it cannot stack a second practice screen.
+  final bool showStart;
 
-  const LessonDetailScreen(
-      {super.key, required this.rudimentId, this.onLineTap});
+  const LessonDetailScreen({
+    super.key,
+    required this.rudimentId,
+    this.showStart = true,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,31 +41,20 @@ class LessonDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _MetaRow(rudiment: rudiment),
+            ExerciseMetaRow(rudiment: rudiment),
             const SizedBox(height: 20),
             Text(
               rudiment.description,
               style: AppTypography.body.copyWith(color: AppColors.textSecondary),
             ),
-            // Sheets (Blattform, 30.09.): the plain pattern as a box when the
-            // exercise has authored lines, then the whole sheet — a tap on a
-            // line starts practice right there. The lesson text lives here
-            // and only here; the practice screen shows notes alone.
-            if (rudiment.lines.isNotEmpty) ...[
-              const SizedBox(height: 32),
-              const _Label('PATTERN'),
-              const SizedBox(height: 12),
-              NotationStaffWidget(rudiment: rudiment),
-            ],
+            // The pattern for every exercise (for legacy rudiments and
+            // etudes that is the whole exercise). The lines themselves live
+            // on the line list (Zeilen statt Blatt, 16.10.); the lesson text
+            // lives here and only here — the practice screen shows notes.
             const SizedBox(height: 32),
-            const _Label('THE SHEET'),
+            const _Label('PATTERN'),
             const SizedBox(height: 12),
-            SheetStaffWidget(
-              rudiment: rudiment,
-              onLineTap: (i) => onLineTap != null
-                  ? onLineTap!(i)
-                  : context.push('/practice/${rudiment.id}?line=${i + 1}'),
-            ),
+            NotationStaffWidget(rudiment: rudiment),
             const SizedBox(height: 12),
             _Legend(),
             if (rudiment.technique.isNotEmpty) ...[
@@ -74,18 +65,21 @@ class LessonDetailScreen extends ConsumerWidget {
                 (s) => _TechniqueCard(section: s),
               ),
             ],
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () async {
-                final bpm =
-                    await ref.read(suggestedBpmProvider(rudiment.id).future);
-                if (context.mounted) {
-                  context.push('/practice/${rudiment.id}?bpm=$bpm');
-                }
-              },
-              icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('Start Practice'),
-            ),
+            if (showStart) ...[
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final bpm = await ref.read(
+                    suggestedBpmProvider(rudiment.id).future,
+                  );
+                  if (context.mounted) {
+                    context.push('/practice/${rudiment.id}?lines=all&bpm=$bpm');
+                  }
+                },
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: const Text('Start Practice'),
+              ),
+            ],
             const SizedBox(height: 16),
           ],
         ),
@@ -110,9 +104,11 @@ class _Label extends StatelessWidget {
       );
 }
 
-class _MetaRow extends StatelessWidget {
+/// Tempo range, difficulty, KIT, skills and genres as chips (info page
+/// and line list).
+class ExerciseMetaRow extends StatelessWidget {
   final Rudiment rudiment;
-  const _MetaRow({required this.rudiment});
+  const ExerciseMetaRow({super.key, required this.rudiment});
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +125,7 @@ class _MetaRow extends StatelessWidget {
           label: rudiment.difficulty.label,
           color: rudiment.difficulty.color,
         ),
+        if (rudiment.isKit) const AppBadge(label: 'KIT'),
         for (final skill in rudiment.skills)
           _InfoChip(
             icon: Icons.label_outline,

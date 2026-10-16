@@ -2,10 +2,14 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 import '../../app/design_tokens.dart';
+import '../../features/coaching/midi/kit_instrument.dart';
 import '../../features/lessons/models/rudiment.dart';
 import 'count_labels.dart';
+import 'kit_layout.dart';
 import 'sheet_geometry.dart';
 import 'staff_layout.dart';
+
+part 'kit_staff_painting.dart';
 
 /// Renders a pattern as an engraved five-line drum staff on warm off-white
 /// "paper" — black ink on a light field reads better at arm's length than
@@ -54,13 +58,20 @@ class NotationStaffWidget extends StatelessWidget {
             ? constraints.maxWidth
             : MediaQuery.of(context).size.width;
         final contentWidth = width - 2 * _hPad;
+        final kit = rudiment.patternVoices.isNotEmpty;
         final painter = _StaffPainter(
           beats: rudiment.sticking,
+          voices: kit ? rudiment.patternVoices : null,
           grid: rudiment.gridUnit,
           beatsPerBar: rudiment.beatsPerBar,
           maxWidth: contentWidth,
-          rowPitch: sheetRowPitch,
+          rowPitch: rudiment.hasFootSides
+              ? kitRowPitchWithFeet
+              : kit
+                  ? kitRowPitch
+                  : sheetRowPitch,
           activeIndex: activeIndex,
+          footLetters: rudiment.hasFootSides,
         );
         return Container(
           width: double.infinity,
@@ -87,33 +98,51 @@ class NotationStaffWidget extends StatelessWidget {
 /// line, an optional title above and count syllables below.
 ///
 /// [activeLine] / [activeIndex] place the cursor; every other line dims to
-/// 45 % (null = nothing dims, the info page). [onLineTap] reports the index
-/// of a tapped line.
+/// 45 % (null = nothing dims, the info page).
+///
+/// [onlyLine] draws that one line alone (the practice screen's one-line
+/// view): its number box, title, repeat signs, clef, time signature and a
+/// final barline, never dimmed.
 class SheetStaffWidget extends StatelessWidget {
   final Rudiment rudiment;
   final int? activeLine;
   final int? activeIndex;
+
+  /// Cursor tick within the active kit line; [activeIndex] is ignored there.
+  final int? activeTick;
   final bool showSticking;
   final bool showCounts;
-  final ValueChanged<int>? onLineTap;
 
   /// Geometry computed by the caller for this content width (the practice
   /// window caches it across the per-note rebuilds); null computes it here.
+  /// With [onlyLine] the line's height comes from its own layout (it
+  /// carries the clef); pass `clefLine: onlyLine` to [computeSheetGeometry]
+  /// when the caller needs that height too.
   final SheetGeometry? geometry;
+
+  /// Draw only this line; null = the whole sheet.
+  final int? onlyLine;
 
   const SheetStaffWidget({
     super.key,
     required this.rudiment,
     this.activeLine,
     this.activeIndex,
+    this.activeTick,
     this.showSticking = true,
     this.showCounts = true,
-    this.onLineTap,
     this.geometry,
+    this.onlyLine,
   });
 
   static const hPad = 4.0;
   static const vPad = 16.0;
+
+  /// The paper card the sheet sits on (also the one-line view's window).
+  static final cardDecoration = BoxDecoration(
+    color: AppColors.paper,
+    borderRadius: BorderRadius.circular(AppRadius.card),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -122,45 +151,56 @@ class SheetStaffWidget extends StatelessWidget {
           ? constraints.maxWidth
           : MediaQuery.of(context).size.width;
       final contentWidth = width - 2 * hPad;
+      final only = onlyLine;
       final geo = geometry ??
-          computeSheetGeometry(rudiment, contentWidth, showCounts: showCounts);
+          computeSheetGeometry(rudiment, contentWidth,
+              showCounts: showCounts, clefLine: only ?? 0);
+      final footLetters = rudiment.hasFootSides;
       final sheet = rudiment.sheet;
+      final shown =
+          only == null ? [for (var i = 0; i < sheet.length; i++) i] : [only];
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
-        decoration: BoxDecoration(
-          color: AppColors.paper,
-          borderRadius: BorderRadius.circular(AppRadius.card),
-        ),
+        decoration: cardDecoration,
         child: Column(
           children: [
-            for (var i = 0; i < sheet.length; i++)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onLineTap == null ? null : () => onLineTap!(i),
-                child: CustomPaint(
-                  size: Size(
-                      contentWidth, geo.layouts[i].rowCount * geo.rowPitch),
-                  painter: _StaffPainter(
-                    beats: sheet[i].beats,
-                    grid: rudiment.gridUnit,
-                    beatsPerBar: rudiment.beatsPerBar,
-                    maxWidth: contentWidth,
-                    rowPitch: geo.rowPitch,
-                    activeIndex: activeLine == i ? activeIndex : null,
-                    lineNumber: i + 1,
-                    repeat: sheet[i].repeat,
-                    finalBar: i == sheet.length - 1,
-                    showTimeSig: i == 0,
-                    showClef: i == 0,
-                    title: sheet[i].title,
-                    countLabels: showCounts && sheet[i].counts
-                        ? countLabelsFor(sheet[i].beats, rudiment.gridUnit,
-                            rudiment.beatsPerBar)
-                        : null,
-                    dimmed: activeLine != null && activeLine != i,
-                    showSticking: showSticking,
-                  ),
+            for (final i in shown)
+              _linePaint(
+                contentWidth: contentWidth,
+                // A line drawn alone carries its own clef: take the
+                // painter's height, whatever line the geometry put the
+                // clef on.
+                height: only == null
+                    ? geo.layouts[i].rowCount * geo.rowPitch
+                    : null,
+                painter: _StaffPainter(
+                  beats: sheet[i].beats,
+                  voices: sheet[i].isKit ? sheet[i].kitVoices : null,
+                  grid: rudiment.gridUnit,
+                  beatsPerBar: rudiment.beatsPerBar,
+                  maxWidth: contentWidth,
+                  rowPitch: geo.rowPitch,
+                  activeIndex: activeLine == i ? activeIndex : null,
+                  activeTick: activeLine == i ? activeTick : null,
+                  lineNumber: i + 1,
+                  repeat: sheet[i].repeat,
+                  finalBar: only != null || i == sheet.length - 1,
+                  showTimeSig: only != null || i == 0,
+                  showClef: only != null || i == 0,
+                  title: sheet[i].title,
+                  countLabels: showCounts && sheet[i].counts && !sheet[i].isKit
+                      ? countLabelsFor(sheet[i].beats, rudiment.gridUnit,
+                          rudiment.beatsPerBar)
+                      : null,
+                  kitCountLabels: showCounts &&
+                          sheet[i].counts &&
+                          sheet[i].isKit
+                      ? kitCountLabelsFor(geo.kitLayouts[i]!, rudiment.gridUnit)
+                      : null,
+                  dimmed: only == null && activeLine != null && activeLine != i,
+                  showSticking: showSticking,
+                  footLetters: footLetters,
                 ),
               ),
           ],
@@ -168,6 +208,15 @@ class SheetStaffWidget extends StatelessWidget {
       );
     });
   }
+
+  static Widget _linePaint(
+          {required double contentWidth,
+          required double? height,
+          required _StaffPainter painter}) =>
+      CustomPaint(
+        size: Size(contentWidth, height ?? painter.computeHeight()),
+        painter: painter,
+      );
 }
 
 /// Bravura (SMuFL) codepoints used by the drum staff. See smufl.org.
@@ -186,6 +235,12 @@ class _Smufl {
   static const rest8 = '\u{E4E6}';
   static const rest16 = '\u{E4E7}';
   static const rest32 = '\u{E4E8}';
+  static const noteheadXBlack = '\u{E0A9}';
+  static const noteheadDiamondBlack = '\u{E0DB}';
+  static const noteheadCircleX = '\u{E0B3}';
+  static const flag8Down = '\u{E241}';
+  static const flag16Down = '\u{E243}';
+  static const flag32Down = '\u{E245}';
   static String timeSig(int digit) => String.fromCharCode(0xE080 + digit);
 }
 
@@ -193,6 +248,9 @@ class _Smufl {
 /// sheet: number box, repeat signs, final barline, title, counts, dimming.
 class _StaffPainter extends CustomPainter {
   final List<StrokeBeat> beats;
+
+  /// Voices of a kit line (Brief B.2); null = pad line drawn from [beats].
+  final List<Voice>? voices;
   final NoteGrid grid;
   final int beatsPerBar;
   final double maxWidth;
@@ -201,6 +259,9 @@ class _StaffPainter extends CustomPainter {
   /// extra pitch is the count band below.
   final double rowPitch;
   final int? activeIndex;
+
+  /// Cursor tick of a kit line; [activeIndex] is ignored there.
+  final int? activeTick;
 
   /// Number in the box at the left of the first row; null = no box.
   final int? lineNumber;
@@ -220,17 +281,26 @@ class _StaffPainter extends CustomPainter {
   /// Count syllable per note (null entries = none); null = no count row.
   final List<String?>? countLabels;
 
+  /// Kit line: count syllable per column, parallel to the kit layout's
+  /// columns (`kitCountLabelsFor`); null = no count row.
+  final List<String?>? kitCountLabels;
+
   /// Whole line at 45 % — it is not the one being played.
   final bool dimmed;
   final bool showSticking;
 
+  /// Sheet draws a second letter row for foot sides (Nachtrag B.4c).
+  final bool footLetters;
+
   _StaffPainter({
     required this.beats,
+    this.voices,
     required this.grid,
     required this.beatsPerBar,
     required this.maxWidth,
     required this.rowPitch,
     this.activeIndex,
+    this.activeTick,
     this.lineNumber,
     this.repeat = false,
     this.finalBar = true,
@@ -238,43 +308,78 @@ class _StaffPainter extends CustomPainter {
     this.showClef = true,
     this.title,
     this.countLabels,
+    this.kitCountLabels,
     this.dimmed = false,
     this.showSticking = true,
+    this.footLetters = false,
   });
+
+  bool get isKit => voices != null;
 
   late final double _leftPad = leftPadFor(numbered: lineNumber != null);
   late final double _rightPad = rightPadFor(repeat: repeat);
   late final double _systemPad = systemPadFor(
-      repeat: repeat, graces: leadsWithGraces(beats), clef: showClef);
+      repeat: repeat,
+      graces: isKit
+          ? voices!.any((v) => leadsWithGraces(v.beats))
+          : leadsWithGraces(beats),
+      clef: showClef,
+      kitBox: isKit && !showClef,
+      kitTimeSig: isKit && showTimeSig && !repeat);
+
+  /// Kit line geometry: both layers on one scale; null for a pad line.
+  late final KitLineLayout? _kit = !isKit
+      ? null
+      : computeKitLineLayout(
+          voices: voices!,
+          grid: grid,
+          beatsPerBar: beatsPerBar,
+          maxWidth: maxWidth,
+          leftPad: _leftPad,
+          rightPad: _rightPad,
+          systemPad: _systemPad,
+          barGap: sheetBarGap,
+        );
 
   /// Duration-proportional layout — the single source of horizontal geometry,
-  /// beam runs and tuplet groups. Computed once, lazily.
-  late final StaffLayout _layout = computeStaffLayout(
-    beats: beats,
-    grid: grid,
-    beatsPerBar: beatsPerBar,
-    maxWidth: maxWidth,
-    leftPad: _leftPad,
-    rightPad: _rightPad,
-    systemPad: _systemPad,
-    barGap: sheetBarGap,
-  );
+  /// beam runs and tuplet groups (a kit line: its hands layer). Computed
+  /// once, lazily.
+  late final StaffLayout _layout = _kit?.hands ??
+      computeStaffLayout(
+        beats: beats,
+        grid: grid,
+        beatsPerBar: beatsPerBar,
+        maxWidth: maxWidth,
+        leftPad: _leftPad,
+        rightPad: _rightPad,
+        systemPad: _systemPad,
+        barGap: sheetBarGap,
+      );
 
   // ── Layout metrics ────────────────────────────────────────────────────────
-  static const double _staffBandH = sheetRowPitch;
+  double get _staffBandH =>
+      footLetters ? kitRowPitchWithFeet : isKit ? kitRowPitch : sheetRowPitch;
 
   // Five-line staff geometry.
   static const double _lineGap = 6; // vertical gap between adjacent staff lines
   // Middle (3rd) line = snare = notehead center.
 
-  // Vertical positions within the staff band.
-  static const double _accentY = 8; // accents / triplet marks / grace tops
-  static const double _stemTopY = 18;
-  static const double _midY = 54; // middle staff line / notehead center
-  static const double _letterY = 90; // R/L letters (below the bottom line)
-  static const double _countY = 104; // count syllables (in the count band)
-  static const double _titleY = 69; // line title: under the staff, left,
-  // in the free strip between the bottom line (66) and the letters (84)
+  // Vertical positions within the staff band — pad row / kit row (B.2).
+  // Accents / triplet marks / grace tops.
+  double get _accentY => isKit ? 6 : 8;
+  double get _stemTopY => isKit ? 14 : 18;
+  // Middle staff line / notehead center.
+  double get _midY => isKit ? 60 : 54;
+  // R/L letters (below the bottom line).
+  double get _letterY => footLetters ? 130 : isKit ? 116 : 90;
+  // Count syllables (in the count band).
+  double get _countY =>
+      footLetters ? kitRowPitchWithFeet : isKit ? kitRowPitch : 104;
+  // Line title: under the staff, left, in the free strip between the bottom
+  // line and the letters (kit: under the feet stems).
+  double get _titleY => footLetters ? 96 : isKit ? 98 : 69;
+  static const double _footLetterY = 114; // foot sides under the feet stems
+  static const double _stemBottomY = 96; // feet stems of a kit row end here
 
   static const double _headRx = 6;
   static const double _headRy = 4.6;
@@ -400,32 +505,46 @@ class _StaffPainter extends CustomPainter {
       _drawSingleBarline(canvas, lineEndX, topLineY, bottomLineY);
     }
 
+    if (isKit) {
+      final kit = _kit!;
+      final tick = activeTick;
+      if (tick != null && kit.rowOfTick(tick) == row) {
+        _drawCursorField(canvas, kit.xOfTick(tick), y0);
+      }
+      _paintKitRow(canvas, row, y0, staffY);
+      return;
+    }
+
     // Cursor field: the active note's slot turns amber; ink stays black.
     if (activeIndex != null) {
       for (final p in rowPlacements) {
         if (p.index != activeIndex) continue;
-        final cx = p.xCenter;
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-                center: Offset(cx, y0 + _staffBandH / 2),
-                width: _cursorW,
-                height: _staffBandH - 16),
-            const Radius.circular(8),
-          ),
-          Paint()..color = _cursorField,
-        );
-        final linePaint = Paint()
-          ..color = _cursorLine
-          ..strokeWidth = 3;
-        canvas.drawLine(
-            Offset(cx, y0 + 10), Offset(cx, y0 + _staffBandH - 10), linePaint);
+        _drawCursorField(canvas, p.xCenter, y0);
         break;
       }
     }
 
     // Beams / tuplet brackets, then individual note heads / flags / letters.
     _paintBeamsAndNotes(canvas, row, rowPlacements, y0, staffY);
+  }
+
+  /// Amber field and line behind the active column; ink stays black.
+  void _drawCursorField(Canvas canvas, double cx, double y0) {
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+            center: Offset(cx, y0 + _staffBandH / 2),
+            width: _cursorW,
+            height: _staffBandH - 16),
+        const Radius.circular(8),
+      ),
+      Paint()..color = _cursorField,
+    );
+    final linePaint = Paint()
+      ..color = _cursorLine
+      ..strokeWidth = 3;
+    canvas.drawLine(
+        Offset(cx, y0 + 10), Offset(cx, y0 + _staffBandH - 10), linePaint);
   }
 
   void _paintBeamsAndNotes(Canvas canvas, int row,
@@ -524,9 +643,13 @@ class _StaffPainter extends CustomPainter {
         _drawDot(canvas, Offset(x, staffY), headColor);
       }
 
-      // R/L letter.
-      if (showSticking) {
-        final letter = beat.hand == Hand.right ? 'R' : 'L';
+      // R/L letter — hand voices only (foot strokes have none).
+      final letter = switch (beat.hand) {
+        Hand.right => 'R',
+        Hand.left => 'L',
+        null => null,
+      };
+      if (showSticking && letter != null) {
         _drawText(canvas, letter, Offset(x, y0 + _letterY), _dim(_letterColor),
             12,
             bold: true);
@@ -813,6 +936,10 @@ class _StaffPainter extends CustomPainter {
       // The label list is rebuilt per build; compare by content so a line
       // with counts does not repaint on every note of another line.
       !listEquals(old.countLabels, countLabels) ||
+      !listEquals(old.kitCountLabels, kitCountLabels) ||
       old.dimmed != dimmed ||
-      old.showSticking != showSticking;
+      old.showSticking != showSticking ||
+      old.footLetters != footLetters ||
+      old.voices != voices ||
+      old.activeTick != activeTick;
 }

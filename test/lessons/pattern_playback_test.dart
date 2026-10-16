@@ -1,3 +1,5 @@
+import 'package:drum_coach/features/lessons/data/etude_dsl.dart';
+import 'package:drum_coach/features/coaching/midi/kit_instrument.dart';
 import 'package:drum_coach/features/lessons/models/pattern_playback.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -161,6 +163,59 @@ void main() {
       expect(pp.isOnsetTick(24), isTrue);
       expect(pp.isOnsetTick(0), isTrue);
       expect(pp.isOnsetTick(1), isFalse);
+    });
+  });
+
+  group('buildVoicesPlayback — kit unit (Brief B.1)', () {
+    final hh = voice(KitInstrument.hiHatClosed, eighths([R, R, R, R, R, R, R, R]));
+    final sn = voice(KitInstrument.snare, [
+      rest(NoteValue.quarter),
+      note(L, NoteValue.quarter, accent: true),
+      rest(NoteValue.quarter),
+      note(L, NoteValue.quarter, ghost: true),
+    ]);
+    final bd = voice(KitInstrument.kick, [
+      foot(NoteValue.quarter),
+      rest(NoteValue.quarter),
+      foot(NoteValue.quarter),
+      rest(NoteValue.quarter),
+    ]);
+    final pp = buildVoicesPlayback([hh, sn, bd], NoteGrid.eighth);
+
+    test('one cycle of the common length, loudest voice per tick', () {
+      expect(pp.totalTicks, 96);
+      expect(pp.tickVolumes.length, 96);
+      expect(pp.tickVolumes[0], 0.85); // hi-hat + kick, both plain
+      expect(pp.tickVolumes[24], 2.0); // accent on the snare wins
+      expect(pp.tickVolumes[72], 0.85); // ghost snare under the hi-hat
+      expect(pp.tickVolumes[6], 0.0);
+    });
+
+    test('onsets are the union of sounding onsets — rests are no columns', () {
+      expect(pp.onsetTicks, [0, 12, 24, 36, 48, 60, 72, 84]);
+      expect(pp.isOnsetTick(24), isTrue);
+      expect(pp.isOnsetTick(6), isFalse);
+      expect(pp.noteIndexAtTick(30), 2);
+    });
+
+    test('a feet-only column is a column too', () {
+      final sparseHh = voice(KitInstrument.hiHatClosed, [
+        note(R, NoteValue.quarter),
+        rest(NoteValue.quarter),
+        rest(NoteValue.quarter),
+        rest(NoteValue.quarter),
+      ]);
+      final p = buildVoicesPlayback([sparseHh, bd], NoteGrid.eighth);
+      expect(p.onsetTicks, [0, 48]);
+      expect(p.tickVolumes[48], 0.85);
+    });
+
+    test('voices of different length throw', () {
+      final short = voice(KitInstrument.tom1, [note(R, NoteValue.half)]);
+      expect(() => buildVoicesPlayback([hh, short], NoteGrid.eighth),
+          throwsArgumentError);
+      expect(() => buildVoicesPlayback(const [], NoteGrid.eighth),
+          throwsArgumentError);
     });
   });
 }

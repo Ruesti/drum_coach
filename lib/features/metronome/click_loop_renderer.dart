@@ -1,3 +1,4 @@
+import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -108,7 +109,9 @@ Uint8List buildLoopWav({
   }
   final tickDurSec = 60.0 / bpm / factor;
   final totalSamples = (ticks * tickDurSec * sampleRate).round();
-  final mix = Float64List(totalSamples);
+  // Float32: half the transient memory of a 64-bar loop (~45 instead of
+  // ~90 MB); the precision loss is far below one int16 step.
+  final mix = Float32List(totalSamples);
 
   for (final v in voices) {
     if (v.gain <= 0) continue;
@@ -150,4 +153,37 @@ Uint8List buildLoopWav({
     bd.setInt16(44 + i * 2, s16, Endian.little);
   }
   return bd.buffer.asUint8List();
+}
+
+/// Renders a loop WAV; the engine's seam between plan and audio, so tests
+/// can swap the off-isolate runner for a controllable one.
+typedef LoopWavRenderer = Future<Uint8List> Function({
+  required int bpm,
+  required int factor,
+  required List<LoopVoice> voices,
+});
+
+/// [buildLoopWav] on a background isolate: a sequence loop (up to 64 bars)
+/// takes 200–400 ms to render, which on the main isolate froze the UI on
+/// every tempo change and ladder step. Only plain data crosses: ints and
+/// the voices (lists of doubles).
+Future<Uint8List> renderLoopWavInIsolate({
+  required int bpm,
+  required int factor,
+  required List<LoopVoice> voices,
+}) =>
+    Isolate.run(() => buildLoopWav(bpm: bpm, factor: factor, voices: voices));
+
+/// Renders with [render] and hands the WAV back only while [isCurrent]
+/// still holds afterwards — a render superseded by a newer rebuild or a
+/// stop while it ran is dropped (null) instead of loaded.
+Future<Uint8List?> renderLoopIfCurrent({
+  required LoopWavRenderer render,
+  required int bpm,
+  required int factor,
+  required List<LoopVoice> voices,
+  required bool Function() isCurrent,
+}) async {
+  final wav = await render(bpm: bpm, factor: factor, voices: voices);
+  return isCurrent() ? wav : null;
 }

@@ -6,6 +6,18 @@ import 'click_loop_renderer.dart';
 /// WAV on every tempo change would stall the loop rebuild.
 const int maxBackingCycleBars = 64;
 
+/// A kit voice the band plays with the player (Phase B.4, S23 test 16.10.:
+/// "Backing" on a kit exercise = the line's own kick and hi-hat with the
+/// real backing samples): per-tick volumes over one pattern cycle (same
+/// length as the pattern volumes).
+enum KitSound { kick, hihat }
+
+class KitSoundTrack {
+  const KitSoundTrack(this.tickVolumes, this.sound);
+  final List<double> tickVolumes;
+  final KitSound sound;
+}
+
 /// What the engine renders: the cycle length, the pattern volumes tiled to
 /// that cycle (the tick clock and beat poller read these) and every voice.
 class LoopPlan {
@@ -27,6 +39,16 @@ class LoopPlan {
 /// - [backing]: kick + hi-hat from a style, tiled per bar, only on the
 ///   24-tick pattern clock (`factor == 24`); the cycle then grows to
 ///   `lcm(pattern, bar)` and the pattern repeats to fill it.
+/// - [backingKick] / [backingHihat]: false mutes that band voice (Brief B.4:
+///   the band keeps quiet in the voices the player plays).
+/// - [kitTracks]: kick/hi-hat voices of a kit unit, tiled to the cycle and
+///   played with [kickSound] / [hihatLoud] / [hihatSoft] at [backingLevel]
+///   in place of a style (kit exercise with Backing on); they need no bar
+///   clock, so the cycle stays the pattern.
+/// - [patternSound]: what the pattern voice *sounds* (same length as
+///   [patternVolumes]); null = the pattern volumes. Kit unit with Backing
+///   on: zero where only kick/hi-hat sound (the samples play those), so
+///   the clock ([LoopPlan.patternVolumes]) keeps every onset.
 LoopPlan buildLoopPlan({
   required List<double> patternVolumes,
   required List<double> patternLoud,
@@ -40,6 +62,10 @@ LoopPlan buildLoopPlan({
   List<double>? kickSound,
   List<double>? hihatLoud,
   List<double>? hihatSoft,
+  bool backingKick = true,
+  bool backingHihat = true,
+  List<KitSoundTrack> kitTracks = const [],
+  List<double>? patternSound,
 }) {
   final patternTicks = patternVolumes.length;
   var cycle = patternTicks;
@@ -59,14 +85,39 @@ LoopPlan buildLoopPlan({
   final tiled = [
     for (var t = 0; t < cycle; t++) patternVolumes[t % patternTicks]
   ];
+  if (patternSound != null && patternSound.length != patternTicks) {
+    throw ArgumentError('pattern sound spans ${patternSound.length} ticks, '
+        'the pattern $patternTicks');
+  }
   final voices = <LoopVoice>[
     LoopVoice(
-      tickVolumes: tiled,
+      tickVolumes: patternSound == null
+          ? tiled
+          : [for (var t = 0; t < cycle; t++) patternSound[t % patternTicks]],
       loudSamples: patternLoud,
       softSamples: patternSoft,
       loudFrom: 1.2,
     ),
   ];
+  for (final t in kitTracks) {
+    if (t.tickVolumes.length != patternTicks) {
+      throw ArgumentError('kit track spans ${t.tickVolumes.length} ticks, '
+          'the pattern $patternTicks');
+    }
+    final kick = t.sound == KitSound.kick;
+    final loud = kick ? kickSound : hihatLoud;
+    final soft = kick ? kickSound : hihatSoft;
+    if (loud == null || soft == null) continue;
+    voices.add(LoopVoice(
+      tickVolumes: [
+        for (var i = 0; i < cycle; i++) t.tickVolumes[i % patternTicks]
+      ],
+      loudSamples: loud,
+      softSamples: soft,
+      loudFrom: kick ? 1.0 : 0.9,
+      gain: backingLevel,
+    ));
+  }
   if (pulse && pulseSound != null) {
     voices.add(LoopVoice(
       tickVolumes: [
@@ -82,21 +133,25 @@ LoopPlan buildLoopPlan({
     final kickPcm = kickSound!;
     final hhLoud = hihatLoud!;
     final hhSoft = hihatSoft!;
-    voices.add(LoopVoice(
-      tickVolumes: tileBackingHits(style.kick,
-          beatsPerBar: beatsPerBar, cycleTicks: cycle),
-      loudSamples: kickPcm,
-      softSamples: kickPcm,
-      gain: backingLevel,
-    ));
-    voices.add(LoopVoice(
-      tickVolumes: tileBackingHits(style.hihat,
-          beatsPerBar: beatsPerBar, cycleTicks: cycle),
-      loudSamples: hhLoud,
-      softSamples: hhSoft,
-      loudFrom: 0.9,
-      gain: backingLevel,
-    ));
+    if (backingKick) {
+      voices.add(LoopVoice(
+        tickVolumes: tileBackingHits(style.kick,
+            beatsPerBar: beatsPerBar, cycleTicks: cycle),
+        loudSamples: kickPcm,
+        softSamples: kickPcm,
+        gain: backingLevel,
+      ));
+    }
+    if (backingHihat) {
+      voices.add(LoopVoice(
+        tickVolumes: tileBackingHits(style.hihat,
+            beatsPerBar: beatsPerBar, cycleTicks: cycle),
+        loudSamples: hhLoud,
+        softSamples: hhSoft,
+        loudFrom: 0.9,
+        gain: backingLevel,
+      ));
+    }
   }
   return LoopPlan(cycleTicks: cycle, patternVolumes: tiled, voices: voices);
 }

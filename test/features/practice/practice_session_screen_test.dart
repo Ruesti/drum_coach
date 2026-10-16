@@ -4,26 +4,28 @@ import 'package:drum_coach/app/platform_support.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/coaching/services/stroke_source.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
+import 'package:drum_coach/features/lessons/lessons_provider.dart';
 import 'package:drum_coach/features/lessons/models/pattern_playback.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/lessons/models/sheet_plan.dart';
 import 'package:drum_coach/features/metronome/backing_styles.dart';
+import 'package:drum_coach/features/metronome/loop_voices.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
 import 'package:drum_coach/features/metronome/metronome_provider.dart';
 import 'package:drum_coach/features/practice/backdrop.dart';
 import 'package:drum_coach/features/practice/practice_provider.dart';
 import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:drum_coach/features/practice/widgets/pulse_bar.dart';
-import 'package:drum_coach/features/practice/widgets/sheet_window.dart';
+import 'package:drum_coach/features/practice/widgets/line_view.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:drum_coach/shared/widgets/app_badge.dart';
-import 'package:drum_coach/shared/widgets/sheet_geometry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../helpers/kit_fixtures.dart';
 import '../../helpers/midi_fakes.dart';
 
 /// Overrides [MetronomeNotifier] so its very first `build()` already reports
@@ -64,6 +66,41 @@ class _RecordingPlayingMetronomeNotifier extends _RecordingMetronomeNotifier {
       const MetronomeState(isPlaying: true, currentBeatIndex: 0);
 }
 
+/// Idle metronome that records the last backing call's mute flags.
+class _BackingFlagsMetronomeNotifier extends MetronomeNotifier {
+  ({bool kick, bool hihat})? last;
+  String? lastStyleId;
+  List<KitSoundTrack> lastKitTracks = const [];
+  List<double>? lastPatternSound;
+  @override
+  MetronomeState build() => const MetronomeState();
+  @override
+  void setBacking(String? styleId,
+      {required int beatsPerBar,
+      bool backingKick = true,
+      bool backingHihat = true,
+      List<KitSoundTrack> kitTracks = const [],
+      List<double>? patternSound}) {
+    last = (kick: backingKick, hihat: backingHihat);
+    lastStyleId = styleId;
+    lastKitTracks = kitTracks;
+    lastPatternSound = patternSound;
+    super.setBacking(styleId,
+        beatsPerBar: beatsPerBar,
+        backingKick: backingKick,
+        backingHihat: backingHihat,
+        kitTracks: kitTracks,
+        patternSound: patternSound);
+  }
+}
+
+/// Playing metronome the test moves tick by tick.
+class _TickingMetronomeNotifier extends MetronomeNotifier {
+  @override
+  MetronomeState build() => const MetronomeState(isPlaying: true);
+  void tickTo(int tick) => state = state.copyWith(currentBeatIndex: tick);
+}
+
 /// Records saves instead of writing to Isar (no database in widget tests).
 /// The ratings go into a list the TEST owns: the provider is autoDispose, so
 /// the notifier instance is thrown away right after the screen's call and a
@@ -88,12 +125,14 @@ Future<ProviderContainer> _pumpScreen(
   required PracticeSessionScreen screen,
   MetronomeNotifier Function()? metronome,
   List<int>? saves,
+  List<Override> extraOverrides = const [],
 }) async {
   final container = ProviderContainer(overrides: [
     metronomeNotifierProvider
         .overrideWith(metronome ?? () => _IdleMetronomeNotifier()),
     practiceNotifierProvider
         .overrideWith(() => _FakePracticeNotifier(saves ?? <int>[])),
+    ...extraOverrides,
   ]);
   addTearDown(container.dispose);
   await tester.pumpWidget(
@@ -114,7 +153,7 @@ PracticeSessionScreen _screen({
   String? contextLine,
   int? phase,
   int? line,
-  String? mode,
+  String? lines,
 }) =>
     PracticeSessionScreen(
       rudimentId: id ?? rudimentsSeedData.first.id,
@@ -125,7 +164,7 @@ PracticeSessionScreen _screen({
       contextLine: contextLine,
       phase: phase,
       line: line,
-      mode: mode,
+      lines: lines,
     );
 
 String _backdropOf(WidgetTester tester) => (tester
@@ -161,41 +200,6 @@ void _mockMicPermission(WidgetTester tester) {
 }
 
 void main() {
-  group('initialSheetPosition', () {
-    const none = (line: 0, sheet: false);
-    test('route params win, clamped and parsed leniently', () {
-      expect(
-          initialSheetPosition(
-              lineCount: 11, paramLine: 3, paramMode: 'sheet', remembered: none),
-          (line: 2, sheet: true));
-      expect(
-          initialSheetPosition(
-                  lineCount: 11, paramLine: 99, paramMode: null, remembered: none)
-              .line,
-          0);
-      expect(
-          initialSheetPosition(
-              lineCount: 11, paramLine: 0, paramMode: 'bogus', remembered: none),
-          (line: 0, sheet: false));
-    });
-    test('else the remembered position, clamped into the sheet', () {
-      expect(
-          initialSheetPosition(
-              lineCount: 11,
-              paramLine: null,
-              paramMode: null,
-              remembered: (line: 4, sheet: false)),
-          (line: 4, sheet: false));
-      expect(
-          initialSheetPosition(
-              lineCount: 3,
-              paramLine: null,
-              paramMode: null,
-              remembered: (line: 7, sheet: true)),
-          (line: 0, sheet: true));
-    });
-  });
-
   group('staleTickAfterUnitChange', () {
     final changed = DateTime(2026, 10, 1, 12, 0, 0);
     test('every tick of the old loop is stale until a downbeat after the '
@@ -222,83 +226,173 @@ void main() {
     });
   });
 
-  group('sheet (Blattform)', () {
+  group('lines and sequences', () {
     const sheetId = 'single_paradiddle';
     Rudiment sheetRudiment() =>
         rudimentsSeedData.firstWhere((r) => r.id == sheetId);
 
     testWidgets('a one-line exercise shows no line bar', (tester) async {
-      await _pumpScreen(tester, screen: _screen());
+      // A legacy basic rudiment without authored lines (Katalog 3a turned
+      // the first twelve into sheets).
+      await _pumpScreen(tester, screen: _screen(id: 'multiple_bounce_roll'));
       expect(find.byKey(const ValueKey('line-bar')), findsNothing);
-      expect(find.byType(SheetWindow), findsOneWidget);
+      expect(find.byType(LineView), findsOneWidget);
       // Uli 10.10.: the card nearly fills the width — 6 px margins.
-      final rect = tester.getRect(find.byType(SheetWindow));
+      final rect = tester.getRect(find.byType(LineView));
       expect(rect.left, 6);
       expect(rect.right, 360 - 6);
     });
 
     testWidgets(
-        'a sheet opens on line 1 with the line bar; › moves to line 2 and '
-        'reloads the loop', (tester) async {
+        'a sheet opens on the remembered line, › moves to line 2 and reloads',
+        (tester) async {
       final rec = _RecordingMetronomeNotifier();
       await _pumpScreen(tester,
           screen: _screen(id: sheetId), metronome: () => rec);
-      expect(find.text('Line 1 / 11'), findsOneWidget);
+      expect(find.text('Line 1 of 8'), findsOneWidget);
       final line2 = SheetPlan.line(sheetRudiment(), 1);
       await tester.tap(find.byKey(const ValueKey('line-next')));
       await tester.pump();
-      expect(find.text('Line 2 / 11'), findsOneWidget);
+      expect(find.text('Line 2 of 8'), findsOneWidget);
       expect(
           rec.volumes.last,
           PatternPlayback.forRudiment(sheetRudiment().withSticking(line2.beats))
               .totalTicks);
-      expect(SettingsService.sheetPositionFor(sheetId),
-          (line: 1, sheet: false));
+      expect(SettingsService.lastLineFor(sheetId), 1);
     });
 
-    testWidgets('Sheet mode plays every line once and shows the bar count',
-        (tester) async {
+    testWidgets('?lines=1,3 plays a sequence: each line twice', (tester) async {
       final rec = _RecordingMetronomeNotifier();
       await _pumpScreen(tester,
-          screen: _screen(id: sheetId), metronome: () => rec);
-      await tester.tap(find.byKey(const ValueKey('mode-sheet')));
-      await tester.pump();
-      expect(find.text('Sheet · 28 bars'), findsOneWidget);
-      expect(find.byKey(const ValueKey('line-next')), findsNothing);
-      expect(rec.volumes.last, 28 * 96);
-      expect(
-          SettingsService.sheetPositionFor(sheetId), (line: 0, sheet: true));
+          screen: _screen(id: sheetId, lines: '1,3'), metronome: () => rec);
+      // Two 2-bar lines, each twice.
+      expect(rec.volumes.last, 2 * 2 * 2 * 96);
+      expect(find.text('Line 1 · 1 of 2 · 1/2'), findsOneWidget);
+      expect(find.byKey(const ValueKey('mode-line')), findsNothing);
+      expect(find.byKey(const ValueKey('mode-sheet')), findsNothing);
     });
 
-    testWidgets('?line=3 opens line 3; out of range opens line 1',
+    testWidgets('the sequence advances with the cursor', (tester) async {
+      final metronome = _TickingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: sheetId, lines: '1,3'),
+          metronome: () => metronome);
+      metronome.tickTo(2 * 192);
+      await tester.pump();
+      expect(find.text('Line 3 · 2 of 2 · 1/2'), findsOneWidget);
+      metronome.tickTo(3 * 192);
+      await tester.pump();
+      expect(find.text('Line 3 · 2 of 2 · 2/2'), findsOneWidget);
+    });
+
+    testWidgets('one-line view: only the current line is drawn',
         (tester) async {
+      final metronome = _TickingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: sheetId, lines: '1,3'),
+          metronome: () => metronome);
+      LineView view() => tester.widget<LineView>(find.byType(LineView));
+      expect(
+          find.descendant(
+              of: find.byType(LineView), matching: find.byType(CustomPaint)),
+          findsOneWidget);
+      expect(view().line, 0);
+      metronome.tickTo(2 * 192);
+      await tester.pump();
+      expect(view().line, 2);
+      expect(
+          find.descendant(
+              of: find.byType(LineView), matching: find.byType(CustomPaint)),
+          findsOneWidget);
+    });
+
+    testWidgets('› in a running sequence wraps and reloads', (tester) async {
+      final rec = _RecordingPlayingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: sheetId, lines: '1,3'), metronome: () => rec);
+      final before = rec.volumes.length;
+      await tester.tap(find.byKey(const ValueKey('line-next')));
+      await tester.pump();
+      expect(find.text('Line 3 · 2 of 2 · 1/2'), findsOneWidget);
+      expect(rec.volumes.length, before + 1);
+      await tester.tap(find.byKey(const ValueKey('line-next')));
+      await tester.pump();
+      expect(find.text('Line 1 · 1 of 2 · 1/2'), findsOneWidget);
+      expect(find.text('Stop'), findsOneWidget);
+    });
+
+    testWidgets('the repeats setting is used and capped', (tester) async {
+      await SettingsService.setSequenceRepeats(3);
+      final rec = _RecordingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: 'fill_sixteenth_singles', lines: 'all'),
+          metronome: () => rec);
+      // 8 lines × 4 bars × 3 = 96 bars > 64: two passes each.
+      expect(rec.volumes.last, 64 * 96);
+      expect(find.textContaining(RegExp(r'· 1/2$')), findsOneWidget);
+    });
+
+    testWidgets('lines=all on a one-line exercise plays it alone',
+        (tester) async {
+      await _pumpScreen(tester,
+          screen: _screen(id: 'multiple_bounce_roll', lines: 'all'));
+      expect(find.byKey(const ValueKey('line-bar')), findsNothing);
+      expect(
+          find.textContaining(RegExp(r'^Line \d+ · \d+ of')), findsNothing);
+    });
+
+    testWidgets('?line=3 opens line 3; ?mode=sheet is ignored', (tester) async {
       final a =
           await _pumpScreen(tester, screen: _screen(id: sheetId, line: 3));
-      expect(find.text('Line 3 / 11'), findsOneWidget);
+      expect(find.text('Line 3 of 8'), findsOneWidget);
       a.dispose();
       // A fresh State: the same widget type in the same place would keep
       // the old one (and its line) alive.
       await tester.pumpWidget(const SizedBox());
-      final b =
-          await _pumpScreen(tester, screen: _screen(id: sheetId, line: 40));
-      expect(find.text('Line 1 / 11'), findsOneWidget);
+      await SettingsService.setLastLine(sheetId, 4);
+      final b = await _pumpScreen(tester,
+          screen: const PracticeSessionScreen(
+              rudimentId: sheetId,
+              isFromRoutine: false,
+              lines: null,
+              line: null));
+      expect(find.text('Line 5 of 8'), findsOneWidget);
       b.dispose();
     });
 
-    testWidgets('the remembered position is restored', (tester) async {
-      await SettingsService.setSheetPosition(sheetId, line: 4, sheet: false);
-      await _pumpScreen(tester, screen: _screen(id: sheetId));
-      expect(find.text('Line 5 / 11'), findsOneWidget);
+    testWidgets('opening one line remembers it; a sequence remembers nothing', (
+      tester,
+    ) async {
+      final a = await _pumpScreen(
+        tester,
+        screen: _screen(id: sheetId, lines: '3'),
+      );
+      expect(SettingsService.lastLineFor(sheetId), 2);
+      a.dispose();
+      await tester.pumpWidget(const SizedBox());
+      await SettingsService.setLastLine(sheetId, 6);
+      final b = await _pumpScreen(
+        tester,
+        screen: _screen(id: sheetId, lines: '1,3'),
+      );
+      expect(SettingsService.lastLineFor(sheetId), 6);
+      b.dispose();
     });
 
-    testWidgets('tapping a line in the window selects it', (tester) async {
-      await _pumpScreen(tester, screen: _screen(id: sheetId));
-      final clip = tester.getRect(find.byType(ClipRect).first);
-      // Row 1 of the window = line 2 (line 1 is one row).
-      await tester.tapAt(Offset(clip.center.dx,
-          clip.top + sheetWindowPad + 1.5 * sheetRowPitchWithCounts));
+    testWidgets('› inside a sequence leaves the stored line alone', (
+      tester,
+    ) async {
+      await SettingsService.setLastLine(sheetId, 6);
+      await _pumpScreen(tester, screen: _screen(id: sheetId, lines: '1,3'));
+      await tester.tap(find.byKey(const ValueKey('line-next')));
       await tester.pump();
-      expect(find.text('Line 2 / 11'), findsOneWidget);
+      expect(find.text('Line 3 · 2 of 2 · 1/2'), findsOneWidget);
+      expect(SettingsService.lastLineFor(sheetId), 6);
+    });
+
+    testWidgets('a one-line exercise stores no line', (tester) async {
+      await _pumpScreen(tester, screen: _screen(id: 'multiple_bounce_roll'));
+      expect(SettingsService.lastLineFor('multiple_bounce_roll'), isNull);
     });
 
     testWidgets('switching lines while playing reloads the loop at once',
@@ -311,7 +405,7 @@ void main() {
       await tester.pump();
       expect(rec.volumes.length, before + 1);
       expect(find.text('Stop'), findsOneWidget);
-      expect(find.text('Line 2 / 11'), findsOneWidget);
+      expect(find.text('Line 2 of 8'), findsOneWidget);
     });
 
     testWidgets('options: sticking letters and count hints switches',
@@ -453,11 +547,8 @@ void main() {
         tester,
         screen: const PracticeSessionScreen(
             rudimentId: 'six_stroke_roll', isFromRoutine: false));
-    // The window's clipped paper card is what the eye sees.
-    final sheet = tester.getRect(find
-        .descendant(
-            of: find.byType(SheetWindow), matching: find.byType(ClipRect))
-        .first);
+    // The one-line view's paper card is what the eye sees.
+    final sheet = tester.getRect(find.byType(LineView));
     final header = tester.getRect(find.text('Six Stroke Roll'));
     final tempo = tester.getRect(find.byType(TempoRow));
     final above = sheet.top - header.bottom;
@@ -944,7 +1035,7 @@ void main() {
     await _pumpScreen(tester, screen: _screen());
     AnimatedOpacity sheet() => tester.widget<AnimatedOpacity>(find
         .ancestor(
-            of: find.byType(SheetWindow),
+            of: find.byType(LineView),
             matching: find.byType(AnimatedOpacity))
         .first);
     expect(sheet().opacity, 0.6);
@@ -1099,6 +1190,150 @@ void main() {
       expect(statusText(tester), 'MIC');
       await tester.pumpWidget(const SizedBox());
       container.dispose();
+    });
+  });
+
+  group('kit exercises (Etappe 2, Phase B.1)', () {
+    List<Override> kitCatalog() => [
+          rudimentsProvider
+              .overrideWithValue([...rudimentsSeedData, kitShowcase()]),
+        ];
+
+    testWidgets('loads the mixed unit: one cycle of every voice', (tester) async {
+      final rec = _RecordingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'),
+          metronome: () => rec,
+          extraOverrides: kitCatalog());
+      expect(rec.volumes.last, 2 * 96); // line 1: two bars
+      expect(find.byType(LineView), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a running kit session puts the cursor on a column',
+        (tester) async {
+      final metronome = _TickingMetronomeNotifier();
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'),
+          metronome: () => metronome,
+          extraOverrides: kitCatalog());
+      LineView view() => tester.widget<LineView>(find.byType(LineView));
+      metronome.tickTo(0);
+      await tester.pump();
+      expect((view().line, view().activeTick), (0, 0));
+      expect(view().activeIndex, isNull);
+      metronome.tickTo(96); // bar 2, beat 1 (24 ticks per quarter)
+      await tester.pump();
+      expect((view().line, view().activeTick), (0, 96));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'Backing on: the band plays the line\'s own kick and hi-hat, '
+        'no style; off: nothing (S23 test 16.10.)', (tester) async {
+      Future<_BackingFlagsMetronomeNotifier> run(bool on) async {
+        await SettingsService.setBackingEnabled(on);
+        final rec = _BackingFlagsMetronomeNotifier();
+        await _pumpScreen(tester,
+            screen: _screen(id: 'kit_showcase'),
+            metronome: () => rec,
+            extraOverrides: kitCatalog());
+        await tester.pump();
+        await tester.pumpWidget(const SizedBox());
+        return rec;
+      }
+
+      final on = await run(true);
+      expect(on.lastStyleId, isNull);
+      // Line 1 of the showcase: hi-hat, snare, kick → hi-hat + kick.
+      expect(on.lastKitTracks.map((t) => t.sound),
+          unorderedEquals([KitSound.hihat, KitSound.kick]));
+      // The pattern sound keeps only the snare: hat/kick ticks are silent.
+      expect(on.lastPatternSound![0], 0.0); // hat + kick
+      expect(on.lastPatternSound![12], 0.0); // hat alone
+      expect(on.lastPatternSound![24], greaterThan(0)); // snare on 2
+      final off = await run(false);
+      expect(off.lastStyleId, isNull);
+      expect(off.lastKitTracks, isEmpty);
+      expect(off.lastPatternSound, isNull);
+    });
+
+    testWidgets('no microphone listens: the band plays on a phone without '
+        'headphones (auto source) — pad exercises keep the mic rule',
+        (tester) async {
+      _mockMicPermission(tester);
+      _mockHeadphones(tester, 'none');
+      await SettingsService.setMeasurementSource(MeasurementSource.auto);
+      await SettingsService.setBackingEnabled(true);
+      Future<_BackingFlagsMetronomeNotifier> run(String id) async {
+        final rec = _BackingFlagsMetronomeNotifier();
+        await _pumpScreen(tester,
+            screen: PracticeSessionScreen(
+                rudimentId: id, isFromRoutine: false, ports: FakeMidiPorts()),
+            metronome: () => rec,
+            extraOverrides: kitCatalog());
+        await tester.pump();
+        await tester.pumpWidget(const SizedBox());
+        return rec;
+      }
+
+      final kit = await run('kit_showcase');
+      expect(kit.lastKitTracks, isNotEmpty);
+      final pad = await run(rudimentsSeedData.first.id);
+      expect(pad.lastStyleId, isNull);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the mode chip does not toggle for kit exercises',
+        (tester) async {
+      await SettingsService.setMeasurementSource(MeasurementSource.midi);
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'), extraOverrides: kitCatalog());
+      await tester.pump();
+      final chip = find.byTooltip('Full-kit measurement is not available yet');
+      final ink = find.descendant(of: chip, matching: find.byType(InkWell));
+      expect(tester.widget<InkWell>(ink).onTap, isNull);
+    });
+
+    testWidgets('opens no stroke source even with a MIDI module at hand',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({'measurement_source': 'midi'});
+      await SettingsService.init();
+      final port = FakeMidiPort();
+      final ports = FakeMidiPorts(port: port);
+      await _pumpScreen(tester,
+          screen: PracticeSessionScreen(
+              rudimentId: 'kit_showcase', isFromRoutine: false, ports: ports),
+          extraOverrides: kitCatalog());
+      await tester.pump();
+      expect(ports.opened, 0);
+      expect(find.text('NOT MEASURABLE'), findsOneWidget);
+      expect(find.textContaining('MIDI ·'), findsNothing);
+    });
+
+    testWidgets('the mode chip explains why: full-kit measurement is not '
+        'available yet', (tester) async {
+      // The chip shows only with a measurement source chosen (setUp: off).
+      await SettingsService.setMeasurementSource(MeasurementSource.midi);
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'), extraOverrides: kitCatalog());
+      await tester.pump();
+      expect(find.byTooltip('Full-kit measurement is not available yet'),
+          findsOneWidget);
+    });
+
+    testWidgets(
+        'options: Backing on = the band plays kick and hi-hat with you, '
+        'off = click only', (tester) async {
+      await _pumpScreen(tester,
+          screen: _screen(id: 'kit_showcase'), extraOverrides: kitCatalog());
+      await tester.tap(find.byIcon(Icons.more_horiz));
+      await tester.pumpAndSettle();
+      expect(find.text('Band plays kick and hi-hat with you'), findsOneWidget);
+      await tester.tap(find.widgetWithText(SwitchListTile, 'Backing'));
+      await tester.pumpAndSettle();
+      expect(find.text('Click only'), findsOneWidget);
+      expect(SettingsService.backingEnabled, isFalse);
     });
   });
 }

@@ -70,6 +70,10 @@ double resolveTickVolume({
 // ── MetronomeEngine ───────────────────────────────────────────────────────────
 
 class MetronomeEngine {
+  MetronomeEngine({LoopWavRenderer renderLoop = renderLoopWavInIsolate})
+      : _renderLoop = renderLoop;
+
+  final LoopWavRenderer _renderLoop;
   final _beatCtrl = StreamController<BeatEvent>.broadcast();
   Stream<BeatEvent> get beatStream => _beatCtrl.stream;
 
@@ -204,6 +208,10 @@ class MetronomeEngine {
         kickSound: _kickPcm,
         hihatLoud: _hihatLoudPcm,
         hihatSoft: _hihatSoftPcm,
+        backingKick: _backingKick,
+        backingHihat: _backingHihat,
+        kitTracks: hasPattern ? _kitTracks : const [],
+        patternSound: hasPattern ? _kitPatternSound : null,
       );
     } catch (e) {
       // A broken backing must never silence the exercise: render without it.
@@ -217,7 +225,17 @@ class MetronomeEngine {
         pulseSound: pulseSamples(),
       );
     }
-    final wav = buildLoopWav(bpm: _bpm, factor: _factor, voices: plan.voices);
+    // Off the main isolate (a sequence loop renders for 200–400 ms); a
+    // rebuild or stop during the render supersedes it.
+    final wav = await renderLoopIfCurrent(
+      render: _renderLoop,
+      bpm: _bpm,
+      factor: _factor,
+      voices: plan.voices,
+      isCurrent: () =>
+          !_disposed && _isPlaying && generation == _loopGeneration,
+    );
+    if (wav == null) return;
     // Timeout-guarded: on a dead audio engine loadMem never answers — this
     // path must FAIL fast so the start supervisor can revive the engine,
     // instead of hanging forever before any watchdog exists.
@@ -565,21 +583,38 @@ class MetronomeEngine {
   /// 24-tick pattern clock. Sounds are synthesised once per process.
   BackingStyle? _backing;
   double _backingLevel = 0.7;
+  bool _backingKick = true;
+  bool _backingHihat = true;
+  List<KitSoundTrack> _kitTracks = const [];
+  List<double>? _kitPatternSound;
   int _beatsPerBar = 4;
   static final List<double> _kickPcm = kickSamples();
   static final List<double> _hihatLoudPcm = hihatSamples(accent: true);
   static final List<double> _hihatSoftPcm = hihatSamples(accent: false);
 
   void setBacking(BackingStyle? style,
-      {required double level, required int beatsPerBar}) {
+      {required double level,
+      required int beatsPerBar,
+      bool backingKick = true,
+      bool backingHihat = true,
+      List<KitSoundTrack> kitTracks = const [],
+      List<double>? patternSound}) {
     if (_backing == style &&
         _backingLevel == level &&
-        _beatsPerBar == beatsPerBar) {
+        _beatsPerBar == beatsPerBar &&
+        _backingKick == backingKick &&
+        _backingHihat == backingHihat &&
+        identical(_kitTracks, kitTracks) &&
+        identical(_kitPatternSound, patternSound)) {
       return;
     }
+    _kitTracks = kitTracks;
+    _kitPatternSound = patternSound;
     _backing = style;
     _backingLevel = level;
     _beatsPerBar = beatsPerBar;
+    _backingKick = backingKick;
+    _backingHihat = backingHihat;
     _scheduleLoopRebuild();
   }
 

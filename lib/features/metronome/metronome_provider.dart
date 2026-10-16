@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/local/settings_service.dart';
 import '../coaching/services/recording_setup.dart';
 import 'backing_styles.dart';
+import 'loop_voices.dart';
 import 'metronome_engine.dart';
 
 part 'metronome_provider.g.dart';
@@ -174,6 +175,10 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   }
 
   int _beatsPerBar = 4;
+  bool _backingKick = true;
+  bool _backingHihat = true;
+  List<KitSoundTrack> _kitTracks = const [];
+  List<double>? _kitPatternSound;
 
   /// Headphone plug/unplug: reroute the engine and tell listening screens.
   @visibleForTesting
@@ -184,11 +189,28 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   }
 
   /// Backing loop next to a pattern (Engine part 1). Unknown ids mean off.
-  void setBacking(String? styleId, {required int beatsPerBar}) {
+  /// [kitTracks]: a kit unit's own kick/hi-hat voices the band plays
+  /// instead of a style (S23 test 16.10.); [patternSound] what the
+  /// pattern voice sounds meanwhile (null = the pattern volumes).
+  void setBacking(String? styleId,
+      {required int beatsPerBar,
+      bool backingKick = true,
+      bool backingHihat = true,
+      List<KitSoundTrack> kitTracks = const [],
+      List<double>? patternSound}) {
     final style = backingStyleById(styleId);
     _beatsPerBar = beatsPerBar;
+    _backingKick = backingKick;
+    _backingHihat = backingHihat;
+    _kitTracks = kitTracks;
+    _kitPatternSound = patternSound;
     _engine?.setBacking(style,
-        level: state.backingLevel, beatsPerBar: beatsPerBar);
+        level: state.backingLevel,
+        beatsPerBar: beatsPerBar,
+        backingKick: backingKick,
+        backingHihat: backingHihat,
+        kitTracks: kitTracks,
+        patternSound: patternSound);
     state = style == null
         ? state.copyWith(clearBackingStyle: true)
         : state.copyWith(backingStyleId: style.id);
@@ -197,7 +219,12 @@ class MetronomeNotifier extends _$MetronomeNotifier {
   void setBackingLevel(double level) {
     final clamped = level.clamp(0.0, 1.0).toDouble();
     _engine?.setBacking(backingStyleById(state.backingStyleId),
-        level: clamped, beatsPerBar: _beatsPerBar);
+        level: clamped,
+        beatsPerBar: _beatsPerBar,
+        backingKick: _backingKick,
+        backingHihat: _backingHihat,
+        kitTracks: _kitTracks,
+        patternSound: _kitPatternSound);
     state = state.copyWith(backingLevel: clamped);
   }
 

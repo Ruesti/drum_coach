@@ -115,6 +115,28 @@ void main() {
     expect(jsonl, contains('"sheetMode":"line"'));
   });
 
+  test('a sequence logs its selection next to sheetMode', () {
+    final log = buildSessionLog(
+      analysis: null,
+      beatLog: const [],
+      exerciseId: 'single_paradiddle',
+      bpm: 90,
+      durationSeconds: 60,
+      rating: 3,
+      startedAt: DateTime(2026, 10, 16, 9),
+      headphones: 'none',
+      device: const DeviceInfo(model: 'SM-S918B', androidVersion: '14'),
+      latencyOffsetMs: null,
+      sheetMode: 'sequence',
+      sheetLines: '1,4,6',
+    );
+    expect(log.sheetLine, isNull);
+    expect(log.sheetLines, '1,4,6');
+    final jsonl = sessionLogToJsonl(log);
+    expect(jsonl, contains('"sheetMode":"sequence"'));
+    expect(jsonl, contains('"sheetLines":"1,4,6"'));
+  });
+
   test('midi session: source, device, mapping and per-event instrument', () {
     final analysis = SessionAnalysis(
       detectedHits: 1,
