@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from sheetlang import Line, check_sheet, parse_line
+from sheetlang import KitLine, Line, check_sheet, parse_kit_line, parse_line
 
 
 @dataclass
@@ -30,10 +30,15 @@ class Sheet:
     line_bars: int = 2  # Takte je Zeile (2 Rudiment, 4 Fill)
     backing: str | None = None  # Stil-Id, None = Automatik (autoBackingStyle)
     grid: str = 'eighth'  # NoteGrid für neue Seed-Einträge
+    kit: bool = False  # Spuren-Blatt (Phase B.1): Zeilen als `HH: … / SN: … / BD: …`
+    limbs: tuple[str, ...] = ('hands',)  # Limb-Tags des Seed-Eintrags
 
-    def parsed(self) -> list[Line]:
-        out = [parse_line(t, counts=i < self.count_lines) for i, t in enumerate(self.lines)]
-        out.append(parse_line(self.challenge, repeat=False, title='Challenge'))
+    def _parse(self, text: str, **kw) -> Line | KitLine:
+        return parse_kit_line(text, **kw) if self.kit else parse_line(text, **kw)
+
+    def parsed(self) -> list[Line | KitLine]:
+        out = [self._parse(t, counts=i < self.count_lines) for i, t in enumerate(self.lines)]
+        out.append(self._parse(self.challenge, repeat=False, title='Challenge'))
         check_sheet(out)
         if len(self.lines) != 8:
             raise ValueError(f'{self.id}: {len(self.lines)} lines, expected 8')
@@ -44,8 +49,8 @@ class Sheet:
             raise ValueError(f'{self.id}: challenge has {out[-1].bars} bars')
         return out
 
-    def pattern_line(self) -> Line:
-        ln = parse_line(self.pattern, repeat=False)
+    def pattern_line(self) -> Line | KitLine:
+        ln = self._parse(self.pattern, repeat=False)
         if ln.bars != 1:
             raise ValueError(f'{self.id}: pattern has {ln.bars} bars, expected 1')
         return ln
@@ -57,6 +62,7 @@ def print_table(sheets: list[Sheet]) -> None:
         lines = s.parsed()
         s.pattern_line()
         bars = sum(ln.bars for ln in lines)
-        notes = sum(len(ln.notes) for ln in lines)
+        notes = sum((sum(len(t.notes) for t in ln.tracks) if isinstance(ln, KitLine) else len(ln.notes))
+                    for ln in lines)
         print(f'{s.id:24s} {len(lines)} Zeilen  {bars:2d} Takte  {notes:3d} Noten')
     print(len(sheets), 'Blätter ok')

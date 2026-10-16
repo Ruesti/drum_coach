@@ -37,6 +37,9 @@ def _entry(s) -> str:
     c = camel(s.id)
     skills = ', '.join(f'Skill.{k}' for k in s.skills)
     genres = ', '.join(f'Genre.{g}' for g in s.genres)
+    limbs = ', '.join(f'Limb.{l}' for l in s.limbs)
+    kit = (f"    voicing: ExerciseVoicing.kit,\n    requiredSensor: SensorLevel.midi,\n"
+           f"    patternVoices: {c}PatternVoices,\n") if s.kit else ''
     return (
         f"\n  Rudiment(\n    id: '{s.id}',\n    name: {dart_str(s.name)},\n"
         f"    skills: {{{skills}}},\n"
@@ -46,6 +49,8 @@ def _entry(s) -> str:
         f"    difficulty: Difficulty.{s.difficulty},\n"
         f"    gridUnit: NoteGrid.{s.grid},\n"
         + (f"    backing: '{s.backing}',\n" if s.backing else '')
+        + (f"    limbs: {{{limbs}}},\n" if s.limbs != ('hands',) else '')
+        + kit
         + f"    sticking: {c}Pattern,\n    technique: {c}Lesson,\n    lines: {c}Sheet,\n  ),\n")
 
 
@@ -70,6 +75,10 @@ def patch(path: pathlib.Path) -> None:
     imports = ''.join(f"import 'sheets/{s.id}_sheet.dart';\n" for s in all_sheets())
     src = re.sub(r"(import 'sheets/[a-z_]+_sheet\.dart';\n)+", '', src)
     src = src.replace("import '../models/rudiment.dart';\n", "import '../models/rudiment.dart';\n" + imports, 1)
+
+    if any(s.kit for s in all_sheets()) and "coaching/services/stroke_source.dart" not in src:
+        src = src.replace("import '../models/rudiment.dart';\n",
+                          "import '../../coaching/services/stroke_source.dart';\nimport '../models/rudiment.dart';\n", 1)
 
     updated = added = 0
     for st in SETS:

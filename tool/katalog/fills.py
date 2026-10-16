@@ -334,6 +334,12 @@ SHEETS: list[Sheet] = [
 ]
 
 
+FILLS: dict[str, list[str]] = {
+    'fill_sixteenth_singles': _SX, 'fill_doubles': _DB, 'fill_paradiddle': _PD, 'fill_triplets': _TR,
+    'fill_flams': _FL, 'fill_sextuplets': _SE, 'fill_six_groups': _SG, 'fill_roll': _RO,
+}
+
+
 def all_parsed() -> dict[str, list[Line]]:
     """Alle Blätter geparst und geprüft; wirft bei Fehlern."""
     return {s.id: s.parsed() for s in SHEETS}

@@ -25,6 +25,22 @@ Vorschlag mit der anderen Hand), `d` Drag (zwei). Pause `-8`. Triole
 `3(R8 L8 R8)`, Sextole `6(R16 L16 R16 L16 R16 R16)`. Taktstriche `|` nur zur
 Prüfung. Eine Zeile = 1–8 ganze Takte, ein Blatt ≤ 64 Takte.
 
+## Spuren (Phase B.1)
+
+Für Kit-Blätter (`Sheet(kit=True, limbs=(…))`) ist eine Zeile ein Block mit einer
+Zeile je Instrument: `HH: R8 R8 …` / `SN: -4 L4> -4 L4>` / `BD: K4 -4 K4 -4`.
+Spurköpfe: `HH HO HP SN SR BD T1 T2 F1 F2 C1 C2 RD RB CH SP` (Tabelle `TRACKS`).
+Hände spielen `R L`, Füße (`BD`, `HP`) `K` (Kick) und `P` (Hi-Hat-Pedal); Fußnoten
+tragen weder Flam noch Drag. `~` am Kopf (`T1~:`) setzt die Instrument-Klasse
+(`accepts`: Toms/Crashes/Becken). Alle Spuren einer Zeile gleich viele ganze Takte.
+
+Dart: `kitLine([voice(KitInstrument.x, [...]) …])`, Füße als `foot(...)`; `xPatternVoices`
+ist der Pattern-Takt aller Stimmen, `xPattern` ist `xPatternVoices.first.beats` (dasselbe
+Objekt). ABC: zwei Stimmen `[V:H]` (Hände, Hals oben) und `[V:F]` (Füße, Hals unten) auf
+einem Schlagzeug-System, Akkorde `[cg]`. Bekannte Vereinfachung der Kurationsseite (kein
+App-Verhalten): Triolen/Sextolen stehen in den Schichten ohne `(3`-Klammer, die Längen
+stimmen, abcjs zeigt sie als punktierte/kurze Werte.
+
 ## Blatt-Felder (blatt.py)
 
 `line_bars` (2 Rudiment, 4 Fill; jede Zeile muss genau so lang sein),
