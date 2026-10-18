@@ -65,6 +65,26 @@ void main() {
     expect(e.validate, throwsArgumentError);
   });
 
+  test('validate rejects variation directly after intro', () {
+    final e = _ex([
+      _s(SectionKind.intro, 0, cells: 0),
+      _var(),
+      _s(SectionKind.groove, 8),
+      _s(SectionKind.outro, 1),
+    ]);
+    expect(e.validate, throwsArgumentError);
+  });
+
+  test('validate rejects variation directly before outro', () {
+    final e = _ex([
+      _s(SectionKind.intro, 0, cells: 0),
+      _s(SectionKind.groove, 8),
+      _var(),
+      _s(SectionKind.outro, 1),
+    ]);
+    expect(e.validate, throwsArgumentError);
+  });
+
   test('validate rejects variation without speechClipId or textEn', () {
     for (final v in [
       _s(SectionKind.variation, 8, text: 'Hi'),

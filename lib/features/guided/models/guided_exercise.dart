@@ -100,8 +100,10 @@ class GuidedExercise {
           throw ArgumentError(
               '$id: variation $i needs textEn and speechClipId');
         }
-        if (i > 0 && sections[i - 1].kind == SectionKind.variation) {
-          throw ArgumentError('$id: variation $i directly follows a variation');
+        if (sections[i - 1].kind != SectionKind.groove ||
+            sections[i + 1].kind != SectionKind.groove) {
+          throw ArgumentError(
+              '$id: variation $i must sit directly between two grooves');
         }
       }
     }
