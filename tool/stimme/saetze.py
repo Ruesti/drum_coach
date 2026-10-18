@@ -1,0 +1,29 @@
+"""Teacher sentences: clip id -> English text (spoken by Piper)."""
+
+# Short single words are rendered faster (Piper --length-scale) so each stays
+# below 600 ms and fits on one beat at 100 BPM.
+SHORT_WORD_IDS = (
+    "ci_one", "ci_two", "ci_three", "ci_four",
+    "cd_three", "cd_two", "cd_one", "cd_go",
+)
+SHORT_WORD_LENGTH_SCALE = 0.8
+
+SAETZE = {
+    "ci_one": "One",
+    "ci_two": "Two",
+    "ci_three": "Three",
+    "ci_four": "Four",
+    "cd_three": "Three",
+    "cd_two": "Two",
+    "cd_one": "One",
+    "cd_go": "Go!",
+    "after_good": "Nice — back to the groove.",
+    "after_last": "Last round.",
+    "demo_kit_v1": "Next up: add the bass drum on the and of three.",
+    "demo_kit_v2": "Now add a soft ghost note on the snare, on the e of two.",
+    "demo_kit_v3": "Last one: open the hi-hat on the and of four.",
+    "demo_pad_v1": "Next up: accent the first note of every beat.",
+    "demo_pad_v2": "Now switch to doubles: right right, left left.",
+    "demo_pad_v3": ("Last one: play paradiddles. "
+                    "Right left right right, left right left left."),
+}

@@ -54,3 +54,5 @@ app.*.map.json
 
 # Piper venv + downloaded voices (tool/stimme/spike_clip.sh)
 tool/stimme/.venv/
+__pycache__/
+.pytest_cache/

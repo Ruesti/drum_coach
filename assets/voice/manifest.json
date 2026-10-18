@@ -1,0 +1,102 @@
+{
+  "voice": "en_GB-cori-high",
+  "lang": "en",
+  "clips": [
+    {
+      "id": "ci_one",
+      "ms": 430,
+      "text": "One",
+      "hash": "58bc00dd5520c245"
+    },
+    {
+      "id": "ci_two",
+      "ms": 380,
+      "text": "Two",
+      "hash": "d7037b6ad773f95d"
+    },
+    {
+      "id": "ci_three",
+      "ms": 423,
+      "text": "Three",
+      "hash": "db5c0dbf468ddcda"
+    },
+    {
+      "id": "ci_four",
+      "ms": 408,
+      "text": "Four",
+      "hash": "352e89fb860d788d"
+    },
+    {
+      "id": "cd_three",
+      "ms": 394,
+      "text": "Three",
+      "hash": "db5c0dbf468ddcda"
+    },
+    {
+      "id": "cd_two",
+      "ms": 410,
+      "text": "Two",
+      "hash": "d7037b6ad773f95d"
+    },
+    {
+      "id": "cd_one",
+      "ms": 423,
+      "text": "One",
+      "hash": "58bc00dd5520c245"
+    },
+    {
+      "id": "cd_go",
+      "ms": 402,
+      "text": "Go!",
+      "hash": "ee040a32b32d047b"
+    },
+    {
+      "id": "after_good",
+      "ms": 1959,
+      "text": "Nice — back to the groove.",
+      "hash": "d85dbf67d29f5dc4"
+    },
+    {
+      "id": "after_last",
+      "ms": 878,
+      "text": "Last round.",
+      "hash": "1f8f35e17184baf3"
+    },
+    {
+      "id": "demo_kit_v1",
+      "ms": 2505,
+      "text": "Next up: add the bass drum on the and of three.",
+      "hash": "44055f349f53ba4f"
+    },
+    {
+      "id": "demo_kit_v2",
+      "ms": 3703,
+      "text": "Now add a soft ghost note on the snare, on the e of two.",
+      "hash": "7a64fce2b2d67981"
+    },
+    {
+      "id": "demo_kit_v3",
+      "ms": 2537,
+      "text": "Last one: open the hi-hat on the and of four.",
+      "hash": "b15967d6dfe83e09"
+    },
+    {
+      "id": "demo_pad_v1",
+      "ms": 2838,
+      "text": "Next up: accent the first note of every beat.",
+      "hash": "3e1ef1dbbcc3dadc"
+    },
+    {
+      "id": "demo_pad_v2",
+      "ms": 2704,
+      "text": "Now switch to doubles: right right, left left.",
+      "hash": "d1c3eab2c931fd01"
+    },
+    {
+      "id": "demo_pad_v3",
+      "ms": 5259,
+      "text": "Last one: play paradiddles. Right left right right, left right left left.",
+      "hash": "523e5dd784900944"
+    }
+  ]
+}
