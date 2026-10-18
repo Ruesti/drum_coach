@@ -1,7 +1,7 @@
 # Geführte Übungen — 5-Minuten-Groove mit Variationen und Ansage-Stimme
 
 Stand: Entwurf 17.10.2026 · Branch `spec-gefuehrte-uebungen` (gestapelt auf
-`worktree-etappe2-phase-b`, Draft-PR #35) · Status: zur Freigabe durch Uli (Rückfragen F1–F3 beantwortet 17.10. 23:54).
+`worktree-etappe2-phase-b`, Draft-PR #35) · Status: **von Uli freigegeben 18.10. 11:06** (Rückfragen F1–F3 beantwortet 17.10. 23:54).
 
 Vorbild: Drumeo Method (Uli hat am 17.10. eine Lektion durchgespielt). Prinzipien
 übernehmen, keine Inhalte kopieren.
