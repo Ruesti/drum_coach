@@ -5,11 +5,14 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 
 /// Where the guided player puts its rendered bars (seam for tests).
 abstract class PcmSink {
-  /// Prepares a fresh mono Float32 stream at [sampleRate].
-  Future<void> open(int sampleRate);
+  /// Prepares a fresh mono Float32 stream at [sampleRate] that can hold
+  /// [maxBuffer] of audio (preserved buffering keeps every sample).
+  Future<void> open(int sampleRate, {required Duration maxBuffer});
 
   /// Appends mono Float32 samples; playback starts with the first append.
-  void append(Float32List pcm);
+  /// false = the samples were not taken (no stream, buffer full, engine
+  /// error); the caller must stop appending.
+  bool append(Float32List pcm);
 
   /// No more data follows; the stream ends after the appended audio.
   void markEnded();
@@ -21,8 +24,8 @@ abstract class PcmSink {
 }
 
 /// [PcmSink] on a SoLoud buffer stream with the spike's parameters
-/// (docs/BERICHT_GEFUEHRT_SPIKE.md): f32le mono, preserved buffering,
-/// 0.1 s buffering threshold. Every SoLoud call is guarded: a stalled or
+/// (docs/BERICHT_GEFUEHRT_SPIKE.md): f32le mono, preserved buffering
+/// (getPosition is the run clock; Ruling R13), 0.1 s buffering threshold. Every SoLoud call is guarded: a stalled or
 /// missing audio engine (host tests have no FFI) must never block or throw.
 class SoloudPcmSink implements PcmSink {
   AudioSource? _source;
@@ -44,7 +47,7 @@ class SoloudPcmSink implements PcmSink {
   }
 
   @override
-  Future<void> open(int sampleRate) async {
+  Future<void> open(int sampleRate, {required Duration maxBuffer}) async {
     await close();
     _sampleRate = sampleRate;
     try {
@@ -53,7 +56,7 @@ class SoloudPcmSink implements PcmSink {
       }
       if (!_soloudReady) return;
       _source = SoLoud.instance.setBufferStream(
-        maxBufferSizeDuration: const Duration(minutes: 10),
+        maxBufferSizeDuration: maxBuffer,
         bufferingType: BufferingType.preserved,
         bufferingTimeNeeds: 0.1,
         sampleRate: sampleRate,
@@ -66,20 +69,21 @@ class SoloudPcmSink implements PcmSink {
   }
 
   @override
-  void append(Float32List pcm) {
+  bool append(Float32List pcm) {
     final src = _source;
-    if (src == null || !_soloudReady) return;
+    if (src == null || !_soloudReady) return false;
     try {
       SoLoud.instance.addAudioDataStream(
           src, pcm.buffer.asUint8List(pcm.offsetInBytes, pcm.lengthInBytes));
       _samples += pcm.length;
     } catch (_) {
-      return;
+      return false;
     }
     if (!_playRequested) {
       _playRequested = true;
       unawaited(_play(src));
     }
+    return true;
   }
 
   Future<void> _play(AudioSource src) async {

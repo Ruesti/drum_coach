@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:drum_coach/features/guided/bar_render_backend.dart';
@@ -27,9 +28,27 @@ class FakePcmSink implements PcmSink {
   double get totalMs => startMs(appended.length);
 
   @override
-  Future<void> open(int sampleRate) async => opened = true;
+  Future<void> open(int sampleRate, {required Duration maxBuffer}) async {
+    await openGate?.future;
+    opened = true;
+    this.maxBuffer = maxBuffer;
+  }
+
+  Duration? maxBuffer;
+
+  /// When set, open() waits for it.
+  Completer<void>? openGate;
+
+  /// Appends from this index on fail.
+  int? failAppendAt;
+
   @override
-  void append(Float32List pcm) => appended.add(pcm);
+  bool append(Float32List pcm) {
+    if (failAppendAt != null && appended.length >= failAppendAt!) return false;
+    appended.add(pcm);
+    return true;
+  }
+
   @override
   double positionMs() => pos;
   @override
@@ -49,15 +68,15 @@ ExerciseLine _varLine() =>
 
 /// count-in 0 | groove 1-4 (explanation v1 on bar 2, countdown bar 4) |
 /// variation 5-12 | groove 13-16 | outro 17.
-GuidedExercise _ex() => GuidedExercise(
+GuidedExercise _ex({int minBpm = 40, int maxBpm = 240}) => GuidedExercise(
       id: 'x',
       name: 'X',
       description: 'd',
       package: GuidedPackage.pad,
       difficulty: Difficulty.beginner,
       defaultBpm: 100,
-      minBpm: 40,
-      maxBpm: 240,
+      minBpm: minBpm,
+      maxBpm: maxBpm,
       gridUnit: NoteGrid.eighth,
       sections: [
         const GuidedSection(
@@ -103,17 +122,52 @@ const _silentDrums = <RunSound, List<double>>{};
 GuidedPlayer _player(FakePcmSink sink,
         {Map<RunSound, List<double>>? sounds,
         DateTime Function()? now,
-        double minQueuedMs = 0}) =>
+        double minQueuedMs = 0,
+        BarRenderBackend? renderer,
+        Future<VoiceClip> Function(String id)? loadClip}) =>
     GuidedPlayer(
       sink: sink,
       clips: _manifest,
-      loadClip: _loadClip,
+      loadClip: loadClip ?? _loadClip,
       sounds: sounds ?? _drums,
-      renderer: InlineBarRenderBackend(),
+      renderer: renderer ?? InlineBarRenderBackend(),
       autoPoll: false,
       minQueuedMs: minQueuedMs,
       now: now,
     );
+
+/// Renders are held until the test completes them.
+class GatedBackend implements BarRenderBackend {
+  final pending = <Completer<Float32List>>[];
+  int calls = 0;
+
+  @override
+  Future<void> init(Map<RunSound, List<double>> sounds) async {}
+  @override
+  Future<Float32List> render(BarJob job) {
+    calls++;
+    final c = Completer<Float32List>();
+    pending.add(c);
+    return c.future;
+  }
+
+  void completeFirst() =>
+      pending.removeAt(0).complete(Float32List(_samplesAt(100)));
+
+  @override
+  void reset() {}
+  @override
+  Future<void> dispose() async {}
+}
+
+class ThrowingBackend extends InlineBarRenderBackend {
+  int calls = 0;
+  @override
+  Future<Float32List> render(BarJob job) {
+    if (++calls >= 3) return Future.error(StateError('boom'));
+    return super.render(job);
+  }
+}
 
 int _samplesAt(int bpm) => (4 * 60 / bpm * 44100).round();
 
@@ -343,5 +397,133 @@ void main() {
     }
     await b.dispose();
     await a.dispose();
+  });
+
+  test('slow run fits the stream', () async {
+    final sink = FakePcmSink();
+    final p = _player(sink);
+    final ex = _ex(minBpm: 40);
+    await p.start(ex, bpm: 40, options: const RunOptions());
+    var guard = 0;
+    while (!sink.ended) {
+      sink.pos += 1000;
+      await p.poll();
+      if (++guard > 10000) fail('no end');
+    }
+    final planned =
+        buildRun(ex, bpm: 40, options: const RunOptions(), clips: _manifest)
+            .length;
+    expect(sink.appended.length, planned);
+    expect(sink.maxBuffer!.inMicroseconds / 1000,
+        greaterThanOrEqualTo(sink.totalMs * 1.25 + 30000 - 1));
+    await p.stop();
+  });
+
+  test('bpm clamps to the exercise range during a run', () async {
+    final sink = FakePcmSink();
+    final p = _player(sink);
+    await p.start(_ex(minBpm: 60, maxBpm: 200),
+        bpm: 30, options: const RunOptions());
+    expect(p.bpm, 60);
+    p.setBpm(10);
+    expect(p.bpm, 60);
+    p.setBpm(230);
+    expect(p.bpm, 200);
+    await p.stop();
+  });
+
+  test('failed append surfaces an error', () async {
+    final sink = FakePcmSink()..failAppendAt = 3;
+    final p = _player(sink);
+    final errors = <Object>[];
+    p.errors.listen(errors.add);
+    await p.start(_ex(), bpm: 100, options: const RunOptions());
+    for (var b = 1; b <= 6; b++) {
+      sink.pos = 2400.0 * b + 1;
+      await p.poll();
+    }
+    await pumpEventQueue();
+    expect(sink.appended.length, 3);
+    expect(errors, hasLength(1));
+    await p.stop();
+  });
+
+  test('render error surfaces on errors', () async {
+    final sink = FakePcmSink();
+    final p = _player(sink, renderer: ThrowingBackend());
+    final errors = <Object>[];
+    p.errors.listen(errors.add);
+    await p.start(_ex(), bpm: 100, options: const RunOptions());
+    await _playInto(p, sink, 1);
+    await _playInto(p, sink, 1);
+    await pumpEventQueue();
+    expect(sink.appended.length, 2);
+    expect(errors.single, isA<StateError>());
+    await p.stop();
+  });
+
+  test('restart during pending fill keeps one fill loop', () async {
+    final sink = FakePcmSink();
+    final gate = GatedBackend();
+    final p = _player(sink, renderer: gate);
+    unawaited(p.start(_ex(), bpm: 100, options: const RunOptions()));
+    await pumpEventQueue();
+    expect(gate.pending, hasLength(1)); // run A, bar 0
+    final second = p.start(_ex(), bpm: 100, options: const RunOptions());
+    await pumpEventQueue();
+    expect(gate.pending, hasLength(2)); // run B, bar 0
+    gate.completeFirst(); // stale run A finishes
+    await pumpEventQueue();
+    unawaited(p.poll());
+    await pumpEventQueue();
+    expect(gate.pending, hasLength(1), reason: 'a second fill loop started');
+    gate.completeFirst();
+    await pumpEventQueue();
+    gate.completeFirst();
+    await second;
+    expect(sink.appended, hasLength(2));
+    await p.stop();
+  });
+
+  test('tempo set during start applies to the first bar', () async {
+    final sink = FakePcmSink();
+    final p = _player(sink);
+    sink.openGate = Completer<void>();
+    final f = p.start(_ex(), bpm: 100, options: const RunOptions());
+    await pumpEventQueue(); // queue planned at 100, open() pending
+    p.setBpm(140);
+    sink.openGate!.complete();
+    await f;
+    expect(p.bpm, 140);
+    expect(sink.counts, everyElement(_samplesAt(140)));
+    await p.stop();
+  });
+
+  test('teacher off restamp accents the countdown clicks', () async {
+    final sink = FakePcmSink();
+    final p = _player(sink, sounds: {RunSound.click: List.filled(50, 0.1)});
+    await p.start(_ex(), bpm: 100, options: const RunOptions());
+    await _playInto(p, sink, 1);
+    await _playInto(p, sink, 2); // bar 3 appended, countdown bar 4 not yet
+    p.setOptions(const RunOptions(teacher: false));
+    await _playInto(p, sink, 3);
+    final bar4 = sink.appended[4];
+    final beat = _samplesAt(100) ~/ 4;
+    expect(bar4[beat], closeTo(0.15, 0.01)); // "3" click, accent 1.5
+  });
+
+  test('a failed clip load is retried', () async {
+    final sink = FakePcmSink();
+    final tried = <String>{};
+    Future<VoiceClip> flaky(String id) async {
+      if (tried.add(id)) throw StateError('not yet');
+      return _loadClip(id);
+    }
+
+    final p = _player(sink, sounds: _silentDrums, loadClip: flaky);
+    await p.start(_ex(), bpm: 100, options: const RunOptions());
+    await _playInto(p, sink, 1); // bar 2 with the explanation
+    expect(sink.appended[2].any((v) => v != 0), isTrue);
+    await p.stop();
   });
 }

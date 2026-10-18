@@ -150,7 +150,13 @@ class IsolateBarRenderBackend implements BarRenderBackend {
       _port = port;
       final ready = Completer<SendPort>();
       port.listen((m) {
-        if (m is SendPort) {
+        if (m == null) {
+          // onExit: the isolate is gone; nothing pending will be answered.
+          _send = null;
+          _failPending('render isolate exited');
+        } else if (m is List) {
+          _failPending('render isolate error: ${m.first}');
+        } else if (m is SendPort) {
           ready.complete(m);
         } else if (m is TransferableTypedData) {
           if (_waiting.isNotEmpty) {
@@ -163,6 +169,8 @@ class IsolateBarRenderBackend implements BarRenderBackend {
         }
       });
       _isolate = await Isolate.spawn(_renderMain, port.sendPort,
+          onExit: port.sendPort,
+          onError: port.sendPort,
           debugName: 'guided-bar-render');
       _send = await ready.future.timeout(const Duration(seconds: 5));
     }
@@ -192,10 +200,12 @@ class IsolateBarRenderBackend implements BarRenderBackend {
     _isolate = null;
     _port?.close();
     _port = null;
+    _failPending('render backend disposed');
+  }
+
+  void _failPending(String why) {
     while (_waiting.isNotEmpty) {
-      _waiting
-          .removeFirst()
-          .completeError(StateError('render backend disposed'));
+      _waiting.removeFirst().completeError(StateError(why));
     }
   }
 }

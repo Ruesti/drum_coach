@@ -15,6 +15,9 @@ const int guidedMinBpm = 40;
 const int guidedMaxBpm = 240;
 const int guidedSampleRate = 44100;
 
+/// Countdown click accent with the teacher off (buildRun's value).
+const double _teacherOffAccent = 1.5;
+
 /// Crash level per package: quieter on the pad (Spec §3.5).
 double crashGainFor(GuidedPackage p) => p == GuidedPackage.pad ? 0.4 : 1.0;
 
@@ -68,6 +71,7 @@ class GuidedPlayer {
 
   final _positionCtrl = StreamController<RunPosition>.broadcast();
   final _finishedCtrl = StreamController<void>.broadcast();
+  final _errorCtrl = StreamController<Object>.broadcast();
 
   GuidedExercise? _ex;
   int _bpm = 100;
@@ -87,6 +91,7 @@ class GuidedPlayer {
   bool _frozen = false;
   bool _ended = false;
   bool _finished = false;
+  bool _failed = false;
   int _generation = 0;
   Future<void>? _filling;
   Timer? _timer;
@@ -100,6 +105,10 @@ class GuidedPlayer {
 
   Stream<RunPosition> get positions => _positionCtrl.stream;
   Stream<void> get finished => _finishedCtrl.stream;
+
+  /// A render error or a bar the sink refused. The run stops appending and
+  /// polling (the audio already queued plays out); call [stop].
+  Stream<Object> get errors => _errorCtrl.stream;
   int get bpm => _bpm;
   RunOptions get options => _options;
   bool get isPaused => _paused;
@@ -107,24 +116,61 @@ class GuidedPlayer {
 
   double get _appendedMs => _appendedSamples * 1000 / guidedSampleRate;
 
-  static int _clampBpm(int bpm) => bpm.clamp(guidedMinBpm, guidedMaxBpm);
+  /// 40..240, narrowed to the exercise's range once one is set (Ruling R13:
+  /// the stream is sized for a whole run at the exercise's minBpm).
+  int _clampBpm(int bpm) {
+    final ex = _ex;
+    final lo = ex == null ? guidedMinBpm : math.max(guidedMinBpm, ex.minBpm);
+    final hi = ex == null ? guidedMaxBpm : math.min(guidedMaxBpm, ex.maxBpm);
+    return bpm.clamp(lo, math.max(lo, hi));
+  }
+
+  /// Stream capacity (Ruling R13): the whole run at the slowest allowed
+  /// tempo, teacher on, × 1.25 + 30 s.
+  Duration _bufferFor(GuidedExercise ex) {
+    final slow = _clampBpm(ex.minBpm);
+    final bars =
+        buildRun(ex, bpm: slow, options: const RunOptions(), clips: _clips)
+            .length;
+    final ms = bars * guidedBeatsPerBar * 60000 / slow;
+    return Duration(milliseconds: (ms * 1.25 + 30000).ceil());
+  }
 
   Future<void> start(GuidedExercise ex,
       {required int bpm, required RunOptions options}) async {
-    await stop();
-    final gen = _generation;
+    // Set before awaiting: a setBpm/setOptions while start() runs is kept.
     _ex = ex;
     _bpm = _clampBpm(bpm);
     _options = options;
+    await stop();
+    final gen = _generation;
+    var plannedBpm = _bpm;
+    var plannedOptions = _options;
     _queue.addAll(buildRun(ex, bpm: _bpm, options: _options, clips: _clips));
     _preloadClips();
-    if (!_rendererReady) {
-      await _renderer.init(_sounds);
-      _rendererReady = true;
+    try {
+      if (!_rendererReady) {
+        await _renderer.init(_sounds);
+        _rendererReady = true;
+      }
+      _renderer.reset();
+      await _sink.open(guidedSampleRate, maxBuffer: _bufferFor(ex));
+    } catch (e) {
+      if (gen == _generation) _fail(e);
+      return;
     }
-    _renderer.reset();
-    await _sink.open(guidedSampleRate);
     if (gen != _generation) return;
+    if (_bpm != plannedBpm ||
+        _options.teacher != plannedOptions.teacher ||
+        _options.playAlong != plannedOptions.playAlong) {
+      // Changed while we were opening: nothing is rendered yet, replan all.
+      plannedBpm = _bpm;
+      plannedOptions = _options;
+      _queue
+        ..clear()
+        ..addAll(buildRun(ex, bpm: _bpm, options: _options, clips: _clips));
+      _preloadClips();
+    }
     _running = true;
     _lastPosMs = -1;
     _lastMoveAt = _now();
@@ -175,6 +221,7 @@ class GuidedPlayer {
     _frozen = false;
     _ended = false;
     _finished = false;
+    _failed = false;
     _queue.clear();
     _committed = null;
     _clock = RunClock();
@@ -192,6 +239,14 @@ class GuidedPlayer {
     _rendererReady = false;
     await _positionCtrl.close();
     await _finishedCtrl.close();
+    await _errorCtrl.close();
+  }
+
+  void _fail(Object error) {
+    if (_failed) return;
+    _failed = true;
+    _timer?.cancel();
+    _errorCtrl.add(error);
   }
 
   void _startTimer() {
@@ -205,7 +260,7 @@ class GuidedPlayer {
   /// 10 ms; tests call it directly.
   @visibleForTesting
   Future<void> poll() async {
-    if (!_running || _paused || _frozen || _finished) return;
+    if (!_running || _paused || _frozen || _finished || _failed) return;
     final pos = _sink.positionMs();
     final now = _now();
     if (pos != _lastPosMs) {
@@ -243,14 +298,18 @@ class GuidedPlayer {
   Future<void> _fill() {
     final f = _filling;
     if (f != null) return f;
-    final next = _fillLoop().whenComplete(() => _filling = null);
+    late final Future<void> next;
+    next = _fillLoop().whenComplete(() {
+      // A stale run's loop must not clear a newer run's fill.
+      if (identical(_filling, next)) _filling = null;
+    });
     _filling = next;
     return next;
   }
 
   Future<void> _fillLoop() async {
     final gen = _generation;
-    while (_running && gen == _generation && !_ended) {
+    while (_running && gen == _generation && !_ended && !_failed) {
       final pos = math.max(0.0, _lastPosMs);
       final playing = _clock.at(pos)?.bar ?? 0;
       final needBars = _lastRenderedBar < playing + lookaheadBars;
@@ -263,11 +322,20 @@ class GuidedPlayer {
       }
       final bar = _queue.removeAt(0); // committed: later changes skip it
       _committed = bar;
-      final job = await _jobFor(bar);
+      final Float32List pcm;
+      try {
+        final job = await _jobFor(bar);
+        if (gen != _generation) return;
+        pcm = await _renderer.render(job);
+      } catch (e) {
+        if (gen == _generation) _fail(e);
+        return;
+      }
       if (gen != _generation) return;
-      final pcm = await _renderer.render(job);
-      if (gen != _generation) return;
-      _sink.append(pcm);
+      if (!_sink.append(pcm)) {
+        _fail(StateError('audio stream refused bar ${bar.globalBar}'));
+        return;
+      }
       _clock.addBar(bar.globalBar, _appendedMs, bar.bpm, runTicksPerBar,
           sectionIndex: bar.sectionIndex, barInSection: bar.barInSection);
       _appendedSamples += pcm.length;
@@ -285,7 +353,9 @@ class GuidedPlayer {
         if (e is ClipEvent) e.clipId
     ];
     for (final id in ids) {
-      await (_clipLoads[id] ?? _loadOne(id));
+      await _loadOne(id);
+      // A preload that failed is retried once for the bar that needs it.
+      if (!_clipCache.containsKey(id)) await _loadOne(id);
     }
     return barJobFor(bar,
         clips: _clipCache, crashGain: crashGainFor(_ex!.package));
@@ -301,12 +371,22 @@ class GuidedPlayer {
     }
   }
 
-  /// Loads a clip once; a clip that fails to load stays silent.
-  Future<void> _loadOne(String id) => _clipLoads[id] ??= () async {
-        try {
-          _clipCache[id] = (await _loadClip(id)).samples;
-        } catch (_) {}
-      }();
+  /// Loads a clip once. A failed load is forgotten (retried next time);
+  /// the bar it was for plays without the clip.
+  Future<void> _loadOne(String id) {
+    final running = _clipLoads[id];
+    if (running != null) return running;
+    late final Future<void> load;
+    load = Future<void>(() async {
+      try {
+        _clipCache[id] = (await _loadClip(id)).samples;
+      } catch (_) {
+        if (identical(_clipLoads[id], load)) _clipLoads.remove(id);
+      }
+    });
+    _clipLoads[id] = load;
+    return load;
+  }
 
   /// Keeps the unrendered rest of the current section (re-stamped with the
   /// current tempo/options), replans everything after it.
@@ -342,6 +422,20 @@ class GuidedPlayer {
     var vols = b.tickVolumes;
     if (!_options.teacher) {
       events = List.unmodifiable(events.where((e) => e is! ClipEvent));
+      // Without the voice the countdown clicks are accented, as in
+      // buildRun's teacher-off path.
+      final cd = [
+        for (final e in b.events)
+          if (e is CountdownEvent) e.tick
+      ];
+      final click = vols[RunSound.click];
+      if (cd.isNotEmpty && click != null) {
+        final c = List<double>.of(click);
+        for (final t in cd) {
+          if (c[t] > 0) c[t] = _teacherOffAccent;
+        }
+        vols = {...vols, RunSound.click: c};
+      }
     }
     if (!_options.playAlong && !b.isCountIn) {
       final click = List<double>.of(
