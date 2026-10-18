@@ -17,6 +17,7 @@ import '../features/practice/session_timer_provider.dart';
 import '../features/program/program_screen.dart';
 import '../features/program/program_setup_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
+import '../features/guided/debug_guided_screen.dart';
 import '../features/settings/kit_learn_screen.dart';
 import '../features/settings/latency_calibration_screen.dart';
 import '../features/settings/midi_calibration_screen.dart';
@@ -183,6 +184,13 @@ final router = GoRouter(
       path: '/settings/midi-calibration',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const MidiCalibrationScreen(),
+    ),
+    // Hidden listening page for guided exercises (Plan 1): only reachable
+    // by a long press on the version line in Settings.
+    GoRoute(
+      path: '/debug/guided',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, __) => const DebugGuidedScreen(),
     ),
     GoRoute(
       path: '/coaching/exercise-generator',

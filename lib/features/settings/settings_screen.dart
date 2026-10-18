@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../app/app_version.dart';
 import '../../app/design_tokens.dart';
 import '../../app/platform_support.dart';
 import '../../data/local/session_log_service.dart';
@@ -322,6 +323,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: const Text('Restarts the intro from the beginning',
                   style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
               trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Long press opens the hidden guided listening page (no menu
+          // entry on purpose).
+          Center(
+            child: GestureDetector(
+              key: const ValueKey('settings-version'),
+              behavior: HitTestBehavior.opaque,
+              onLongPress: () => context.push('/debug/guided'),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text('Version $appVersion',
+                    style: const TextStyle(
+                        color: AppColors.textMuted, fontSize: 12)),
+              ),
             ),
           ),
         ],

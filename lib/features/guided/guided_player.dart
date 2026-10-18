@@ -66,6 +66,10 @@ class GuidedPlayer {
   final int lookaheadBars;
   final double minQueuedMs;
 
+  /// Debug builds only (the listening page turns it on inside an assert):
+  /// prints the render time of every bar.
+  static bool debugLogRenderTimes = false;
+
   static const _pollInterval = Duration(milliseconds: 10);
   static const _frozenAfter = Duration(seconds: 1);
 
@@ -326,7 +330,17 @@ class GuidedPlayer {
       try {
         final job = await _jobFor(bar);
         if (gen != _generation) return;
+        final sw = Stopwatch()..start();
         pcm = await _renderer.render(job);
+        assert(() {
+          if (debugLogRenderTimes) {
+            debugPrint('guided render bar ${bar.globalBar} '
+                '(section ${bar.sectionIndex}, ${bar.bpm} bpm): '
+                '${(sw.elapsedMicroseconds / 1000).toStringAsFixed(1)} ms, '
+                'queued ${(_appendedMs - pos).toStringAsFixed(0)} ms');
+          }
+          return true;
+        }());
       } catch (e) {
         if (gen == _generation) _fail(e);
         return;
