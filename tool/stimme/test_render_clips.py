@@ -47,9 +47,9 @@ def test_trim_keeps_speech():
 
 
 def test_manifest_ms_equals_wav_length(tmp_path):
-    rc.render(tmp_path, "v", synth=fake_synth(), saetze={"a": "Hello", "b": "World peace"})
+    rc.render(tmp_path, "en_GB-cori-high", synth=fake_synth(), saetze={"a": "Hello", "b": "World peace"})
     m = json.loads((tmp_path / "manifest.json").read_text())
-    assert m["lang"] == "en" and m["voice"] == "v"
+    assert m["lang"] == "en" and m["voice"] == "en_GB-cori-high"
     for c in m["clips"]:
         with wave.open(str(tmp_path / f"{c['id']}.wav")) as w:
             assert w.getframerate() == 44100 and w.getnchannels() == 1
@@ -61,23 +61,23 @@ def test_manifest_ms_equals_wav_length(tmp_path):
 def test_unchanged_text_skips_rerender(tmp_path):
     calls = []
     s = {"a": "Hello", "b": "World"}
-    rc.render(tmp_path, "v", synth=fake_synth(calls), saetze=s)
+    rc.render(tmp_path, "en_GB-cori-high", synth=fake_synth(calls), saetze=s)
     assert len(calls) == 2
-    rc.render(tmp_path, "v", synth=fake_synth(calls), saetze=s)
+    rc.render(tmp_path, "en_GB-cori-high", synth=fake_synth(calls), saetze=s)
     assert len(calls) == 2
     s["b"] = "Changed"
-    rc.render(tmp_path, "v", synth=fake_synth(calls), saetze=s)
+    rc.render(tmp_path, "en_GB-cori-high", synth=fake_synth(calls), saetze=s)
     assert calls[2:] == ["Changed"]
-    rc.render(tmp_path, "w", synth=fake_synth(calls), saetze=s)  # other voice
+    rc.render(tmp_path, "en_US-ljspeech-high", synth=fake_synth(calls), saetze=s)  # other voice
     assert len(calls) == 5
 
 
 def test_only_renders_subset_and_keeps_others(tmp_path):
     calls = []
     s = {"a": "Hello", "b": "World"}
-    rc.render(tmp_path, "v", synth=fake_synth(calls), saetze=s)
+    rc.render(tmp_path, "en_GB-cori-high", synth=fake_synth(calls), saetze=s)
     s["a"] = "Hi"
-    rc.render(tmp_path, "v", only={"b"}, synth=fake_synth(calls), saetze=s)
+    rc.render(tmp_path, "en_GB-cori-high", only={"b"}, synth=fake_synth(calls), saetze=s)
     ids = [c["id"] for c in json.loads((tmp_path / "manifest.json").read_text())["clips"]]
     assert sorted(ids) == ["a", "b"] and len(calls) == 2
 
@@ -96,7 +96,7 @@ def test_short_word_ids_get_length_scale(tmp_path):
     def synth(text, voice, scale):
         seen[text] = scale
         return fake_synth()(text, voice, scale)
-    rc.render(tmp_path, "v", synth=synth,
+    rc.render(tmp_path, "en_GB-cori-high", synth=synth,
               saetze={"cd_go": "Go!", "after_last": "Last round."})
     assert seen == {"Go!": rc.SHORT_WORD_LENGTH_SCALE, "Last round.": 1.0}
 
@@ -104,18 +104,24 @@ def test_short_word_ids_get_length_scale(tmp_path):
 def test_silent_synth_raises(tmp_path):
     silent = lambda t, v, s: wav_bytes(array.array("h", [0] * 4410))
     with pytest.raises(ValueError, match="silent"):
-        rc.render(tmp_path, "v", synth=silent, saetze={"a": "x"})
+        rc.render(tmp_path, "en_GB-cori-high", synth=silent, saetze={"a": "x"})
 
 
 def test_force_rerenders(tmp_path):
     calls = []
     s = {"a": "Hello"}
-    rc.render(tmp_path, "v", synth=fake_synth(calls), saetze=s)
-    rc.render(tmp_path, "v", synth=fake_synth(calls), saetze=s, force=True)
+    rc.render(tmp_path, "en_GB-cori-high", synth=fake_synth(calls), saetze=s)
+    rc.render(tmp_path, "en_GB-cori-high", synth=fake_synth(calls), saetze=s, force=True)
     assert len(calls) == 2
 
 
 def test_only_with_other_voice_rejected(tmp_path):
-    rc.render(tmp_path, "v", synth=fake_synth(), saetze={"a": "Hello"})
+    rc.render(tmp_path, "en_GB-cori-high", synth=fake_synth(), saetze={"a": "Hello"})
     with pytest.raises(ValueError, match="full render"):
-        rc.render(tmp_path, "w", only={"a"}, synth=fake_synth(), saetze={"a": "Hello"})
+        rc.render(tmp_path, "en_US-ljspeech-high", only={"a"}, synth=fake_synth(), saetze={"a": "Hello"})
+
+
+def test_unknown_voice_rejected(tmp_path):
+    with pytest.raises(ValueError, match="unknown voice"):
+        rc.render(tmp_path, "nobody", synth=fake_synth(), saetze={"a": "x"})
+    assert not (tmp_path / "manifest.json").exists()

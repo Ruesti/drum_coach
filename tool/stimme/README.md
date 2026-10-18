@@ -15,17 +15,30 @@ under 600 ms.
 
 ## Voices and licences
 
-Both are Piper voices trained from scratch on public-domain speech (no
-lessac/Blizzard lineage, which is research-only). Public domain carries no
-conditions, so shipping the rendered audio in a commercial app is allowed.
-Voices to avoid: en_US-lessac/amy, en_GB-alan/joe, de_DE-thorsten (lessac
-lineage), en_US-ryan, hfc_* (CC BY-NC-SA). Details: `docs/BERICHT_GEFUEHRT_SPIKE.md`.
+Facts below are taken from each voice's Piper model card (MODEL_CARD line
+"License"). A public-domain dataset carries no conditions, which is why the
+rendered audio may ship in a commercial app.
 
-| Voice | Dataset | Licence | Source |
-|---|---|---|---|
-| `en_GB-cori-high` (default) | LibriVox recordings (Cori Samuel) | Public Domain | https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/cori/high (model card: MODEL_CARD there; LibriVox: https://librivox.org/pages/public-domain/) |
-| `en_US-ljspeech-high` | LJ Speech (Linda Johnson, LibriVox readings) | Public Domain | https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/ljspeech/high (dataset: https://keithito.com/LJ-Speech-Dataset/) |
+- `en_GB-cori-high` (default). Dataset: LibriVox recordings
+  (https://librivox.org), public domain; trained from scratch by Bryce Beattie
+  (https://brycebeattie.com/files/tts/). Model card:
+  https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_GB/cori/high/MODEL_CARD
+- `en_US-ljspeech-high`. Dataset: LJ Speech
+  (https://keithito.com/LJ-Speech-Dataset/), public domain; trained from
+  scratch by Bryce Beattie. Model card: https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ljspeech/high/MODEL_CARD
 
-`manifest.json` records `voice`, `license` and `source` of the rendered voice.
+Voices not to use (model card licence lines):
+
+- lessac/high: licence is the Blizzard 2013 licence page
+  (https://www.cstr.ed.ac.uk/projects/blizzard/2013/lessac_blizzard2013/license.html);
+  card: https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/lessac/high/MODEL_CARD
+- amy/medium and alan/medium: "Finetuned from U.S. English lessac voice",
+  licence "See URL" (Mycroft mimic3-voices);
+  cards: https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/amy/medium/MODEL_CARD, https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_GB/alan/medium/MODEL_CARD
+- ryan/high: CC BY-NC-SA 4.0 (non-commercial);
+  card: https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_US/ryan/high/MODEL_CARD
+
+`manifest.json` records `voice`, `license` and `source` of the rendered voice;
+an unknown voice (not in `VOICE_INFO` in `render_clips.py`) is rejected.
 `--force` re-renders despite an unchanged hash; `--only` requires the same
 voice as the existing manifest (otherwise do a full render).

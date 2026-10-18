@@ -105,6 +105,9 @@ def render(out_dir, voice=DEFAULT_VOICE, only=None, synth=piper_synth,
     """Renders all (or `only`) clips into out_dir and updates manifest.json.
 
     Returns the list of ids that were actually synthesised."""
+    if voice not in VOICE_INFO:
+        raise ValueError(f"unknown voice {voice!r}: add its licence and source "
+                         f"to VOICE_INFO first")
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     mpath = out_dir / "manifest.json"
