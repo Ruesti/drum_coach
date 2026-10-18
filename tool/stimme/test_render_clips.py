@@ -80,3 +80,42 @@ def test_only_renders_subset_and_keeps_others(tmp_path):
     rc.render(tmp_path, "v", only={"b"}, synth=fake_synth(calls), saetze=s)
     ids = [c["id"] for c in json.loads((tmp_path / "manifest.json").read_text())["clips"]]
     assert sorted(ids) == ["a", "b"] and len(calls) == 2
+
+
+def test_manifest_names_voice_license(tmp_path):
+    for v in rc.VOICE_INFO:
+        rc.render(tmp_path, v, synth=fake_synth(), saetze={"a": "Hello"})
+        m = json.loads((tmp_path / "manifest.json").read_text())
+        assert "Public Domain" in m["license"]
+        assert m["source"].startswith("https://huggingface.co/rhasspy/piper-voices")
+
+
+def test_short_word_ids_get_length_scale(tmp_path):
+    seen = {}
+
+    def synth(text, voice, scale):
+        seen[text] = scale
+        return fake_synth()(text, voice, scale)
+    rc.render(tmp_path, "v", synth=synth,
+              saetze={"cd_go": "Go!", "after_last": "Last round."})
+    assert seen == {"Go!": rc.SHORT_WORD_LENGTH_SCALE, "Last round.": 1.0}
+
+
+def test_silent_synth_raises(tmp_path):
+    silent = lambda t, v, s: wav_bytes(array.array("h", [0] * 4410))
+    with pytest.raises(ValueError, match="silent"):
+        rc.render(tmp_path, "v", synth=silent, saetze={"a": "x"})
+
+
+def test_force_rerenders(tmp_path):
+    calls = []
+    s = {"a": "Hello"}
+    rc.render(tmp_path, "v", synth=fake_synth(calls), saetze=s)
+    rc.render(tmp_path, "v", synth=fake_synth(calls), saetze=s, force=True)
+    assert len(calls) == 2
+
+
+def test_only_with_other_voice_rejected(tmp_path):
+    rc.render(tmp_path, "v", synth=fake_synth(), saetze={"a": "Hello"})
+    with pytest.raises(ValueError, match="full render"):
+        rc.render(tmp_path, "w", only={"a"}, synth=fake_synth(), saetze={"a": "Hello"})

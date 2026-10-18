@@ -28,6 +28,18 @@ MAX_PAD_MS = 30
 PEAK_DBFS = -1.0
 SILENCE_THRESHOLD = 0.02  # fraction of full scale
 
+# Provenance written into manifest.json (see README.md for the reasoning).
+VOICE_INFO = {
+    "en_GB-cori-high": {
+        "license": "Public Domain (LibriVox recordings)",
+        "source": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/cori/high",
+    },
+    "en_US-ljspeech-high": {
+        "license": "Public Domain (LJ Speech dataset)",
+        "source": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/ljspeech/high",
+    },
+}
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 OUT_DIR = ROOT / "assets" / "voice"
@@ -41,7 +53,7 @@ def trim_and_normalize(samples, rate=RATE, max_pad_ms=MAX_PAD_MS,
     limit = int(32768 * threshold)
     first = next((i for i, v in enumerate(samples) if abs(v) > limit), None)
     if first is None:
-        return array.array("h")
+        raise ValueError("synth output is silent: nothing to trim")
     last = len(samples) - 1 - next(
         i for i, v in enumerate(reversed(samples)) if abs(v) > limit)
     pad = int(rate * max_pad_ms / 1000)
@@ -89,7 +101,7 @@ def text_hash(text, voice, length_scale):
 
 
 def render(out_dir, voice=DEFAULT_VOICE, only=None, synth=piper_synth,
-           saetze=SAETZE):
+           saetze=SAETZE, force=False):
     """Renders all (or `only`) clips into out_dir and updates manifest.json.
 
     Returns the list of ids that were actually synthesised."""
@@ -101,6 +113,10 @@ def render(out_dir, voice=DEFAULT_VOICE, only=None, synth=piper_synth,
         m = json.loads(mpath.read_text())
         if m.get("voice") == voice:
             old = {c["id"]: c for c in m["clips"]}
+        elif only is not None:
+            raise ValueError(
+                f"--only with voice {voice!r} differs from manifest voice "
+                f"{m.get('voice')!r}: do a full render")
     rendered = []
     clips = []
     for cid, text in saetze.items():
@@ -109,7 +125,7 @@ def render(out_dir, voice=DEFAULT_VOICE, only=None, synth=piper_synth,
         prev = old.get(cid)
         wav = out_dir / f"{cid}.wav"
         skip = (only is not None and cid not in only) or (
-            prev and prev.get("hash") == h and wav.exists())
+            not force and prev and prev.get("hash") == h and wav.exists())
         if skip and prev:
             clips.append(prev)
             continue
@@ -121,7 +137,8 @@ def render(out_dir, voice=DEFAULT_VOICE, only=None, synth=piper_synth,
                       "text": text, "hash": h})
         rendered.append(cid)
     mpath.write_text(json.dumps(
-        {"voice": voice, "lang": "en", "clips": clips},
+        {"voice": voice, "lang": "en", **VOICE_INFO.get(voice, {}),
+         "clips": clips},
         ensure_ascii=False, indent=2) + "\n")
     return rendered
 
@@ -130,9 +147,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", help="comma-separated clip ids")
     ap.add_argument("--voice", default=DEFAULT_VOICE)
+    ap.add_argument("--force", action="store_true",
+                    help="re-render even if text+voice hash is unchanged")
     a = ap.parse_args()
     only = set(a.only.split(",")) if a.only else None
-    done = render(OUT_DIR, a.voice, only)
+    try:
+        done = render(OUT_DIR, a.voice, only, force=a.force)
+    except ValueError as e:
+        sys.exit(f"error: {e}")
     print(f"rendered {len(done)}: {', '.join(done) or '-'}")
 
 

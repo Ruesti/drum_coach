@@ -1,6 +1,8 @@
 {
   "voice": "en_GB-cori-high",
   "lang": "en",
+  "license": "Public Domain (LibriVox recordings)",
+  "source": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/cori/high",
   "clips": [
     {
       "id": "ci_one",
