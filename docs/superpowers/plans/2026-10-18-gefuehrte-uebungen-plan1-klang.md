@@ -4,7 +4,7 @@
 
 **Goal:** Ein Ablauf-Spieler, der eine geführte Übung von ~5 Minuten (Einzähler, Crash, Grundgroove, Erklärung per Stimme, Countdown, Variationen, Schluss-Crash) nahtlos abspielt, das Tempo ab dem nächsten Takt ohne Neustart wechselt und eine Positions-Uhr (Abschnitt/Takt/Schlag) liefert — hörbar auf S23 und Linux über eine versteckte Test-Seite.
 
-**Architecture:** Ein reiner Dart-Kern rechnet aus einer `GuidedExercise` einen linearen `RunPlan` (Takte mit Stimmen-Lautstärken + Ereignisse wie Sprach-Clip, Crash, Countdown). Ein Takt-Renderer mischt Takte zu PCM-Stücken (Nachklang wird in den nächsten Takt übertragen, nicht gewickelt). Der `GuidedPlayer` hängt diese Stücke mit ~1 Takt Vorlauf an einen SoLoud-`setBufferStream` an; ein Tempowechsel gilt für den nächsten noch nicht gerenderten Takt. Die Positions-Uhr leitet sich aus der Stream-Position und der Tempo-Historie ab. Sprach-Clips werden offline mit Piper vorgerendert und als Samples mitgemischt — kein zweites Audio-System.
+**Architecture:** Ein reiner Dart-Kern rechnet aus einer `GuidedExercise` einen linearen `RunPlan` (Takte mit Stimmen-Lautstärken + Ereignisse wie Sprach-Clip, Crash, Countdown). Ein Takt-Renderer mischt Takte zu PCM-Stücken (Nachklang wird in den nächsten Takt übertragen, nicht gewickelt). Der `GuidedPlayer` hängt diese Stücke mit ~1 Takt Vorlauf an einen SoLoud-`setBufferStream` an; ein Tempowechsel gilt für den nächsten noch nicht gerenderten Takt. Die Positions-Uhr leitet sich aus der Stream-Position und der Tempo-Historie ab. Englische Sprach-Clips werden offline mit Piper vorgerendert und als Samples mitgemischt — kein zweites Audio-System.
 
 **Tech Stack:** Flutter/Dart, `flutter_soloud` (3.5.x im Lockfile, `setBufferStream`/`addAudioDataStream`), Riverpod, go_router; Python 3 + `piper-tts` (nur Werkzeug, nicht in der App).
 
@@ -15,7 +15,7 @@
 - Audio nur über `flutter_soloud` — nie `just_audio`/`audioplayers` (docs/CLAUDE.md).
 - BPM-Bereich 40–240; Tempo greift **ab dem nächsten Takt**, nahtlos, Position bleibt (Spec §3.3).
 - Kein hörbarer Übergang zwischen Takten; Jitter nicht schlechter als die heutige Schleife; **die bestehende Schleifen-Wiedergabe (`MetronomeEngine`, `buildLoopPlan`, `buildLoopWav`) bleibt unverändert** (Spec §3.4).
-- Alle UI-Strings Englisch (Spec §3.2, F3). Stimme Deutsch, Sprache als Werkzeug-Einstellung.
+- Alle UI-Strings und die Stimme Englisch (Spec §3.2, F3 + Korrektur 18.10.); ein Text je Erklärung (`textEn`) wird angezeigt und vorgelesen; Sprache als Werkzeug-Einstellung.
 - App vollständig offline; Clips sind Assets.
 - Neue Assets nur frei lizenziert, Eintrag in `assets/audio/CREDITS.md`.
 - Nur 4/4 (Spec §2 Nicht-Ziele).
@@ -40,7 +40,7 @@ Zweck: bestätigt die Architektur, bevor Task 1–7 gebaut werden. Branch `spike
 - Create: `tool/stimme/requirements.txt` (`piper-tts`), `tool/stimme/spike_clip.sh`
 - Create (Spike-Branch only): `lib/spike/stream_spike_screen.dart`, Route `/debug/stream-spike`
 
-- [ ] **Step 1: Piper einrichten und einen Clip rendern.** venv unter `tool/stimme/.venv` (gitignored), Stimme `de_DE-thorsten-high` (Lizenz CC0 prüfen und notieren). Satz: „Gleich kommt die Bassdrum zusätzlich auf die Und von drei." → 44,1 kHz mono WAV. Erwartet: Datei < 400 KB, verständlich.
+- [ ] **Step 1: Piper einrichten und einen Clip rendern.** venv unter `tool/stimme/.venv` (gitignored), englische Stimme mit kommerziell nutzbarer Lizenz (MODEL_CARD prüfen, Lizenz notieren). Satz: „Next up: add the bass drum on the and of three." → 44,1 kHz mono WAV. Erwartet: Datei < 400 KB, verständlich.
 - [ ] **Step 2: Spike-Seite.** `setBufferStream(sampleRate: 44100, channels: mono, format: f32le, bufferingType: preserved, bufferingTimeNeeds: 0.1)`; Takte (Kick/Snare/Hi-Hat aus `backing_sounds.dart`/Snare-PCM, 4/4) einzeln mit `buildLoopWav`-ähnlicher Mischung als Float32 rendern und mit 1 Takt Vorlauf per `addAudioDataStream` anhängen; ab Takt 4 alle 8 Takte den Clip mitmischen; Knöpfe BPM ±10; Anzeige: gerenderter Takt, `getPosition`, berechneter Takt/Schlag; 150 Takte laufen lassen.
 - [ ] **Step 3: Messen auf dem NUC-Emulator, dann S23 und Linux-Laptop.** APK auf dem NUC bauen (siehe Memory „Android-Build + Emulator auf dem NUC"), S23 installieren über `cross-machine-test-deploy`; Linux-Bundle auf dem Laptop (docs/CLAUDE.md „Delivery"). Prüfen und notieren in `docs/BERICHT_GEFUEHRT_SPIKE.md`:
   - (a) kein Knacksen/Lücke an Taktgrenzen, auch bei Tempowechsel;
@@ -74,8 +74,8 @@ git commit -m "spike(gefuehrt): Stream + Piper-Clip auf S23/Linux — Bericht"
     const GuidedSection({required this.kind, required this.line, required this.bars,
       this.textEn, this.speechClipId, this.afterClipId});
     final SectionKind kind; final ExerciseLine line; final int bars;
-    final String? textEn;        // banner/line above notes (English)
-    final String? speechClipId;  // explanation spoken in the groove BEFORE this section
+    final String? textEn;        // explanation: shown (banner/line above notes) AND spoken
+    final String? speechClipId;  // clip of textEn, spoken in the groove BEFORE this section
     final String? afterClipId;   // short phrase after the section ("Gut — zurück zum Groove.")
   }
   class GuidedExercise {
@@ -103,7 +103,7 @@ git commit -m "spike(gefuehrt): Stream + Piper-Clip auf S23/Linux — Bericht"
   - `validate rejects variation without speechClipId or textEn` → throws.
   - `validate rejects non-whole-bar lines` (line ticks not a multiple of one 4/4 bar) → throws.
   - `barsAt counts count-in bar`: sections 0+8+16+8+16+8+1 bars → `barsAt(100) == 58` (1 count-in).
-  - `manifest parses durations`: `{"clips":[{"id":"cd_drei","ms":420}]}` → `durationMs('cd_drei') == 420`; unknown id → `throwsStateError`.
+  - `manifest parses durations`: `{"clips":[{"id":"cd_three","ms":420}]}` → `durationMs('cd_three') == 420`; unknown id → `throwsStateError`.
 - [ ] **Step 2: Run** `flutter test test/guided/guided_exercise_test.dart` → FAIL (files missing).
 - [ ] **Step 3: Implement** both files; immutable, `const` constructors, no Flutter imports in the model.
 - [ ] **Step 4: Run** same command → PASS.
@@ -172,8 +172,8 @@ git commit -m "spike(gefuehrt): Stream + Piper-Clip auf S23/Linux — Bericht"
   /// (the player calls this again on tempo/teacher/playAlong changes).
   List<RunBar> buildRun(GuidedExercise ex, {required int bpm, required RunOptions options,
     required ClipManifest clips, int fromBar = 0});
-  const countdownClipIds = ['cd_drei', 'cd_zwei', 'cd_eins', 'cd_los'];
-  const countInClipIds = ['ci_eins', 'ci_zwei', 'ci_drei', 'ci_vier'];
+  const countdownClipIds = ['cd_three', 'cd_two', 'cd_one', 'cd_go'];
+  const countInClipIds = ['ci_one', 'ci_two', 'ci_three', 'ci_four'];
   ```
   Rules (Spec §3.1–3.4a):
   - Bar 0 = count-in: click on each beat; teacher on → `countInClipIds` on beats 1–4.
@@ -188,7 +188,7 @@ git commit -m "spike(gefuehrt): Stream + Piper-Clip auf S23/Linux — Bericht"
   - `count-in bar first` → `bars[0].isCountIn`, 4 click hits.
   - `crash on first groove bar and outro` → exactly two `CrashEvent`s.
   - `countdown bar precedes each variation` → bars at index of var−1 have `isCountdown` and events remaining 3,2,1 on ticks of beats 2,3,4.
-  - `countdown halves when words do not fit a beat`: 240 bpm (beat 250 ms), clips 400 ms → countdown on beat 1 (`cd_zwei`) and beat 3 (`cd_eins`) of the countdown bar, `cd_los` on beat 1 of the variation; no two clips overlap.
+  - `countdown halves when words do not fit a beat`: 240 bpm (beat 250 ms), clips 400 ms → countdown on beat 1 (`cd_two`) and beat 3 (`cd_one`) of the countdown bar, `cd_go` on beat 1 of the variation; no two clips overlap.
   - `explanation ends before countdown at 100 bpm` → clip start ms + 3200 + 250 ≤ countdown bar start ms.
   - `extends relax bars at 240 bpm` → groove-before-variation-2 has more than 4 bars, and the rule above holds.
   - `teacher off has no clips` → zero `ClipEvent`; countdown clicks present with volume 1.5.
@@ -270,19 +270,19 @@ git commit -m "spike(gefuehrt): Stream + Piper-Clip auf S23/Linux — Bericht"
 ### Task 6: Sprach-Clip-Werkzeug
 
 **Files:**
-- Create: `tool/stimme/render_clips.py`, `tool/stimme/saetze.py` (Satzliste: id → deutscher Text), `tool/stimme/README.md`
+- Create: `tool/stimme/render_clips.py`, `tool/stimme/saetze.py` (Satzliste: id → englischer Text), `tool/stimme/README.md`
 - Create (generated, committed): `assets/voice/*.wav`, `assets/voice/manifest.json`
 - Modify: `pubspec.yaml` (`- assets/voice/`), `.gitignore` (`tool/stimme/.venv/`)
 - Test: `tool/stimme/test_render_clips.py`, `test/guided/voice_assets_test.dart`
 
 **Interfaces:**
-- Produces: `assets/voice/<id>.wav` (44 100 Hz, mono, 16 bit, Stille vorn/hinten auf ≤ 30 ms gekürzt, Spitze −1 dBFS) und `manifest.json` `{"voice":"de_DE-thorsten-high","lang":"de","clips":[{"id":..,"ms":..,"text":..}]}`; Python-Einstieg `python tool/stimme/render_clips.py [--only id,...] [--voice NAME]`. Feste Sätze in `saetze.py`: `ci_eins…ci_vier`, `cd_drei, cd_zwei, cd_eins, cd_los`, `after_gut`, `after_letzte`, plus die Erklärungen der Demo-Übung aus Task 7. Die Erklärungen der Katalog-Übungen kommen in Plan 2 aus `tool/katalog/gefuehrt.py`.
+- Produces: `assets/voice/<id>.wav` (44 100 Hz, mono, 16 bit, Stille vorn/hinten auf ≤ 30 ms gekürzt, Spitze −1 dBFS) und `manifest.json` `{"voice":"<piper voice>","lang":"en","clips":[{"id":..,"ms":..,"text":..}]}`; Python-Einstieg `python tool/stimme/render_clips.py [--only id,...] [--voice NAME]`. Feste Sätze in `saetze.py`: `ci_one…ci_four`, `cd_three, cd_two, cd_one, cd_go`, `after_good`, `after_last`, plus die Erklärungen der Demo-Übung aus Task 7. Die Erklärungen der Katalog-Übungen kommen in Plan 2 aus `tool/katalog/gefuehrt.py`.
 - Consumes in Dart: `ClipManifest.fromJson`, loader `Future<VoiceClip> loadVoiceClip(String id)` in `lib/features/guided/voice_assets.dart` (decode via SoLoud `readSamplesFromMem`; host tests: WAV parsed in Dart, no FFI).
-- [ ] **Step 1: Failing tests:** Python — `trim keeps speech`, `manifest ms equals wav length` (±1 ms), `unchanged text skips re-render` (Hash des Texts + Stimme in manifest). Dart — `every manifest id has an asset`, `countdown clips each ≤ 600 ms` (sonst passt „drei" nicht auf einen Schlag bei 100 BPM).
+- [ ] **Step 1: Failing tests:** Python — `trim keeps speech`, `manifest ms equals wav length` (±1 ms), `unchanged text skips re-render` (Hash des Texts + Stimme in manifest). Dart — `every manifest id has an asset`, `countdown clips each ≤ 600 ms` (sonst passt „three" nicht auf einen Schlag bei 100 BPM).
 - [ ] **Step 2: Run** `python -m pytest tool/stimme` and `flutter test test/guided/voice_assets_test.dart` → FAIL.
 - [ ] **Step 3: Implement**, render, commit Assets.
 - [ ] **Step 4: Run** both → PASS.
-- [ ] **Step 5: Commit** `feat(gefuehrt): Sprach-Clips (Piper, deutsch) + Manifest`
+- [ ] **Step 5: Commit** `feat(gefuehrt): Sprach-Clips (Piper, englisch) + Manifest`
 
 ---
 

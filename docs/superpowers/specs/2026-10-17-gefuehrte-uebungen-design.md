@@ -96,24 +96,21 @@ Crash · Grundgroove (Einspielen)
   (typisch Groove 4–8, Variation 8–16). Bei anderem Tempo ändert sich die Dauer, die
   Taktzahl nicht (Ausnahme 3.3).
 - **Einstieg:** vor dem ersten Crash ein Einzähler (1 Takt, Klicks + Stimme
-  „eins, zwei, drei, vier" bzw. nur Klicks bei Lehrer aus).
+  „one, two, three, four" bzw. nur Klicks bei Lehrer aus).
 
 ### 3.2 Ansage („Lehrer")
 
-- Die Stimme **erklärt wie ein Lehrer**, was sich ändert, z. B. „Gleich kommt die
-  Bassdrum zusätzlich auf die Und von drei." / Pad: „Jetzt Akzent auf jeder ersten
-  Sechzehntel." Kurz (≤ ~4 s), konkret, freundlich. Dazu gibt es wenige Lob- oder
-  Übergangssätze („Gut — zurück zum Groove.", „Letzte Runde.").
+- Die Stimme **erklärt wie ein Lehrer**, was sich ändert, z. B. „Next up: add the
+  bass drum on the and of three." / Pad: „Now accent the first of every four
+  sixteenths." Kurz (≤ ~4 s), konkret, freundlich. Dazu gibt es wenige Lob- oder
+  Übergangssätze („Nice — back to the groove.", „Last round.").
 - **Wann:** die Erklärung läuft **im Grundgroove vor dem Wechsel** und ist fertig,
   bevor der Countdown beginnt; der **Countdown liegt im letzten Takt** vor dem
-  Wechsel auf den Schlägen 2–4 + Eins („drei, zwei, eins, los"/„jetzt").
-- **Sprache:** Bildschirmtexte (Banner, Zeile über den Noten, Liste, Vorschau)
-  **Englisch** wie die übrige App (Ulis Antwort F3). Stimme **Deutsch** *(meine
-  Entscheidung aus dem Gespräch; F3 betraf nur den Bildschirm)*. Folge: jede
-  Erklärung hat **zwei Texte** (`textEn` für den Bildschirm, `speechDe` für den Clip),
-  beide im Katalog-Werkzeug an einer Stelle gepflegt und auf der Kurationsseite
-  nebeneinander gezeigt. Die Sprache der Stimme ist eine Katalog-Einstellung, damit ein
-  Wechsel auf Englisch nur ein Neu-Rendern der Clips ist.
+  Wechsel auf den Schlägen 2–4 + Eins („three, two, one, go").
+- **Sprache: Englisch** — Bildschirmtexte und Stimme (Ulis Antwort F3; Korrektur
+  18.10.: „wir hatten uns auf englische Stimme geeinigt"). Folge: **ein Text je
+  Erklärung** (`textEn`), der vorgelesen und angezeigt wird. Die Sprache der Stimme
+  bleibt eine Katalog-Einstellung (späteres Deutsch = Clips neu rendern).
 - **Lehrer aus:** gleicher Ablauf; statt Stimme ein **Hinweis-Banner** mit demselben
   Erklärtext, Countdown als Zahlen im Banner + betonter Klick auf den Countdown-
   Schlägen. Schalter im Übungs-Screen, Einstellung wird gemerkt.
@@ -122,7 +119,7 @@ Crash · Grundgroove (Einspielen)
 
 **Wie die Stimme entsteht (meine Entscheidung, durch Spike zu bestätigen, §5 Phase 0):**
 Die Sätze werden **beim Katalog-Bau** mit einer guten Offline-Sprachsynthese (z. B.
-Piper, deutsche Stimme) zu **kurzen Audiodateien vorgerendert** und als Assets
+Piper, englische Stimme mit kommerziell nutzbarer Lizenz) zu **kurzen Audiodateien vorgerendert** und als Assets
 mitgeliefert; abgespielt werden sie **über SoLoud**, in denselben Ablauf eingeplant
 wie die Schläge. Gründe: (1) Dauer jedes Satzes ist vorher bekannt → exakte Planung
 vor dem Countdown; (2) kein zweites Audio-System neben SoLoud (Risiko Android-Audio-
@@ -248,7 +245,7 @@ die vorhandene Schleifen-Wiedergabe für normale Zeilen bleibt unberührt.
 
 ## 5. Reihenfolge (Vorschlag)
 
-- **Phase 0 — Wegwerf-Spike** (Pflicht vor allem anderen): vorgerenderter deutscher
+- **Phase 0 — Wegwerf-Spike** (Pflicht vor allem anderen): vorgerenderter englischer
   Sprach-Clip + Schlagzeug gleichzeitig über SoLoud auf dem S23 und Linux; dazu ein
   Ablauf über > 64 Takte mit Tempowechsel am Taktende. Ergebnis entscheidet 3.2/3.4.
 - **Phase 1 — Ablauf-Spieler** (3.4) + Crash-Sample + Countdown.
@@ -271,10 +268,9 @@ die vorhandene Schleifen-Wiedergabe für normale Zeilen bleibt unberührt.
   (Spike, Ablauf-Spieler, Modell/Katalog) berühren dessen Baustellen kaum; Phase 3–4
   (Screens, Log, „Variation antippen → Zeile üben") erst, wenn #35 nach Ulis
   Gerätetest (ab 24.10.) steht, sonst Rebase.
-- Stimme Deutsch trotz englischer Bildschirmtexte (zwei Texte je Erklärung).
 
 - Vorgerenderte Clips über SoLoud statt Geräte-Sprachausgabe.
-- Erklärung im Groove davor, Countdown im letzten Takt („drei, zwei, eins, los").
+- Erklärung im Groove davor, Countdown im letzten Takt („three, two, one, go").
 - Tempo greift ab nächstem Takt; Relax-Phase verlängert sich bei Bedarf automatisch.
 - Ort „Geführt" in der Bibliothek, Umschalter Set | Pad.
 - Kommende Variation gedimmt sichtbar während der Erklärung; Erklärtext bleibt
