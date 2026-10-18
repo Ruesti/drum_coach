@@ -43,21 +43,26 @@ Alles auf Englisch (Bildschirm und Stimme).
    Taktübergang sauber (kein Knacksen, kein Holpern)?
 2. **Tempo mitten drin hoch und runter** (mehrmals + und −). Erwartung: kein
    Neustart, kein Aussetzer; das neue Tempo greift ab dem nächsten Takt. Die
-   Übung läuft an derselben Stelle weiter.
-3. **Teacher aus** (vor dem Start oder mittendrin). Erwartung: gleicher Ablauf,
+   Übung läuft an derselben Stelle weiter. (Genau: im Puffer liegen immer
+   gut 1,2 s fertiger Ton. Drückst du erst in der letzten gut 1,2 s eines
+   Takts, ist der nächste schon fertig — dann greift es einen Takt später.)
+3. **Pause und weiter**, auch kurz vor dem Schluss-Crash. Erwartung: Ton
+   stoppt sofort und kommt erst mit „Resume" wieder; der Schluss-Crash
+   klingt ganz aus und wird nicht abgeschnitten.
+4. **Teacher aus** (vor dem Start oder mittendrin). Erwartung: gleicher Ablauf,
    aber ohne Stimme; der Countdown ist dann ein **betonter Klick** auf den
    Schlägen 2–4. Hinweis: das Banner mit Countdown-Zahlen kommt erst mit dem
    richtigen Übungs-Screen (Plan 2); hier steht nur der Erklärtext.
    Wird Teacher mittendrin wieder **an**geschaltet, greift das erst ab dem
    nächsten Abschnitt.
-4. **Stimme klar über dem Groove?** Versteht man jeden Satz, auch bei der
+5. **Stimme klar über dem Groove?** Versteht man jeden Satz, auch bei der
    Kit-Übung mit Bassdrum und Hi-Hat?
-5. **Stimme cori oder ljspeech?** In der App ist **cori** (britisch) eingebaut.
+6. **Stimme cori oder ljspeech?** In der App ist **cori** (britisch) eingebaut.
    Zum Vergleich liegen beide Stimmen als Hörbeispiele auf dem NUC in
    `~/gefuehrt-stimmen/` (je ein Satz + „three, two, one, go"). Wenn dir
    ljspeech (amerikanisch, etwas kürzere Wörter) lieber ist: sag Bescheid,
    dann rendere ich die Clips neu.
-6. Optional: **Play along aus** — nur noch Viertel-Klick, Stimme und
+7. Optional: **Play along aus** — nur noch Viertel-Klick, Stimme und
    Countdown bleiben.
 
 ## Installation auf dem S23
@@ -77,12 +82,22 @@ Versionsnummer 1; ein Neu-Installieren drüber klappt deshalb.
 
 Das Desktop-Programm muss **auf dem Laptop** gebaut werden (der NUC hat eine
 neuere Systembibliothek, ein dort gebautes Programm startet auf dem Laptop
-nicht). Auf dem Laptop:
+nicht). Dafür gibt es einen **eigenen Checkout** `drum_coach-guided` — der
+Etappe-2-Checkout (`drum_coach-etappe2-phase-b`) bleibt unberührt.
+
+Beim ersten Mal (legt den Checkout an):
 
 ```bash
 ssh laptop
-cd ~/agent-test-checkouts/drum_coach-etappe2-phase-b
-git fetch && git reset --hard origin/spec-gefuehrte-uebungen
+git clone git@github.com:Ruesti/drum_coach.git ~/agent-test-checkouts/drum_coach-guided
+```
+
+Danach jedes Mal:
+
+```bash
+ssh laptop
+cd ~/agent-test-checkouts/drum_coach-guided
+git fetch && git checkout spec-gefuehrte-uebungen && git pull --ff-only
 ~/development/flutter/bin/flutter build linux --release
 rsync -a --delete build/linux/x64/release/bundle/ ~/drum-coach-guided/
 ~/drum-coach-guided/drum_coach

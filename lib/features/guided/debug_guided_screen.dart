@@ -101,6 +101,9 @@ class _GuidedPageState extends State<_GuidedPage> {
   RunOptions _options = const RunOptions();
   bool _running = false;
   bool _paused = false;
+
+  /// start() is in flight: Start/Pause taps are ignored meanwhile.
+  bool _starting = false;
   RunPosition? _pos;
   String? _error;
 
@@ -118,7 +121,17 @@ class _GuidedPageState extends State<_GuidedPage> {
     }());
     _subs
       ..add(_player.positions.listen((p) => setState(() => _pos = p)))
-      ..add(_player.errors.listen((e) => setState(() => _error = '$e')))
+      // A failed run stops appending; reset the page to stopped.
+      ..add(_player.errors.listen((e) {
+        setState(() {
+          _error = '$e';
+          _running = false;
+          _paused = false;
+        });
+        unawaited(_player.stop());
+      }))
+      // A frozen position paused the run on its own: show Resume.
+      ..add(_player.stateChanges.listen((_) => setState(() {})))
       ..add(_player.finished.listen((_) => setState(() {
             _running = false;
             _paused = false;
@@ -169,16 +182,25 @@ class _GuidedPageState extends State<_GuidedPage> {
     });
   }
 
+  /// Paused by the user or by a frozen position.
+  bool get _showResume => _paused || _player.isFrozen;
+
   Future<void> _toggle() async {
+    if (_starting) return;
     if (!_running) {
       setState(() {
         _running = true;
         _paused = false;
+        _starting = true;
         _error = null;
         _pos = null;
       });
-      await _player.start(_ex, bpm: _bpm, options: _options);
-    } else if (_paused) {
+      try {
+        await _player.start(_ex, bpm: _bpm, options: _options);
+      } finally {
+        if (mounted) setState(() => _starting = false);
+      }
+    } else if (_showResume) {
       _player.resume();
       setState(() => _paused = false);
     } else {
@@ -287,11 +309,12 @@ class _GuidedPageState extends State<_GuidedPage> {
                       backgroundColor: PracticeColors.accent,
                       padding: const EdgeInsets.symmetric(vertical: 16)),
                   onPressed: _toggle,
-                  icon: Icon(
-                      !_running || _paused ? Icons.play_arrow : Icons.pause),
+                  icon: Icon(!_running || _showResume
+                      ? Icons.play_arrow
+                      : Icons.pause),
                   label: Text(!_running
                       ? 'Start'
-                      : _paused
+                      : _showResume
                           ? 'Resume'
                           : 'Pause'),
                 ),

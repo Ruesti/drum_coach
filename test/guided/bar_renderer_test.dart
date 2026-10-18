@@ -17,15 +17,18 @@ List<double> _silent16() => List<double>.filled(16, 0.0);
 void main() {
   test('bar length matches tempo', () {
     final r = BarRenderer();
-    final bar = r.renderBar(
-        bpm: 120, factor: 4, voices: [_voice(_silent16(), [0.5])]);
+    final bar = r.renderBar(bpm: 120, factor: 4, voices: [
+      _voice(_silent16(), [0.5])
+    ]);
     expect(bar.samples, 88200);
     expect(bar.pcm.length, 88200);
   });
 
   test('mixed tempo has no drift', () {
     final r = BarRenderer();
-    final v = [_voice(_silent16(), [0.5])];
+    final v = [
+      _voice(_silent16(), [0.5])
+    ];
     var total = 0;
     for (var i = 0; i < 3; i++) {
       total += r.renderBar(bpm: 120, factor: 4, voices: v).samples;
@@ -39,11 +42,14 @@ void main() {
   test('carry spans several bars', () {
     final r = BarRenderer();
     final hit = SampleHit(tick: 0, samples: List<double>.filled(3 * _sr, 0.5));
-    final b1 = r.renderBar(
-        bpm: 120, factor: 4, voices: [_voice(_silent16(), [0.1])],
-        hits: [hit]);
-    final b2 = r.renderBar(
-        bpm: 120, factor: 4, voices: [_voice(_silent16(), [0.1])]);
+    final b1 = r.renderBar(bpm: 120, factor: 4, voices: [
+      _voice(_silent16(), [0.1])
+    ], hits: [
+      hit
+    ]);
+    final b2 = r.renderBar(bpm: 120, factor: 4, voices: [
+      _voice(_silent16(), [0.1])
+    ]);
     expect(b1.pcm.every((x) => (x - 0.5).abs() < 1e-6), isTrue);
     expect(b2.pcm[0], closeTo(0.5, 1e-6));
     expect(b2.pcm[_sr].abs(), lessThan(1e-6));
@@ -53,24 +59,31 @@ void main() {
   test('carry is not wrapped', () {
     final r = BarRenderer();
     final hit = SampleHit(tick: 15, samples: List<double>.filled(20000, 0.5));
-    final b1 = r.renderBar(
-        bpm: 120, factor: 4, voices: [_voice(_silent16(), [0.1])],
-        hits: [hit]);
+    final b1 = r.renderBar(bpm: 120, factor: 4, voices: [
+      _voice(_silent16(), [0.1])
+    ], hits: [
+      hit
+    ]);
     for (var i = 0; i < 100; i++) {
       expect(b1.pcm[i], 0.0);
     }
     expect(b1.pcm.last, closeTo(0.5, 1e-6));
-    final b2 = r.renderBar(
-        bpm: 120, factor: 4, voices: [_voice(_silent16(), [0.1])]);
+    final b2 = r.renderBar(bpm: 120, factor: 4, voices: [
+      _voice(_silent16(), [0.1])
+    ]);
     expect(b2.pcm[0], closeTo(0.5, 1e-6));
   });
 
   test('reset drops carry', () {
     final r = BarRenderer();
-    final v = [_voice(_silent16(), [0.1])];
-    r.renderBar(bpm: 120, factor: 4, voices: v, hits: [
-      SampleHit(tick: 0, samples: List<double>.filled(3 * _sr, 0.5))
-    ]);
+    final v = [
+      _voice(_silent16(), [0.1])
+    ];
+    r.renderBar(
+        bpm: 120,
+        factor: 4,
+        voices: v,
+        hits: [SampleHit(tick: 0, samples: List<double>.filled(3 * _sr, 0.5))]);
     r.reset();
     final b = r.renderBar(bpm: 120, factor: 4, voices: v);
     expect(b.pcm.every((x) => x == 0.0), isTrue);
@@ -92,5 +105,39 @@ void main() {
       expect((bar.pcm[i] * 32767).round(), body.getInt16(i * 2, Endian.little),
           reason: 'sample $i');
     }
+  });
+
+  test('flush returns the carry past the last bar with a short fade', () {
+    final r = BarRenderer();
+    final v = [
+      _voice(_silent16(), [0.1])
+    ];
+    // 3 s at 120 bpm: 2 s in the bar, 1 s carried.
+    r.renderBar(
+        bpm: 120,
+        factor: 4,
+        voices: v,
+        hits: [SampleHit(tick: 0, samples: List<double>.filled(3 * _sr, 0.5))]);
+    final tail = r.flush();
+    expect(tail.length, _sr);
+    expect(tail[0], closeTo(0.5, 1e-6));
+    final fade = (BarRenderer.flushFadeMs * _sr / 1000).round();
+    expect(tail[_sr - fade - 1], closeTo(0.5, 1e-6)); // before the fade
+    expect(tail[_sr - fade], lessThan(0.5)); // fading ...
+    expect(tail.last, lessThan(0.5 / fade + 1e-6)); // ... to almost 0
+    for (var i = _sr - fade + 1; i < _sr; i++) {
+      expect(tail[i], lessThanOrEqualTo(tail[i - 1]));
+    }
+    expect(r.flush(), isEmpty, reason: 'flush empties the carry');
+  });
+
+  test('flush soft-limits the carry', () {
+    final r = BarRenderer();
+    r.renderBar(bpm: 120, factor: 4, voices: [
+      _voice(_silent16(), [0.1])
+    ], hits: [
+      SampleHit(tick: 0, samples: List<double>.filled(3 * _sr, 3))
+    ]);
+    expect(r.flush().every((x) => x.abs() <= 0.98 + 1e-6), isTrue);
   });
 }

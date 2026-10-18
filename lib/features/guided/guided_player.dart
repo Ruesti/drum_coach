@@ -26,9 +26,15 @@ double crashGainFor(GuidedPackage p) => p == GuidedPackage.pad ? 0.4 : 1.0;
 /// the play position and publishes the position (section / bar / beat)
 /// from the sink's play clock.
 ///
-/// Lookahead: at least [lookaheadBars] bars past the playing bar AND at
-/// least [minQueuedMs] of audio past the play position, so the queue covers
-/// the worst render time at any tempo (1 bar = 1 s at 240 bpm).
+/// Lookahead: at least [minQueuedMs] of audio past the play position, so
+/// the queue covers the worst render time at any tempo (1 bar = 1 s at
+/// 240 bpm). [lookaheadBars] (default 0, Ruling R16) can demand whole bars
+/// on top; with 0 the lookahead is purely time-based, so a tempo change
+/// lands on the next bar (Spec §3.3) whenever that bar is not rendered yet.
+///
+/// Pause (user or frozen): nothing is appended while paused — SoLoud's
+/// buffer stream would unpause the voice on new data. A bar whose render
+/// was in flight is held and appended on [resume].
 ///
 /// Tempo / option changes (Ruling R7): bars already rendered are never
 /// touched. The not yet rendered bars of the section that is playing are
@@ -43,7 +49,7 @@ class GuidedPlayer {
     required ClipManifest clips,
     required Future<VoiceClip> Function(String id) loadClip,
     required Map<RunSound, List<double>> sounds,
-    this.lookaheadBars = 1,
+    this.lookaheadBars = 0,
     this.minQueuedMs = 1200,
     BarRenderBackend? renderer,
     bool autoPoll = true,
@@ -76,6 +82,7 @@ class GuidedPlayer {
   final _positionCtrl = StreamController<RunPosition>.broadcast();
   final _finishedCtrl = StreamController<void>.broadcast();
   final _errorCtrl = StreamController<Object>.broadcast();
+  final _stateCtrl = StreamController<void>.broadcast();
 
   GuidedExercise? _ex;
   int _bpm = 100;
@@ -97,8 +104,15 @@ class GuidedPlayer {
   bool _finished = false;
   bool _failed = false;
   int _generation = 0;
+
+  /// Counts start() calls, so a superseded start knows it is stale.
+  int _starts = 0;
   Future<void>? _filling;
   Timer? _timer;
+
+  /// Rendered while paused, appended on resume. [bar] null = the final
+  /// carry flush (appended, then the stream is marked ended).
+  ({RunBar? bar, Float32List pcm})? _held;
 
   double _lastPosMs = -1;
   DateTime _lastMoveAt = DateTime(0);
@@ -117,6 +131,14 @@ class GuidedPlayer {
   RunOptions get options => _options;
   bool get isPaused => _paused;
   bool get isRunning => _running;
+
+  /// Paused because the play position stood still (stream reclaimed);
+  /// [resume] continues. [stateChanges] fires when it turns on.
+  bool get isFrozen => _frozen;
+
+  /// Fires when the player changes state on its own (a frozen position
+  /// paused the run), so a page can re-read [isFrozen] / [isPaused].
+  Stream<void> get stateChanges => _stateCtrl.stream;
 
   double get _appendedMs => _appendedSamples * 1000 / guidedSampleRate;
 
@@ -142,6 +164,7 @@ class GuidedPlayer {
 
   Future<void> start(GuidedExercise ex,
       {required int bpm, required RunOptions options}) async {
+    final myStart = ++_starts;
     // Set before awaiting: a setBpm/setOptions while start() runs is kept.
     _ex = ex;
     _bpm = _clampBpm(bpm);
@@ -153,7 +176,9 @@ class GuidedPlayer {
     _queue.addAll(buildRun(ex, bpm: _bpm, options: _options, clips: _clips));
     _preloadClips();
     try {
-      if (!_rendererReady) {
+      // A render isolate that exited is not ready any more: init again.
+      if (!_rendererReady || !_renderer.isReady) {
+        _rendererReady = false;
         await _renderer.init(_sounds);
         _rendererReady = true;
       }
@@ -163,7 +188,13 @@ class GuidedPlayer {
       if (gen == _generation) _fail(e);
       return;
     }
-    if (gen != _generation) return;
+    if (gen != _generation) {
+      // stop() came while we were opening: its close() ran before this
+      // open finished, so close the stream we just made. A newer start()
+      // opens the sink itself; leave that one alone.
+      if (myStart == _starts) await _sink.close();
+      return;
+    }
     if (_bpm != plannedBpm ||
         _options.teacher != plannedOptions.teacher ||
         _options.playAlong != plannedOptions.playAlong) {
@@ -205,11 +236,14 @@ class GuidedPlayer {
     _sink.pause(true);
   }
 
-  /// Ends a user pause or a pause forced by a frozen position.
+  /// Ends a user pause or a pause forced by a frozen position. A bar
+  /// rendered during the pause is appended first (the sink is still
+  /// paused), then the sink resumes.
   void resume() {
     if (!_running || (!_paused && !_frozen)) return;
     _paused = false;
     _frozen = false;
+    _appendHeld();
     _sink.pause(false);
     _lastMoveAt = _now();
     _startTimer();
@@ -233,6 +267,7 @@ class GuidedPlayer {
     _lastRenderedBar = -1;
     _lastPosition = null;
     _filling = null;
+    _held = null;
     if (wasOpen) await _sink.close();
   }
 
@@ -244,6 +279,7 @@ class GuidedPlayer {
     await _positionCtrl.close();
     await _finishedCtrl.close();
     await _errorCtrl.close();
+    await _stateCtrl.close();
   }
 
   void _fail(Object error) {
@@ -279,6 +315,7 @@ class GuidedPlayer {
       _sink.pause(true);
       final last = _lastPosition;
       if (last != null) _positionCtrl.add(last);
+      _stateCtrl.add(null);
       return;
     }
     final p = _clock.at(pos, now: now);
@@ -314,14 +351,19 @@ class GuidedPlayer {
   Future<void> _fillLoop() async {
     final gen = _generation;
     while (_running && gen == _generation && !_ended && !_failed) {
+      // Appending while paused would let SoLoud unpause the voice.
+      if (_paused || _frozen) return;
+      if (_held != null) {
+        if (!_appendHeld()) return;
+        continue;
+      }
       final pos = math.max(0.0, _lastPosMs);
       final playing = _clock.at(pos)?.bar ?? 0;
       final needBars = _lastRenderedBar < playing + lookaheadBars;
       final needTime = _appendedMs - pos < minQueuedMs;
       if (!needBars && !needTime) return;
       if (_queue.isEmpty) {
-        _ended = true;
-        _sink.markEnded();
+        await _flushTail(gen);
         return;
       }
       final bar = _queue.removeAt(0); // committed: later changes skip it
@@ -330,13 +372,18 @@ class GuidedPlayer {
       try {
         final job = await _jobFor(bar);
         if (gen != _generation) return;
-        final sw = Stopwatch()..start();
+        Stopwatch? sw;
+        assert(() {
+          if (debugLogRenderTimes) sw = Stopwatch()..start();
+          return true;
+        }());
         pcm = await _renderer.render(job);
         assert(() {
-          if (debugLogRenderTimes) {
+          final w = sw;
+          if (w != null) {
             debugPrint('guided render bar ${bar.globalBar} '
                 '(section ${bar.sectionIndex}, ${bar.bpm} bpm): '
-                '${(sw.elapsedMicroseconds / 1000).toStringAsFixed(1)} ms, '
+                '${(w.elapsedMicroseconds / 1000).toStringAsFixed(1)} ms, '
                 'queued ${(_appendedMs - pos).toStringAsFixed(0)} ms');
           }
           return true;
@@ -346,19 +393,73 @@ class GuidedPlayer {
         return;
       }
       if (gen != _generation) return;
-      if (!_sink.append(pcm)) {
-        _fail(StateError('audio stream refused bar ${bar.globalBar}'));
+      if (_paused || _frozen) {
+        // Paused while rendering: keep the bar (the renderer's carry has
+        // moved on) and append it on resume.
+        _held = (bar: bar, pcm: pcm);
         return;
       }
-      _clock.addBar(bar.globalBar, _appendedMs, bar.bpm, runTicksPerBar,
-          sectionIndex: bar.sectionIndex, barInSection: bar.barInSection);
-      _appendedSamples += pcm.length;
-      _lastRenderedBar = bar.globalBar;
+      if (!_appendBar(bar, pcm)) return;
       if (_queue.isEmpty) {
-        _ended = true;
-        _sink.markEnded();
+        await _flushTail(gen);
+        return;
       }
     }
+  }
+
+  /// Appends [pcm] of [bar] and registers it on the run clock.
+  bool _appendBar(RunBar bar, Float32List pcm) {
+    if (!_sink.append(pcm)) {
+      _fail(StateError('audio stream refused bar ${bar.globalBar}'));
+      return false;
+    }
+    _clock.addBar(bar.globalBar, _appendedMs, bar.bpm, runTicksPerBar,
+        sectionIndex: bar.sectionIndex, barInSection: bar.barInSection);
+    _appendedSamples += pcm.length;
+    _lastRenderedBar = bar.globalBar;
+    return true;
+  }
+
+  /// After the last bar: appends what still rings past it (the final
+  /// crash) and marks the stream ended. Held when a pause came meanwhile.
+  Future<void> _flushTail(int gen) async {
+    final Float32List tail;
+    try {
+      tail = await _renderer.flush();
+    } catch (e) {
+      if (gen == _generation) _fail(e);
+      return;
+    }
+    if (gen != _generation) return;
+    if (_paused || _frozen) {
+      _held = (bar: null, pcm: tail);
+      return;
+    }
+    _appendTail(tail);
+  }
+
+  /// The tail counts in [_appendedSamples] (the end is reached after it)
+  /// but not on the run clock: it is no bar.
+  bool _appendTail(Float32List tail) {
+    if (tail.isNotEmpty) {
+      if (!_sink.append(tail)) {
+        _fail(StateError('audio stream refused the final tail'));
+        return false;
+      }
+      _appendedSamples += tail.length;
+    }
+    _ended = true;
+    _sink.markEnded();
+    return true;
+  }
+
+  /// Appends the held bar or tail, if any; false on a refused append.
+  bool _appendHeld() {
+    final h = _held;
+    if (h == null) return true;
+    _held = null;
+    final bar = h.bar;
+    return bar == null ? _appendTail(h.pcm) : _appendBar(bar, h.pcm);
   }
 
   Future<BarJob> _jobFor(RunBar bar) async {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:drum_coach/features/guided/bar_render_backend.dart';
@@ -14,6 +15,9 @@ import 'package:flutter_test/flutter_test.dart';
 class FakePcmSink implements PcmSink {
   final appended = <Float32List>[];
   final pauses = <bool>[];
+
+  /// Every call in order: open, append, end, pause:true/false, close.
+  final log = <String>[];
   double pos = 0;
   bool opened = false;
   bool closed = false;
@@ -30,6 +34,7 @@ class FakePcmSink implements PcmSink {
   @override
   Future<void> open(int sampleRate, {required Duration maxBuffer}) async {
     await openGate?.future;
+    log.add('open');
     opened = true;
     this.maxBuffer = maxBuffer;
   }
@@ -46,17 +51,29 @@ class FakePcmSink implements PcmSink {
   bool append(Float32List pcm) {
     if (failAppendAt != null && appended.length >= failAppendAt!) return false;
     appended.add(pcm);
+    log.add('append');
     return true;
   }
 
   @override
   double positionMs() => pos;
   @override
-  void pause(bool paused) => pauses.add(paused);
+  void pause(bool paused) {
+    pauses.add(paused);
+    log.add('pause:$paused');
+  }
+
   @override
-  void markEnded() => ended = true;
+  void markEnded() {
+    ended = true;
+    log.add('end');
+  }
+
   @override
-  Future<void> close() async => closed = true;
+  Future<void> close() async {
+    closed = true;
+    log.add('close');
+  }
 }
 
 const _r = StrokeBeat(hand: Hand.right);
@@ -122,7 +139,7 @@ const _silentDrums = <RunSound, List<double>>{};
 GuidedPlayer _player(FakePcmSink sink,
         {Map<RunSound, List<double>>? sounds,
         DateTime Function()? now,
-        double minQueuedMs = 0,
+        double minQueuedMs = 1200,
         BarRenderBackend? renderer,
         Future<VoiceClip> Function(String id)? loadClip}) =>
     GuidedPlayer(
@@ -143,6 +160,10 @@ class GatedBackend implements BarRenderBackend {
 
   @override
   Future<void> init(Map<RunSound, List<double>> sounds) async {}
+  @override
+  bool get isReady => true;
+  @override
+  Future<Float32List> flush() async => Float32List(0);
   @override
   Future<Float32List> render(BarJob job) {
     calls++;
@@ -171,29 +192,69 @@ class ThrowingBackend extends InlineBarRenderBackend {
 
 int _samplesAt(int bpm) => (4 * 60 / bpm * 44100).round();
 
-/// Moves the play position just inside bar [bar] and polls.
+/// Plays up to just inside bar [bar] and polls: the position runs to the
+/// end of what is queued until bar [bar] is appended (the time-based
+/// lookahead renders it then), then sits 1 ms into it.
 Future<void> _playInto(GuidedPlayer p, FakePcmSink s, int bar) async {
+  for (var guard = 0; s.appended.length <= bar; guard++) {
+    final n = s.appended.length;
+    s.pos = s.totalMs - 1;
+    await p.poll();
+    await pumpEventQueue();
+    if (s.appended.length == n && guard > 3) return; // stuck (error)
+  }
   s.pos = s.startMs(bar) + 1;
   await p.poll();
 }
 
+/// Plays the run to its end in [stepMs] steps; returns when the sink is
+/// ended and the position has reached everything appended.
+Future<void> _playToEnd(GuidedPlayer p, FakePcmSink s,
+    {double stepMs = 37}) async {
+  var guard = 0;
+  while (!s.ended || s.pos < s.totalMs) {
+    s.pos += stepMs;
+    await p.poll();
+    if (++guard > 100000) fail('no end');
+  }
+  await p.poll();
+}
+
 void main() {
-  test('appends lookahead on start', () async {
+  test('lookahead defaults: purely time-based, 1200 ms (Ruling R16)', () {
+    final p = GuidedPlayer(
+        sink: FakePcmSink(),
+        clips: _manifest,
+        loadClip: _loadClip,
+        sounds: _drums,
+        renderer: InlineBarRenderBackend(),
+        autoPoll: false);
+    expect(p.lookaheadBars, 0);
+    expect(p.minQueuedMs, 1200);
+  });
+
+  test('appends 1200 ms of lookahead on start', () async {
     final sink = FakePcmSink();
     final p = _player(sink);
+    // 2400 ms per bar at 100: one bar covers 1200 ms.
     await p.start(_ex(), bpm: 100, options: const RunOptions());
     expect(sink.opened, isTrue);
-    expect(sink.counts, [_samplesAt(100), _samplesAt(100)]);
+    expect(sink.counts, [_samplesAt(100)]);
     await p.stop();
     expect(sink.closed, isTrue);
+    // 1000 ms per bar at 240: two bars.
+    final fast = FakePcmSink();
+    final q = _player(fast);
+    await q.start(_ex(), bpm: 240, options: const RunOptions());
+    expect(fast.counts, [_samplesAt(240), _samplesAt(240)]);
+    await q.stop();
   });
 
   test('time-based lookahead queues at least minQueuedMs', () async {
     final sink = FakePcmSink();
     final p = _player(sink, minQueuedMs: 2500);
     await p.start(_ex(), bpm: 240, options: const RunOptions());
-    // 1000 ms per bar at 240: one bar ahead would be 2 bars; 2500 ms
-    // queued need 3.
+    // 1000 ms per bar at 240: 2500 ms queued need 3 bars.
     expect(sink.appended.length, 3);
     sink.pos = 1500;
     await p.poll();
@@ -208,32 +269,27 @@ void main() {
     final positions = <RunPosition>[];
     p.positions.listen(positions.add);
     await p.start(_ex(), bpm: 100, options: const RunOptions());
-    for (var b = 1; b <= 5; b++) {
-      await _playInto(p, sink, b);
-    }
-    expect(sink.appended.length, 7); // playing bar 5, bar 6 queued
+    await _playInto(p, sink, 5);
+    // Playing bar 5 (1 ms in): 2399 ms queued > 1200, bar 6 not rendered.
+    expect(sink.appended.length, 6);
     p.setBpm(140);
     expect(p.bpm, 140);
     await _playInto(p, sink, 6);
-    expect(sink.counts[6], _samplesAt(100)); // already rendered: old tempo
-    expect(sink.counts[7], _samplesAt(140));
+    expect(sink.counts[5], _samplesAt(100)); // already rendered: old tempo
+    expect(sink.counts[6], _samplesAt(140)); // next bar: new tempo
     // Sweep to the end in 37 ms steps: positions never go back.
     final done = p.finished.first;
-    var guard = 0;
-    while (!sink.ended || sink.pos < sink.totalMs) {
-      sink.pos += 37;
-      await p.poll();
-      if (++guard > 100000) fail('no end');
-    }
-    await p.poll();
+    await _playToEnd(p, sink);
     await done;
-    expect(sink.counts.skip(7), everyElement(_samplesAt(140)));
+    // Bars 6..17 at 140 (the last append is the outro's ring-out tail).
+    expect(sink.counts.skip(6).take(12), everyElement(_samplesAt(140)));
     for (var i = 1; i < positions.length; i++) {
       final a = positions[i - 1], b = positions[i];
       expect(b.bar * 96 + b.tick, greaterThan(a.bar * 96 + a.tick));
     }
     expect(positions.last.bar, 17);
-    expect(positions.firstWhere((e) => e.bar == 7).bpm, 140);
+    expect(positions.firstWhere((e) => e.bar == 6).bpm, 140);
+    expect(positions.firstWhere((e) => e.bar == 5).bpm, 100);
     expect(positions.firstWhere((e) => e.bar == 5).sectionIndex, 2);
     await p.stop();
   });
@@ -243,11 +299,12 @@ void main() {
     final p = _player(sink, sounds: _silentDrums);
     await p.start(_ex(), bpm: 100, options: const RunOptions());
     // Explanation v1 (3.2 s, longer than a 2.4-s bar) sits on bar 2.
-    await _playInto(p, sink, 1); // bar 2 appended
+    await _playInto(p, sink, 2); // bar 2 playing, bar 3 not rendered
+    expect(sink.appended.length, 3);
     expect(sink.appended[2].any((v) => v != 0), isTrue);
     p.setOptions(const RunOptions(teacher: false));
     expect(p.options.teacher, isFalse);
-    await _playInto(p, sink, 2); // bar 3 rendered after the switch
+    await _playInto(p, sink, 3); // bar 3 rendered after the switch
     final bar3 = sink.appended[3];
     // The clip started in bar 2 continues (carry intact) ...
     expect(bar3.first, isNot(0));
@@ -272,10 +329,11 @@ void main() {
     final p = _player(sink, sounds: {RunSound.click: List.filled(100, 0.5)});
     await p.start(_ex(), bpm: 100, options: const RunOptions(teacher: false));
     // Only clicks sound; with play-along on a groove bar has no click.
-    await _playInto(p, sink, 1);
+    await _playInto(p, sink, 2);
+    expect(sink.appended.length, 3);
     expect(sink.appended[2].every((v) => v == 0), isTrue);
     p.setOptions(const RunOptions(teacher: false, playAlong: false));
-    await _playInto(p, sink, 2);
+    await _playInto(p, sink, 3);
     final beat = _samplesAt(100) ~/ 4;
     final bar3 = sink.appended[3];
     for (var q = 0; q < 4; q++) {
@@ -455,7 +513,7 @@ void main() {
     p.errors.listen(errors.add);
     await p.start(_ex(), bpm: 100, options: const RunOptions());
     await _playInto(p, sink, 1);
-    await _playInto(p, sink, 1);
+    await _playInto(p, sink, 2); // third render throws
     await pumpEventQueue();
     expect(sink.appended.length, 2);
     expect(errors.single, isA<StateError>());
@@ -465,7 +523,8 @@ void main() {
   test('restart during pending fill keeps one fill loop', () async {
     final sink = FakePcmSink();
     final gate = GatedBackend();
-    final p = _player(sink, renderer: gate);
+    // 3000 ms ahead: two 2400-ms bars per run.
+    final p = _player(sink, renderer: gate, minQueuedMs: 3000);
     unawaited(p.start(_ex(), bpm: 100, options: const RunOptions()));
     await pumpEventQueue();
     expect(gate.pending, hasLength(1)); // run A, bar 0
@@ -503,10 +562,10 @@ void main() {
     final sink = FakePcmSink();
     final p = _player(sink, sounds: {RunSound.click: List.filled(50, 0.1)});
     await p.start(_ex(), bpm: 100, options: const RunOptions());
-    await _playInto(p, sink, 1);
-    await _playInto(p, sink, 2); // bar 3 appended, countdown bar 4 not yet
+    await _playInto(p, sink, 3); // bar 3 playing, countdown bar 4 not yet
+    expect(sink.appended.length, 4);
     p.setOptions(const RunOptions(teacher: false));
-    await _playInto(p, sink, 3);
+    await _playInto(p, sink, 4);
     final bar4 = sink.appended[4];
     final beat = _samplesAt(100) ~/ 4;
     expect(bar4[beat], closeTo(0.15, 0.01)); // "3" click, accent 1.5
@@ -522,8 +581,276 @@ void main() {
 
     final p = _player(sink, sounds: _silentDrums, loadClip: flaky);
     await p.start(_ex(), bpm: 100, options: const RunOptions());
-    await _playInto(p, sink, 1); // bar 2 with the explanation
+    await _playInto(p, sink, 2); // bar 2 with the explanation
     expect(sink.appended[2].any((v) => v != 0), isTrue);
     await p.stop();
   });
+
+  test('bar rendered during pause is appended only on resume', () async {
+    final sink = FakePcmSink();
+    final gate = GatedBackend();
+    final p = _player(sink, renderer: gate, minQueuedMs: 3000);
+    unawaited(p.start(_ex(), bpm: 100, options: const RunOptions()));
+    await pumpEventQueue();
+    gate.completeFirst(); // bar 0 appended, bar 1 rendering
+    await pumpEventQueue();
+    expect(sink.appended, hasLength(1));
+    expect(gate.pending, hasLength(1));
+    p.pause();
+    gate.completeFirst(); // bar 1 finishes while paused
+    await pumpEventQueue();
+    expect(sink.appended, hasLength(1), reason: 'appended while paused');
+    expect(sink.log.last, 'pause:true');
+    expect(gate.pending, isEmpty, reason: 'rendered on while paused');
+    p.resume();
+    expect(sink.appended, hasLength(2));
+    // Appended while the sink is still paused, then the sink resumes.
+    expect(sink.log.sublist(sink.log.length - 3),
+        ['pause:true', 'append', 'pause:false']);
+    await p.stop();
+  });
+
+  test('bar rendered while frozen is appended only on resume', () async {
+    var t = DateTime(2026, 10, 18, 12);
+    final sink = FakePcmSink();
+    final gate = GatedBackend();
+    final p = _player(sink, renderer: gate, minQueuedMs: 3000, now: () => t);
+    var changes = 0;
+    p.stateChanges.listen((_) => changes++);
+    unawaited(p.start(_ex(), bpm: 100, options: const RunOptions()));
+    await pumpEventQueue();
+    gate.completeFirst();
+    await pumpEventQueue();
+    expect(gate.pending, hasLength(1)); // bar 1 rendering
+    // poll() awaits the fill that waits for the gate: do not await it.
+    t = t.add(const Duration(seconds: 2));
+    unawaited(p.poll()); // first reading
+    t = t.add(const Duration(seconds: 2));
+    unawaited(p.poll()); // stood still: frozen
+    await pumpEventQueue();
+    expect(p.isFrozen, isTrue);
+    expect(changes, 1);
+    gate.completeFirst();
+    await pumpEventQueue();
+    expect(sink.appended, hasLength(1));
+    p.resume();
+    expect(p.isFrozen, isFalse);
+    expect(sink.appended, hasLength(2));
+    expect(sink.log.last, 'pause:false');
+    await p.stop();
+  });
+
+  test('stream is not ended while paused; the tail waits for resume', () async {
+    final sink = FakePcmSink();
+    final backend = GatedFlushBackend();
+    final p = _player(sink,
+        renderer: backend,
+        sounds: {..._drums, RunSound.crash: List.filled(3 * 44100, 0.2)});
+    await p.start(_ex(), bpm: 240, options: const RunOptions());
+    // At 240 the count-in takes two bars.
+    final planned =
+        buildRun(_ex(), bpm: 240, options: const RunOptions(), clips: _manifest)
+            .length;
+    // Poll on (not awaited: the last fill waits in flush) until the tail
+    // is being flushed.
+    for (var guard = 0; !backend.flushCalled; guard++) {
+      sink.pos = sink.totalMs - 100;
+      unawaited(p.poll());
+      await pumpEventQueue();
+      if (guard > 1000) fail('no flush');
+    }
+    expect(sink.appended, hasLength(planned));
+    p.pause();
+    backend.flushGate.complete();
+    await pumpEventQueue();
+    expect(sink.ended, isFalse, reason: 'ended while paused');
+    expect(sink.appended, hasLength(planned),
+        reason: 'tail appended while paused');
+    expect(sink.log.last, 'pause:true');
+    p.resume();
+    expect(sink.ended, isTrue);
+    expect(sink.appended, hasLength(planned + 1));
+    expect(sink.log.sublist(sink.log.length - 3),
+        ['append', 'end', 'pause:false']);
+    await p.stop();
+  });
+
+  test('outro crash rings out past the last bar', () async {
+    final sink = FakePcmSink();
+    const crashLen = 3 * 44100; // 3 s, longer than a 1714-ms bar at 140
+    final p = _player(sink,
+        sounds: {..._drums, RunSound.crash: List.filled(crashLen, 0.2)});
+    await p.start(_ex(), bpm: 140, options: const RunOptions());
+    await _playToEnd(p, sink);
+    // Bars 0..17 plus the ring-out tail.
+    expect(sink.appended, hasLength(19));
+    final afterOutroStart =
+        sink.appended.skip(17).fold<int>(0, (n, b) => n + b.length);
+    expect(afterOutroStart, greaterThanOrEqualTo(crashLen));
+    expect(sink.appended.last.last.abs(), lessThan(0.01)); // faded out
+    expect(sink.log.last, 'end');
+  });
+
+  test('tail counts for finished but not on the run clock', () async {
+    final sink = FakePcmSink();
+    final p = _player(sink,
+        sounds: {..._drums, RunSound.crash: List.filled(3 * 44100, 0.2)});
+    final positions = <RunPosition>[];
+    p.positions.listen(positions.add);
+    var finished = 0;
+    p.finished.listen((_) => finished++);
+    await p.start(_ex(), bpm: 140, options: const RunOptions());
+    while (!sink.ended) {
+      sink.pos += 300;
+      await p.poll();
+    }
+    // Inside the tail: still the outro's last tick, not finished.
+    sink.pos = sink.startMs(18) + 500;
+    await p.poll();
+    await pumpEventQueue();
+    expect(finished, 0);
+    expect(positions.last.bar, 17);
+    sink.pos = sink.totalMs;
+    await p.poll();
+    await pumpEventQueue();
+    expect(finished, 1);
+  });
+
+  test('tempo change in a long bar lands on the next bar (Spec 3.3)', () async {
+    final sink = FakePcmSink();
+    final p = _player(sink);
+    // 6000 ms per bar at 40.
+    await p.start(_ex(), bpm: 40, options: const RunOptions());
+    sink.pos = 3000; // halfway through bar 0: 3000 ms queued > 1200
+    await p.poll();
+    expect(sink.appended, hasLength(1));
+    p.setBpm(100);
+    sink.pos = 5000; // 1000 ms left: bar 1 renders now
+    await p.poll();
+    expect(sink.counts, [_samplesAt(40), _samplesAt(100)]);
+    await p.stop();
+  });
+
+  test('a change after the next bar was rendered lands one bar later',
+      () async {
+    final sink = FakePcmSink();
+    final p = _player(sink);
+    await p.start(_ex(), bpm: 100, options: const RunOptions());
+    sink.pos = 1500; // 900 ms left in bar 0: bar 1 rendered
+    await p.poll();
+    expect(sink.appended, hasLength(2));
+    p.setBpm(140);
+    await _playInto(p, sink, 2);
+    expect(sink.counts, [_samplesAt(100), _samplesAt(100), _samplesAt(140)]);
+    await p.stop();
+  });
+
+  test('stop during start closes the stream start opened', () async {
+    final sink = FakePcmSink()..openGate = Completer<void>();
+    final p = _player(sink);
+    final f = p.start(_ex(), bpm: 100, options: const RunOptions());
+    await pumpEventQueue(); // open() pending
+    await p.stop();
+    sink.openGate!.complete();
+    await f;
+    expect(sink.appended, isEmpty);
+    expect(sink.log.last, 'close');
+    expect(
+        sink.log.lastIndexOf('close'), greaterThan(sink.log.indexOf('open')));
+  });
+
+  test('a newer start keeps its stream when the older start finishes',
+      () async {
+    final sink = FakePcmSink()..openGate = Completer<void>();
+    final p = _player(sink);
+    final a = p.start(_ex(), bpm: 100, options: const RunOptions());
+    await pumpEventQueue();
+    final b = p.start(_ex(), bpm: 100, options: const RunOptions());
+    sink.openGate!.complete();
+    await a;
+    await b;
+    expect(p.isRunning, isTrue);
+    expect(sink.log.last, 'append');
+    await p.stop();
+  });
+
+  test('a render backend that is no longer ready is initialized again',
+      () async {
+    final backend = FlakyReadyBackend();
+    final sink = FakePcmSink();
+    final p = _player(sink, renderer: backend);
+    await p.start(_ex(), bpm: 100, options: const RunOptions());
+    expect(backend.inits, 1);
+    await p.start(_ex(), bpm: 100, options: const RunOptions());
+    expect(backend.inits, 1, reason: 'ready: no second init');
+    backend.ready = false; // its isolate exited
+    await p.start(_ex(), bpm: 100, options: const RunOptions());
+    expect(backend.inits, 2);
+    expect(sink.appended, isNotEmpty);
+    await p.stop();
+  });
+
+  test('isolate backend flushes the same tail as inline', () async {
+    final job = BarJob(bpm: 140, tickVolumes: const {}, hits: [
+      JobHit(
+          tick: 0,
+          samples: Float32List(3 * 44100)..fillRange(0, 3 * 44100, 0.3))
+    ]);
+    final a = InlineBarRenderBackend();
+    final b = IsolateBarRenderBackend();
+    await a.init(_drums);
+    await b.init(_drums);
+    await a.render(job);
+    await b.render(job);
+    final x = await a.flush();
+    final y = await b.flush();
+    expect(x, isNotEmpty);
+    expect(y, orderedEquals(x));
+    expect(await b.flush(), isEmpty);
+    await b.dispose();
+    expect(b.isReady, isFalse);
+  });
+
+  test('isolate handshake timeout leaves the backend clean for a retry',
+      () async {
+    final b = IsolateBarRenderBackend(entry: _silentMain);
+    await expectLater(b.init(_drums), throwsA(isA<TimeoutException>()));
+    expect(b.isReady, isFalse);
+    await b.dispose();
+    final c = IsolateBarRenderBackend();
+    await c.init(_drums);
+    expect(c.isReady, isTrue);
+    expect(await c.render(const BarJob(bpm: 120, tickVolumes: {})),
+        hasLength(_samplesAt(120)));
+    await c.dispose();
+  }, timeout: const Timeout(Duration(seconds: 20)));
+}
+
+class FlakyReadyBackend extends InlineBarRenderBackend {
+  int inits = 0;
+  bool ready = false;
+  @override
+  Future<void> init(Map<RunSound, List<double>> sounds) async {
+    inits++;
+    ready = true;
+    await super.init(sounds);
+  }
+
+  @override
+  bool get isReady => ready;
+}
+
+/// Render isolate main that never sends its port (handshake timeout).
+void _silentMain(SendPort out) {}
+
+/// Inline rendering whose flush waits for [flushGate].
+class GatedFlushBackend extends InlineBarRenderBackend {
+  final flushGate = Completer<void>();
+  bool flushCalled = false;
+  @override
+  Future<Float32List> flush() async {
+    flushCalled = true;
+    await flushGate.future;
+    return super.flush();
+  }
 }

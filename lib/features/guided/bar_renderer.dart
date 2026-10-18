@@ -40,6 +40,27 @@ class BarRenderer {
     _carry = Float32List(0);
   }
 
+  /// Fade at the end of [flush] so a cut-off tail does not click.
+  static const flushFadeMs = 10.0;
+
+  /// Returns what is left in the carry (sound past the last rendered bar),
+  /// soft-limited, with a short linear fade over its last [flushFadeMs] so
+  /// the end of the stream does not click; empties the carry. Called once
+  /// after the last bar so a final crash rings out.
+  Float32List flush() {
+    final c = _carry;
+    _carry = Float32List(0);
+    final out = Float32List(c.length);
+    final fade = math.min(c.length, (flushFadeMs * sampleRate / 1000).round());
+    final fadeFrom = c.length - fade;
+    for (var i = 0; i < c.length; i++) {
+      var v = softLimit(c[i]);
+      if (i >= fadeFrom) v *= (c.length - i) / (fade + 1);
+      out[i] = v;
+    }
+    return out;
+  }
+
   /// Mixes one bar of [voices] (each `tickVolumes` spans exactly one bar,
   /// i.e. 4 * [factor] ticks) plus [hits] at [bpm]/[factor].
   RenderedBar renderBar({
@@ -105,7 +126,8 @@ class BarRenderer {
       }
     }
 
-    _carry = Float32List.fromList(Float32List.sublistView(mix, len)); // unlimited, copied
+    // Unlimited, copied.
+    _carry = Float32List.fromList(Float32List.sublistView(mix, len));
     final pcm = Float32List(len);
     for (var i = 0; i < len; i++) {
       pcm[i] = softLimit(mix[i]);

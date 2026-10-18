@@ -90,6 +90,15 @@ abstract class BarRenderBackend {
   Future<void> init(Map<RunSound, List<double>> sounds);
   Future<Float32List> render(BarJob job);
 
+  /// The carry left after the last rendered bar (soft-limited, faded at its
+  /// end; empty when nothing rings on) — see [BarRenderer.flush]. Empties
+  /// the carry.
+  Future<Float32List> flush();
+
+  /// false once the backend cannot render any more (its isolate exited or
+  /// was disposed); [init] makes it ready again.
+  bool get isReady;
+
   /// Drops the carry (new run).
   void reset();
   Future<void> dispose();
@@ -99,14 +108,23 @@ abstract class BarRenderBackend {
 class InlineBarRenderBackend implements BarRenderBackend {
   final _renderer = BarRenderer();
   Map<RunSound, List<double>> _sounds = const {};
+  bool _ready = false;
 
   @override
-  Future<void> init(Map<RunSound, List<double>> sounds) async =>
-      _sounds = sounds;
+  Future<void> init(Map<RunSound, List<double>> sounds) async {
+    _sounds = sounds;
+    _ready = true;
+  }
+
+  @override
+  bool get isReady => _ready;
 
   @override
   Future<Float32List> render(BarJob job) async =>
       renderBarJob(_renderer, _sounds, job).pcm;
+
+  @override
+  Future<Float32List> flush() async => _renderer.flush();
 
   @override
   void reset() => _renderer.reset();
@@ -128,6 +146,10 @@ class _Dispose {
   const _Dispose();
 }
 
+class _Flush {
+  const _Flush();
+}
+
 class _RenderError {
   const _RenderError(this.message);
   final String message;
@@ -138,6 +160,12 @@ class _RenderError {
 /// [init]; each job carries only volumes and clip samples, the result comes
 /// back as transferable data (no copy).
 class IsolateBarRenderBackend implements BarRenderBackend {
+  /// [entry] replaces the isolate's main function (tests: one that never
+  /// answers, to hit the handshake timeout).
+  IsolateBarRenderBackend({void Function(SendPort)? entry})
+      : _entry = entry ?? _renderMain;
+
+  final void Function(SendPort) _entry;
   Isolate? _isolate;
   ReceivePort? _port;
   SendPort? _send;
@@ -152,8 +180,14 @@ class IsolateBarRenderBackend implements BarRenderBackend {
       port.listen((m) {
         if (m == null) {
           // onExit: the isolate is gone; nothing pending will be answered.
-          _send = null;
-          _failPending('render isolate exited');
+          // isReady turns false, so the player inits a new one next start.
+          port.close();
+          if (identical(_port, port)) {
+            _port = null;
+            _send = null;
+            _isolate = null;
+            _failPending('render isolate exited');
+          }
         } else if (m is List) {
           _failPending('render isolate error: ${m.first}');
         } else if (m is SendPort) {
@@ -168,24 +202,46 @@ class IsolateBarRenderBackend implements BarRenderBackend {
           }
         }
       });
-      _isolate = await Isolate.spawn(_renderMain, port.sendPort,
-          onExit: port.sendPort,
-          onError: port.sendPort,
-          debugName: 'guided-bar-render');
-      _send = await ready.future.timeout(const Duration(seconds: 5));
+      try {
+        _isolate = await Isolate.spawn(_entry, port.sendPort,
+            onExit: port.sendPort,
+            onError: port.sendPort,
+            debugName: 'guided-bar-render');
+        _send = await ready.future.timeout(handshakeTimeout);
+      } catch (_) {
+        // No handshake (or no spawn): drop the half-made isolate and port
+        // so the next init starts clean.
+        _isolate?.kill(priority: Isolate.immediate);
+        _isolate = null;
+        port.close();
+        if (identical(_port, port)) _port = null;
+        _send = null;
+        rethrow;
+      }
     }
     _send!.send(_Init(sounds));
   }
 
+  /// How long [init] waits for the new isolate to answer.
+  static const handshakeTimeout = Duration(seconds: 5);
+
   @override
-  Future<Float32List> render(BarJob job) {
+  bool get isReady => _send != null;
+
+  @override
+  Future<Float32List> render(BarJob job) => _ask(job);
+
+  @override
+  Future<Float32List> flush() => _ask(const _Flush());
+
+  Future<Float32List> _ask(Object message) {
     final send = _send;
     if (send == null) {
       return Future.error(StateError('render backend not initialized'));
     }
     final c = Completer<Float32List>();
     _waiting.add(c);
-    send.send(job);
+    send.send(message);
     return c.future;
   }
 
@@ -228,6 +284,8 @@ void _renderMain(SendPort out) {
         } catch (e) {
           out.send(_RenderError('$e'));
         }
+      case _Flush():
+        out.send(TransferableTypedData.fromList([renderer.flush()]));
       case _Dispose():
         inbox.close();
     }

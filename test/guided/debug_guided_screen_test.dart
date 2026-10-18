@@ -19,6 +19,11 @@ class FakeGuidedPlayer implements GuidedPlayer {
   final positionCtrl = StreamController<RunPosition>.broadcast();
   final errorCtrl = StreamController<Object>.broadcast();
   final finishedCtrl = StreamController<void>.broadcast();
+  final stateCtrl = StreamController<void>.broadcast();
+  bool frozen = false;
+
+  /// When set, start() waits for it.
+  Completer<void>? startGate;
   final setBpmCalls = <int>[];
   final optionCalls = <RunOptions>[];
   final calls = <String>[];
@@ -33,6 +38,10 @@ class FakeGuidedPlayer implements GuidedPlayer {
   @override
   Stream<void> get finished => finishedCtrl.stream;
   @override
+  Stream<void> get stateChanges => stateCtrl.stream;
+  @override
+  bool get isFrozen => frozen;
+  @override
   int get bpm => _bpm;
 
   @override
@@ -42,6 +51,7 @@ class FakeGuidedPlayer implements GuidedPlayer {
     startedBpm = bpm;
     _bpm = bpm;
     calls.add('start');
+    await startGate?.future;
   }
 
   @override
@@ -55,7 +65,11 @@ class FakeGuidedPlayer implements GuidedPlayer {
   @override
   void pause() => calls.add('pause');
   @override
-  void resume() => calls.add('resume');
+  void resume() {
+    frozen = false;
+    calls.add('resume');
+  }
+
   @override
   Future<void> stop() async => calls.add('stop');
   @override
@@ -193,5 +207,58 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pump();
     expect(p.calls.last, 'stop');
+  });
+
+  testWidgets('a frozen run shows Resume and resumes the player',
+      (tester) async {
+    final p = FakeGuidedPlayer();
+    await tester.pumpWidget(_app(p));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('guided-start')));
+    await tester.pump();
+    expect(find.text('Pause'), findsOneWidget);
+    p.frozen = true;
+    p.stateCtrl.add(null);
+    await tester.pump();
+    expect(find.text('Resume'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('guided-start')));
+    await tester.pump();
+    expect(p.calls.last, 'resume');
+    expect(p.calls, isNot(contains('pause')));
+    expect(find.text('Pause'), findsOneWidget);
+  });
+
+  testWidgets('an error resets the page to stopped', (tester) async {
+    final p = FakeGuidedPlayer();
+    await tester.pumpWidget(_app(p));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('guided-start')));
+    await tester.pump();
+    expect(find.text('Pause'), findsOneWidget);
+    p.errorCtrl.add(StateError('stream refused'));
+    await tester.pump();
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.textContaining('stream refused'), findsOneWidget);
+    expect(p.calls.last, 'stop');
+    // Start works again.
+    await tester.tap(find.byKey(const ValueKey('guided-start')));
+    await tester.pump();
+    expect(p.calls.where((c) => c == 'start'), hasLength(2));
+  });
+
+  testWidgets('taps while start() is in flight are ignored', (tester) async {
+    final p = FakeGuidedPlayer()..startGate = Completer<void>();
+    await tester.pumpWidget(_app(p));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('guided-start')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('guided-start')));
+    await tester.pump();
+    expect(p.calls, ['start']);
+    p.startGate!.complete();
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('guided-start')));
+    await tester.pump();
+    expect(p.calls, ['start', 'pause']);
   });
 }
