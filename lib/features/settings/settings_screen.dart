@@ -210,6 +210,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          // SPIKE (Plan 1 Task 0) — temporary entry, spike branch only.
+          AppCard(
+            padding: EdgeInsets.zero,
+            onTap: () => context.push('/debug/stream-spike'),
+            child: const ListTile(
+              leading: Icon(Icons.science, color: AppColors.textMuted),
+              title: Text('SPIKE: stream test', style: TextStyle(fontSize: 14)),
+              subtitle: Text('Guided-exercise audio spike (temporary)',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            ),
+          ),
+          const SizedBox(height: 12),
           AppCard(
             onTap: () => context.push('/settings/latency-calibration'),
             child: Row(

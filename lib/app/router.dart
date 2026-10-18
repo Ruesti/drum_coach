@@ -23,6 +23,7 @@ import '../features/settings/midi_calibration_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 import '../features/today/today_screen.dart';
+import '../spike/stream_spike_screen.dart';
 
 // /program, /metronome, /settings, /coaching/exercise-generator etc. are
 // top-level GoRoutes declared as siblings of the StatefulShellRoute, meant
@@ -36,8 +37,10 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 final router = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/',
+  // SPIKE: --dart-define=SPIKE_ROUTE=/debug/stream-spike?auto=1 opens it.
+  initialLocation: const String.fromEnvironment('SPIKE_ROUTE', defaultValue: '/'),
   redirect: (context, state) {
+    if (state.matchedLocation.startsWith('/debug/')) return null; // SPIKE
     if (!SettingsService.isOnboardingDone && state.matchedLocation != '/onboarding') {
       return '/onboarding';
     }
@@ -158,6 +161,12 @@ final router = GoRouter(
         lines: state.uri.queryParameters['lines'],
         line: int.tryParse(state.uri.queryParameters['line'] ?? ''),
       ),
+    ),
+    GoRoute(
+      path: '/debug/stream-spike', // SPIKE (Plan 1 Task 0)
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, state) => StreamSpikeScreen(
+          autoStart: state.uri.queryParameters['auto'] == '1'),
     ),
     GoRoute(
       path: '/metronome',
