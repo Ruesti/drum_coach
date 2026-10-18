@@ -203,6 +203,81 @@ void main() {
     }
   }
 
+  void expectNoOverlap(List<RunBar> bars, ClipManifest clips) {
+    final spans = _clipSpans(bars, clips)
+      ..sort((a, b) => a.start.compareTo(b.start));
+    for (var i = 1; i < spans.length; i++) {
+      expect(spans[i].start, greaterThanOrEqualTo(spans[i - 1].end - 1e-6),
+          reason: '${spans[i - 1].id} overlaps ${spans[i].id}');
+    }
+  }
+
+  test('countdown speaks only go when words exceed two beats', () {
+    // 240 bpm: two beats = 500 ms, words 600 ms.
+    final clips = _clips(cd: 600);
+    final bars = buildRun(_fixture(), bpm: 240, options: on, clips: clips);
+    for (final vs in [2, 4]) {
+      final vi = _firstBarOf(bars, vs);
+      final cd = bars[vi - 1];
+      expect(cd.events.whereType<ClipEvent>(), isEmpty);
+      final counts = cd.events.whereType<CountdownEvent>().toList();
+      expect(counts, isNotEmpty);
+      final click = cd.tickVolumes[RunSound.click]!;
+      for (final c in counts) {
+        expect(click[c.tick], 1.0);
+      }
+      expect(bars[vi].events.whereType<ClipEvent>().single.clipId, 'cd_go');
+    }
+    expect(
+        bars[0].events.whereType<ClipEvent>().map((e) => e.clipId), ['ci_one']);
+    expectNoOverlap(bars, clips);
+  });
+
+  test('half count-in speaks one and three, clicks all four', () {
+    final clips = _clips();
+    final bars = buildRun(_fixture(), bpm: 240, options: on, clips: clips);
+    expect({
+      for (final e in bars[0].events.whereType<ClipEvent>()) e.tick: e.clipId
+    }, {
+      0: 'ci_one',
+      48: 'ci_three'
+    });
+    final click = bars[0].tickVolumes[RunSound.click]!;
+    expect([
+      for (var t = 0; t < 96; t++)
+        if (click[t] > 0) t
+    ], [
+      0,
+      24,
+      48,
+      72
+    ]);
+    expectNoOverlap(bars, clips);
+  });
+
+  test('long after-phrase extends the groove without overlap', () {
+    // 100 bpm, bar 2400 ms: explanation needs 2 lead bars (fits 4 bars),
+    // the 2600 ms after-phrase needs 2 more → groove 2 grows to 5 bars.
+    final clips = ClipManifest.fromJson({
+      'clips': [
+        {'id': 'v1', 'ms': 3200},
+        {'id': 'v2', 'ms': 3200},
+        {'id': 'good', 'ms': 2600},
+        for (final id in [...countdownClipIds, ...countInClipIds])
+          {'id': id, 'ms': 400},
+      ]
+    });
+    final bars = buildRun(_fixture(), bpm: 100, options: on, clips: clips);
+    expect(bars.where((b) => b.sectionIndex == 1).length, 4);
+    expect(bars.where((b) => b.sectionIndex == 3).length, 5);
+    final spans = _clipSpans(bars, clips);
+    final good = spans.firstWhere((c) => c.id == 'good');
+    final v2 = spans.singleWhere((c) => c.id == 'v2');
+    expect(v2.start, greaterThanOrEqualTo(good.end - 1e-6));
+    expectNoOverlap(bars, clips);
+    expectExplanationFits(bars, clips);
+  });
+
   test('explanation ends before countdown at 100 bpm', () {
     final clips = _clips();
     final bars = buildRun(_fixture(), bpm: 100, options: on, clips: clips);
@@ -330,52 +405,57 @@ void main() {
     expect(v[RunSound.pattern]![0], 0); // kick/hi-hat come from samples
   });
 
-  test('from cursor continues the plan at the new tempo', () {
+  List<int> sectionSeq(Iterable<RunBar> bars) {
+    final out = <int>[];
+    for (final b in bars) {
+      if (out.isEmpty || out.last != b.sectionIndex) out.add(b.sectionIndex);
+    }
+    return out;
+  }
+
+  test('from cursor at section end continues with next section', () {
     final ex = _fixture();
     final clips = _clips();
     final before = buildRun(ex, bpm: 100, options: on, clips: clips);
-    final at = before[10];
+    // Last bar of variation 1 (section 2).
+    final at = before.lastWhere((b) => b.sectionIndex == 2);
+    expect(at.globalBar, 12);
     final cursor = RunCursor(
         sectionIndex: at.sectionIndex,
         barInSection: at.barInSection,
-        globalBar: at.globalBar);
+        globalBar: at.globalBar,
+        sectionBars: before.where((b) => b.sectionIndex == 2).length);
     final after =
         buildRun(ex, bpm: 140, options: on, clips: clips, from: cursor);
-    expect(after.first.globalBar, 11);
+    expect(after.first.globalBar, 13);
     expect(after.first.bpm, 140);
-    final next = before[11];
-    expect((after.first.sectionIndex, after.first.barInSection),
-        (next.sectionIndex, next.barInSection));
+    expect((after.first.sectionIndex, after.first.barInSection), (3, 0));
     for (var i = 1; i < after.length; i++) {
       expect(after[i].globalBar, after[i - 1].globalBar + 1);
     }
-    List<int> seq(Iterable<RunBar> bars) {
-      final out = <int>[];
-      for (final b in bars) {
-        if (out.isEmpty || out.last != b.sectionIndex) out.add(b.sectionIndex);
-      }
-      return out;
-    }
-
-    expect(seq([...before.take(11), ...after]), seq(before));
+    expect(sectionSeq([...before.take(13), ...after]), sectionSeq(before));
+    // Every variation still gets a full countdown bar.
+    final vi = _firstBarOf(after, 4);
+    final cd = after[vi - 1];
+    expect(cd.isCountdown, isTrue);
+    expect([for (final e in cd.events.whereType<CountdownEvent>()) e.remaining],
+        [3, 2, 1]);
     expect(after.where((b) => b.isCountdown).length, 1);
+    expectExplanationFits([...before.take(13), ...after], clips);
   });
 
-  test('from cursor inside a groove keeps its played bars', () {
-    final ex = _fixture();
-    final clips = _clips();
-    // Cursor on bar 2 of groove 3 at 100 bpm; at 240 bpm that groove needs
-    // more bars, the continuation adds them after the played ones.
-    final after = buildRun(ex,
-        bpm: 240,
-        options: on,
-        clips: clips,
-        from: const RunCursor(sectionIndex: 3, barInSection: 2, globalBar: 15));
-    expect(after.first.sectionIndex, 3);
-    expect(after.first.barInSection, 3);
-    final groove = after.where((b) => b.sectionIndex == 3).toList();
-    expect(groove.last.isCountdown, isTrue);
-    expect(groove.last.barInSection, greaterThan(3));
+  test('from cursor mid-section throws', () {
+    expect(
+        () => buildRun(_fixture(),
+            bpm: 140,
+            options: on,
+            clips: _clips(),
+            from: const RunCursor(
+                sectionIndex: 2,
+                barInSection: 5,
+                globalBar: 10,
+                sectionBars: 8)),
+        throwsArgumentError);
   });
 
   test('from count-in starts at the first section', () {
@@ -383,7 +463,8 @@ void main() {
         bpm: 100,
         options: on,
         clips: _clips(),
-        from: const RunCursor(sectionIndex: -1, barInSection: 0, globalBar: 0));
+        from: const RunCursor(
+            sectionIndex: -1, barInSection: 0, globalBar: 0, sectionBars: 1));
     expect(after.first.sectionIndex, 1);
     expect(after.first.globalBar, 1);
     expect(after.length, 29);
