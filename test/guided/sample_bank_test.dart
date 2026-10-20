@@ -76,7 +76,6 @@ void main() {
 
   test('assets are credited in CREDITS.md', () {
     final credits = File('assets/audio/CREDITS.md').readAsStringSync();
-    expect(credits, contains('snare.mp3'));
     expect(credits, contains('snare.wav'));
     if (File('assets/audio/crash.wav').existsSync()) {
       expect(credits, contains('crash.wav'));

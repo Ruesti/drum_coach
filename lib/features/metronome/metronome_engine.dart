@@ -9,6 +9,7 @@ import 'backing_sounds.dart';
 import 'backing_styles.dart';
 import 'click_loop_renderer.dart';
 import 'loop_voices.dart';
+import 'snare_sample.dart';
 import 'stroke_sounds.dart' as sounds;
 
 enum Subdivision {
@@ -117,30 +118,14 @@ class MetronomeEngine {
     unawaited(_prepareAudio());
   }
 
-  /// Snare-PCM decoding and, if a start already happened, the loop start.
-  /// Every SoLoud call is timeout-guarded: a stalled audio engine must never
-  /// silence the metronome forever — the loop is retried on the next start.
+  /// Snare-PCM loading (WAV, read in Dart — no audio engine involved) and,
+  /// if a start already happened, the loop start.
   Future<void> _prepareAudio() async {
     try {
-      final snareBytes = (await rootBundle.load('assets/audio/snare.mp3'))
-          .buffer
-          .asUint8List();
-      final snareSource = await SoLoud.instance
-          .loadMem('snare_len_probe', snareBytes)
-          .timeout(const Duration(seconds: 5));
-      final snareLen = SoLoud.instance.getLength(snareSource);
-      unawaited(SoLoud.instance.disposeSource(snareSource));
-      final snareSampleCount =
-          (snareLen.inMicroseconds * 44100 / 1000000).round();
-      if (snareSampleCount > 0) {
-        final floats = await SoLoud.instance
-            .readSamplesFromMem(snareBytes, snareSampleCount)
-            .timeout(const Duration(seconds: 5));
-        _snarePcm = List<double>.from(floats);
-      }
+      _snarePcm = await loadSnarePcm();
     } catch (_) {
-      // Loop rendering for the snare falls back to an empty sample; click
-      // and rim stay synthetic and unaffected.
+      // Loop rendering for the snare falls back to the synthetic click;
+      // click and rim stay synthetic and unaffected.
     }
     if (_disposed) return;
     // A start may have happened while audio was not ready — the loop start
@@ -655,8 +640,8 @@ class MetronomeEngine {
       case SoundType.rim:
         return sounds.rimSamples(accent: accent, sampleRate: sampleRate);
       case SoundType.snare:
-        // The snare is a real recorded sample (assets/audio/snare.mp3); its
-        // PCM is decoded once at init via readSamplesFromMem and kept in
+        // The snare is a real recorded sample (assets/audio/snare.wav); its
+        // PCM is decoded once at init (loadSnarePcm) and kept in
         // [_snarePcm] for the loop renderer.
         throw ArgumentError('snare is sample-based; use the decoded PCM');
     }
