@@ -54,11 +54,32 @@ void main() {
     expect(bank.of(RunSound.pattern), isNotEmpty);
   });
 
+  // MP3 decoders without gapless support keep the encoder delay (1105
+  // samples = 25 ms of silence) — the snare then lands 25 ms after the
+  // synthetic kick and hi-hat (S23/Linux listening test 20.10.).
+  int onsetIndex(List<double> s) {
+    final peak = _peak(s);
+    return s.indexWhere((v) => v.abs() > 0.02 * peak);
+  }
+
+  test('recorded snare and crash load and start on their first millisecond',
+      () async {
+    final bank = await SampleBank.load();
+    final snare = bank.of(RunSound.pattern);
+    final crash = bank.of(RunSound.crash);
+    // Not the synthetic fallbacks: the recordings are ~0.67 s and ~2.4 s.
+    expect(snare.length, greaterThan(44100 * 0.6));
+    expect(crash.length, greaterThan(44100 * 2.3));
+    expect(onsetIndex(snare), lessThan(44));
+    expect(onsetIndex(crash), lessThan(44));
+  });
+
   test('assets are credited in CREDITS.md', () {
     final credits = File('assets/audio/CREDITS.md').readAsStringSync();
     expect(credits, contains('snare.mp3'));
-    if (File('assets/audio/crash.mp3').existsSync()) {
-      expect(credits, contains('crash.mp3'));
+    expect(credits, contains('snare.wav'));
+    if (File('assets/audio/crash.wav').existsSync()) {
+      expect(credits, contains('crash.wav'));
     }
   });
 }

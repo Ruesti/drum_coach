@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter_soloud/flutter_soloud.dart';
+import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 
 import '../metronome/backing_sounds.dart';
 import '../metronome/metronome_engine.dart';
 import 'run_plan.dart';
+import 'voice_assets.dart';
 
 /// Synthetic crash: 1.2 s of high-passed noise with an exponential decay,
 /// peak exactly 0.9. Used whenever the recorded crash cannot be decoded —
@@ -56,30 +56,21 @@ class SampleBank {
   static final List<double> _hihatSoft = hihatSamples(accent: false);
   static final List<double> _click = MetronomeEngine.pulseSamples();
 
-  /// Decodes the recordings (rootBundle → SoLoud). Every step is
-  /// timeout-guarded and failures fall back; host tests (no FFI) get the
-  /// synthetic sounds.
-  static Future<SampleBank> load() async {
-    final snare = await _decode('assets/audio/snare.mp3');
-    final crash = await _decode('assets/audio/crash.mp3');
+  /// Loads the recordings as 16-bit WAV and parses them in Dart. Not via
+  /// SoLoud's MP3 decoder: it keeps the MP3 encoder delay (25 ms of leading
+  /// silence), which put the snare audibly behind kick and hi-hat. The WAVs
+  /// are made from the MP3s with ffmpeg, which strips that delay. A missing
+  /// or broken file falls back to the synthetic sound.
+  static Future<SampleBank> load({AssetBundle? bundle}) async {
+    final snare = await _decode('assets/audio/snare.wav', bundle);
+    final crash = await _decode('assets/audio/crash.wav', bundle);
     return SampleBank(snare: snare, crash: crash);
   }
 
-  static Future<List<double>> _decode(String asset) async {
+  static Future<List<double>> _decode(String asset, AssetBundle? bundle) async {
     try {
-      final bytes = (await rootBundle.load(asset)).buffer.asUint8List();
-      final source = await SoLoud.instance
-          .loadMem('${asset}_len_probe', bytes)
-          .timeout(const Duration(seconds: 5));
-      final length = SoLoud.instance.getLength(source);
-      unawaited(SoLoud.instance.disposeSource(source));
-      final count = (length.inMicroseconds * 44100 / 1000000).round();
-      if (count <= 0) return const [];
-      final floats = await SoLoud.instance
-          // ignore: experimental_member_use
-          .readSamplesFromMem(bytes, count)
-          .timeout(const Duration(seconds: 5));
-      return List<double>.from(floats);
+      final data = await (bundle ?? rootBundle).load(asset);
+      return decodeVoiceWav(data.buffer.asUint8List());
     } catch (_) {
       return const [];
     }
