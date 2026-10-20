@@ -40,9 +40,13 @@ double crashGainFor(GuidedPackage p) => p == GuidedPackage.pad ? 0.4 : 1.0;
 /// touched. The not yet rendered bars of the section that is playing are
 /// kept and re-stamped with the new tempo; turning the teacher off drops
 /// their voice clips, turning play-along off swaps their line for a quarter
-/// click. Turning teacher or play-along ON takes effect from the next
-/// section (the kept bars cannot gain clips or a line without replanning
-/// the section). Everything after the section is replanned with [buildRun].
+/// click, turning play-along on gives them their line back (the section is
+/// planned again with [buildRun] and the kept bars take its tick volumes;
+/// should that plan have another length, the line comes back from the next
+/// section). So play-along on and off both apply from the next not yet
+/// rendered bar. Turning the teacher ON takes effect from the next section
+/// (the kept bars cannot gain clips without replanning the section).
+/// Everything after the section is replanned with [buildRun].
 class GuidedPlayer {
   GuidedPlayer({
     required PcmSink sink,
@@ -225,8 +229,9 @@ class GuidedPlayer {
         options.playAlong == _options.playAlong) {
       return;
     }
+    final lineBack = options.playAlong && !_options.playAlong;
     _options = options;
-    _replan();
+    _replan(lineBack: lineBack);
   }
 
   void pause() {
@@ -504,16 +509,19 @@ class GuidedPlayer {
   }
 
   /// Keeps the unrendered rest of the current section (re-stamped with the
-  /// current tempo/options), replans everything after it.
-  void _replan() {
+  /// current tempo/options), replans everything after it. [lineBack]: play
+  /// along was just turned on, the kept bars get their line again.
+  void _replan({bool lineBack = false}) {
     final ex = _ex;
     final cur = _committed;
     if (!_running || ex == null || cur == null || _ended) return;
     final section = cur.sectionIndex;
-    final kept = [
+    var kept = [
       for (final b in _queue)
-        if (b.sectionIndex == section) _restamp(b)
+        if (b.sectionIndex == section) b
     ];
+    if (lineBack && kept.isNotEmpty) kept = _withLine(ex, kept);
+    kept = [for (final b in kept) _restamp(b)];
     final lastOfSection = kept.isEmpty ? cur : kept.last;
     final rest = buildRun(ex,
         bpm: _bpm,
@@ -530,6 +538,42 @@ class GuidedPlayer {
       ..addAll(kept)
       ..addAll(rest);
     _preloadClips();
+  }
+
+  /// [kept] (the unrendered rest of one section) with the tick volumes of
+  /// that section planned again at the current tempo and options; events,
+  /// flags and bar numbers stay. Unchanged when the new plan has another
+  /// length (the line then comes back with the next section).
+  List<RunBar> _withLine(GuidedExercise ex, List<RunBar> kept) {
+    final section = kept.first.sectionIndex;
+    if (section < 0) return kept; // count-in: no line
+    // Any cursor in section - 1 works: buildRun only needs its section and
+    // global bar (a one-bar section keeps the last-bar rule).
+    final firstGlobal = kept.first.globalBar - kept.first.barInSection;
+    final again = buildRun(ex,
+        bpm: _bpm,
+        options: _options,
+        clips: _clips,
+        from: RunCursor(
+          sectionIndex: section - 1,
+          barInSection: 0,
+          globalBar: firstGlobal - 1,
+          sectionBars: 1,
+        )).takeWhile((b) => b.sectionIndex == section).toList();
+    if (again.length != kept.last.barInSection + 1) return kept;
+    return [
+      for (final b in kept)
+        RunBar(
+          globalBar: b.globalBar,
+          sectionIndex: b.sectionIndex,
+          barInSection: b.barInSection,
+          bpm: b.bpm,
+          isCountIn: b.isCountIn,
+          isCountdown: b.isCountdown,
+          tickVolumes: again[b.barInSection].tickVolumes,
+          events: b.events,
+        )
+    ];
   }
 
   RunBar _restamp(RunBar b) {

@@ -124,6 +124,10 @@ final _manifest = ClipManifest.fromJson({
 Future<VoiceClip> _loadClip(String id) async => VoiceClip(
     id, Float32List.fromList(List.filled((_ms(id) * 44.1).round(), 0.1)));
 
+/// A clip of the right length that makes no sound.
+Future<VoiceClip> _silentClip(String id) async =>
+    VoiceClip(id, Float32List((_ms(id) * 44.1).round()));
+
 final _drums = <RunSound, List<double>>{
   RunSound.pattern: List.filled(800, 0.3),
   RunSound.kick: List.filled(800, 0.3),
@@ -221,7 +225,8 @@ Future<void> _playToEnd(GuidedPlayer p, FakePcmSink s,
 }
 
 void main() {
-  test('lookahead defaults: purely time-based, 500 ms (S23: ≤ 60 ms per bar)', () {
+  test('lookahead defaults: purely time-based, 500 ms (S23: ≤ 60 ms per bar)',
+      () {
     final p = GuidedPlayer(
         sink: FakePcmSink(),
         clips: _manifest,
@@ -339,6 +344,45 @@ void main() {
     for (var q = 0; q < 4; q++) {
       expect(bar3[q * beat], isNot(0), reason: 'click on beat ${q + 1}');
     }
+    await p.stop();
+  });
+
+  test('play along off mid-section applies from the next unrendered bar',
+      () async {
+    final sink = FakePcmSink();
+    final p = _player(sink,
+        sounds: {RunSound.pattern: List.filled(100, 0.5)},
+        loadClip: _silentClip);
+    await p.start(_ex(), bpm: 100, options: const RunOptions());
+    // Only the line sounds (clips are silent): groove bars 1-4
+    // (section 1) play it.
+    await _playInto(p, sink, 1); // bar 1 playing, bar 2 not rendered
+    expect(sink.appended.length, 2);
+    expect(sink.appended[1].any((v) => v != 0), isTrue);
+    p.setOptions(const RunOptions(playAlong: false));
+    await _playInto(p, sink, 2);
+    // Bar 2 (same section, after the switch): no line any more.
+    expect(sink.appended[2].every((v) => v == 0), isTrue);
+    await p.stop();
+  });
+
+  test('play along on mid-section applies from the next unrendered bar',
+      () async {
+    final sink = FakePcmSink();
+    final p = _player(sink,
+        sounds: {RunSound.pattern: List.filled(100, 0.5)},
+        loadClip: _silentClip);
+    await p.start(_ex(), bpm: 100, options: const RunOptions(playAlong: false));
+    // Play-along off: only clicks (silent here) in the groove bars.
+    await _playInto(p, sink, 1); // bar 1 playing, bar 2 not rendered
+    expect(sink.appended.length, 2);
+    expect(sink.appended[1].every((v) => v == 0), isTrue);
+    p.setOptions(const RunOptions());
+    await _playInto(p, sink, 2);
+    // Bar 2 is still section 1: the line is back, not only clicks.
+    expect(sink.appended[2].any((v) => v != 0), isTrue);
+    await _playInto(p, sink, 3); // countdown bar of section 1
+    expect(sink.appended[3].any((v) => v != 0), isTrue);
     await p.stop();
   });
 
