@@ -221,7 +221,7 @@ Future<void> _playToEnd(GuidedPlayer p, FakePcmSink s,
 }
 
 void main() {
-  test('lookahead defaults: purely time-based, 1200 ms (Ruling R16)', () {
+  test('lookahead defaults: purely time-based, 500 ms (S23: ≤ 60 ms per bar)', () {
     final p = GuidedPlayer(
         sink: FakePcmSink(),
         clips: _manifest,
@@ -230,7 +230,7 @@ void main() {
         renderer: InlineBarRenderBackend(),
         autoPoll: false);
     expect(p.lookaheadBars, 0);
-    expect(p.minQueuedMs, 1200);
+    expect(p.minQueuedMs, 500);
   });
 
   test('appends 1200 ms of lookahead on start', () async {

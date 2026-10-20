@@ -50,7 +50,7 @@ class GuidedPlayer {
     required Future<VoiceClip> Function(String id) loadClip,
     required Map<RunSound, List<double>> sounds,
     this.lookaheadBars = 0,
-    this.minQueuedMs = 1200,
+    this.minQueuedMs = 500,
     BarRenderBackend? renderer,
     bool autoPoll = true,
     DateTime Function()? now,

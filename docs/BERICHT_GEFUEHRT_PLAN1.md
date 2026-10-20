@@ -44,8 +44,9 @@ Alles auf Englisch (Bildschirm und Stimme).
 2. **Tempo mitten drin hoch und runter** (mehrmals + und −). Erwartung: kein
    Neustart, kein Aussetzer; das neue Tempo greift ab dem nächsten Takt. Die
    Übung läuft an derselben Stelle weiter. (Genau: im Puffer liegen immer
-   gut 1,2 s fertiger Ton. Drückst du erst in der letzten gut 1,2 s eines
-   Takts, ist der nächste schon fertig — dann greift es einen Takt später.)
+   etwa 0,5 s fertiger Ton. Drückst du erst in der letzten halben Sekunde
+   eines Takts, ist der nächste schon fertig — dann greift es einen Takt
+   später.)
 3. **Pause und weiter**, auch kurz vor dem Schluss-Crash. Erwartung: Ton
    stoppt sofort und kommt erst mit „Resume" wieder; der Schluss-Crash
    klingt ganz aus und wird nicht abgeschnitten.
@@ -132,4 +133,22 @@ Geprüft am 18.10. auf dem Android-Emulator des NUC (Debug-APK, ohne Ton):
 
 ## Befunde
 
-(leer — hier trägst du bzw. trage ich nach deinem Test ein, was auffällt)
+### Erster Test, 20.10.2026 (Uli am S23 und Linux-Laptop)
+
+1. **S23: „Start" zeigte sofort „Resume", kein Ton.** Ferngesteuert am selben
+   Gerät um 18:01–18:04 nicht nachstellbar: Kit- und Pad-Demo spielen,
+   Stop → Start, App im Hintergrund und zurück — alles läuft (Lautsprecher).
+   Ursache offen; Rückfrage an Uli, was beim Fehlversuch anders war
+   (Bluetooth-Kopfhörer? Bildschirm gesperrt?).
+2. **Linux: Kick und Snare nicht zeitgleich.** Ursache gefunden: SoLouds
+   MP3-Dekodierung (miniaudio) lässt die MP3-Kodierverzögerung drin (1105
+   Samples = 25 ms Stille vorn) → Snare und Crash 25 ms zu spät.
+   **Behoben** (cd3a794): Snare/Crash als WAV, in Dart gelesen. Betrifft
+   auch die normalen Übungen (MetronomeEngine liest weiter snare.mp3) —
+   eigene Korrektur, noch offen.
+3. **Tempowechsel greift erst nach ein paar Sekunden.** Vorlauf von 1,2 s auf
+   0,5 s verkürzt (S23 rechnet einen Takt in ≤ 60 ms). Das neue Tempo gilt
+   weiter ab dem nächsten Takt.
+4. **Klingt sehr computergeneriert.** Erwartet: Kick/Hi-Hat sind synthetisch,
+   die Stimme ist Piper. Echte Schlagzeug-Samples und Hintergrundband sind
+   ein eigener Schritt (Plan 2 / Band-Spec).
