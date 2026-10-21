@@ -33,5 +33,8 @@ SAETZE = {
 try:
     from saetze_gefuehrt import GEFUEHRT
 except ImportError:
+    import sys
+    print("warning: saetze_gefuehrt not importable, guided sentences missing "
+          "(run tool/katalog/gen_gefuehrt.py)", file=sys.stderr)
     GEFUEHRT = {}
 SAETZE.update(GEFUEHRT)

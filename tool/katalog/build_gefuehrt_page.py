@@ -24,7 +24,7 @@ PACKAGE = {'kit': 'Set', 'pad': 'Pad'}
 
 def duration_label(s: GuidedSheet) -> str:
     """Geplante Dauer bei Standardtempo wie in der App (ohne automatische Verlängerung)."""
-    sec = round(bars(s) * 240 / s.default_bpm)
+    sec = int(bars(s) * 240 / s.default_bpm + 0.5)  # like Dart .round()
     return f'~{sec // 60}:{sec % 60:02d}'
 
 

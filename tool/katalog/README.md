@@ -82,11 +82,22 @@ einem englischen Satz (`Variation(line, text, after='after_good')`, die letzte m
 Keine Zeitstempel: ein zweiter Lauf schreibt dieselben Bytes. Beide Dateien nie
 von Hand ändern.
 
+| Datei | Inhalt |
+|---|---|
+| `gefuehrt_blatt.py` | `GuidedSheet`/`Variation` + Formprüfung (Groove genau 1 Takt; 2-Takt-Variation nur bei geradem `variation_bars`) |
+| `gefuehrt.py` | Runde-1-Daten (8 Übungen) + Übersicht |
+| `gen_gefuehrt.py` | schreibt Dart-Katalog und `saetze_gefuehrt.py` |
+| `build_gefuehrt_page.py` | Kurations-Seite (Noten + Clips anhören) |
+
 ```
 python3 tool/katalog/gefuehrt.py                       # prüft + Übersicht (Dauer bei default_bpm)
 python3 tool/katalog/gen_gefuehrt.py .
 dart format lib/features/guided/data/guided_catalog.dart
-flutter test test/guided/guided_catalog_test.dart
+tool/stimme/.venv/bin/python tool/stimme/render_clips.py --prune-prefix g_
+python3 tool/katalog/build_gefuehrt_page.py <out.html>
+(cd tool/katalog && python3 -m unittest -v)
+tool/stimme/.venv/bin/python -m pytest tool/stimme
+flutter test test/guided/
 ```
 
 ## Ablauf

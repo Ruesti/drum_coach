@@ -113,6 +113,10 @@ def render(out_dir, voice=DEFAULT_VOICE, only=None, synth=piper_synth,
     if voice not in VOICE_INFO:
         raise ValueError(f"unknown voice {voice!r}: add its licence and source "
                          f"to VOICE_INFO first")
+    if prune_prefix and not any(cid.startswith(prune_prefix) for cid in saetze):
+        raise ValueError(
+            f"--prune-prefix {prune_prefix!r}: no id in saetze starts with it; "
+            f"refusing to prune (did the import of the generated sentences fail?)")
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     mpath = out_dir / "manifest.json"

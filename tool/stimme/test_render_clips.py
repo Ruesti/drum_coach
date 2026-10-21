@@ -127,6 +127,16 @@ def test_unknown_voice_rejected(tmp_path):
     assert not (tmp_path / "manifest.json").exists()
 
 
+def test_prune_refuses_empty_prefix_set(tmp_path):
+    rc.render(tmp_path, synth=fake_synth(), saetze={"g_a": "A", "demo_x": "D"})
+    with pytest.raises(ValueError, match="refusing to prune"):
+        rc.render(tmp_path, synth=fake_synth(), prune_prefix="g_",
+                  saetze={"demo_x": "D"})
+    assert (tmp_path / "g_a.wav").exists()
+    ids = [c["id"] for c in json.loads((tmp_path / "manifest.json").read_text())["clips"]]
+    assert "g_a" in ids
+
+
 def test_prune_prefix_removes_stale_clips(tmp_path):
     rc.render(tmp_path, synth=fake_synth(),
               saetze={"g_old_v1": "Old", "g_keep": "Keep", "demo_x": "Demo"})

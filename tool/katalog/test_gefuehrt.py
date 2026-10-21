@@ -68,9 +68,22 @@ class Guided(unittest.TestCase):
         two = KIT_G.replace('\n', ' | R8 R8 R8 R8 R8 R8 R8 R8\n', 1)  # only HH extended -> mismatch
         with self.assertRaises(ValueError):
             mk(groove=two).parsed()
-        self.assertEqual(mk('pad', groove=PAD_G + ' | ' + PAD_G).parsed()[0].bars, 2)
+        two = PAD_V + ' | ' + PAD_V
+        vs = (Variation(two, 'a.'), Variation(PAD_V, 'b.'), Variation(PAD_V, 'c.', after=None))
+        self.assertEqual(mk('pad', variations=vs).parsed()[1][0].bars, 2)
         with self.assertRaises(ValueError):
             mk('pad', groove=' | '.join([PAD_G] * 3)).parsed()
+
+    def test_rejects_two_bar_groove(self):
+        with self.assertRaisesRegex(ValueError, 'groove'):
+            mk('pad', groove=PAD_G + ' | ' + PAD_G).parsed()
+
+    def test_rejects_two_bar_variation_with_odd_bars(self):
+        two = PAD_V + ' | ' + PAD_V
+        vs = (Variation(two, 'a.'), Variation(PAD_V, 'b.'), Variation(PAD_V, 'c.', after=None))
+        mk('pad', variations=vs).parsed()  # even 24 bars: fine
+        with self.assertRaisesRegex(ValueError, 'even'):
+            mk('pad', variations=vs, variation_bars=23).parsed()
 
     def test_check_catalog_rejects_duplicate_ids(self):
         check_catalog([mk('kit'), mk('pad')])
@@ -116,6 +129,24 @@ class Generator(unittest.TestCase):
             first = dart.read_bytes(), py.read_bytes()
             self._run(pathlib.Path(d))
             self.assertEqual((dart.read_bytes(), py.read_bytes()), first)
+
+    def test_committed_generated_files_are_current(self):
+        import pathlib
+        import re
+        import tempfile
+        repo = pathlib.Path(__file__).resolve().parents[2]
+
+        def norm(t):
+            t = re.sub(r'\s+', ' ', t)
+            t = re.sub(r',\s*([)\]])', r'\1', t)
+            return re.sub(r'\s*([()\[\],])\s*', r'\1', t).strip()  # dart format moves breaks
+
+        with tempfile.TemporaryDirectory() as d:
+            dart, py, _ = self._run(pathlib.Path(d))
+            self.assertEqual(py.read_bytes(),
+                             (repo / 'tool/stimme/saetze_gefuehrt.py').read_bytes())
+            committed = repo / 'lib/features/guided/data/guided_catalog.dart'
+            self.assertEqual(norm(dart.read_text()), norm(committed.read_text()))
 
     def test_round1_has_eight_exercises(self):
         from gefuehrt import SHEETS
@@ -167,6 +198,14 @@ class Page(unittest.TestCase):
         from gefuehrt import BACKBEAT_WALK
         # 1 count-in + 3 x (12 + 24) + 12 + 1 outro = 122 bars x 2.667 s = 325.3 s
         self.assertEqual(build_gefuehrt_page.duration_label(BACKBEAT_WALK), '~5:25')
+
+    def test_duration_rounds_half_up(self):
+        from unittest import mock
+        import build_gefuehrt_page
+        from gefuehrt import BACKBEAT_WALK
+        s = dataclasses.replace(BACKBEAT_WALK, default_bpm=160, max_bpm=160)
+        with mock.patch.object(build_gefuehrt_page, 'bars', lambda _s: 1):  # 1.5 s exactly
+            self.assertEqual(build_gefuehrt_page.duration_label(s), '~0:02')
 
 
 if __name__ == '__main__':

@@ -81,7 +81,12 @@ class GuidedSheet:
     def parsed(self) -> tuple[Line | KitLine, list[Line | KitLine]]:
         self._check_fields()
         groove = self._parse(self.groove, 'groove')
+        if groove.bars != 1:
+            raise self._err('groove', f'{groove.bars} bars, expected exactly 1 (outro plays it for 1 bar)')
         vs = [self._parse(v.line, f'variation {i}') for i, v in enumerate(self.variations, 1)]
+        for i, ln in enumerate(vs, 1):
+            if ln.bars == 2 and self.variation_bars % 2:
+                raise self._err(f'variation {i}', '2-bar line needs even variation_bars')
         return groove, vs
 
     def clip_id(self, n: int) -> str:
