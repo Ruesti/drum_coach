@@ -99,6 +99,42 @@
       "ms": 5259,
       "text": "Last one: play paradiddles. Right left right right, left right left left.",
       "hash": "523e5dd784900944"
+    },
+    {
+      "id": "g_guided_kit_rock8_v1",
+      "ms": 2616,
+      "text": "Next up: add the bass drum on the and of three.",
+      "hash": "44055f349f53ba4f"
+    },
+    {
+      "id": "g_guided_kit_rock8_v2",
+      "ms": 3707,
+      "text": "Now add a soft ghost note on the snare, on the e of two.",
+      "hash": "7a64fce2b2d67981"
+    },
+    {
+      "id": "g_guided_kit_rock8_v3",
+      "ms": 2504,
+      "text": "Last one: open the hi-hat on the and of four.",
+      "hash": "b15967d6dfe83e09"
+    },
+    {
+      "id": "g_guided_pad_eighths_v1",
+      "ms": 2907,
+      "text": "Next up: accent the first note of every beat.",
+      "hash": "3e1ef1dbbcc3dadc"
+    },
+    {
+      "id": "g_guided_pad_eighths_v2",
+      "ms": 3073,
+      "text": "Now switch to doubles: right right, left left.",
+      "hash": "d1c3eab2c931fd01"
+    },
+    {
+      "id": "g_guided_pad_eighths_v3",
+      "ms": 3896,
+      "text": "Last one: paradiddles. Right, left, right, right.",
+      "hash": "8da52d635ef9e1f7"
     }
   ]
 }

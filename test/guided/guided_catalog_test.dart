@@ -9,24 +9,11 @@ import 'package:drum_coach/features/guided/run_plan.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// The real manifest plus every catalog clip (`g_*`) at 3000 ms — the `g_*`
-/// clips are rendered later (Task 3), their length is a stand-in here.
-ClipManifest _manifest() {
-  final json = jsonDecode(File('assets/voice/manifest.json').readAsStringSync())
-      as Map<String, dynamic>;
-  final clips = [...(json['clips'] as List)];
-  final known = {for (final c in clips) (c as Map)['id']};
-  for (final ex in guidedCatalog) {
-    for (final s in ex.sections) {
-      final id = s.speechClipId;
-      if (id != null && !known.contains(id)) {
-        clips.add({'id': id, 'ms': 3000});
-        known.add(id);
-      }
-    }
-  }
-  return ClipManifest.fromJson({'clips': clips});
-}
+Map<String, dynamic> _manifestJson() =>
+    jsonDecode(File('assets/voice/manifest.json').readAsStringSync())
+        as Map<String, dynamic>;
+
+ClipManifest _manifest() => ClipManifest.fromJson(_manifestJson());
 
 double _runMs(GuidedExercise ex, int bpm) =>
     buildRun(ex, bpm: bpm, options: const RunOptions(), clips: _manifest())
@@ -52,8 +39,10 @@ String _line(ExerciseLine l) => [
         '${v.instrument}/${v.accepts}:[${v.beats.map(_beat).join(' ')}]',
     ].join('|');
 
+// textEn is left out: the catalog's spoken texts are pinned against the
+// manifest instead (they may be shorter than the demo's).
 String _section(GuidedSection s) =>
-    '${s.kind} ${s.bars} ${s.textEn} ${s.afterClipId} ${_line(s.line)}';
+    '${s.kind} ${s.bars} ${s.afterClipId} ${_line(s.line)}';
 
 GuidedExercise _byId(String id) => guidedCatalog.firstWhere((e) => e.id == id);
 
@@ -111,6 +100,59 @@ void main() {
       expect(clips, [
         for (var n = 1; n <= clips.length; n++) 'g_${fixture.id}_v$n',
       ]);
+    }
+  });
+
+  test('every catalog clip exists in the manifest', () {
+    final m = _manifest();
+    for (final ex in guidedCatalog) {
+      for (final s in ex.sections) {
+        for (final id in [s.speechClipId, s.afterClipId]) {
+          if (id == null) continue;
+          expect(m.ids, contains(id), reason: '${ex.id}: $id');
+        }
+      }
+    }
+  });
+
+  test('catalog textEn equals manifest text', () {
+    final texts = {
+      for (final c in _manifestJson()['clips'] as List)
+        (c as Map)['id'] as String: c['text'] as String?,
+    };
+    for (final ex in guidedCatalog) {
+      for (final s in ex.sections) {
+        final id = s.speechClipId;
+        if (id == null) continue;
+        expect(s.textEn, texts[id], reason: '${ex.id}: $id');
+      }
+    }
+  });
+
+  test('explanations are at most 4500 ms', () {
+    final m = _manifest();
+    for (final ex in guidedCatalog) {
+      for (final s in ex.sections) {
+        final id = s.speechClipId;
+        if (id == null) continue;
+        expect(m.durationMs(id), lessThanOrEqualTo(4500),
+            reason: '${ex.id}: $id');
+      }
+      // The planner may stretch a groove to fit the explanation, but by
+      // no more than 2 bars at the default tempo.
+      final run = buildRun(ex,
+          bpm: ex.defaultBpm, options: const RunOptions(), clips: m);
+      final perSection = <int, int>{};
+      for (final b in run) {
+        perSection[b.sectionIndex] = (perSection[b.sectionIndex] ?? 0) + 1;
+      }
+      for (final e in perSection.entries) {
+        if (e.key < 0) continue;
+        final s = ex.sections[e.key];
+        if (s.kind == SectionKind.variation) continue;
+        expect(e.value, lessThanOrEqualTo(s.bars + 2),
+            reason: '${ex.id}: section ${e.key} (${s.kind})');
+      }
     }
   });
 }

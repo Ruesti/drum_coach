@@ -42,3 +42,7 @@ Voices not to use (model card licence lines):
 an unknown voice (not in `VOICE_INFO` in `render_clips.py`) is rejected.
 `--force` re-renders despite an unchanged hash; `--only` requires the same
 voice as the existing manifest (otherwise do a full render).
+`--prune-prefix g_` removes manifest entries and WAVs whose id starts with the
+prefix but is no longer in `SAETZE` (e.g. renamed catalog clips); other ids are
+never touched. Catalog clips: `tool/stimme/.venv/bin/python
+tool/stimme/render_clips.py --prune-prefix g_`.

@@ -125,3 +125,17 @@ def test_unknown_voice_rejected(tmp_path):
     with pytest.raises(ValueError, match="unknown voice"):
         rc.render(tmp_path, "nobody", synth=fake_synth(), saetze={"a": "x"})
     assert not (tmp_path / "manifest.json").exists()
+
+
+def test_prune_prefix_removes_stale_clips(tmp_path):
+    rc.render(tmp_path, synth=fake_synth(),
+              saetze={"g_old_v1": "Old", "g_keep": "Keep", "demo_x": "Demo"})
+    assert (tmp_path / "g_old_v1.wav").exists()
+    rc.render(tmp_path, synth=fake_synth(), prune_prefix="g_",
+              saetze={"g_keep": "Keep"})
+    m = json.loads((tmp_path / "manifest.json").read_text())
+    ids = [c["id"] for c in m["clips"]]
+    assert "g_old_v1" not in ids and "g_keep" in ids
+    assert not (tmp_path / "g_old_v1.wav").exists()
+    # ids without the prefix are never touched, even if not in saetze
+    assert "demo_x" in ids and (tmp_path / "demo_x.wav").exists()

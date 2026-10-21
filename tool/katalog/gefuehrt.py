@@ -58,7 +58,7 @@ PAD_EIGHTHS = GuidedSheet(
         Variation('R8 R8 L8 L8 R8 R8 L8 L8',
                   'Now switch to doubles: right right, left left.'),
         Variation('R8> L8 R8 R8 L8> R8 L8 L8',
-                  'Last one: play paradiddles. Right left right right, left right left left.',
+                  'Last one: paradiddles. Right, left, right, right.',
                   after=None),
     ),
 )

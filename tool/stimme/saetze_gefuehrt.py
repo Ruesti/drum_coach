@@ -7,5 +7,5 @@ GEFUEHRT = {
     'g_guided_kit_rock8_v3': 'Last one: open the hi-hat on the and of four.',
     'g_guided_pad_eighths_v1': 'Next up: accent the first note of every beat.',
     'g_guided_pad_eighths_v2': 'Now switch to doubles: right right, left left.',
-    'g_guided_pad_eighths_v3': 'Last one: play paradiddles. Right left right right, left right left left.',
+    'g_guided_pad_eighths_v3': 'Last one: paradiddles. Right, left, right, right.',
 }

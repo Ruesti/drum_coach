@@ -375,8 +375,7 @@ final List<GuidedExercise> guidedCatalog = [
           note(L, NoteValue.eighth),
         ]),
         bars: 24,
-        textEn:
-            'Last one: play paradiddles. Right left right right, left right left left.',
+        textEn: 'Last one: paradiddles. Right, left, right, right.',
         speechClipId: 'g_guided_pad_eighths_v3',
       ),
       GuidedSection(

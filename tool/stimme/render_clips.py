@@ -2,6 +2,7 @@
 """Renders the teacher sentences with Piper into assets/voice/*.wav + manifest.
 
     tool/stimme/.venv/bin/python tool/stimme/render_clips.py [--only id,...] [--voice NAME]
+        [--force] [--prune-prefix PREFIX]
 
 Output: 44100 Hz mono 16-bit WAV, leading/trailing silence trimmed to <= 30 ms,
 peak -1 dBFS. Clips whose text+voice hash is unchanged are not re-rendered.
@@ -101,8 +102,12 @@ def text_hash(text, voice, length_scale):
 
 
 def render(out_dir, voice=DEFAULT_VOICE, only=None, synth=piper_synth,
-           saetze=SAETZE, force=False):
+           saetze=SAETZE, force=False, prune_prefix=None):
     """Renders all (or `only`) clips into out_dir and updates manifest.json.
+
+    With prune_prefix, every manifest clip whose id starts with it and is not
+    in `saetze` is removed (manifest entry and WAV); other ids are never touched
+    (old clips outside `saetze` without the prefix are kept as they are).
 
     Returns the list of ids that were actually synthesised."""
     if voice not in VOICE_INFO:
@@ -139,6 +144,17 @@ def render(out_dir, voice=DEFAULT_VOICE, only=None, synth=piper_synth,
         clips.append({"id": cid, "ms": round(len(samples) * 1000 / RATE),
                       "text": text, "hash": h})
         rendered.append(cid)
+    if prune_prefix:
+        for cid, prev in old.items():
+            if cid in saetze:
+                continue
+            if cid.startswith(prune_prefix):
+                (out_dir / f"{cid}.wav").unlink(missing_ok=True)
+            else:
+                clips.append(prev)
+        for wav in out_dir.glob(f"{prune_prefix}*.wav"):
+            if wav.stem not in saetze:
+                wav.unlink()
     mpath.write_text(json.dumps(
         {"voice": voice, "lang": "en", **VOICE_INFO.get(voice, {}),
          "clips": clips},
@@ -152,10 +168,14 @@ def main():
     ap.add_argument("--voice", default=DEFAULT_VOICE)
     ap.add_argument("--force", action="store_true",
                     help="re-render even if text+voice hash is unchanged")
+    ap.add_argument("--prune-prefix", metavar="PREFIX",
+                    help="remove manifest entries and WAVs with this id prefix "
+                         "that are no longer in SAETZE (e.g. g_)")
     a = ap.parse_args()
     only = set(a.only.split(",")) if a.only else None
     try:
-        done = render(OUT_DIR, a.voice, only, force=a.force)
+        done = render(OUT_DIR, a.voice, only, force=a.force,
+                     prune_prefix=a.prune_prefix)
     except ValueError as e:
         sys.exit(f"error: {e}")
     print(f"rendered {len(done)}: {', '.join(done) or '-'}")
