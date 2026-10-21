@@ -81,5 +81,47 @@ class Guided(unittest.TestCase):
         self.assertEqual(mk(id='guided_x').clip_id(2), 'g_guided_x_v2')
 
 
+class Generator(unittest.TestCase):
+    def _run(self, root):
+        import gen_gefuehrt
+        from gefuehrt import SHEETS
+        gen_gefuehrt.generate(root, SHEETS)
+        dart = root / 'lib/features/guided/data/guided_catalog.dart'
+        py = root / 'tool/stimme/saetze_gefuehrt.py'
+        return dart, py, SHEETS
+
+    def test_generate_writes_catalog_and_sentences(self):
+        import pathlib
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            dart, py, sheets = self._run(pathlib.Path(d))
+            self.assertTrue(dart.exists() and py.exists())
+            text = dart.read_text()
+            self.assertIn('final List<GuidedExercise> guidedCatalog = [', text)
+            self.assertIn("'g_guided_kit_rock8_v1'", text)
+            self.assertIn('do not edit', text.splitlines()[0])
+            ns: dict = {}
+            exec(py.read_text(), ns)
+            sentences = ns['GEFUEHRT']
+            self.assertEqual(len(sentences), sum(len(s.variations) for s in sheets))
+            for s in sheets:
+                for i, v in enumerate(s.variations, 1):
+                    self.assertEqual(sentences[s.clip_id(i)], v.text)
+
+    def test_second_run_writes_identical_files(self):
+        import pathlib
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            dart, py, _ = self._run(pathlib.Path(d))
+            first = dart.read_bytes(), py.read_bytes()
+            self._run(pathlib.Path(d))
+            self.assertEqual((dart.read_bytes(), py.read_bytes()), first)
+
+    def test_fixtures_are_the_two_demos(self):
+        from gefuehrt import SHEETS
+        check_catalog(SHEETS)
+        self.assertEqual([s.id for s in SHEETS], ['guided_kit_rock8', 'guided_pad_eighths'])
+
+
 if __name__ == '__main__':
     unittest.main()

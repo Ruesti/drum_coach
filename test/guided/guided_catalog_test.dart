@@ -1,0 +1,116 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:drum_coach/features/guided/data/demo_exercise.dart';
+import 'package:drum_coach/features/guided/data/guided_catalog.dart';
+import 'package:drum_coach/features/guided/models/guided_exercise.dart';
+import 'package:drum_coach/features/guided/models/voice_clip.dart';
+import 'package:drum_coach/features/guided/run_plan.dart';
+import 'package:drum_coach/features/lessons/models/rudiment.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// The real manifest plus every catalog clip (`g_*`) at 3000 ms — the `g_*`
+/// clips are rendered later (Task 3), their length is a stand-in here.
+ClipManifest _manifest() {
+  final json = jsonDecode(File('assets/voice/manifest.json').readAsStringSync())
+      as Map<String, dynamic>;
+  final clips = [...(json['clips'] as List)];
+  final known = {for (final c in clips) (c as Map)['id']};
+  for (final ex in guidedCatalog) {
+    for (final s in ex.sections) {
+      final id = s.speechClipId;
+      if (id != null && !known.contains(id)) {
+        clips.add({'id': id, 'ms': 3000});
+        known.add(id);
+      }
+    }
+  }
+  return ClipManifest.fromJson({'clips': clips});
+}
+
+double _runMs(GuidedExercise ex, int bpm) =>
+    buildRun(ex, bpm: bpm, options: const RunOptions(), clips: _manifest())
+        .fold<double>(0, (t, b) => t + guidedBeatsPerBar * 60000 / b.bpm);
+
+String _beat(StrokeBeat b) => [
+      b.hand,
+      b.isAccent,
+      b.isGhost,
+      b.isRest,
+      b.graces,
+      b.value,
+      b.dotted,
+      b.tuplet,
+    ].join(',');
+
+String _line(ExerciseLine l) => [
+      l.repeat,
+      l.title,
+      l.counts,
+      l.isKit,
+      for (final v in l.voices)
+        '${v.instrument}/${v.accepts}:[${v.beats.map(_beat).join(' ')}]',
+    ].join('|');
+
+String _section(GuidedSection s) =>
+    '${s.kind} ${s.bars} ${s.textEn} ${s.afterClipId} ${_line(s.line)}';
+
+GuidedExercise _byId(String id) => guidedCatalog.firstWhere((e) => e.id == id);
+
+void main() {
+  test('every catalog exercise validates', () {
+    expect(guidedCatalog, isNotEmpty);
+    for (final ex in guidedCatalog) {
+      expect(ex.validate, returnsNormally, reason: ex.id);
+      expect(ex.variationCount, inInclusiveRange(3, 5), reason: ex.id);
+    }
+  });
+
+  test('ids are unique and not demo ids', () {
+    final ids = guidedCatalog.map((e) => e.id).toList();
+    expect(ids.toSet().length, ids.length);
+    for (final id in ids) {
+      expect(id, startsWith('guided_'));
+      expect(id, isNot(anyOf(demoKitExercise.id, demoPadExercise.id)));
+    }
+  });
+
+  test('about five minutes at default bpm', () {
+    for (final ex in guidedCatalog) {
+      final ms = _runMs(ex, ex.defaultBpm);
+      expect(ms, inInclusiveRange(4 * 60000, 6 * 60000), reason: ex.id);
+    }
+  });
+
+  test('catalog plays at min and max bpm', () {
+    for (final ex in guidedCatalog) {
+      expect(_runMs(ex, ex.minBpm), lessThanOrEqualTo(9 * 60000),
+          reason: ex.id);
+      expect(_runMs(ex, ex.maxBpm), greaterThanOrEqualTo(2.5 * 60000),
+          reason: ex.id);
+    }
+  });
+
+  test('fixture equals demo notes', () {
+    for (final (fixture, demo) in [
+      (_byId('guided_kit_rock8'), demoKitExercise),
+      (_byId('guided_pad_eighths'), demoPadExercise),
+    ]) {
+      expect(fixture.package, demo.package);
+      expect(fixture.difficulty, demo.difficulty);
+      expect(fixture.gridUnit, demo.gridUnit);
+      expect([fixture.defaultBpm, fixture.minBpm, fixture.maxBpm],
+          [demo.defaultBpm, demo.minBpm, demo.maxBpm]);
+      expect(fixture.sections.map(_section).toList(),
+          demo.sections.map(_section).toList(),
+          reason: fixture.id);
+      final clips = fixture.sections
+          .where((s) => s.kind == SectionKind.variation)
+          .map((s) => s.speechClipId)
+          .toList();
+      expect(clips, [
+        for (var n = 1; n <= clips.length; n++) 'g_${fixture.id}_v$n',
+      ]);
+    }
+  });
+}
