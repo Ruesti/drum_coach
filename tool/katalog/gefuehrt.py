@@ -54,7 +54,7 @@ BACKBEAT_WALK = GuidedSheet(
                   'Now add one more bass drum, on the and of one.'),
         Variation(kit(C1_=two(BW_C1, '-1'), HH=two(BW_HH_NO1, BW_HH), SN=two(BW_SN, BW_SN),
                       BD=two(BW_BD_1AND, BW_BD_1AND)),
-                  'Last one: every other bar, hit the crash on one instead.',
+                  'Last one: every other bar, crash on one instead of the hi-hat.',
                   after=None),
     ),
 )
@@ -74,7 +74,7 @@ FS_BD_3A = 'K4 -8 K8 -8 K16 K16 -4'  # dazu „3 a"
 FUNK_SIXTEENTHS = GuidedSheet(
     id='guided_kit_funk_sixteenths',
     name='Funk Sixteenths',
-    description='A sixteenth hi-hat funk groove that grows ghost notes, an open hat and a double kick.',
+    description='A sixteenth hi-hat funk groove that grows ghost notes, an open hat and two kicks in a row.',
     package='kit', difficulty='intermediate',
     default_bpm=95, min_bpm=70, max_bpm=120, grid='sixteenth',
     groove=kit(HH=FS_HH, SN=FS_SN, BD=FS_BD),
@@ -107,13 +107,13 @@ HT_BD_4L = '3(K8 -8 K8) -4 3(-8 -8 K8) 3(-8 -8 K8)'  # dazu „4 let"
 HALFTIME_SHUFFLE = GuidedSheet(
     id='guided_kit_halftime_shuffle',
     name='Half-Time Shuffle',
-    description='A rolling half-time shuffle: ghost notes inside the triplets, kicks that move, an open hat.',
+    description='A rolling half-time shuffle: ghost notes inside the triplets, kicks that fill in, an open hat.',
     package='kit', difficulty='advanced',
     default_bpm=80, min_bpm=60, max_bpm=100, grid='triplet',
     groove=kit(HH=HT_HH, SN=HT_SN, BD=HT_BD),
     variations=(
         Variation(kit(HH=HT_HH, SN=HT_SN_GHOST, BD=HT_BD),
-                  'Next up: ghost notes on the middle note of each triplet.'),
+                  'Next up: ghosts on the middle note of every triplet, except beat three.'),
         Variation(kit(HH=HT_HH, SN=HT_SN_GHOST, BD=HT_BD_1L),
                   'Now add a kick on the let of one.'),
         Variation(kit(HH=HT_HH, SN=HT_SN_GHOST, BD=HT_BD_4L),
@@ -176,7 +176,7 @@ LINEAR_SHIFT = GuidedSheet(
         Variation(LS_1, 'Next up: move the second kick to the e of two.'),
         Variation(LS_2, 'Now push the snare on four one sixteenth later, onto the e.'),
         Variation(LS_3, 'Now play the a of four as an accent on the floor tom.'),
-        Variation(LS_4, 'Last one: add a high tom accent on the and of three.', after=None),
+        Variation(LS_4, 'Last one: on the and of three, left hand plays high tom instead of the hat.', after=None),
     ),
     groove_bars=8, variation_bars=18,
 )
@@ -254,15 +254,23 @@ TRIPLET_FLAMS = GuidedSheet(
 # zwei Takte, Flam Taps, zuletzt die Fünfer mit Flams auf den Akzenten.
 
 
-def grouped(n: int, *, flam: bool = False) -> str:
-    """Zwei Takte Sechzehntel R L, Akzent (ggf. Flam) auf jeder n-ten Note ab der Eins."""
+FIVES = (5, 5, 6)  # je Takt: 16 = 5 + 5 + 6, schließt bei der Wiederholung sauber
+SIXES = (6, 6, 6, 6, 4, 4)  # zwei Takte: 32 = 4 × 6 + 2 × 4, läuft über den Taktstrich
+
+
+def grouped(groups: tuple[int, ...], *, flam: bool = False) -> str:
+    """Sechzehntel R L, Akzent (ggf. Flam) auf der ersten Note jeder Gruppe; Summe = ganze Takte."""
+    n = sum(groups)
+    if n % 16:
+        raise ValueError(f'groups {groups} do not fill whole bars')
+    starts = {sum(groups[:k]) for k in range(len(groups))}
     toks = []
-    for i in range(32):
+    for i in range(n):
         t = ('R' if i % 2 == 0 else 'L') + '16'
-        if i % n == 0:
+        if i in starts:
             t += 'f>' if flam else '>'
         toks.append(t)
-        if i == 15:
+        if i % 16 == 15 and i + 1 < n:
             toks.append('|')
     return ' '.join(toks)
 
@@ -270,17 +278,17 @@ def grouped(n: int, *, flam: bool = False) -> str:
 FIVES_AND_SIXES = GuidedSheet(
     id='guided_pad_fives_and_sixes',
     name='Fives and Sixes',
-    description='Sixteenth accents grouped in fives and sixes across the bar line, then flam taps.',
+    description='Sixteenth accents grouped in fives and sixes, one across the bar line, then flam taps.',
     package='pad', difficulty='professional',
     default_bpm=80, min_bpm=60, max_bpm=110, grid='sixteenth',
     groove=' '.join(['R16> L16 R16 L16'] * 4),
     variations=(
-        Variation(grouped(5), 'Next up: accent every fifth note, across two bars.'),
-        Variation(grouped(6), 'Now groups of six: accent every sixth note.'),
+        Variation(grouped(FIVES), 'Next up: accents in groups of five, five, six, every bar.'),
+        Variation(grouped(SIXES), 'Now across two bars: four groups of six, then two of four.'),
         Variation(' '.join(['R16f> R16 L16f> L16'] * 4),
                   'Now flam taps: a flam, then a tap with the same hand.'),
-        Variation(grouped(5, flam=True),
-                  'Last one: back to the fives, with a flam on every accent.',
+        Variation(grouped(FIVES, flam=True),
+                  'Last one: back to the five five six accents, now as flams.',
                   after=None),
     ),
     groove_bars=8, variation_bars=16,

@@ -114,9 +114,9 @@
     },
     {
       "id": "g_guided_kit_backbeat_walk_v3",
-      "ms": 3340,
-      "text": "Last one: every other bar, hit the crash on one instead.",
-      "hash": "c261565df79a5b33"
+      "ms": 3568,
+      "text": "Last one: every other bar, crash on one instead of the hi-hat.",
+      "hash": "f0a9edde4918a1c5"
     },
     {
       "id": "g_guided_kit_funk_sixteenths_v1",
@@ -144,9 +144,9 @@
     },
     {
       "id": "g_guided_kit_halftime_shuffle_v1",
-      "ms": 2954,
-      "text": "Next up: ghost notes on the middle note of each triplet.",
-      "hash": "0dc9c1e71bceed09"
+      "ms": 4041,
+      "text": "Next up: ghosts on the middle note of every triplet, except beat three.",
+      "hash": "fb16e3b18959b7f7"
     },
     {
       "id": "g_guided_kit_halftime_shuffle_v2",
@@ -186,9 +186,9 @@
     },
     {
       "id": "g_guided_kit_linear_shift_v4",
-      "ms": 2903,
-      "text": "Last one: add a high tom accent on the and of three.",
-      "hash": "e2186f7c1b5cdb2e"
+      "ms": 4263,
+      "text": "Last one: on the and of three, left hand plays high tom instead of the hat.",
+      "hash": "429e9efe2ecbdcfc"
     },
     {
       "id": "g_guided_pad_accent_walk_v1",
@@ -258,15 +258,15 @@
     },
     {
       "id": "g_guided_pad_fives_and_sixes_v1",
-      "ms": 3314,
-      "text": "Next up: accent every fifth note, across two bars.",
-      "hash": "4683b5cfa8ee23d1"
+      "ms": 4319,
+      "text": "Next up: accents in groups of five, five, six, every bar.",
+      "hash": "4240d27b1b6221df"
     },
     {
       "id": "g_guided_pad_fives_and_sixes_v2",
-      "ms": 2635,
-      "text": "Now groups of six: accent every sixth note.",
-      "hash": "c7008e081182336f"
+      "ms": 3816,
+      "text": "Now across two bars: four groups of six, then two of four.",
+      "hash": "9f0671fc32f3425f"
     },
     {
       "id": "g_guided_pad_fives_and_sixes_v3",
@@ -276,9 +276,9 @@
     },
     {
       "id": "g_guided_pad_fives_and_sixes_v4",
-      "ms": 3371,
-      "text": "Last one: back to the fives, with a flam on every accent.",
-      "hash": "9db980d6c7a10375"
+      "ms": 3698,
+      "text": "Last one: back to the five five six accents, now as flams.",
+      "hash": "486612197252a41b"
     }
   ]
 }

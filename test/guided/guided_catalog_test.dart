@@ -52,7 +52,7 @@ void main() {
     }
   });
 
-  test('demos are unchanged and not in the catalog', () {
+  test('demos still validate and are not in the catalog', () {
     final ids = guidedCatalog.map((e) => e.id).toSet();
     for (final demo in [demoKitExercise, demoPadExercise]) {
       expect(demo.validate, returnsNormally, reason: demo.id);

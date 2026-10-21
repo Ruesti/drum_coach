@@ -126,6 +126,18 @@ class Generator(unittest.TestCase):
             self.assertEqual(sorted(s.difficulty for s in SHEETS if s.package == pkg),
                              sorted(DIFFICULTIES), pkg)
 
+    def test_groupings_close_on_the_line(self):
+        from gefuehrt import FIVES_AND_SIXES
+        from sheetlang import parse_line
+        vs = FIVES_AND_SIXES.variations
+        for i, v in ((1, vs[0]), (2, vs[1]), (4, vs[3])):  # V3 = flam taps, no grouping
+            ln = parse_line(v.line)
+            acc = [k for k, n in enumerate(ln.notes) if n.accent]
+            gaps = [b - a for a, b in zip(acc, acc[1:] + [acc[0] + len(ln.notes)])]
+            self.assertEqual(acc[0], 0, i)
+            self.assertEqual(sum(gaps), len(ln.notes), i)
+            self.assertTrue(all(g >= 4 for g in gaps), (i, gaps))  # no broken short group
+
     def test_linear_groove_is_linear(self):
         from gefuehrt import LINEAR_SHIFT, is_linear
         for line in [LINEAR_SHIFT.groove] + [v.line for v in LINEAR_SHIFT.variations]:

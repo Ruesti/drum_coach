@@ -36,7 +36,7 @@ dem Hauptschlag, „Drag" = zwei Vorschläge.
 **Übt:** den berühmten „rollenden" Shuffle (Triolen-Gefühl, Snare nur auf 3).
 **Roter Faden:** Erst das Gerüst, dann füllen Ghosts und Bassdrum die Lücken.
 - Grundgroove: Shuffle-Hi-Hat, Snare auf 3, Bassdrum auf 1 und „3 let".
-- V1: Ghost Notes auf der mittleren Triolennote.
+- V1: Ghost Notes auf der mittleren Triolennote (außer auf Schlag 3).
 - V2: Bassdrum dazu auf „1 let".
 - V3: Bassdrum dazu auf „4 let" (führt zurück zur 1).
 - V4: Hi-Hat auf „4 let" öffnen, zusammen mit der Bassdrum.
@@ -49,7 +49,7 @@ gehört genau einem Instrument (rechte Hand Hi-Hat, linke Hand Snare, Fuß Bassd
 - V1: zweite Bassdrum rutscht von „1 a" auf „2 e".
 - V2: Snare von 4 eine Sechzehntel später, auf „4 e".
 - V3: „4 a" wird ein Akzent auf dem Standtom.
-- V4: dazu ein Hängetom-Akzent auf „3 und".
+- V4: auf „3 und" spielt die linke Hand Hängetom statt Hi-Hat.
 
 ## Pad
 
@@ -77,17 +77,17 @@ gehört genau einem Instrument (rechte Hand Hi-Hat, linke Hand Snare, Fuß Bassd
 - Grundgroove: Triolen abwechselnd, Akzent auf jeder Zählzeit.
 - V1: Akzent auf die letzte Triolennote.
 - V2: zurück auf die Zählzeit, als Flams (das Rudiment „Flam Accent").
-- V3: Flams auf 2 und 4 werden Drags.
+- V3: Flams auf 2 und 4 werden Drags. Achtung, deutlicher Sprung gegenüber V2: auf 2 und 4 spielt die rechte Hand drei Schläge hintereinander (Schlag, dann die zwei Drag-Vorschläge).
 (Nur 3 Variationen, dafür längere Abschnitte.)
 
 ### 8. Fives and Sixes – Profi · 60–80–110 · ~5:18
-**Übt:** Akzent-Gruppen, die quer über den Takt laufen (5er und 6er), und Flam Taps.
+**Übt:** Akzent-Gruppen aus 5 und 6 Noten, die gegen den Takt laufen, und Flam Taps.
 **Roter Faden:** Das Ohr verliert die 1 – die Hände müssen sie halten.
 - Grundgroove: Sechzehntel R L, Akzent auf jeder Zählzeit.
-- V1: Akzent auf jeder 5. Note, über zwei Takte.
-- V2: Akzent auf jeder 6. Note, über zwei Takte.
+- V1: Akzent-Gruppen 5 + 5 + 6 in jedem Takt.
+- V2: über zwei Takte vier Sechsergruppen, dann zwei Vierergruppen (6+6+6+6+4+4) – läuft über den Taktstrich.
 - V3: Flam Taps (Flam, dann ein Schlag mit derselben Hand).
-- V4: wieder die Fünfer, jetzt mit Flam auf jedem Akzent.
+- V4: wieder 5 + 5 + 6, jetzt mit Flam auf jedem Akzent.
 
 ## Offene Fragen an Uli
 1. **Tempo-Gefühl:** Passt das Standardtempo je Übung (v. a. Funk 95 und Linear 90)?
