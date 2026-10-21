@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:drum_coach/app/platform_support.dart';
 import 'package:drum_coach/features/guided/data/demo_exercise.dart';
+import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/debug_guided_screen.dart';
 import 'package:drum_coach/features/guided/guided_player.dart';
 import 'package:drum_coach/features/guided/guided_rig_provider.dart';
@@ -92,8 +93,11 @@ ClipManifest _clips() => ClipManifest.fromJson({
           'demo_pad_v1',
           'demo_pad_v2',
           'demo_pad_v3',
+          for (final ex in guidedCatalog)
+            for (final s in ex.sections)
+              if (s.speechClipId != null) s.speechClipId!,
         ])
-          {'id': id, 'ms': id.startsWith('demo') ? 3500 : 400},
+          {'id': id, 'ms': id.startsWith(RegExp('demo|g_')) ? 3500 : 400},
       ]
     });
 
@@ -114,6 +118,14 @@ RunPosition _pos(int section, int barInSection, int beat) => RunPosition(
       bpm: 100,
       plannedAt: DateTime(2026),
     );
+
+/// Opens the exercise dropdown and picks [ex].
+Future<void> _pick(WidgetTester tester, GuidedExercise ex) async {
+  await tester.tap(find.byKey(const ValueKey('guided-exercise')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey('guided-exercise-${ex.id}')).last);
+  await tester.pumpAndSettle();
+}
 
 void main() {
   setUp(() => debugDesktopOverride = false);
@@ -151,8 +163,7 @@ void main() {
     final p = FakeGuidedPlayer();
     await tester.pumpWidget(_app(p));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Pad demo'));
-    await tester.pump();
+    await _pick(tester, demoPadExercise);
     await tester.tap(find.byKey(const ValueKey('guided-start')));
     await tester.pump();
     expect(p.started?.id, demoPadExercise.id);
@@ -163,6 +174,48 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('guided-stop')));
     await tester.pump();
     expect(p.calls.last, 'stop');
+  });
+
+  testWidgets('exercise dropdown lists demos and catalog', (tester) async {
+    final p = FakeGuidedPlayer();
+    await tester.pumpWidget(_app(p));
+    await tester.pumpAndSettle();
+    expect(find.text('Exercise'), findsOneWidget);
+    final dd = tester.widget<DropdownButton<GuidedExercise>>(
+        find.byKey(const ValueKey('guided-exercise')));
+    final listed = [
+      for (final i in dd.items!)
+        if (i.value != null) i.value!
+    ];
+    // Demos first, then the catalog with Set entries before Pad entries.
+    expect(listed, [
+      demoKitExercise,
+      demoPadExercise,
+      ...guidedCatalog.where((e) => e.package == GuidedPackage.kit),
+      ...guidedCatalog.where((e) => e.package == GuidedPackage.pad),
+    ]);
+    expect(listed, hasLength(2 + guidedCatalog.length));
+
+    // Label: name · difficulty · ~m:ss at the default tempo.
+    final kit = guidedCatalog.firstWhere((e) => e.package == GuidedPackage.kit);
+    final sec = (kit.barsAt(kit.defaultBpm) * 240 / kit.defaultBpm).round();
+    final mmss = '${sec ~/ 60}:${(sec % 60).toString().padLeft(2, '0')}';
+    await _pick(tester, kit);
+    expect(find.text('${kit.name} · ${kit.difficulty.label} · ~$mmss'),
+        findsWidgets);
+    expect(find.text(kit.description), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('guided-start')));
+    await tester.pump();
+    expect(identical(p.started, kit), isTrue);
+    expect(p.startedBpm, kit.defaultBpm);
+
+    // Locked while running.
+    expect(
+        tester
+            .widget<DropdownButton<GuidedExercise>>(
+                find.byKey(const ValueKey('guided-exercise')))
+            .onChanged,
+        isNull);
   });
 
   testWidgets('status line, variation text and errors follow the player',

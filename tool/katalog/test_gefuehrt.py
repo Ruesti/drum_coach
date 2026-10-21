@@ -123,5 +123,30 @@ class Generator(unittest.TestCase):
         self.assertEqual([s.id for s in SHEETS], ['guided_kit_rock8', 'guided_pad_eighths'])
 
 
+class Page(unittest.TestCase):
+    def test_page_contains_every_exercise_and_audio(self):
+        import pathlib
+        import tempfile
+        import build_gefuehrt_page
+        from gefuehrt import SHEETS
+        with tempfile.TemporaryDirectory() as d:
+            out = pathlib.Path(d) / 'p.html'
+            build_gefuehrt_page.main(out)
+            page = out.read_text()
+        for s in SHEETS:
+            self.assertIn(f'id="{s.id}"', page)
+            for i, v in enumerate(s.variations, 1):
+                self.assertIn(s.clip_id(i), page)
+        self.assertEqual(page.count('data:audio/wav;base64,'),
+                         sum(len(s.variations) for s in SHEETS))
+        self.assertIn('<script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.4.4/abcjs-basic-min.js">', page)
+
+    def test_duration_at_default_bpm(self):
+        import build_gefuehrt_page
+        from gefuehrt import ROCK8
+        # 1 count-in + 3 x (12 + 24) + 12 + 1 outro = 122 bars x 2.4 s = 292.8 s
+        self.assertEqual(build_gefuehrt_page.duration_label(ROCK8), '~4:53')
+
+
 if __name__ == '__main__':
     unittest.main()

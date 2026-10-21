@@ -10,6 +10,7 @@ import '../../app/platform_support.dart';
 import '../../app/theme.dart';
 import '../practice/practice_shortcuts.dart';
 import 'data/demo_exercise.dart';
+import 'data/guided_catalog.dart';
 import 'guided_player.dart';
 import 'guided_rig_provider.dart';
 import 'models/guided_exercise.dart';
@@ -57,8 +58,44 @@ String _mmss(double ms) {
   return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
 }
 
+/// `Name · Difficulty · ~m:ss`: planned length at the default tempo, without
+/// the planner's extension for long explanations (same as the curation page).
+String guidedExerciseLabel(GuidedExercise ex) => '${ex.name} · '
+    '${ex.difficulty.label} · ~${_mmss(ex.barsAt(ex.defaultBpm) * guidedBeatsPerBar * 60000 / ex.defaultBpm)}';
+
+/// Dropdown entries: the two demos, then the catalog, Set before Pad, each
+/// group under a disabled header.
+List<DropdownMenuItem<GuidedExercise>> _exerciseItems() {
+  DropdownMenuItem<GuidedExercise> header(String t) => DropdownMenuItem(
+        enabled: false,
+        child: Text(t,
+            style: const TextStyle(
+                fontSize: 12,
+                letterSpacing: 1.2,
+                color: PracticeColors.textMuted)),
+      );
+  DropdownMenuItem<GuidedExercise> item(GuidedExercise ex) => DropdownMenuItem(
+        key: ValueKey('guided-exercise-${ex.id}'),
+        value: ex,
+        child: Text(guidedExerciseLabel(ex), overflow: TextOverflow.ellipsis),
+      );
+  return [
+    header('DEMOS'),
+    item(demoKitExercise),
+    item(demoPadExercise),
+    for (final (title, package) in [
+      ('SET', GuidedPackage.kit),
+      ('PAD', GuidedPackage.pad),
+    ]) ...[
+      header(title),
+      for (final ex in guidedCatalog)
+        if (ex.package == package) item(ex),
+    ],
+  ];
+}
+
 /// Hidden listening page (`/debug/guided`, long press on the version line
-/// in Settings): plays a whole guided demo exercise — count-in, crash,
+/// in Settings): plays a whole guided exercise (demo or catalog) — count-in, crash,
 /// groove, explanation, countdown, variations, outro crash.
 class DebugGuidedScreen extends ConsumerWidget {
   const DebugGuidedScreen({super.key});
@@ -257,15 +294,25 @@ class _GuidedPageState extends State<_GuidedPage> {
                 style: const TextStyle(color: PracticeColors.struggled)),
             const SizedBox(height: 12),
           ],
-          SegmentedButton<GuidedExercise>(
-            segments: [
-              ButtonSegment(
-                  value: demoKitExercise, label: const Text('Kit demo')),
-              ButtonSegment(
-                  value: demoPadExercise, label: const Text('Pad demo')),
-            ],
-            selected: {_ex},
-            onSelectionChanged: _running ? null : (s) => _choose(s.first),
+          InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Exercise',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<GuidedExercise>(
+                key: const ValueKey('guided-exercise'),
+                isExpanded: true,
+                value: _ex,
+                items: _exerciseItems(),
+                onChanged: _running
+                    ? null
+                    : (ex) {
+                        if (ex != null) _choose(ex);
+                      },
+              ),
+            ),
           ),
           const SizedBox(height: 8),
           Text(_ex.description,
