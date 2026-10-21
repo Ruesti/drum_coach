@@ -6,7 +6,6 @@ import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/models/voice_clip.dart';
 import 'package:drum_coach/features/guided/run_plan.dart';
-import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _manifestJson() =>
@@ -18,33 +17,6 @@ ClipManifest _manifest() => ClipManifest.fromJson(_manifestJson());
 double _runMs(GuidedExercise ex, int bpm) =>
     buildRun(ex, bpm: bpm, options: const RunOptions(), clips: _manifest())
         .fold<double>(0, (t, b) => t + guidedBeatsPerBar * 60000 / b.bpm);
-
-String _beat(StrokeBeat b) => [
-      b.hand,
-      b.isAccent,
-      b.isGhost,
-      b.isRest,
-      b.graces,
-      b.value,
-      b.dotted,
-      b.tuplet,
-    ].join(',');
-
-String _line(ExerciseLine l) => [
-      l.repeat,
-      l.title,
-      l.counts,
-      l.isKit,
-      for (final v in l.voices)
-        '${v.instrument}/${v.accepts}:[${v.beats.map(_beat).join(' ')}]',
-    ].join('|');
-
-// textEn is left out: the catalog's spoken texts are pinned against the
-// manifest instead (they may be shorter than the demo's).
-String _section(GuidedSection s) =>
-    '${s.kind} ${s.bars} ${s.afterClipId} ${_line(s.line)}';
-
-GuidedExercise _byId(String id) => guidedCatalog.firstWhere((e) => e.id == id);
 
 void main() {
   test('every catalog exercise validates', () {
@@ -80,25 +52,31 @@ void main() {
     }
   });
 
-  test('fixture equals demo notes', () {
-    for (final (fixture, demo) in [
-      (_byId('guided_kit_rock8'), demoKitExercise),
-      (_byId('guided_pad_eighths'), demoPadExercise),
-    ]) {
-      expect(fixture.package, demo.package);
-      expect(fixture.difficulty, demo.difficulty);
-      expect(fixture.gridUnit, demo.gridUnit);
-      expect([fixture.defaultBpm, fixture.minBpm, fixture.maxBpm],
-          [demo.defaultBpm, demo.minBpm, demo.maxBpm]);
-      expect(fixture.sections.map(_section).toList(),
-          demo.sections.map(_section).toList(),
-          reason: fixture.id);
-      final clips = fixture.sections
+  test('demos are unchanged and not in the catalog', () {
+    final ids = guidedCatalog.map((e) => e.id).toSet();
+    for (final demo in [demoKitExercise, demoPadExercise]) {
+      expect(demo.validate, returnsNormally, reason: demo.id);
+      expect(ids, isNot(contains(demo.id)));
+    }
+  });
+
+  test('round 1: one exercise per package and difficulty', () {
+    expect(guidedCatalog, hasLength(8));
+    for (final p in GuidedPackage.values) {
+      final ds =
+          guidedCatalog.where((e) => e.package == p).map((e) => e.difficulty);
+      expect(ds.toSet(), hasLength(4), reason: '$p');
+    }
+  });
+
+  test('variation clips follow the id scheme', () {
+    for (final ex in guidedCatalog) {
+      final clips = ex.sections
           .where((s) => s.kind == SectionKind.variation)
           .map((s) => s.speechClipId)
           .toList();
       expect(clips, [
-        for (var n = 1; n <= clips.length; n++) 'g_${fixture.id}_v$n',
+        for (var n = 1; n <= clips.length; n++) 'g_${ex.id}_v$n',
       ]);
     }
   });

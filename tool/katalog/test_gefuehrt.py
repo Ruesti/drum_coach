@@ -2,7 +2,7 @@
 import dataclasses
 import unittest
 
-from gefuehrt_blatt import GuidedSheet, Variation, check_catalog
+from gefuehrt_blatt import DIFFICULTIES, GuidedSheet, Variation, check_catalog
 
 KIT_G = 'HH: R8 R8 R8 R8 R8 R8 R8 R8\nSN: -4 L4> -4 L4>\nBD: K4 -4 K4 -4'
 KIT_V = 'HH: R8 R8 R8 R8 R8 R8 R8 R8\nSN: -4 L4> -4 L4>\nBD: K4 K4 K4 -4'
@@ -98,7 +98,7 @@ class Generator(unittest.TestCase):
             self.assertTrue(dart.exists() and py.exists())
             text = dart.read_text()
             self.assertIn('final List<GuidedExercise> guidedCatalog = [', text)
-            self.assertIn("'g_guided_kit_rock8_v1'", text)
+            self.assertIn("'g_guided_kit_backbeat_walk_v1'", text)
             self.assertIn('do not edit', text.splitlines()[0])
             ns: dict = {}
             exec(py.read_text(), ns)
@@ -117,10 +117,19 @@ class Generator(unittest.TestCase):
             self._run(pathlib.Path(d))
             self.assertEqual((dart.read_bytes(), py.read_bytes()), first)
 
-    def test_fixtures_are_the_two_demos(self):
+    def test_round1_has_eight_exercises(self):
         from gefuehrt import SHEETS
         check_catalog(SHEETS)
-        self.assertEqual([s.id for s in SHEETS], ['guided_kit_rock8', 'guided_pad_eighths'])
+        self.assertEqual(len(SHEETS), 8)
+        self.assertEqual(len({s.id for s in SHEETS}), 8)
+        for pkg in ('kit', 'pad'):
+            self.assertEqual(sorted(s.difficulty for s in SHEETS if s.package == pkg),
+                             sorted(DIFFICULTIES), pkg)
+
+    def test_linear_groove_is_linear(self):
+        from gefuehrt import LINEAR_SHIFT, is_linear
+        for line in [LINEAR_SHIFT.groove] + [v.line for v in LINEAR_SHIFT.variations]:
+            self.assertTrue(is_linear(line), line)
 
 
 class Page(unittest.TestCase):
@@ -143,9 +152,9 @@ class Page(unittest.TestCase):
 
     def test_duration_at_default_bpm(self):
         import build_gefuehrt_page
-        from gefuehrt import ROCK8
-        # 1 count-in + 3 x (12 + 24) + 12 + 1 outro = 122 bars x 2.4 s = 292.8 s
-        self.assertEqual(build_gefuehrt_page.duration_label(ROCK8), '~4:53')
+        from gefuehrt import BACKBEAT_WALK
+        # 1 count-in + 3 x (12 + 24) + 12 + 1 outro = 122 bars x 2.667 s = 325.3 s
+        self.assertEqual(build_gefuehrt_page.duration_label(BACKBEAT_WALK), '~5:25')
 
 
 if __name__ == '__main__':
