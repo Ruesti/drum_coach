@@ -20,6 +20,7 @@ import '../features/coaching/exercise_generator_screen.dart';
 import '../features/guided/debug_guided_screen.dart';
 import '../features/settings/kit_learn_screen.dart';
 import '../features/guided/screens/guided_placeholder.dart';
+import '../features/guided/screens/guided_preview_screen.dart';
 import '../features/settings/latency_calibration_screen.dart';
 import '../features/settings/midi_calibration_screen.dart';
 import '../features/settings/settings_screen.dart';
@@ -142,12 +143,12 @@ final router = GoRouter(
       builder: (_, state) =>
           LineListScreen(rudimentId: state.pathParameters['rudimentId']!),
     ),
-    // Guided exercise preview / player (placeholders until Tasks 4/5).
+    // Guided exercise preview; the player is a placeholder until Task 5.
     GoRoute(
       path: '/guided/:id',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (_, state) =>
-          GuidedPlaceholder(id: state.pathParameters['id']!),
+          GuidedPreviewScreen(id: state.pathParameters['id']!),
     ),
     GoRoute(
       path: '/guided/:id/play',

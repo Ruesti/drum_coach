@@ -215,6 +215,17 @@ class SettingsService {
   static Future<void> setLibraryMode(String mode) =>
       _prefs.setString('library_mode', mode == 'guided' ? 'guided' : 'exercises');
 
+  /// Guided exercises: spoken teacher voice (default on).
+  static bool get guidedTeacher => _prefs.getBool('guided_teacher') ?? true;
+  static Future<void> setGuidedTeacher(bool v) =>
+      _prefs.setBool('guided_teacher', v);
+
+  /// Guided exercises: play-along backing (default on).
+  static bool get guidedPlayAlong =>
+      _prefs.getBool('guided_play_along') ?? true;
+  static Future<void> setGuidedPlayAlong(bool v) =>
+      _prefs.setBool('guided_play_along', v);
+
   // ── Practice-session snapshot ────────────────────────────────────────────
   // Written when the app goes to background mid-session so the timer survives
   // Android killing the process (e.g. during a phone call).
