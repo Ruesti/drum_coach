@@ -126,6 +126,31 @@ def abc_for_kit_pattern(sheet) -> str:
     return KIT_ABC_HEADER + kit_line_to_abc(sheet.pattern_line())
 
 
+# Schrift + Grundstil der Kurations-Seiten (auch build_gefuehrt_page.py).
+STYLE = '''<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap">
+<style>
+  :root { --bg:#FAF8F3; --fg:#17181A; --fg2:#6A6760; --line:#E3DFD5; --accent:#E8531E; --paper:#FFFFFF; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#151617; --fg:#F1EEE6; --fg2:#A5A29A; --line:#2E2F31; --accent:#FF6A33; color-scheme:dark; } }
+  :root[data-theme="dark"] { --bg:#151617; --fg:#F1EEE6; --fg2:#A5A29A; --line:#2E2F31; --accent:#FF6A33; color-scheme:dark; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif; padding-block:32px 48px; padding-inline:16px; }
+  main { max-width:920px; margin:0 auto; }
+  .eyebrow { font-family:"Space Mono",ui-monospace,monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin:0 0 6px; }
+  h1 { font-size:28px; margin:0 0 8px; text-wrap:balance; }
+  .lead { color:var(--fg2); margin:0 0 12px; line-height:1.5; max-width:72ch; }
+  .toc { font-size:13px; color:var(--fg2); line-height:1.8; margin:0 0 24px; }
+  .toc a { color:var(--fg); text-decoration:none; border-bottom:1px solid var(--line); }
+  .sheet { background:var(--paper); color:#111; border-radius:14px; padding:24px 22px 18px; margin:0 0 24px; border:1px solid var(--line); }
+  .sheet .eyebrow { color:#777; }
+  .sheet h2 { font-size:24px; margin:0 0 2px; }
+  .sheet .sub { color:#555; margin:0 0 10px; font-size:15px; }
+  .box { background:#EFECE4; border-radius:8px; padding:6px 10px 0; margin:0 0 6px; }
+  .abc svg { max-width:100%; height:auto; }
+  details.lesson { margin:8px 0 0; font-size:14px; color:#333; }
+  details.lesson summary { cursor:pointer; color:#555; font-size:13px; }
+  details.lesson h4 { margin:10px 0 2px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:#2F3F5C; }
+  details.lesson p { margin:0; line-height:1.5; }
+</style>'''
+
 KIT_LEGEND = ('Hände Hals oben, Füße Hals unten · x = Becken/Hi-Hat · Raute = Glocke · '
               'Crash/China/Splash auf der Hilfslinie · Kick erster Zwischenraum · Pedal unter der ersten Linie'
               ' · Fußseiten R/L nur in der App')
@@ -160,29 +185,7 @@ def main(out: pathlib.Path, set_key: str | None) -> None:
               f'border:1px solid var(--line); border-radius:8px; max-width:72ch">{html.escape(KIT_LEGEND)}</p>'
               if any(sh.kit for sh in SHEETS) else '')
     page = f'''<title>{html.escape(title)} Kuration</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap">
-<style>
-  :root {{ --bg:#FAF8F3; --fg:#17181A; --fg2:#6A6760; --line:#E3DFD5; --accent:#E8531E; --paper:#FFFFFF; }}
-  @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) {{ --bg:#151617; --fg:#F1EEE6; --fg2:#A5A29A; --line:#2E2F31; --accent:#FF6A33; color-scheme:dark; }} }}
-  :root[data-theme="dark"] {{ --bg:#151617; --fg:#F1EEE6; --fg2:#A5A29A; --line:#2E2F31; --accent:#FF6A33; color-scheme:dark; }}
-  body {{ margin:0; background:var(--bg); color:var(--fg); font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif; padding-block:32px 48px; padding-inline:16px; }}
-  main {{ max-width:920px; margin:0 auto; }}
-  .eyebrow {{ font-family:"Space Mono",ui-monospace,monospace; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin:0 0 6px; }}
-  h1 {{ font-size:28px; margin:0 0 8px; text-wrap:balance; }}
-  .lead {{ color:var(--fg2); margin:0 0 12px; line-height:1.5; max-width:72ch; }}
-  .toc {{ font-size:13px; color:var(--fg2); line-height:1.8; margin:0 0 24px; }}
-  .toc a {{ color:var(--fg); text-decoration:none; border-bottom:1px solid var(--line); }}
-  .sheet {{ background:var(--paper); color:#111; border-radius:14px; padding:24px 22px 18px; margin:0 0 24px; border:1px solid var(--line); }}
-  .sheet .eyebrow {{ color:#777; }}
-  .sheet h2 {{ font-size:24px; margin:0 0 2px; }}
-  .sheet .sub {{ color:#555; margin:0 0 10px; font-size:15px; }}
-  .box {{ background:#EFECE4; border-radius:8px; padding:6px 10px 0; margin:0 0 6px; }}
-  .abc svg {{ max-width:100%; height:auto; }}
-  details.lesson {{ margin:8px 0 0; font-size:14px; color:#333; }}
-  details.lesson summary {{ cursor:pointer; color:#555; font-size:13px; }}
-  details.lesson h4 {{ margin:10px 0 2px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:#2F3F5C; }}
-  details.lesson p {{ margin:0; line-height:1.5; }}
-</style>
+{STYLE}
 <main>
   <p class="eyebrow">drum_coach · Katalog Schritt {step} · Kuration</p>
   <h1>{html.escape(title)}</h1>

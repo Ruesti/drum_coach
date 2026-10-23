@@ -47,6 +47,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/audio/
+    - assets/voice/
     - assets/fonts/OFL.txt
     # Space Grotesk + IBM Plex Mono bundled (OFL) so google_fonts never
     # fetches at runtime and tests run offline; see assets/google_fonts/OFL_*.txt.

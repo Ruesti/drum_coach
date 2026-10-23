@@ -26,6 +26,9 @@ class LineView extends StatefulWidget {
   final bool showSticking;
   final bool showCounts;
 
+  /// The line-number box (off for guided lines, Ruling R3).
+  final bool showLineNumber;
+
   const LineView({
     super.key,
     required this.rudiment,
@@ -34,6 +37,7 @@ class LineView extends StatefulWidget {
     this.activeTick,
     this.showSticking = true,
     this.showCounts = true,
+    this.showLineNumber = true,
   });
 
   @override
@@ -116,6 +120,7 @@ class _LineViewState extends State<LineView> {
         activeTick: widget.activeTick,
         showSticking: widget.showSticking,
         showCounts: widget.showCounts,
+        showLineNumber: widget.showLineNumber,
       );
       if (!c.maxHeight.isFinite || height <= c.maxHeight) {
         return SizedBox(height: height, child: sheet);

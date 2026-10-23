@@ -123,6 +123,10 @@ class SheetStaffWidget extends StatelessWidget {
   /// Draw only this line; null = the whole sheet.
   final int? onlyLine;
 
+  /// Draw the line-number box at the start of each line (Ruling R3: off
+  /// for guided lines, where "1" means nothing).
+  final bool showLineNumber;
+
   const SheetStaffWidget({
     super.key,
     required this.rudiment,
@@ -133,6 +137,7 @@ class SheetStaffWidget extends StatelessWidget {
     this.showCounts = true,
     this.geometry,
     this.onlyLine,
+    this.showLineNumber = true,
   });
 
   static const hPad = 4.0;
@@ -183,7 +188,7 @@ class SheetStaffWidget extends StatelessWidget {
                   rowPitch: geo.rowPitch,
                   activeIndex: activeLine == i ? activeIndex : null,
                   activeTick: activeLine == i ? activeTick : null,
-                  lineNumber: i + 1,
+                  lineNumber: showLineNumber ? i + 1 : null,
                   repeat: sheet[i].repeat,
                   finalBar: only != null || i == sheet.length - 1,
                   showTimeSig: only != null || i == 0,

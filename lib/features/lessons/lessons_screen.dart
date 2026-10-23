@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
 import '../../shared/widgets/app_badge.dart';
+import '../../data/local/settings_service.dart';
+import '../guided/screens/guided_list.dart';
 import '../practice/backdrop.dart';
 import 'exercise_entry.dart';
 import 'lessons_provider.dart';
@@ -27,6 +29,24 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
   Set<Limb> _selectedLimbs = {};
   Set<NoteGrid> _selectedSubdivisions = {};
 
+  /// 'exercises' | 'guided', remembered in [SettingsService].
+  late String _mode = _storedMode();
+
+  static String _storedMode() {
+    try {
+      return SettingsService.libraryMode;
+    } catch (_) {
+      return 'exercises'; // settings not initialised (tests)
+    }
+  }
+
+  void _setMode(String mode) {
+    setState(() => _mode = mode);
+    try {
+      SettingsService.setLibraryMode(mode);
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final all = ref.watch(rudimentsProvider);
@@ -48,54 +68,72 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
       value: SystemUiOverlayStyle.light
           .copyWith(statusBarColor: Colors.transparent),
       child: Scaffold(
-      body: Column(
-        children: [
-          _LibraryHero(asset: _hero),
-          _FilterAxisRow<Skill>(
-            label: 'Skill',
-            values: Skill.values,
-            selected: _selectedSkills,
-            labelOf: (s) => s.label,
-            onChanged: (v) => setState(() => _selectedSkills = v),
-          ),
-          if (presentGenres.isNotEmpty)
-            _FilterAxisRow<Genre>(
-              label: 'Genre',
-              values: Genre.values.where(presentGenres.contains).toList(),
-              selected: _selectedGenres,
-              labelOf: (g) => g.label,
-              onChanged: (v) => setState(() => _selectedGenres = v),
+        body: Column(
+          children: [
+            _LibraryHero(asset: _hero),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: SegmentedButton<String>(
+                key: const ValueKey('library-mode'),
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(value: 'exercises', label: Text('Exercises')),
+                  ButtonSegment(value: 'guided', label: Text('Guided')),
+                ],
+                selected: {_mode},
+                onSelectionChanged: (v) => _setMode(v.first),
+              ),
             ),
-          _FilterAxisRow<Limb>(
-            label: 'Limbs',
-            values: Limb.values,
-            selected: _selectedLimbs,
-            labelOf: (l) => l.label,
-            onChanged: (v) => setState(() => _selectedLimbs = v),
-          ),
-          if (presentSubdivisions.isNotEmpty)
-            _FilterAxisRow<NoteGrid>(
-              label: 'Subdivision',
-              values:
-                  NoteGrid.values.where(presentSubdivisions.contains).toList(),
-              selected: _selectedSubdivisions,
-              labelOf: (g) => g.label,
-              onChanged: (v) => setState(() => _selectedSubdivisions = v),
-            ),
-          const Divider(height: 1, color: AppColors.textFaint),
-          Expanded(
-            child: filtered.isEmpty
-                ? const _EmptyFilterState()
-                : ListView(
-                    padding: const EdgeInsets.only(bottom: 24, top: 8),
-                    children: [
-                      for (final rudiment in filtered)
-                        _RudimentTile(rudiment: rudiment),
-                    ],
-                  ),
-          ),
-        ],
-      ),
+            if (_mode == 'guided')
+              const Expanded(child: GuidedList())
+            else ...[
+              _FilterAxisRow<Skill>(
+                label: 'Skill',
+                values: Skill.values,
+                selected: _selectedSkills,
+                labelOf: (s) => s.label,
+                onChanged: (v) => setState(() => _selectedSkills = v),
+              ),
+              if (presentGenres.isNotEmpty)
+                _FilterAxisRow<Genre>(
+                  label: 'Genre',
+                  values: Genre.values.where(presentGenres.contains).toList(),
+                  selected: _selectedGenres,
+                  labelOf: (g) => g.label,
+                  onChanged: (v) => setState(() => _selectedGenres = v),
+                ),
+              _FilterAxisRow<Limb>(
+                label: 'Limbs',
+                values: Limb.values,
+                selected: _selectedLimbs,
+                labelOf: (l) => l.label,
+                onChanged: (v) => setState(() => _selectedLimbs = v),
+              ),
+              if (presentSubdivisions.isNotEmpty)
+                _FilterAxisRow<NoteGrid>(
+                  label: 'Subdivision',
+                  values: NoteGrid.values
+                      .where(presentSubdivisions.contains)
+                      .toList(),
+                  selected: _selectedSubdivisions,
+                  labelOf: (g) => g.label,
+                  onChanged: (v) => setState(() => _selectedSubdivisions = v),
+                ),
+              const Divider(height: 1, color: AppColors.textFaint),
+              Expanded(
+                child: filtered.isEmpty
+                    ? const _EmptyFilterState()
+                    : ListView(
+                        padding: const EdgeInsets.only(bottom: 24, top: 8),
+                        children: [
+                          for (final rudiment in filtered)
+                            _RudimentTile(rudiment: rudiment),
+                        ],
+                      ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -1,0 +1,284 @@
+{
+  "voice": "en_GB-cori-high",
+  "lang": "en",
+  "license": "Public Domain (LibriVox recordings)",
+  "source": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/cori/high",
+  "clips": [
+    {
+      "id": "ci_one",
+      "ms": 430,
+      "text": "One",
+      "hash": "58bc00dd5520c245"
+    },
+    {
+      "id": "ci_two",
+      "ms": 380,
+      "text": "Two",
+      "hash": "d7037b6ad773f95d"
+    },
+    {
+      "id": "ci_three",
+      "ms": 423,
+      "text": "Three",
+      "hash": "db5c0dbf468ddcda"
+    },
+    {
+      "id": "ci_four",
+      "ms": 408,
+      "text": "Four",
+      "hash": "352e89fb860d788d"
+    },
+    {
+      "id": "cd_three",
+      "ms": 394,
+      "text": "Three",
+      "hash": "db5c0dbf468ddcda"
+    },
+    {
+      "id": "cd_two",
+      "ms": 410,
+      "text": "Two",
+      "hash": "d7037b6ad773f95d"
+    },
+    {
+      "id": "cd_one",
+      "ms": 423,
+      "text": "One",
+      "hash": "58bc00dd5520c245"
+    },
+    {
+      "id": "cd_go",
+      "ms": 402,
+      "text": "Go!",
+      "hash": "ee040a32b32d047b"
+    },
+    {
+      "id": "after_good",
+      "ms": 1959,
+      "text": "Nice — back to the groove.",
+      "hash": "d85dbf67d29f5dc4"
+    },
+    {
+      "id": "after_last",
+      "ms": 878,
+      "text": "Last round.",
+      "hash": "1f8f35e17184baf3"
+    },
+    {
+      "id": "demo_kit_v1",
+      "ms": 2505,
+      "text": "Next up: add the bass drum on the and of three.",
+      "hash": "44055f349f53ba4f"
+    },
+    {
+      "id": "demo_kit_v2",
+      "ms": 3703,
+      "text": "Now add a soft ghost note on the snare, on the e of two.",
+      "hash": "7a64fce2b2d67981"
+    },
+    {
+      "id": "demo_kit_v3",
+      "ms": 2537,
+      "text": "Last one: open the hi-hat on the and of four.",
+      "hash": "b15967d6dfe83e09"
+    },
+    {
+      "id": "demo_pad_v1",
+      "ms": 2838,
+      "text": "Next up: accent the first note of every beat.",
+      "hash": "3e1ef1dbbcc3dadc"
+    },
+    {
+      "id": "demo_pad_v2",
+      "ms": 2704,
+      "text": "Now switch to doubles: right right, left left.",
+      "hash": "d1c3eab2c931fd01"
+    },
+    {
+      "id": "demo_pad_v3",
+      "ms": 5259,
+      "text": "Last one: play paradiddles. Right left right right, left right left left.",
+      "hash": "523e5dd784900944"
+    },
+    {
+      "id": "g_guided_kit_backbeat_walk_v1",
+      "ms": 2447,
+      "text": "Next up: add a bass drum on the and of three.",
+      "hash": "7f9061d486d5932c"
+    },
+    {
+      "id": "g_guided_kit_backbeat_walk_v2",
+      "ms": 2937,
+      "text": "Now add one more bass drum, on the and of one.",
+      "hash": "1004afb748cd1c29"
+    },
+    {
+      "id": "g_guided_kit_backbeat_walk_v3",
+      "ms": 3568,
+      "text": "Last one: every other bar, crash on one instead of the hi-hat.",
+      "hash": "f0a9edde4918a1c5"
+    },
+    {
+      "id": "g_guided_kit_funk_sixteenths_v1",
+      "ms": 3653,
+      "text": "Next up: a soft ghost note on the snare, on the e of two.",
+      "hash": "2ffc56c8d444f7af"
+    },
+    {
+      "id": "g_guided_kit_funk_sixteenths_v2",
+      "ms": 3098,
+      "text": "Now add a second ghost note, on the a of four.",
+      "hash": "843a98d0a2818310"
+    },
+    {
+      "id": "g_guided_kit_funk_sixteenths_v3",
+      "ms": 2157,
+      "text": "Now open the hi-hat on the and of four.",
+      "hash": "97d88859583f3368"
+    },
+    {
+      "id": "g_guided_kit_funk_sixteenths_v4",
+      "ms": 3376,
+      "text": "Last one: add a kick on the a of three, right before the snare.",
+      "hash": "97fd6604f2f21edf"
+    },
+    {
+      "id": "g_guided_kit_halftime_shuffle_v1",
+      "ms": 4041,
+      "text": "Next up: ghosts on the middle note of every triplet, except beat three.",
+      "hash": "fb16e3b18959b7f7"
+    },
+    {
+      "id": "g_guided_kit_halftime_shuffle_v2",
+      "ms": 1608,
+      "text": "Now add a kick on the let of one.",
+      "hash": "9dc9afba5c7e6923"
+    },
+    {
+      "id": "g_guided_kit_halftime_shuffle_v3",
+      "ms": 2878,
+      "text": "Add one more kick on the let of four, leading into one.",
+      "hash": "9b6204ecb991dec0"
+    },
+    {
+      "id": "g_guided_kit_halftime_shuffle_v4",
+      "ms": 3353,
+      "text": "Last one: open the hi-hat on the let of four, with the kick.",
+      "hash": "3908e17596f4afa1"
+    },
+    {
+      "id": "g_guided_kit_linear_shift_v1",
+      "ms": 2791,
+      "text": "Next up: move the second kick to the e of two.",
+      "hash": "6b91654b299b97c1"
+    },
+    {
+      "id": "g_guided_kit_linear_shift_v2",
+      "ms": 3493,
+      "text": "Now push the snare on four one sixteenth later, onto the e.",
+      "hash": "ef454a720a062aaa"
+    },
+    {
+      "id": "g_guided_kit_linear_shift_v3",
+      "ms": 2921,
+      "text": "Now play the a of four as an accent on the floor tom.",
+      "hash": "8b2d885ab6247614"
+    },
+    {
+      "id": "g_guided_kit_linear_shift_v4",
+      "ms": 4263,
+      "text": "Last one: on the and of three, left hand plays high tom instead of the hat.",
+      "hash": "429e9efe2ecbdcfc"
+    },
+    {
+      "id": "g_guided_pad_accent_walk_v1",
+      "ms": 3295,
+      "text": "Next up: accent beat one, keep the other notes soft.",
+      "hash": "33eb0fd6c7caff0a"
+    },
+    {
+      "id": "g_guided_pad_accent_walk_v2",
+      "ms": 1886,
+      "text": "Now accent beats one and three.",
+      "hash": "5118f9424ae33052"
+    },
+    {
+      "id": "g_guided_pad_accent_walk_v3",
+      "ms": 3125,
+      "text": "Now accent every and, with your left hand.",
+      "hash": "5915d2610f8648a5"
+    },
+    {
+      "id": "g_guided_pad_accent_walk_v4",
+      "ms": 3895,
+      "text": "Last one: accents on one, the and of two, and four.",
+      "hash": "a0f25aac1b1a3925"
+    },
+    {
+      "id": "g_guided_pad_paradiddle_builder_v1",
+      "ms": 3903,
+      "text": "Next up: doubles on beat four. Right right, left left.",
+      "hash": "47aa9267ec22adef"
+    },
+    {
+      "id": "g_guided_pad_paradiddle_builder_v2",
+      "ms": 3806,
+      "text": "Now paradiddles: right left right right, left right left left.",
+      "hash": "354496f301a89f81"
+    },
+    {
+      "id": "g_guided_pad_paradiddle_builder_v3",
+      "ms": 2882,
+      "text": "Now accent the first note of every paradiddle.",
+      "hash": "e46b1588a02e97e4"
+    },
+    {
+      "id": "g_guided_pad_paradiddle_builder_v4",
+      "ms": 3348,
+      "text": "Last one: move the accent to the last note of each paradiddle.",
+      "hash": "df3a91a059a0d6ae"
+    },
+    {
+      "id": "g_guided_pad_triplet_flams_v1",
+      "ms": 3509,
+      "text": "Next up: move the accent to the last note of every triplet.",
+      "hash": "6228dc912f365a11"
+    },
+    {
+      "id": "g_guided_pad_triplet_flams_v2",
+      "ms": 3013,
+      "text": "Now back to accents on the beat, and play them as flams.",
+      "hash": "c49121a1007b01f3"
+    },
+    {
+      "id": "g_guided_pad_triplet_flams_v3",
+      "ms": 3194,
+      "text": "Last one: turn the flams on two and four into drags.",
+      "hash": "030dcbb84565a1c4"
+    },
+    {
+      "id": "g_guided_pad_fives_and_sixes_v1",
+      "ms": 4319,
+      "text": "Next up: accents in groups of five, five, six, every bar.",
+      "hash": "4240d27b1b6221df"
+    },
+    {
+      "id": "g_guided_pad_fives_and_sixes_v2",
+      "ms": 3816,
+      "text": "Now across two bars: four groups of six, then two of four.",
+      "hash": "9f0671fc32f3425f"
+    },
+    {
+      "id": "g_guided_pad_fives_and_sixes_v3",
+      "ms": 3120,
+      "text": "Now flam taps: a flam, then a tap with the same hand.",
+      "hash": "cecbd8f3a6a0fd0a"
+    },
+    {
+      "id": "g_guided_pad_fives_and_sixes_v4",
+      "ms": 3698,
+      "text": "Last one: back to the five five six accents, now as flams.",
+      "hash": "486612197252a41b"
+    }
+  ]
+}

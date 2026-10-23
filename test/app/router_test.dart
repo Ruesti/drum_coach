@@ -1,6 +1,8 @@
 import 'package:drum_coach/app/router.dart';
 import 'package:drum_coach/app/theme.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
+import 'package:drum_coach/features/guided/data/guided_catalog.dart';
+import 'package:drum_coach/features/guided/screens/guided_preview_screen.dart';
 import 'package:drum_coach/features/lessons/line_list_screen.dart';
 import 'package:drum_coach/features/stats/stats_provider.dart';
 import 'package:drum_coach/features/today/next_step.dart';
@@ -70,5 +72,14 @@ void main() {
     router.go('/exercise/single_paradiddle');
     await tester.pumpAndSettle();
     expect(find.byType(LineListScreen), findsOneWidget);
+  });
+
+  testWidgets('/guided/:id opens the preview', (tester) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+    router.push('/guided/${guidedCatalog.first.id}');
+    await tester.pumpAndSettle();
+    expect(find.byType(GuidedPreviewScreen), findsOneWidget);
+    expect(find.text(guidedCatalog.first.name), findsOneWidget);
   });
 }
