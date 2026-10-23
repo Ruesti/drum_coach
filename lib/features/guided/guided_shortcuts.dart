@@ -6,11 +6,11 @@ const int guidedTempoStep = 4;
 
 /// Key hint under the preview's Start button (desktop).
 const String guidedPreviewKeyHint =
-    'Space start · ↑↓ ± tempo · T teacher · P along · Esc back';
+    'Space start · ↑↓ ± tempo\nT teacher · P along · Esc back';
 
 /// Key hint under the practice controls (desktop).
 const String guidedPlayKeyHint =
-    'Space pause · ↑↓ ± tempo · T teacher · P along · Esc stop';
+    'Space pause · ↑↓ ± tempo\nT teacher · P along · Esc stop';
 
 /// Desktop keys of the guided screens (preview and practice): Space
 /// [primary], ↑/↓ and +/− tempo by [guidedTempoStep] (Shift: twice that),

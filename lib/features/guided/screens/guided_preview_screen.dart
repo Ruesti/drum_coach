@@ -70,11 +70,20 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
     }
   }
 
+  bool _starting = false;
+
   Future<void> _start() async {
+    if (_starting) return;
+    _starting = true;
     final ex = _ex!;
-    final result = await context.push<GuidedPlayResult>(
-        '/guided/${ex.id}/play?bpm=$_bpm'
-        '&teacher=${_teacher ? 1 : 0}&along=${_along ? 1 : 0}');
+    final GuidedPlayResult? result;
+    try {
+      result = await context.push<GuidedPlayResult>(
+          '/guided/${ex.id}/play?bpm=$_bpm'
+          '&teacher=${_teacher ? 1 : 0}&along=${_along ? 1 : 0}');
+    } finally {
+      _starting = false;
+    }
     if (!mounted) return;
     // Tempo and switches may have changed during play: take them over, so
     // the next Start does not send the old values. The switches are saved

@@ -383,7 +383,9 @@ void main() {
     expect(guidedPlayKeyHint, contains('±'));
     final para = t.renderObject<RenderParagraph>(hint);
     expect(para.didExceedMaxLines, isFalse);
-    expect(para.size.height, lessThan(2 * 11));
+    expect(para.size.height, lessThan(3 * 12 * 1.3));
+    expect(para.text.style!.fontSize, greaterThanOrEqualTo(12),
+        reason: 'key hint is at least 12 px');
     final stop = t.getRect(find.byKey(const Key('guided-play-stop')));
     expect(t.getRect(hint).right, lessThanOrEqualTo(stop.right + 0.5));
   });

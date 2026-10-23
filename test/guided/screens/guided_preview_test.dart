@@ -149,6 +149,18 @@ void main() {
     expect(find.byType(GuidedLineView), findsOneWidget);
   });
 
+  testWidgets('start pushes play only once', (t) async {
+    final router = await _pump(t, _kit.id, const Size(1280, 800), desktop: true);
+    await t.sendKeyEvent(LogicalKeyboardKey.space);
+    await t.sendKeyEvent(LogicalKeyboardKey.space);
+    await t.pumpAndSettle();
+    expect(find.textContaining('play:'), findsOneWidget);
+    router.pop();
+    await t.pumpAndSettle();
+    expect(find.textContaining('play:'), findsNothing);
+    expect(find.byType(GuidedPreviewScreen), findsOneWidget);
+  });
+
   testWidgets('start pushes play with bpm and options', (t) async {
     final router = await _pump(t, _kit.id, const Size(412, 915));
     expect(_bpmText(t), '${_kit.defaultBpm}');
@@ -269,7 +281,9 @@ void main() {
     expect(guidedPreviewKeyHint, contains('±'));
     final para = t.renderObject<RenderParagraph>(hint);
     expect(para.didExceedMaxLines, isFalse);
-    expect(para.size.height, lessThan(2 * 11));
+    expect(para.size.height, lessThan(3 * 12 * 1.3));
+    expect(para.text.style!.fontSize, greaterThanOrEqualTo(12),
+        reason: 'key hint is at least 12 px');
     final start = t.getRect(find.byKey(const Key('guided-start')));
     final r = t.getRect(hint);
     expect(r.left, greaterThanOrEqualTo(start.left - 0.5));

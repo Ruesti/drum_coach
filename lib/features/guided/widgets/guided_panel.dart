@@ -184,25 +184,19 @@ class GuidedGhostButton extends StatelessWidget {
   }
 }
 
-/// One line of desktop key hints under the controls: never wraps, shrinks
-/// a little when the column is narrower than the text.
+/// Desktop key hints under the controls: two balanced lines (the text
+/// carries the line break), at the design label size (12), never shrunk.
 class GuidedKeyHint extends StatelessWidget {
   const GuidedKeyHint(this.text, {super.key});
   final String text;
 
   @override
-  Widget build(BuildContext context) => FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          text,
-          key: const Key('guided-key-hint'),
-          maxLines: 1,
-          softWrap: false,
-          textAlign: TextAlign.center,
-          style: PracticeTypography.label.copyWith(
-              fontSize: 11,
-              letterSpacing: 0.3,
-              color: PracticeColors.textMuted),
-        ),
+  Widget build(BuildContext context) => Text(
+        text,
+        key: const Key('guided-key-hint'),
+        maxLines: 2,
+        textAlign: TextAlign.center,
+        style: PracticeTypography.label.copyWith(
+            fontSize: 12, color: PracticeColors.textMuted),
       );
 }
