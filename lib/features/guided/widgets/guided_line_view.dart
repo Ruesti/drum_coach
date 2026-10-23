@@ -92,6 +92,7 @@ class GuidedLineView extends StatelessWidget {
             activeIndex: activeIndex,
             activeTick: line.isKit ? tick : null,
             showCounts: false,
+            showLineNumber: false,
           ),
         );
 

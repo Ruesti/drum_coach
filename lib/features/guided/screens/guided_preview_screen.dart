@@ -10,9 +10,11 @@ import '../../practice/widgets/tempo_row.dart';
 import '../data/guided_lookup.dart';
 import '../guided_format.dart';
 import '../models/guided_exercise.dart';
+import '../guided_shortcuts.dart';
 import '../widgets/guided_backdrop.dart';
 import '../widgets/guided_layout.dart';
 import '../widgets/guided_line_view.dart';
+import '../widgets/guided_panel.dart';
 
 /// The preview stays inside the 900 px desktop cap, so it never reaches
 /// the 1000 px of [guidedWide]: it switches to two columns from this width
@@ -21,7 +23,7 @@ import '../widgets/guided_line_view.dart';
 const double guidedPreviewTwoColumnMinWidth = 820;
 
 /// Tempo step of the +/- buttons and keys; Shift doubles it.
-const int guidedPreviewBpmStep = 4;
+const int guidedPreviewBpmStep = guidedTempoStep;
 
 /// `/guided/:id`: introduces one guided exercise — its sequence of sections
 /// with the explanations, the groove notes, tempo, Teacher / Play along —
@@ -73,30 +75,13 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
         '&teacher=${_teacher ? 1 : 0}&along=${_along ? 1 : 0}');
   }
 
-  Map<ShortcutActivator, VoidCallback> get _shortcuts {
-    void bump(int d) => _setBpm(_bpm + d);
-    const s = guidedPreviewBpmStep;
-    return {
-      const SingleActivator(LogicalKeyboardKey.space): _start,
-      const SingleActivator(LogicalKeyboardKey.arrowUp): () => bump(s),
-      const SingleActivator(LogicalKeyboardKey.arrowUp, shift: true): () =>
-          bump(2 * s),
-      const SingleActivator(LogicalKeyboardKey.arrowDown): () => bump(-s),
-      const SingleActivator(LogicalKeyboardKey.arrowDown, shift: true): () =>
-          bump(-2 * s),
-      const SingleActivator(LogicalKeyboardKey.equal): () => bump(s),
-      const SingleActivator(LogicalKeyboardKey.equal, shift: true): () =>
-          bump(s),
-      const SingleActivator(LogicalKeyboardKey.add): () => bump(s),
-      const SingleActivator(LogicalKeyboardKey.numpadAdd): () => bump(s),
-      const SingleActivator(LogicalKeyboardKey.minus): () => bump(-s),
-      const SingleActivator(LogicalKeyboardKey.numpadSubtract): () => bump(-s),
-      const SingleActivator(LogicalKeyboardKey.keyT): () =>
-          _setTeacher(!_teacher),
-      const SingleActivator(LogicalKeyboardKey.keyP): () => _setAlong(!_along),
-      const SingleActivator(LogicalKeyboardKey.escape): _back,
-    };
-  }
+  Map<ShortcutActivator, VoidCallback> get _shortcuts => guidedShortcuts(
+        primary: _start,
+        bumpBpm: (d) => _setBpm(_bpm + d),
+        toggleTeacher: () => _setTeacher(!_teacher),
+        togglePlayAlong: () => _setAlong(!_along),
+        leave: _back,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +173,11 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
                       children: [
                         _settings(ex),
                         const SizedBox(height: AppSpacing.lg),
-                        _StartButton(onPressed: _start),
+                        GuidedAccentButton(
+                            key: const Key('guided-start'),
+                            icon: Icons.play_arrow_rounded,
+                            label: 'Start',
+                            onPressed: _start),
                         if (isDesktopPlatform) ...[
                           const SizedBox(height: AppSpacing.md),
                           const _KeyHint(),
@@ -230,7 +219,11 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
-          child: _StartButton(onPressed: _start),
+          child: GuidedAccentButton(
+              key: const Key('guided-start'),
+              icon: Icons.play_arrow_rounded,
+              label: 'Start',
+              onPressed: _start),
         ),
       ],
     );
@@ -238,48 +231,6 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
 }
 
 // ── Pieces ──────────────────────────────────────────────────────────────────
-
-/// Dark glass card that keeps text readable over the photo.
-class _Panel extends StatelessWidget {
-  const _Panel({required this.child, this.padding});
-  final Widget child;
-  final EdgeInsetsGeometry? padding;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: padding ?? const EdgeInsets.all(AppSpacing.cardPadding),
-        decoration: BoxDecoration(
-          color: PracticeColors.base.withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: child,
-      );
-}
-
-class _PanelLabel extends StatelessWidget {
-  const _PanelLabel(this.text, {this.trailing});
-  final String text;
-  final String? trailing;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: AppSpacing.md),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(text,
-                  style: PracticeTypography.label
-                      .copyWith(color: PracticeColors.textMuted)),
-            ),
-            if (trailing != null)
-              Text(trailing!,
-                  style: PracticeTypography.label
-                      .copyWith(color: PracticeColors.textMuted)),
-          ],
-        ),
-      );
-}
 
 class _Header extends StatelessWidget {
   const _Header({
@@ -371,13 +322,13 @@ class _Timeline extends StatelessWidget {
       ));
     }
     final bars = sections.fold<int>(0, (n, s) => n + s.bars);
-    return _Panel(
+    return GuidedPanel(
       padding: const EdgeInsets.fromLTRB(AppSpacing.cardPadding,
           AppSpacing.cardPadding, AppSpacing.cardPadding, AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _PanelLabel('SEQUENCE', trailing: '$bars BARS'),
+          GuidedPanelLabel('SEQUENCE', trailing: '$bars BARS'),
           ...rows,
         ],
       ),
@@ -515,11 +466,11 @@ class _GroovePanel extends StatelessWidget {
         .where((s) => s.kind == SectionKind.groove)
         .firstOrNull;
     if (groove == null) return const SizedBox.shrink();
-    return _Panel(
+    return GuidedPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _PanelLabel('GROOVE'),
+          const GuidedPanelLabel('GROOVE'),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.chip),
             child: GuidedLineView(
@@ -555,11 +506,11 @@ class _SettingsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Panel(
+    return GuidedPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _PanelLabel('TEMPO',
+          GuidedPanelLabel('TEMPO',
               trailing: '${exercise.minBpm}–${exercise.maxBpm}'),
           TempoRow(
             bpm: bpm,
@@ -570,7 +521,7 @@ class _SettingsPanel extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           const Divider(height: 1, color: Color(0x1FFFFFFF)),
-          _SwitchRow(
+          GuidedSwitchRow(
             key: const Key('guided-teacher'),
             title: 'Teacher',
             subtitle: 'A voice explains each variation',
@@ -578,7 +529,7 @@ class _SettingsPanel extends StatelessWidget {
             onChanged: onTeacher,
           ),
           const Divider(height: 1, color: Color(0x1FFFFFFF)),
-          _SwitchRow(
+          GuidedSwitchRow(
             key: const Key('guided-along'),
             title: 'Play along',
             subtitle: 'Hear the notes played with you',
@@ -586,88 +537,6 @@ class _SettingsPanel extends StatelessWidget {
             onChanged: onAlong,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SwitchRow extends StatelessWidget {
-  const _SwitchRow({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => onChanged(!value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: PracticeTypography.subtitle),
-                  Text(subtitle,
-                      style: PracticeTypography.body.copyWith(
-                          fontSize: 13,
-                          height: 1.3,
-                          color: PracticeColors.textMuted)),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Switch(
-              value: value,
-              onChanged: onChanged,
-              activeThumbColor: Colors.white,
-              activeTrackColor: PracticeColors.accent,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Big accent button in the practice screen's style (height 56).
-class _StartButton extends StatelessWidget {
-  const _StartButton({required this.onPressed});
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: FilledButton(
-        key: const Key('guided-start'),
-        style: FilledButton.styleFrom(
-          backgroundColor: PracticeColors.accent,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.card)),
-        ),
-        onPressed: onPressed,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.play_arrow_rounded, size: 26),
-            const SizedBox(width: 10),
-            Text('Start',
-                style:
-                    PracticeTypography.subtitle.copyWith(color: Colors.white)),
-          ],
-        ),
       ),
     );
   }

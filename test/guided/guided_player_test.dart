@@ -615,6 +615,27 @@ void main() {
     expect(bar4[beat], closeTo(0.15, 0.01)); // "3" click, accent 1.5
   });
 
+  test('positions carry the countdown of the plan (teacher off too)', () async {
+    final sink = FakePcmSink();
+    final p = _player(sink);
+    final positions = <RunPosition>[];
+    p.positions.listen(positions.add);
+    await p.start(_ex(), bpm: 100, options: const RunOptions(teacher: false));
+    await _playToEnd(p, sink);
+    // Countdown bar 4: 3 on beat 2, 2 on beat 3, 1 on beat 4; GO on
+    // beat 1 of the variation (bar 5).
+    int? at(int bar, int beat) =>
+        positions.firstWhere((e) => e.bar == bar && e.beat == beat).countdown;
+    expect(at(4, 1), isNull);
+    expect(at(4, 2), 3);
+    expect(at(4, 3), 2);
+    expect(at(4, 4), 1);
+    expect(at(5, 1), 0);
+    expect(at(5, 2), isNull);
+    expect(at(3, 3), isNull);
+    await p.stop();
+  });
+
   test('a failed clip load is retried', () async {
     final sink = FakePcmSink();
     final tried = <String>{};

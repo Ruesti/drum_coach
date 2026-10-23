@@ -10,6 +10,7 @@ class RunPosition {
     required this.tick,
     required this.bpm,
     required this.plannedAt,
+    this.countdown,
   });
 
   /// Global bar of the run (the count-in is 0).
@@ -31,17 +32,27 @@ class RunPosition {
   /// Wall time at which [tick] started sounding: the poll time minus the
   /// offset into the tick, so the poll cadence does not blur it.
   final DateTime plannedAt;
+
+  /// Countdown step on screen: 3, 2, 1, or 0 = GO; null outside the
+  /// countdown. From the plan's countdown events of this bar (they are
+  /// planned with the teacher off too): the last step reached in the bar;
+  /// GO (on beat 1 of the variation) lasts one beat.
+  final int? countdown;
 }
+
+/// A countdown step of one bar: [remaining] from [tick] on.
+typedef CountdownStep = ({int tick, int remaining});
 
 class _ClockBar {
   const _ClockBar(this.index, this.startMs, this.bpm, this.ticks,
-      this.sectionIndex, this.barInSection);
+      this.sectionIndex, this.barInSection, this.countdown);
   final int index;
   final double startMs;
   final int bpm;
   final int ticks;
   final int sectionIndex;
   final int barInSection;
+  final List<CountdownStep> countdown;
 
   double get tickMs => 60000 / bpm / (ticks / guidedBeatsPerBar);
 }
@@ -54,15 +65,18 @@ class RunClock {
   final _bars = <_ClockBar>[];
 
   /// Registers bar [index] that starts [startMs] into the stream and has
-  /// [ticks] ticks at [bpm] (4/4).
+  /// [ticks] ticks at [bpm] (4/4). [countdownSteps]: the bar's countdown
+  /// events, sorted by tick.
   void addBar(int index, double startMs, int bpm, int ticks,
-      {int sectionIndex = 0, int barInSection = 0}) {
+      {int sectionIndex = 0,
+      int barInSection = 0,
+      List<CountdownStep> countdownSteps = const []}) {
     if (_bars.isNotEmpty && startMs < _bars.last.startMs) {
       throw ArgumentError('bars must be added in order: '
           '$startMs < ${_bars.last.startMs}');
     }
-    _bars
-        .add(_ClockBar(index, startMs, bpm, ticks, sectionIndex, barInSection));
+    _bars.add(_ClockBar(index, startMs, bpm, ticks, sectionIndex, barInSection,
+        countdownSteps));
   }
 
   bool get isEmpty => _bars.isEmpty;
@@ -89,6 +103,13 @@ class RunClock {
       tick = b.ticks - 1;
       inTick = 0;
     }
+    int? countdown;
+    for (final step in b.countdown) {
+      if (step.tick <= tick) countdown = step.remaining;
+    }
+    if (countdown == 0 && tick >= b.ticks ~/ guidedBeatsPerBar) {
+      countdown = null;
+    }
     final t = now ?? DateTime.now();
     return RunPosition(
       bar: b.index,
@@ -98,6 +119,7 @@ class RunClock {
       tick: tick,
       bpm: b.bpm,
       plannedAt: t.subtract(Duration(microseconds: (inTick * 1000).round())),
+      countdown: countdown,
     );
   }
 }

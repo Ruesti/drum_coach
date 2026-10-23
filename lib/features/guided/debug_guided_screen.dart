@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,45 +13,12 @@ import 'data/guided_catalog.dart';
 import 'guided_format.dart';
 import 'guided_player.dart';
 import 'guided_rig_provider.dart';
+import 'guided_run_controller.dart';
 import 'models/guided_exercise.dart';
-import 'models/voice_clip.dart';
-import 'run_clock.dart';
 import 'run_plan.dart';
 
 /// Tempo step of the ± buttons and keys.
 const int guidedBpmStep = 4;
-
-/// `Section 3 of 9 · Variation 1 · bar 5 · beat 2` (count-in: `Count-in ·
-/// beat 2`).
-String guidedStatusLine(GuidedExercise ex, RunPosition p) {
-  if (p.sectionIndex < 0) return 'Count-in · beat ${p.beat}';
-  final s = ex.sections[p.sectionIndex];
-  final label = switch (s.kind) {
-    SectionKind.intro => 'Intro',
-    SectionKind.groove => 'Groove',
-    SectionKind.outro => 'Outro',
-    SectionKind.variation =>
-      'Variation ${ex.sections.take(p.sectionIndex + 1).where((x) => x.kind == SectionKind.variation).length}',
-  };
-  return 'Section ${p.sectionIndex + 1} of ${ex.sections.length} · $label'
-      ' · bar ${p.barInSection + 1} · beat ${p.beat}';
-}
-
-/// The explanation of the variation that is playing ([coming] false) or of
-/// the one that comes next ([coming] true); null when none is left.
-({bool coming, String text})? guidedVariationText(
-    GuidedExercise ex, int sectionIndex) {
-  if (sectionIndex >= 0 &&
-      ex.sections[sectionIndex].kind == SectionKind.variation) {
-    return (coming: false, text: ex.sections[sectionIndex].textEn!);
-  }
-  for (var i = math.max(0, sectionIndex + 1); i < ex.sections.length; i++) {
-    if (ex.sections[i].kind == SectionKind.variation) {
-      return (coming: true, text: ex.sections[i].textEn!);
-    }
-  }
-  return null;
-}
 
 /// `Name · Difficulty · ~m:ss`: planned length at the default tempo, without
 /// the planner's extension for long explanations (same as the curation page).
@@ -126,24 +92,13 @@ class _GuidedPage extends StatefulWidget {
 }
 
 class _GuidedPageState extends State<_GuidedPage> {
-  GuidedPlayer get _player => widget.rig.player;
-  ClipManifest get _clips => widget.rig.clips;
+  late final GuidedRunController _run = GuidedRunController(
+    player: widget.rig.player,
+    clips: widget.rig.clips,
+    exercise: demoKitExercise,
+  )..addListener(_changed);
 
-  GuidedExercise _ex = demoKitExercise;
-  late int _bpm = _ex.defaultBpm;
-  RunOptions _options = const RunOptions();
-  bool _running = false;
-  bool _paused = false;
-
-  /// start() is in flight: Start/Pause taps are ignored meanwhile.
-  bool _starting = false;
-  RunPosition? _pos;
-  String? _error;
-
-  /// Planned bar lengths at the current tempo/options (time estimate).
-  List<double> _barMs = const [];
-
-  final _subs = <StreamSubscription<Object?>>[];
+  void _changed() => setState(() {});
 
   @override
   void initState() {
@@ -152,34 +107,13 @@ class _GuidedPageState extends State<_GuidedPage> {
       GuidedPlayer.debugLogRenderTimes = true;
       return true;
     }());
-    _subs
-      ..add(_player.positions.listen((p) => setState(() => _pos = p)))
-      // A failed run stops appending; reset the page to stopped.
-      ..add(_player.errors.listen((e) {
-        setState(() {
-          _error = '$e';
-          _running = false;
-          _paused = false;
-        });
-        unawaited(_player.stop());
-      }))
-      // A frozen position paused the run on its own: show Resume.
-      ..add(_player.stateChanges.listen((_) => setState(() {})))
-      ..add(_player.finished.listen((_) => setState(() {
-            _running = false;
-            _paused = false;
-          })));
-    _replanTime();
   }
 
   @override
   void dispose() {
-    for (final s in _subs) {
-      unawaited(s.cancel());
-    }
-    // The provider disposes the player; stop now so the run does not
-    // outlive the page while the provider winds down.
-    unawaited(_player.stop());
+    _run
+      ..removeListener(_changed)
+      ..dispose();
     assert(() {
       GuidedPlayer.debugLogRenderTimes = false;
       return true;
@@ -187,98 +121,25 @@ class _GuidedPageState extends State<_GuidedPage> {
     super.dispose();
   }
 
-  void _replanTime() {
-    _barMs = [
-      for (final b
-          in buildRun(_ex, bpm: _bpm, options: _options, clips: _clips))
-        guidedBeatsPerBar * 60000 / b.bpm
-    ];
-  }
+  GuidedExercise get _ex => _run.exercise;
+  int get _bpm => _run.bpm;
+  RunOptions get _options => _run.options;
+  bool get _running => _run.running;
+  bool get _showResume => _run.showResume;
+  String? get _error => _run.error;
 
-  double get _totalMs => _barMs.fold(0.0, (a, b) => a + b);
-
-  double get _elapsedMs {
-    final p = _pos;
-    if (p == null) return 0;
-    final before = _barMs.take(p.bar).fold(0.0, (a, b) => a + b);
-    final bar = p.bar < _barMs.length ? _barMs[p.bar] : 0.0;
-    return math.min(_totalMs, before + bar * p.tick / runTicksPerBar);
-  }
-
-  void _choose(GuidedExercise ex) {
-    if (_running || identical(ex, _ex)) return;
-    setState(() {
-      _ex = ex;
-      _bpm = ex.defaultBpm;
-      _pos = null;
-      _replanTime();
-    });
-  }
-
-  /// Paused by the user or by a frozen position.
-  bool get _showResume => _paused || _player.isFrozen;
-
-  Future<void> _toggle() async {
-    if (_starting) return;
-    if (!_running) {
-      setState(() {
-        _running = true;
-        _paused = false;
-        _starting = true;
-        _error = null;
-        _pos = null;
-      });
-      try {
-        await _player.start(_ex, bpm: _bpm, options: _options);
-      } finally {
-        if (mounted) setState(() => _starting = false);
-      }
-    } else if (_showResume) {
-      _player.resume();
-      setState(() => _paused = false);
-    } else {
-      _player.pause();
-      setState(() => _paused = true);
-    }
-  }
-
-  Future<void> _stop() async {
-    await _player.stop();
-    if (!mounted) return;
-    setState(() {
-      _running = false;
-      _paused = false;
-      _pos = null;
-    });
-  }
-
-  void _bump(int delta) {
-    final next = (_bpm + delta)
-        .clamp(math.max(guidedMinBpm, _ex.minBpm),
-            math.min(guidedMaxBpm, _ex.maxBpm))
-        .toInt();
-    if (next == _bpm) return;
-    _player.setBpm(next);
-    setState(() {
-      _bpm = next;
-      _replanTime();
-    });
-  }
-
-  void _setOptions(RunOptions o) {
-    _player.setOptions(o);
-    setState(() {
-      _options = o;
-      _replanTime();
-    });
-  }
+  Future<void> _toggle() => _run.toggle();
+  Future<void> _stop() => _run.stop();
+  void _bump(int delta) => _run.bump(delta);
+  void _setOptions(RunOptions o) => _run.setOptions(o);
+  void _choose(GuidedExercise ex) => _run.choose(ex);
 
   @override
   Widget build(BuildContext context) {
-    final pos = _pos;
+    final pos = _run.position;
     final text = guidedVariationText(_ex, pos?.sectionIndex ?? -1);
-    final total = _totalMs;
-    final elapsed = _elapsedMs;
+    final total = _run.totalMs;
+    final elapsed = _run.elapsedMs;
     final scaffold = Scaffold(
       appBar: AppBar(title: const Text('Guided demo')),
       body: ListView(
@@ -420,7 +281,7 @@ class _GuidedPageState extends State<_GuidedPage> {
           ],
           const SizedBox(height: 16),
           LinearProgressIndicator(
-            value: total > 0 ? elapsed / total : 0,
+            value: _run.progress,
             minHeight: 6,
             color: PracticeColors.accent,
             backgroundColor: PracticeColors.raised,

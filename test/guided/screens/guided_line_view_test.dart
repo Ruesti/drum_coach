@@ -9,6 +9,7 @@ import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/practice/widgets/line_view.dart';
 import 'package:drum_coach/shared/widgets/kit_layout.dart';
+import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -117,6 +118,17 @@ void main() {
         find.descendant(
             of: find.byType(GuidedLineView), matching: find.byType(Opacity)),
         findsNothing);
+  });
+
+  testWidgets('guided lines hide the line-number box (R3)', (t) async {
+    final ex = _first(GuidedPackage.kit);
+    await t.pumpWidget(_host(GuidedLineView(exercise: ex, line: _v1(ex)), 760));
+    expect(t.widget<LineView>(find.byType(LineView)).showLineNumber, isFalse);
+    expect(
+        t
+            .widget<SheetStaffWidget>(find.byType(SheetStaffWidget))
+            .showLineNumber,
+        isFalse);
   });
 
   testWidgets('pad cursor: tick maps to the note index', (t) async {

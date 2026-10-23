@@ -48,4 +48,23 @@ void main() {
     final c = RunClock()..addBar(0, 0, 120, 96);
     expect(() => c.addBar(1, -1, 120, 96), throwsArgumentError);
   });
+
+  test('countdown: last step reached in the bar; GO only on beat 1', () {
+    final c = RunClock()
+      ..addBar(0, 0, 120, 96)
+      ..addBar(1, 2000, 120, 96, countdownSteps: const [
+        (tick: 24, remaining: 3),
+        (tick: 48, remaining: 2),
+        (tick: 72, remaining: 1),
+      ])
+      ..addBar(2, 4000, 120, 96,
+          countdownSteps: const [(tick: 0, remaining: 0)]);
+    expect(c.at(100)!.countdown, isNull);
+    expect(c.at(2100)!.countdown, isNull); // beat 1 of the countdown bar
+    expect(c.at(2600)!.countdown, 3);
+    expect(c.at(3100)!.countdown, 2);
+    expect(c.at(3900)!.countdown, 1);
+    expect(c.at(4100)!.countdown, 0); // GO on beat 1 of the variation
+    expect(c.at(4600)!.countdown, isNull); // beat 2: gone
+  });
 }

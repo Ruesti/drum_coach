@@ -419,7 +419,12 @@ class GuidedPlayer {
       return false;
     }
     _clock.addBar(bar.globalBar, _appendedMs, bar.bpm, runTicksPerBar,
-        sectionIndex: bar.sectionIndex, barInSection: bar.barInSection);
+        sectionIndex: bar.sectionIndex,
+        barInSection: bar.barInSection,
+        countdownSteps: [
+          for (final e in bar.events)
+            if (e is CountdownEvent) (tick: e.tick, remaining: e.remaining)
+        ]);
     _appendedSamples += pcm.length;
     _lastRenderedBar = bar.globalBar;
     return true;

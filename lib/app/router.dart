@@ -19,7 +19,7 @@ import '../features/program/program_setup_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
 import '../features/guided/debug_guided_screen.dart';
 import '../features/settings/kit_learn_screen.dart';
-import '../features/guided/screens/guided_placeholder.dart';
+import '../features/guided/screens/guided_play_screen.dart';
 import '../features/guided/screens/guided_preview_screen.dart';
 import '../features/settings/latency_calibration_screen.dart';
 import '../features/settings/midi_calibration_screen.dart';
@@ -143,7 +143,7 @@ final router = GoRouter(
       builder: (_, state) =>
           LineListScreen(rudimentId: state.pathParameters['rudimentId']!),
     ),
-    // Guided exercise preview; the player is a placeholder until Task 5.
+    // Guided exercise: preview, then the practice screen it starts.
     GoRoute(
       path: '/guided/:id',
       parentNavigatorKey: _rootNavigatorKey,
@@ -153,8 +153,8 @@ final router = GoRouter(
     GoRoute(
       path: '/guided/:id/play',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (_, state) =>
-          GuidedPlaceholder(id: state.pathParameters['id']!, play: true),
+      builder: (_, state) => GuidedPlayScreen.fromQuery(
+          state.pathParameters['id']!, state.uri.queryParameters),
     ),
     // Top-level (outside the bottom-nav shell) so it can be pushed from any
     // route — collection, program, lessons — without go_router raising a
