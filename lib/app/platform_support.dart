@@ -40,14 +40,67 @@ bool get micAllowedByDefault => !isDesktopPlatform;
 /// Phone layout, centered, capped — no desktop redesign in Phase A.
 const double desktopContentMaxWidth = 900;
 
+/// Width limit while an [UncappedContent] route is on screen (guided
+/// exercises, desktop-first layout).
+const double uncappedContentMaxWidth = 1440;
+
+/// Number of [UncappedContent] widgets currently mounted. The builder in
+/// [capContentWidth] wraps the Navigator, so a route cannot reach it
+/// directly: it registers here and the cap widens while the count is > 0.
+final ValueNotifier<int> uncappedContentCount = ValueNotifier<int>(0);
+
+/// Route-level opt-out from the 900 px cap: while mounted, the content may
+/// grow to [uncappedContentMaxWidth].
+class UncappedContent extends StatefulWidget {
+  const UncappedContent({super.key, required this.child});
+  final Widget child;
+
+  @override
+  State<UncappedContent> createState() => _UncappedContentState();
+}
+
+class _UncappedContentState extends State<UncappedContent> {
+  // Changes are deferred to after the frame: notifying the cap widget in the
+  // middle of build/unmount would mark it dirty while the tree is locked.
+  void _bump(int d) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      uncappedContentCount.value += d;
+    });
+    WidgetsBinding.instance.scheduleFrame();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _bump(1);
+  }
+
+  @override
+  void dispose() {
+    _bump(-1);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 Widget capContentWidth(BuildContext context, Widget? child) {
   if (!isDesktopPlatform || child == null) return child ?? const SizedBox();
   return ColoredBox(
     color: const Color(0xFF111111),
     child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: desktopContentMaxWidth),
+      child: ValueListenableBuilder<int>(
+        valueListenable: uncappedContentCount,
+        // Same widget structure either way: the Navigator keeps its state.
         child: child,
+        builder: (_, count, child) => ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth:
+                count > 0 ? uncappedContentMaxWidth : desktopContentMaxWidth,
+          ),
+          child: child,
+        ),
       ),
     ),
   );
