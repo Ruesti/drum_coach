@@ -206,6 +206,15 @@ class SettingsService {
   static Future<void> setSequenceRepeats(int n) =>
       _prefs.setInt('sequence_repeats', n.clamp(1, 4));
 
+  /// Library mode: 'exercises' (default) or 'guided'.
+  static String get libraryMode {
+    final v = _prefs.getString('library_mode');
+    return v == 'guided' ? 'guided' : 'exercises';
+  }
+
+  static Future<void> setLibraryMode(String mode) =>
+      _prefs.setString('library_mode', mode == 'guided' ? 'guided' : 'exercises');
+
   // ── Practice-session snapshot ────────────────────────────────────────────
   // Written when the app goes to background mid-session so the timer survives
   // Android killing the process (e.g. during a phone call).

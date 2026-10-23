@@ -11,6 +11,7 @@ import '../../app/theme.dart';
 import '../practice/practice_shortcuts.dart';
 import 'data/demo_exercise.dart';
 import 'data/guided_catalog.dart';
+import 'guided_format.dart';
 import 'guided_player.dart';
 import 'guided_rig_provider.dart';
 import 'models/guided_exercise.dart';
@@ -53,15 +54,10 @@ String guidedStatusLine(GuidedExercise ex, RunPosition p) {
   return null;
 }
 
-String _mmss(double ms) {
-  final s = (ms / 1000).round();
-  return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
-}
-
 /// `Name · Difficulty · ~m:ss`: planned length at the default tempo, without
 /// the planner's extension for long explanations (same as the curation page).
-String guidedExerciseLabel(GuidedExercise ex) => '${ex.name} · '
-    '${ex.difficulty.label} · ~${_mmss(ex.barsAt(ex.defaultBpm) * guidedBeatsPerBar * 60000 / ex.defaultBpm)}';
+String guidedExerciseLabel(GuidedExercise ex) =>
+    '${ex.name} · ${ex.difficulty.label} · ${guidedDurationLabel(ex)}';
 
 /// Dropdown entries: the two demos, then the catalog, Set before Pad, each
 /// group under a disabled header.
@@ -430,7 +426,7 @@ class _GuidedPageState extends State<_GuidedPage> {
             backgroundColor: PracticeColors.raised,
           ),
           const SizedBox(height: 6),
-          Text('${_mmss(elapsed)} / ~${_mmss(total)}',
+          Text('${guidedMmss(elapsed)} / ~${guidedMmss(total)}',
               style: const TextStyle(color: PracticeColors.textMuted)),
           if (isDesktopPlatform) ...[
             const SizedBox(height: 24),
