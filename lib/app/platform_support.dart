@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 /// The one place that knows whether we run on a desktop (Brief Etappe 2,
@@ -44,13 +45,20 @@ const double desktopContentMaxWidth = 900;
 /// exercises, desktop-first layout).
 const double uncappedContentMaxWidth = 1440;
 
-/// Number of [UncappedContent] widgets currently mounted. The builder in
-/// [capContentWidth] wraps the Navigator, so a route cannot reach it
-/// directly: it registers here and the cap widens while the count is > 0.
+/// Number of [UncappedContent] widgets currently counting as on screen.
+/// The builder in [capContentWidth] wraps the Navigator, so a route cannot
+/// reach it directly: it registers here and the cap widens while the count
+/// is > 0. The cap listens at the render level (no rebuild), so the count
+/// may change at any point of a frame, also during build.
 final ValueNotifier<int> uncappedContentCount = ValueNotifier<int>(0);
 
-/// Route-level opt-out from the 900 px cap: while mounted, the content may
-/// grow to [uncappedContentMaxWidth].
+/// Route-level opt-out from the 900 px cap: while its route is the current
+/// one and entering or shown (animation forward/completed), the content may
+/// grow to [uncappedContentMaxWidth]. It stops counting the moment the
+/// route starts to leave (pop: animation reverse) or another route is
+/// pushed on top, so the page that comes back is laid out capped from the
+/// first frame of the transition. Without a [ModalRoute] (tests) it counts
+/// while mounted.
 class UncappedContent extends StatefulWidget {
   const UncappedContent({super.key, required this.child});
   final Widget child;
@@ -60,48 +68,111 @@ class UncappedContent extends StatefulWidget {
 }
 
 class _UncappedContentState extends State<UncappedContent> {
-  // Changes are deferred to after the frame: notifying the cap widget in the
-  // middle of build/unmount would mark it dirty while the tree is locked.
-  void _bump(int d) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      uncappedContentCount.value += d;
-    });
-    WidgetsBinding.instance.scheduleFrame();
+  ModalRoute<Object?>? _route;
+  Animation<double>? _animation;
+  bool _counted = false;
+  bool _active = true;
+
+  bool get _wanted {
+    if (!_active) return false;
+    final route = _route;
+    if (route == null) return true;
+    if (!route.isCurrent) return false;
+    final status = route.animation?.status ?? AnimationStatus.completed;
+    return status == AnimationStatus.forward ||
+        status == AnimationStatus.completed;
+  }
+
+  void _sync() {
+    final want = _wanted;
+    if (want == _counted) return;
+    _counted = want;
+    uncappedContentCount.value += want ? 1 : -1;
+  }
+
+  void _onStatus(AnimationStatus _) => _sync();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Depends on the route's status: rebuilt when isCurrent changes.
+    _route = ModalRoute.of(context);
+    final animation = _route?.animation;
+    if (!identical(animation, _animation)) {
+      _animation?.removeStatusListener(_onStatus);
+      _animation = animation?..addStatusListener(_onStatus);
+    }
+    _sync();
   }
 
   @override
-  void initState() {
-    super.initState();
-    _bump(1);
+  void deactivate() {
+    _active = false;
+    _sync();
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _active = true;
+    _sync();
   }
 
   @override
   void dispose() {
-    _bump(-1);
+    _animation?.removeStatusListener(_onStatus);
+    _active = false;
+    _sync();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    // Re-checked on every rebuild (isCurrent changes rebuild us).
+    _sync();
+    return widget.child;
+  }
+}
+
+double get _capMaxWidth => uncappedContentCount.value > 0
+    ? uncappedContentMaxWidth
+    : desktopContentMaxWidth;
+
+/// Width cap that follows [uncappedContentCount] by relayout only: a change
+/// in the middle of a build (a route leaving) applies in the same frame.
+class _ContentCap extends SingleChildRenderObjectWidget {
+  const _ContentCap({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderContentCap();
+}
+
+class _RenderContentCap extends RenderConstrainedBox {
+  _RenderContentCap()
+      : super(additionalConstraints: BoxConstraints(maxWidth: _capMaxWidth));
+
+  void _update() =>
+      additionalConstraints = BoxConstraints(maxWidth: _capMaxWidth);
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    uncappedContentCount.addListener(_update);
+    _update();
+  }
+
+  @override
+  void detach() {
+    uncappedContentCount.removeListener(_update);
+    super.detach();
+  }
 }
 
 Widget capContentWidth(BuildContext context, Widget? child) {
   if (!isDesktopPlatform || child == null) return child ?? const SizedBox();
   return ColoredBox(
     color: const Color(0xFF111111),
-    child: Center(
-      child: ValueListenableBuilder<int>(
-        valueListenable: uncappedContentCount,
-        // Same widget structure either way: the Navigator keeps its state.
-        child: child,
-        builder: (_, count, child) => ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth:
-                count > 0 ? uncappedContentMaxWidth : desktopContentMaxWidth,
-          ),
-          child: child,
-        ),
-      ),
-    ),
+    child: Center(child: _ContentCap(child: child)),
   );
 }

@@ -13,12 +13,10 @@ import 'data/guided_catalog.dart';
 import 'guided_format.dart';
 import 'guided_player.dart';
 import 'guided_rig_provider.dart';
+import 'guided_shortcuts.dart';
 import 'guided_run_controller.dart';
 import 'models/guided_exercise.dart';
 import 'run_plan.dart';
-
-/// Tempo step of the ± buttons and keys.
-const int guidedBpmStep = 4;
 
 /// `Name · Difficulty · ~m:ss`: planned length at the default tempo, without
 /// the planner's extension for long explanations (same as the curation page).
@@ -180,7 +178,7 @@ class _GuidedPageState extends State<_GuidedPage> {
               IconButton.filledTonal(
                 key: const ValueKey('guided-bpm-down'),
                 tooltip: 'Slower',
-                onPressed: () => _bump(-guidedBpmStep),
+                onPressed: () => _bump(-guidedTempoStep),
                 icon: const Icon(Icons.remove),
               ),
               Expanded(
@@ -198,7 +196,7 @@ class _GuidedPageState extends State<_GuidedPage> {
               IconButton.filledTonal(
                 key: const ValueKey('guided-bpm-up'),
                 tooltip: 'Faster',
-                onPressed: () => _bump(guidedBpmStep),
+                onPressed: () => _bump(guidedTempoStep),
                 icon: const Icon(Icons.add),
               ),
             ],
@@ -304,7 +302,7 @@ class _GuidedPageState extends State<_GuidedPage> {
           ? CallbackShortcuts(
               bindings: practiceShortcuts(
                 toggle: () => unawaited(_toggle()),
-                bumpBpm: (d) => _bump(d.sign * guidedBpmStep),
+                bumpBpm: (d) => _bump(d.sign * guidedTempoStep),
                 leave: () {
                   if (_running) {
                     unawaited(_stop());

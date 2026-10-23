@@ -7,16 +7,23 @@ import 'package:drum_coach/features/guided/data/demo_exercise.dart';
 import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/data/guided_lookup.dart';
 import 'package:drum_coach/features/guided/guided_format.dart';
+import 'package:drum_coach/features/guided/guided_rig_provider.dart';
+import 'package:drum_coach/features/guided/guided_shortcuts.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
+import 'package:drum_coach/features/guided/screens/guided_play_screen.dart';
 import 'package:drum_coach/features/guided/screens/guided_preview_screen.dart';
 import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../fake_guided_player.dart';
 
 const _photo = 'assets/illustrations/practice/p07_rooftop_dusk_s5.jpg';
 
@@ -56,6 +63,42 @@ Future<void> _key(WidgetTester t, LogicalKeyboardKey k,
   await t.pumpAndSettle();
 }
 
+/// Preview with the real play screen behind Start (fake player).
+Future<GoRouter> _pumpWithPlay(WidgetTester t, FakeGuidedPlayer p) async {
+  debugDesktopOverride = true;
+  await t.binding.setSurfaceSize(const Size(1280, 800));
+  addTearDown(() => t.binding.setSurfaceSize(null));
+  final router = GoRouter(initialLocation: '/', routes: [
+    GoRoute(path: '/', builder: (_, __) => const Scaffold(body: Text('home'))),
+    GoRoute(
+      path: '/guided/:id',
+      builder: (_, s) => GuidedPreviewScreen(
+          id: s.pathParameters['id']!, photo: 'assets/none.jpg'),
+    ),
+    GoRoute(
+      path: '/guided/:id/play',
+      builder: (_, s) => GuidedPlayScreen.fromQuery(
+          s.pathParameters['id']!, s.uri.queryParameters,
+          photo: 'assets/none.jpg'),
+    ),
+  ]);
+  await t.pumpWidget(ProviderScope(
+    overrides: [
+      guidedRigProvider.overrideWith(
+          (ref) async => GuidedRig(player: p, clips: fakeClipManifest())),
+    ],
+    child: MaterialApp.router(routerConfig: router, builder: capContentWidth),
+  ));
+  router.push('/guided/${_kit.id}');
+  await t.pumpAndSettle();
+  return router;
+}
+
+bool _switch(WidgetTester t, String key) => t
+    .widget<Switch>(find.descendant(
+        of: find.byKey(Key(key)), matching: find.byType(Switch)))
+    .value;
+
 String _bpmText(WidgetTester t) {
   return '${t.widget<TempoRow>(find.byType(TempoRow)).bpm}';
 }
@@ -65,7 +108,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await SettingsService.init();
   });
-  tearDown(() => debugDesktopOverride = null);
+  tearDown(() {
+    debugDesktopOverride = null;
+    uncappedContentCount.value = 0;
+  });
 
   test('lookup resolves catalog and demos, null for unknown', () {
     expect(guidedExerciseById(_kit.id), same(_kit));
@@ -162,6 +208,72 @@ void main() {
         find.text('play:/guided/${_kit.id}/play'
             '?bpm=${_kit.minBpm + 4}&teacher=0&along=0'),
         findsOneWidget);
+  });
+
+  testWidgets('preview adopts tempo and switches changed during play',
+      (t) async {
+    final p = FakeGuidedPlayer();
+    await _pumpWithPlay(t, p);
+    final b = _kit.defaultBpm;
+    await _key(t, LogicalKeyboardKey.space);
+    expect(find.byType(GuidedPlayScreen), findsOneWidget);
+    expect(p.startedBpm, b);
+    expect(p.startedOptions!.teacher, isTrue);
+
+    // In play: teacher off, faster; Esc back to the preview.
+    await _key(t, LogicalKeyboardKey.keyT);
+    await _key(t, LogicalKeyboardKey.arrowUp);
+    await _key(t, LogicalKeyboardKey.escape);
+    expect(find.byType(GuidedPlayScreen), findsNothing);
+    expect(_bpmText(t), '${b + guidedTempoStep}');
+    expect(_switch(t, 'guided-teacher'), isFalse);
+    expect(_switch(t, 'guided-along'), isTrue);
+
+    // The next Start sends the new values, not the old ones.
+    await _key(t, LogicalKeyboardKey.space);
+    expect(p.startedBpm, b + guidedTempoStep);
+    expect(p.startedOptions!.teacher, isFalse);
+    expect(p.startedOptions!.playAlong, isTrue);
+
+    // System back (no Esc, no button) brings the values back too.
+    await _key(t, LogicalKeyboardKey.arrowUp);
+    await _key(t, LogicalKeyboardKey.keyP);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    expect(find.byType(GuidedPlayScreen), findsNothing);
+    expect(p.calls, contains('stop'));
+    expect(_bpmText(t), '${b + 2 * guidedTempoStep}');
+    expect(_switch(t, 'guided-along'), isFalse);
+  });
+
+  testWidgets('tempo step and duration use the shared helpers', (t) async {
+    await _pump(t, _kit.id, const Size(412, 915));
+    expect(t.widget<TempoRow>(find.byType(TempoRow)).step, guidedTempoStep);
+    await t.ensureVisible(find.byTooltip('Faster'));
+    await t.pumpAndSettle();
+    for (var i = 0; i < 5; i++) {
+      await t.tap(find.byTooltip('Faster'));
+      await t.pumpAndSettle();
+    }
+    final bpm = _kit.defaultBpm + 5 * guidedTempoStep;
+    expect(_bpmText(t), '$bpm');
+    expect(find.text(guidedDurationLabel(_kit, bpm: bpm)), findsOneWidget);
+    expect(guidedDurationLabel(_kit, bpm: _kit.defaultBpm),
+        guidedDurationLabel(_kit));
+  });
+
+  testWidgets('desktop key hint names +/- and stays on one line', (t) async {
+    await _pump(t, _kit.id, const Size(1280, 800), desktop: true);
+    final hint = find.byKey(const Key('guided-key-hint'));
+    expect(t.widget<Text>(hint).data, guidedPreviewKeyHint);
+    expect(guidedPreviewKeyHint, contains('±'));
+    final para = t.renderObject<RenderParagraph>(hint);
+    expect(para.didExceedMaxLines, isFalse);
+    expect(para.size.height, lessThan(2 * 11));
+    final start = t.getRect(find.byKey(const Key('guided-start')));
+    final r = t.getRect(hint);
+    expect(r.left, greaterThanOrEqualTo(start.left - 0.5));
+    expect(r.right, lessThanOrEqualTo(start.right + 0.5));
   });
 
   testWidgets('escape goes back', (t) async {

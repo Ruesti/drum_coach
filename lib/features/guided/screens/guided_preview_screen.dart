@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -15,15 +17,13 @@ import '../widgets/guided_backdrop.dart';
 import '../widgets/guided_layout.dart';
 import '../widgets/guided_line_view.dart';
 import '../widgets/guided_panel.dart';
+import 'guided_play_screen.dart' show GuidedPlayResult;
 
 /// The preview stays inside the 900 px desktop cap, so it never reaches
 /// the 1000 px of [guidedWide]: it switches to two columns from this width
 /// (the cap minus a little — desktop and tablet portrait get two columns,
 /// phones one).
 const double guidedPreviewTwoColumnMinWidth = 820;
-
-/// Tempo step of the +/- buttons and keys; Shift doubles it.
-const int guidedPreviewBpmStep = guidedTempoStep;
 
 /// `/guided/:id`: introduces one guided exercise — its sequence of sections
 /// with the explanations, the groove notes, tempo, Teacher / Play along —
@@ -70,13 +70,24 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
     }
   }
 
-  void _start() {
-    context.push('/guided/${_ex!.id}/play?bpm=$_bpm'
+  Future<void> _start() async {
+    final ex = _ex!;
+    final result = await context.push<GuidedPlayResult>(
+        '/guided/${ex.id}/play?bpm=$_bpm'
         '&teacher=${_teacher ? 1 : 0}&along=${_along ? 1 : 0}');
+    if (!mounted) return;
+    // Tempo and switches may have changed during play: take them over, so
+    // the next Start does not send the old values. The switches are saved
+    // settings, re-read as a fallback (system back without a result).
+    setState(() {
+      _teacher = result?.teacher ?? SettingsService.guidedTeacher;
+      _along = result?.along ?? SettingsService.guidedPlayAlong;
+      if (result != null) _bpm = result.bpm.clamp(ex.minBpm, ex.maxBpm);
+    });
   }
 
   Map<ShortcutActivator, VoidCallback> get _shortcuts => guidedShortcuts(
-        primary: _start,
+        primary: () => unawaited(_start()),
         bumpBpm: (d) => _setBpm(_bpm + d),
         toggleTeacher: () => _setTeacher(!_teacher),
         togglePlayAlong: () => _setAlong(!_along),
@@ -115,14 +126,9 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
     );
   }
 
-  String get _durationLabel {
-    final ex = _ex!;
-    return '~${guidedMmss(ex.barsAt(_bpm) * guidedBeatsPerBar * 60000 / _bpm)}';
-  }
-
   Widget _header(GuidedExercise ex, {required bool large}) => _Header(
         exercise: ex,
-        duration: _durationLabel,
+        duration: guidedDurationLabel(ex, bpm: _bpm),
         large: large,
         onBack: _back,
       );
@@ -177,7 +183,7 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
                             key: const Key('guided-start'),
                             icon: Icons.play_arrow_rounded,
                             label: 'Start',
-                            onPressed: _start),
+                            onPressed: () => unawaited(_start())),
                         if (isDesktopPlatform) ...[
                           const SizedBox(height: AppSpacing.md),
                           const _KeyHint(),
@@ -223,7 +229,7 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
               key: const Key('guided-start'),
               icon: Icons.play_arrow_rounded,
               label: 'Start',
-              onPressed: _start),
+              onPressed: () => unawaited(_start())),
         ),
       ],
     );
@@ -515,7 +521,7 @@ class _SettingsPanel extends StatelessWidget {
           TempoRow(
             bpm: bpm,
             onChanged: onBpm,
-            step: guidedPreviewBpmStep,
+            step: guidedTempoStep,
             min: exercise.minBpm,
             max: exercise.maxBpm,
           ),
@@ -546,12 +552,8 @@ class _KeyHint extends StatelessWidget {
   const _KeyHint();
 
   @override
-  Widget build(BuildContext context) => Text(
-        'Space start · ↑↓ tempo · T teacher · P play along · Esc back',
-        textAlign: TextAlign.center,
-        style:
-            PracticeTypography.label.copyWith(color: PracticeColors.textMuted),
-      );
+  Widget build(BuildContext context) =>
+      const GuidedKeyHint(guidedPreviewKeyHint);
 }
 
 class _NotFound extends StatelessWidget {

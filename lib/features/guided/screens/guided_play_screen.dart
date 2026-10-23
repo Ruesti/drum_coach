@@ -34,7 +34,7 @@ import '../widgets/guided_timeline_bar.dart';
 /// Desktop first: from [guidedWide] two columns (notes and banner left,
 /// timeline and controls right) over the full window ([UncappedContent]);
 /// narrower one column like the phone practice screen. Leaving (Back, Esc,
-/// Stop) stops the player.
+/// Stop) stops the player and pops with a [GuidedPlayResult].
 class GuidedPlayScreen extends ConsumerStatefulWidget {
   const GuidedPlayScreen({
     super.key,
@@ -76,15 +76,19 @@ class GuidedPlayScreen extends ConsumerStatefulWidget {
   ConsumerState<GuidedPlayScreen> createState() => _GuidedPlayScreenState();
 }
 
+/// What the play screen pops with: tempo and switches as they were when
+/// leaving, so the preview shows (and the next Start sends) those.
+typedef GuidedPlayResult = ({int bpm, bool teacher, bool along});
+
 class _GuidedPlayScreenState extends ConsumerState<GuidedPlayScreen> {
   late final GuidedExercise? _ex = guidedExerciseById(widget.id);
 
   // One photo for the whole visit (loading, playing, end view).
   late final String _photo = widget.photo ?? nextBackdrop();
 
-  void _leave() {
+  void _leave([GuidedPlayResult? result]) {
     if (context.canPop()) {
-      context.pop();
+      context.pop(result);
     } else {
       context.go('/library');
     }
@@ -93,10 +97,22 @@ class _GuidedPlayScreenState extends ConsumerState<GuidedPlayScreen> {
   @override
   Widget build(BuildContext context) {
     final ex = _ex;
-    Widget simple(Widget child) => Scaffold(
-          backgroundColor: PracticeColors.base,
-          body: GuidedBackdrop(playing: false, photo: _photo, child: child),
+    Widget simple(Widget child) {
+      Widget page = Scaffold(
+        backgroundColor: PracticeColors.base,
+        body: GuidedBackdrop(playing: false, photo: _photo, child: child),
+      );
+      if (isDesktopPlatform) {
+        page = CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.escape): () => _leave(),
+          },
+          child: Focus(autofocus: true, child: page),
         );
+      }
+      return page;
+    }
+
     final Widget screen;
     if (ex == null) {
       screen = simple(_Message(text: 'Exercise not found', onBack: _leave));
@@ -113,9 +129,25 @@ class _GuidedPlayScreenState extends ConsumerState<GuidedPlayScreen> {
               photo: _photo,
               onLeave: _leave,
             ),
-            loading: () => simple(const Center(
-                child:
-                    CircularProgressIndicator(color: PracticeColors.accent))),
+            loading: () => simple(Stack(
+              children: [
+                const Center(
+                    child: CircularProgressIndicator(
+                        color: PracticeColors.accent)),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    child: IconButton(
+                      key: const Key('guided-loading-back'),
+                      tooltip: 'Back',
+                      onPressed: _leave,
+                      icon: const Icon(Icons.arrow_back,
+                          color: PracticeColors.textPrimary),
+                    ),
+                  ),
+                ),
+              ],
+            )),
             error: (e, _) => simple(_Message(
                 text: 'Could not load the player: $e', onBack: _leave)),
           );
@@ -144,7 +176,7 @@ class _PlayPage extends StatefulWidget {
   final int? bpm;
   final RunOptions options;
   final String photo;
-  final VoidCallback onLeave;
+  final ValueChanged<GuidedPlayResult> onLeave;
 
   @override
   State<_PlayPage> createState() => _PlayPageState();
@@ -180,11 +212,14 @@ class _PlayPageState extends State<_PlayPage> {
 
   void _leave() {
     unawaited(_run.stop());
-    widget.onLeave();
+    widget.onLeave((
+      bpm: _run.bpm,
+      teacher: _run.options.teacher,
+      along: _run.options.playAlong,
+    ));
   }
 
   void _toggle() {
-    // After the end, Space does not start a new run (Again does).
     if (_run.finished) return;
     unawaited(_run.toggle());
   }
@@ -274,7 +309,6 @@ class _PlayPageState extends State<_PlayPage> {
 
   @override
   Widget build(BuildContext context) {
-    final playing = _run.running && !_run.showResume;
     Widget page = Scaffold(
       backgroundColor: PracticeColors.base,
       body: GuidedBackdrop(
@@ -293,22 +327,33 @@ class _PlayPageState extends State<_PlayPage> {
               )
             : LayoutBuilder(
                 builder: (context, c) =>
-                    guidedWide(c.maxWidth) ? _wide(playing) : _narrow(playing)),
+                    guidedWide(c.maxWidth) ? _wide() : _narrow()),
       ),
     );
     if (isDesktopPlatform) {
       page = CallbackShortcuts(
-        bindings: guidedShortcuts(
-          primary: _toggle,
-          bumpBpm: _run.bump,
-          toggleTeacher: () => _setTeacher(!_run.options.teacher),
-          togglePlayAlong: () => _setAlong(!_run.options.playAlong),
-          leave: _leave,
-        ),
+        // The end view only listens to Esc: tempo and switches belong to
+        // a run, and Space does not start a new one (Again does).
+        bindings: _run.finished
+            ? {const SingleActivator(LogicalKeyboardKey.escape): _leave}
+            : guidedShortcuts(
+                primary: _toggle,
+                bumpBpm: _run.bump,
+                toggleTeacher: () => _setTeacher(!_run.options.teacher),
+                togglePlayAlong: () => _setAlong(!_run.options.playAlong),
+                leave: _leave,
+              ),
         child: Focus(autofocus: true, child: page),
       );
     }
-    return page;
+    // System back leaves like the Back button: stop, pop with the result.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _leave();
+      },
+      child: page,
+    );
   }
 
   Widget _header({required bool large}) {
@@ -503,7 +548,7 @@ class _PlayPageState extends State<_PlayPage> {
         max: _ex.maxBpm,
       );
 
-  Widget _wide(bool playing) {
+  Widget _wide() {
     return Padding(
       key: const Key('guided-wide'),
       padding: const EdgeInsets.fromLTRB(
@@ -604,17 +649,7 @@ class _PlayPageState extends State<_PlayPage> {
                       _playButtons(),
                       if (isDesktopPlatform) ...[
                         const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          'Space pause · ↑↓ tempo · T teacher · '
-                          'P along · Esc stop',
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: PracticeTypography.label.copyWith(
-                              fontSize: 11,
-                              letterSpacing: 0.3,
-                              color: PracticeColors.textMuted),
-                        ),
+                        const GuidedKeyHint(guidedPlayKeyHint),
                       ],
                     ],
                   ),
@@ -627,7 +662,7 @@ class _PlayPageState extends State<_PlayPage> {
     );
   }
 
-  Widget _narrow(bool playing) {
+  Widget _narrow() {
     final b = _banner(large: false, lineMax: 200);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

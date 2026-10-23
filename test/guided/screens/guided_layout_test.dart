@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  tearDown(() => debugDesktopOverride = null);
+  tearDown(() {
+    debugDesktopOverride = null;
+    uncappedContentCount.value = 0;
+  });
 
   test('guidedWide boundary', () {
     expect(guidedWide(999), isFalse);
@@ -36,6 +39,60 @@ void main() {
     nav.currentState!.pop();
     await t.pumpAndSettle();
     expect(t.getSize(find.byKey(const Key('plain'))).width, 900);
+  });
+
+  testWidgets('uncapped content without a route counts while mounted',
+      (t) async {
+    debugDesktopOverride = true;
+    await t.binding.setSurfaceSize(const Size(1280, 800));
+    addTearDown(() => t.binding.setSurfaceSize(null));
+    Widget app(bool uncapped) => Directionality(
+          textDirection: TextDirection.ltr,
+          child: Builder(
+            builder: (c) => capContentWidth(
+                c,
+                uncapped
+                    ? const UncappedContent(
+                        child: SizedBox.expand(key: Key('box')))
+                    : const SizedBox.expand(key: Key('box'))),
+          ),
+        );
+    await t.pumpWidget(app(true));
+    expect(t.getSize(find.byKey(const Key('box'))).width, 1280);
+    expect(uncappedContentCount.value, 1);
+    await t.pumpWidget(app(false));
+    expect(t.getSize(find.byKey(const Key('box'))).width, 900);
+    expect(uncappedContentCount.value, 0);
+  });
+
+  testWidgets('a route pushed on top of uncapped content caps again',
+      (t) async {
+    debugDesktopOverride = true;
+    await t.binding.setSurfaceSize(const Size(1600, 900));
+    addTearDown(() => t.binding.setSurfaceSize(null));
+    final nav = GlobalKey<NavigatorState>();
+    await t.pumpWidget(MaterialApp(
+      navigatorKey: nav,
+      builder: capContentWidth,
+      home: const UncappedContent(child: SizedBox.expand(key: Key('wide'))),
+    ));
+    await t.pumpAndSettle();
+    expect(t.getSize(find.byKey(const Key('wide'))).width, 1440);
+    nav.currentState!.push(MaterialPageRoute<void>(
+        builder: (_) => const SizedBox.expand(key: Key('top'))));
+    await t.pump();
+    // Capped from the first frame of the push (the new route is still
+    // offstage in that frame).
+    expect(
+        t.getSize(find.byKey(const Key('top'), skipOffstage: false)).width,
+        900);
+    expect(t.getSize(find.byKey(const Key('wide'))).width, 900);
+    await t.pumpAndSettle();
+    expect(uncappedContentCount.value, 0);
+    nav.currentState!.pop();
+    await t.pumpAndSettle();
+    expect(t.getSize(find.byKey(const Key('wide'))).width, 1440);
+    expect(uncappedContentCount.value, 1);
   });
 
   testWidgets('backdrop scrim switches with playing', (t) async {

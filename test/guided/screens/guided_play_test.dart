@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:drum_coach/app/design_tokens.dart';
@@ -5,11 +6,14 @@ import 'package:drum_coach/app/platform_support.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/guided_rig_provider.dart';
+import 'package:drum_coach/features/guided/guided_shortcuts.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/run_clock.dart';
 import 'package:drum_coach/features/guided/screens/guided_play_screen.dart';
 import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
+import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,6 +57,8 @@ Future<GoRouter> _open(
   GuidedExercise? ex,
   String query = '?bpm=92&teacher=1&along=1',
   String photo = 'assets/none.jpg',
+  Future<GuidedRig> Function()? rig,
+  bool settle = true,
 }) async {
   debugDesktopOverride = desktop ? true : null;
   await t.binding.setSurfaceSize(size);
@@ -76,7 +82,10 @@ Future<GoRouter> _open(
   await t.pumpWidget(ProviderScope(
     overrides: [
       guidedRigProvider.overrideWith(
-          (ref) async => GuidedRig(player: p, clips: fakeClipManifest())),
+          (ref) => rig != null
+              ? rig()
+              : Future.value(
+                  GuidedRig(player: p, clips: fakeClipManifest()))),
     ],
     child: RepaintBoundary(
       key: const Key('shot'),
@@ -90,7 +99,12 @@ Future<GoRouter> _open(
   router.push('/guided/$id');
   await t.pumpAndSettle();
   router.push('/guided/$id/play$query');
-  await t.pumpAndSettle();
+  if (settle) {
+    await t.pumpAndSettle();
+  } else {
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+  }
   return router;
 }
 
@@ -117,7 +131,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await SettingsService.init();
   });
-  tearDown(() => debugDesktopOverride = null);
+  tearDown(() {
+    debugDesktopOverride = null;
+    uncappedContentCount.value = 0;
+  });
 
   testWidgets('starts with bpm and options from the route', (t) async {
     final p = FakeGuidedPlayer();
@@ -300,6 +317,123 @@ void main() {
     await t.tap(find.text('Back to library'));
     await t.pumpAndSettle();
     expect(find.text('library'), findsOneWidget);
+  });
+
+  testWidgets('end view ignores every key but Esc', (t) async {
+    final p = FakeGuidedPlayer();
+    await _open(t, p, size: const Size(1280, 720), desktop: true);
+    p.finishedCtrl.add(null);
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('guided-end')), findsOneWidget);
+    final calls = [...p.calls];
+    for (final k in [
+      LogicalKeyboardKey.space,
+      LogicalKeyboardKey.arrowUp,
+      LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.minus,
+      LogicalKeyboardKey.equal,
+      LogicalKeyboardKey.keyT,
+      LogicalKeyboardKey.keyP,
+    ]) {
+      await _key(t, k);
+    }
+    await _key(t, LogicalKeyboardKey.arrowUp, shift: true);
+    expect(p.calls, calls);
+    expect(p.setBpmCalls, isEmpty);
+    expect(p.optionCalls, isEmpty);
+    expect(SettingsService.guidedTeacher, isTrue);
+    expect(SettingsService.guidedPlayAlong, isTrue);
+    expect(find.text('92'), findsOneWidget);
+    await _key(t, LogicalKeyboardKey.escape);
+    expect(find.text('preview'), findsOneWidget);
+  });
+
+  testWidgets('loading view has Back and Esc', (t) async {
+    final gate = Completer<GuidedRig>();
+    final p = FakeGuidedPlayer();
+    await _open(t, p, rig: () => gate.future, settle: false);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await t.tap(find.byKey(const Key('guided-loading-back')));
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    expect(find.byType(GuidedPlayScreen), findsNothing);
+    expect(find.text('preview'), findsOneWidget);
+    expect(p.calls, isEmpty);
+
+    // Desktop: Esc while loading.
+    await _open(t, p,
+        size: const Size(1280, 720),
+        desktop: true,
+        rig: () => Completer<GuidedRig>().future,
+        settle: false);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await t.sendKeyEvent(LogicalKeyboardKey.escape);
+    await t.pump();
+    await t.pump(const Duration(seconds: 1));
+    expect(find.byType(GuidedPlayScreen), findsNothing);
+    expect(find.text('preview'), findsOneWidget);
+  });
+
+  testWidgets('tempo row and key hint', (t) async {
+    final p = FakeGuidedPlayer();
+    await _open(t, p, size: const Size(1280, 720), desktop: true);
+    expect(t.widget<TempoRow>(find.byType(TempoRow)).step, guidedTempoStep);
+    final hint = find.byKey(const Key('guided-key-hint'));
+    expect(t.widget<Text>(hint).data, guidedPlayKeyHint);
+    expect(guidedPlayKeyHint, contains('±'));
+    final para = t.renderObject<RenderParagraph>(hint);
+    expect(para.didExceedMaxLines, isFalse);
+    expect(para.size.height, lessThan(2 * 11));
+    final stop = t.getRect(find.byKey(const Key('guided-play-stop')));
+    expect(t.getRect(hint).right, lessThanOrEqualTo(stop.right + 0.5));
+  });
+
+  group('content cap at 1600 wide', () {
+    Size sizeOf(WidgetTester t, String text) => t.getSize(find
+        .ancestor(of: find.text(text), matching: find.byType(Scaffold))
+        .first);
+
+    testWidgets('play screen is 1440 wide', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1600, 900), desktop: true);
+      expect(t.getSize(find.byType(GuidedPlayScreen)).width, 1440);
+      expect(find.byKey(const Key('guided-wide')), findsOneWidget);
+    });
+
+    testWidgets('cap returns to 900 on the first frame of the pop',
+        (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1600, 900), desktop: true);
+      expect(t.getSize(find.byType(GuidedPlayScreen)).width, 1440);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pump();
+      // Pop animation running: both pages there, already capped.
+      expect(find.byType(GuidedPlayScreen), findsOneWidget);
+      expect(sizeOf(t, 'preview').width, 900);
+      expect(t.getSize(find.byType(GuidedPlayScreen)).width, 900);
+      await t.pumpAndSettle();
+      expect(sizeOf(t, 'preview').width, 900);
+      expect(uncappedContentCount.value, 0);
+    });
+
+    testWidgets('library is 900 after Back to library', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1600, 900), desktop: true);
+      p.finishedCtrl.add(null);
+      await t.pumpAndSettle();
+      await t.tap(find.text('Back to library'));
+      // The first frame that shows the library is already capped.
+      var frames = 0;
+      while (find.text('library').evaluate().isEmpty) {
+        await t.pump(const Duration(milliseconds: 16));
+        expect(++frames, lessThan(10));
+      }
+      expect(sizeOf(t, 'library').width, 900);
+      await t.pumpAndSettle();
+      expect(find.byType(GuidedPlayScreen), findsNothing);
+      expect(sizeOf(t, 'library').width, 900);
+      expect(uncappedContentCount.value, 0);
+    });
   });
 
   testWidgets('pause, resume and a frozen run', (t) async {

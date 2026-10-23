@@ -6,7 +6,9 @@ String guidedMmss(double ms) {
   return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
 }
 
-/// `~m:ss`: planned length at the default tempo, without the planner's
-/// extension for long explanations.
-String guidedDurationLabel(GuidedExercise ex) =>
-    '~${guidedMmss(ex.barsAt(ex.defaultBpm) * guidedBeatsPerBar * 60000 / ex.defaultBpm)}';
+/// `~m:ss`: planned length at [bpm] (default: the exercise's default
+/// tempo), without the planner's extension for long explanations.
+String guidedDurationLabel(GuidedExercise ex, {int? bpm}) {
+  final b = bpm ?? ex.defaultBpm;
+  return '~${guidedMmss(ex.barsAt(b) * guidedBeatsPerBar * 60000 / b)}';
+}

@@ -31,7 +31,10 @@ Future<void> openGuided(WidgetTester tester) async {
 }
 
 void main() {
-  tearDown(() => debugDesktopOverride = null);
+  tearDown(() {
+    debugDesktopOverride = null;
+    uncappedContentCount.value = 0;
+  });
 
   testWidgets('toggle shows guided list', (tester) async {
     await pumpLibrary(tester, const Size(412, 900));
