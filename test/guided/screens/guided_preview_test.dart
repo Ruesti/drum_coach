@@ -16,7 +16,6 @@ import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
 import 'package:drum_coach/features/practice/widgets/line_view.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:drum_coach/features/guided/widgets/guided_panel.dart';
-import 'package:drum_coach/features/lessons/models/pattern_playback.dart';
 import 'package:drum_coach/shared/widgets/kit_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
