@@ -48,15 +48,32 @@ BarJob barJobFor(RunBar bar,
   return BarJob(bpm: bar.bpm, tickVolumes: bar.tickVolumes, hits: hits);
 }
 
-/// Loud-sample threshold and track gain per sound: pattern like the loop's
-/// pattern voice (accent ≥ 1.2), kick/hi-hat at the loop's backing level.
+/// Loud-sample threshold and track gain per sound. Pattern (pad lines) as
+/// the loop's pattern voice. Kit voices: kick and hi-hat come on the band
+/// scale (normal 0.7, accent 1.0), the rest on the pattern scale (normal
+/// 0.85, accent 2.0, ghost 0.25) — the gains even that out into one kit
+/// mix: kick and snare forward, hi-hat back, cymbals not on top (balance
+/// measured with tool/render_guided_probe_test.dart, Optik-Runde 1). The snare
+/// plays its ghost recording ([_softOf]) below 0.5, i.e. on ghost notes.
 const _voiceSpec = <RunSound, ({double loudFrom, double gain})>{
   RunSound.pattern: (loudFrom: 1.2, gain: 1.0),
-  RunSound.kick: (loudFrom: 1.0, gain: 0.7),
-  RunSound.hihatLoud: (loudFrom: 0.9, gain: 0.7),
-  RunSound.hihatSoft: (loudFrom: 0.9, gain: 0.7),
+  RunSound.kick: (loudFrom: 1.0, gain: 1.2),
+  RunSound.snare: (loudFrom: 0.5, gain: 0.5),
+  RunSound.rim: (loudFrom: 1.0, gain: 0.5),
+  RunSound.hihatClosed: (loudFrom: 1.0, gain: 0.7),
+  RunSound.hihatOpen: (loudFrom: 1.0, gain: 0.5),
+  RunSound.hihatPedal: (loudFrom: 1.0, gain: 0.5),
+  RunSound.tomHigh: (loudFrom: 1.0, gain: 0.45),
+  RunSound.tomLow: (loudFrom: 1.0, gain: 0.45),
+  RunSound.tomFloor: (loudFrom: 1.0, gain: 0.45),
+  RunSound.crash: (loudFrom: 1.0, gain: 0.9),
+  RunSound.ride: (loudFrom: 1.0, gain: 0.6),
+  RunSound.rideBell: (loudFrom: 1.0, gain: 0.65),
   RunSound.click: (loudFrom: 1.0, gain: 1.0),
 };
+
+/// The sample a sound plays below its `loudFrom` when it is not its own.
+const _softOf = <RunSound, RunSound>{RunSound.snare: RunSound.snareGhost};
 
 /// Mixes [job] with [renderer] (carry kept across calls). Sounds without
 /// samples in [sounds] stay silent.
@@ -67,10 +84,11 @@ RenderedBar renderBarJob(
     final s = sounds[sound];
     final spec = _voiceSpec[sound];
     if (s == null || s.isEmpty || spec == null) return;
+    final soft = sounds[_softOf[sound]];
     voices.add(LoopVoice(
       tickVolumes: vols,
       loudSamples: s,
-      softSamples: s,
+      softSamples: soft == null || soft.isEmpty ? s : soft,
       loudFrom: spec.loudFrom,
       gain: spec.gain,
     ));

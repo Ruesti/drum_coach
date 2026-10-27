@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:drum_coach/features/guided/bar_render_backend.dart';
 import 'package:drum_coach/features/guided/bar_renderer.dart';
+import 'package:drum_coach/features/guided/run_plan.dart';
 import 'package:drum_coach/features/metronome/click_loop_renderer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -139,5 +141,41 @@ void main() {
       SampleHit(tick: 0, samples: List<double>.filled(3 * _sr, 3))
     ]);
     expect(r.flush().every((x) => x.abs() <= 0.98 + 1e-6), isTrue);
+  });
+
+  test('snare: ghost strokes use the ghost recording, others the accent one',
+      () {
+    final vols = List<double>.filled(96, 0.0)
+      ..[0] = 2.0 // accent
+      ..[24] = 0.85 // normal
+      ..[48] = 0.25; // ghost
+    final pcm = renderBarJob(
+      BarRenderer(),
+      {
+        RunSound.snare: [0.5],
+        RunSound.snareGhost: [-0.5],
+      },
+      BarJob(bpm: 120, tickVolumes: {RunSound.snare: vols}),
+    ).pcm;
+    int at(int tick) => (tick * 60 / 120 / 24 * _sr).round();
+    expect(pcm[at(0)], greaterThan(0));
+    expect(pcm[at(24)], greaterThan(0));
+    expect(pcm[at(48)], lessThan(0));
+  });
+
+  test('every playable RunSound has a mix spec', () {
+    for (final s in RunSound.values) {
+      if (s == RunSound.snareGhost) continue; // soft sample of the snare only
+      final pcm = renderBarJob(
+        BarRenderer(),
+        {
+          s: [0.5]
+        },
+        BarJob(
+            bpm: 120,
+            tickVolumes: {s: List<double>.filled(96, 0.0)..[0] = 1.0}),
+      ).pcm;
+      expect(pcm[0], isNot(0), reason: '$s is silent');
+    }
   });
 }

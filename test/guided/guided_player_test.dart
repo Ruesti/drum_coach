@@ -131,8 +131,8 @@ Future<VoiceClip> _silentClip(String id) async =>
 final _drums = <RunSound, List<double>>{
   RunSound.pattern: List.filled(800, 0.3),
   RunSound.kick: List.filled(800, 0.3),
-  RunSound.hihatLoud: List.filled(400, 0.2),
-  RunSound.hihatSoft: List.filled(400, 0.1),
+  RunSound.hihatClosed: List.filled(400, 0.2),
+  RunSound.snare: List.filled(400, 0.1),
   RunSound.click: List.filled(300, 0.4),
   RunSound.crash: const [],
 };

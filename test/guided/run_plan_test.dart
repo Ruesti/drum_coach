@@ -1,4 +1,5 @@
 import 'package:drum_coach/features/coaching/midi/kit_instrument.dart';
+import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/models/voice_clip.dart';
 import 'package:drum_coach/features/guided/run_plan.dart';
@@ -395,14 +396,136 @@ void main() {
     );
     final b = buildRun(ex, bpm: 100, options: on, clips: _clips())[1];
     final v = b.tickVolumes;
+    // Kick and hi-hat on the band scale (kitBandVolume), the snare on the
+    // pattern scale (defaultBeatVolume) — same values as before, each on
+    // its own recording now; nothing plays the pad snare any more.
     expect(v[RunSound.kick]![0], 0.7);
     expect(v[RunSound.kick]![12], 0);
-    expect(v[RunSound.hihatLoud]![0], 1.0);
-    expect(v[RunSound.hihatLoud]![12], 0);
-    expect(v[RunSound.hihatSoft]![12], 0.7);
-    expect(v[RunSound.hihatSoft]![0], 0);
-    expect(v[RunSound.pattern]![24], 0.85); // snare in the pattern sound
-    expect(v[RunSound.pattern]![0], 0); // kick/hi-hat come from samples
+    expect(v[RunSound.hihatClosed]![0], 1.0);
+    expect(v[RunSound.hihatClosed]![12], 0.7);
+    expect(v[RunSound.snare]![24], 0.85);
+    expect(v[RunSound.snare]![0], 0);
+    expect(v.containsKey(RunSound.pattern), isFalse);
+  });
+
+  group('kit sounds per instrument (Optik-Runde 1, Task 3)', () {
+    ClipManifest clipsFor(GuidedExercise ex) => ClipManifest.fromJson({
+          'clips': [
+            for (final s in ex.sections) ...[
+              if (s.speechClipId != null) {'id': s.speechClipId, 'ms': 3000},
+              if (s.afterClipId != null) {'id': s.afterClipId, 'ms': 400},
+            ],
+            for (final id in [...countdownClipIds, ...countInClipIds])
+              {'id': id, 'ms': 400},
+          ]
+        });
+
+    test('kit crash voice maps to RunSound.crash, not pattern', () {
+      final ex =
+          guidedCatalog.firstWhere((e) => e.id == 'guided_kit_backbeat_walk');
+      final variations = [
+        for (var i = 0; i < ex.sections.length; i++)
+          if (ex.sections[i].kind == SectionKind.variation) i
+      ];
+      final v3 = variations[2];
+      expect(
+          ex.sections[v3].line.voices
+              .any((v) => v.instrument == KitInstrument.crash1),
+          isTrue);
+      final bars =
+          buildRun(ex, bpm: ex.defaultBpm, options: on, clips: clipsFor(ex))
+              .where((b) => b.sectionIndex == v3)
+              .toList();
+      expect(bars, isNotEmpty);
+      expect(
+          bars.any((b) => (b.tickVolumes[RunSound.crash]?[0] ?? 0) > 0), isTrue,
+          reason: 'crash on one in V3');
+      for (final b in bars) {
+        expect(b.tickVolumes.containsKey(RunSound.pattern), isFalse,
+            reason: 'bar ${b.barInSection} plays the pad snare');
+      }
+    });
+
+    test('every KitInstrument used in the catalog has its own sound', () {
+      final used = <KitInstrument>{
+        for (final ex in guidedCatalog)
+          for (final s in ex.sections)
+            if (s.line.isKit)
+              for (final v in s.line.voices) v.instrument,
+      };
+      expect(used, contains(KitInstrument.crash1));
+      final sounds = {for (final i in used) i: runSoundOf(i)};
+      for (final e in sounds.entries) {
+        expect(e.value, isNot(RunSound.pattern), reason: '${e.key}');
+        expect(e.value, isNot(RunSound.click), reason: '${e.key}');
+        if (e.key != KitInstrument.snare) {
+          expect(e.value, isNot(RunSound.snare), reason: '${e.key}');
+        }
+      }
+      // one sound per instrument: no two catalog instruments share one
+      expect(sounds.values.toSet().length, used.length, reason: '$sounds');
+      // every kit section's playing bars only use those sounds (+ click)
+      for (final ex in guidedCatalog) {
+        if (ex.package != GuidedPackage.kit) continue;
+        for (final b in buildRun(ex,
+            bpm: ex.defaultBpm, options: on, clips: clipsFor(ex))) {
+          expect(b.tickVolumes.containsKey(RunSound.pattern), isFalse,
+              reason: '${ex.id} bar ${b.globalBar}');
+        }
+      }
+    });
+
+    test('cymbals never map to the snare', () {
+      for (final i in [
+        KitInstrument.crash1,
+        KitInstrument.crash2,
+        KitInstrument.china,
+        KitInstrument.splash,
+        KitInstrument.ride,
+        KitInstrument.rideBell,
+        KitInstrument.hiHatClosed,
+        KitInstrument.hiHatOpen,
+        KitInstrument.hiHatPedal,
+      ]) {
+        expect(runSoundOf(i), isNot(anyOf(RunSound.snare, RunSound.pattern)),
+            reason: '$i');
+      }
+    });
+
+    test('pad lines still use the snare', () {
+      for (final ex in [
+        _fixture(),
+        ...guidedCatalog.where((e) => e.package == GuidedPackage.pad),
+      ]) {
+        final bars = buildRun(ex,
+            bpm: ex.defaultBpm,
+            options: on,
+            clips: ex.id == 'x' ? _clips() : clipsFor(ex));
+        var played = false;
+        for (final b in bars) {
+          expect(
+              b.tickVolumes.keys
+                  .toSet()
+                  .difference({RunSound.pattern, RunSound.click}),
+              isEmpty,
+              reason: '${ex.id} bar ${b.globalBar}');
+          if (b.tickVolumes.containsKey(RunSound.pattern)) played = true;
+        }
+        expect(played, isTrue, reason: ex.id);
+      }
+      expect(runSoundOf(KitInstrument.pad), RunSound.pattern);
+    });
+
+    test('play-along off is click only for kit lines too', () {
+      final ex =
+          guidedCatalog.firstWhere((e) => e.id == 'guided_kit_backbeat_walk');
+      for (final b in buildRun(ex,
+          bpm: ex.defaultBpm,
+          options: const RunOptions(playAlong: false),
+          clips: clipsFor(ex))) {
+        expect(b.tickVolumes.keys.toSet(), {RunSound.click});
+      }
+    });
   });
 
   List<int> sectionSeq(Iterable<RunBar> bars) {

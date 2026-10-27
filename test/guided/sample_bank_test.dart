@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:drum_coach/features/guided/run_plan.dart';
 import 'package:drum_coach/features/guided/sample_bank.dart';
 import 'package:drum_coach/features/metronome/metronome_engine.dart';
+import 'package:drum_coach/features/metronome/snare_sample.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 double _peak(List<double> s) => s.fold(0.0, (m, v) => math.max(m, v.abs()));
@@ -35,12 +36,38 @@ void main() {
     expect(bank.of(RunSound.crash), crashFallbackSamples());
   });
 
-  test('decoded snare/crash replace the fallbacks', () {
+  test('decoded recordings replace the fallbacks', () {
     final snare = [0.1, 0.2, 0.3];
     final crash = [0.4, 0.5];
-    final bank = SampleBank(snare: snare, crash: crash);
+    final bank = SampleBank(
+        recordings: {RunSound.pattern: snare, RunSound.crash: crash});
     expect(bank.of(RunSound.pattern), snare);
     expect(bank.of(RunSound.crash), crash);
+  });
+
+  test('a missing recording falls back to the closest real instrument', () {
+    final kit = [0.1, 0.2];
+    final ride = [0.3, 0.4];
+    final closed = [0.5, 0.6];
+    final tom = [0.7, 0.8];
+    final bank = SampleBank(recordings: {
+      RunSound.snare: kit,
+      RunSound.ride: ride,
+      RunSound.hihatClosed: closed,
+      RunSound.tomLow: tom,
+    });
+    expect(bank.of(RunSound.rideBell), ride);
+    expect(bank.of(RunSound.crash), ride); // never the snare for cymbals
+    expect(bank.of(RunSound.hihatPedal), closed);
+    expect(bank.of(RunSound.hihatOpen), closed);
+    expect(bank.of(RunSound.snareGhost), kit);
+    expect(bank.of(RunSound.rim), kit);
+    expect(bank.of(RunSound.tomHigh), tom);
+    expect(bank.of(RunSound.tomFloor), tom);
+    // without any cymbal recording: the synthetic crash, not the snare
+    final bare = SampleBank(recordings: {RunSound.snare: kit});
+    expect(bare.of(RunSound.ride), crashFallbackSamples());
+    expect(bare.of(RunSound.rideBell), crashFallbackSamples());
   });
 
   test('toSoundMap covers every RunSound for GuidedPlayer', () {
@@ -67,18 +94,74 @@ void main() {
     final bank = await SampleBank.load();
     final snare = bank.of(RunSound.pattern);
     final crash = bank.of(RunSound.crash);
-    // Not the synthetic fallbacks: the recordings are ~0.67 s and ~2.4 s.
+    // Not the synthetic fallbacks: the pad snare is ~0.67 s, the crash 2.5 s.
     expect(snare.length, greaterThan(44100 * 0.6));
     expect(crash.length, greaterThan(44100 * 2.3));
     expect(onsetIndex(snare), lessThan(44));
     expect(onsetIndex(crash), lessThan(44));
   });
 
-  test('assets are credited in CREDITS.md', () {
+  test('every sample loads and starts within 1 ms', () async {
+    final bank = await SampleBank.load();
+    expect(
+        SampleBank.assets.keys,
+        containsAll([
+          RunSound.pattern,
+          RunSound.kick,
+          RunSound.snare,
+          RunSound.snareGhost,
+          RunSound.hihatClosed,
+          RunSound.hihatOpen,
+          RunSound.tomHigh,
+          RunSound.tomLow,
+          RunSound.tomFloor,
+          RunSound.crash,
+          RunSound.ride,
+        ]));
+    SampleBank.assets.forEach((sound, path) {
+      final s = decodeMonoWav16(File(path).readAsBytesSync());
+      expect(s, isNotEmpty, reason: path);
+      expect(onsetIndex(s), lessThan(44), reason: '$path onset');
+      expect(_peak(s), inInclusiveRange(0.5, 1.0), reason: '$path peak');
+      expect(s.length, lessThanOrEqualTo(44100 * 2.5 + 1), reason: path);
+      // load() hands out exactly the recording, not a fallback
+      expect(bank.of(sound), s, reason: '$sound from $path');
+    });
+  });
+
+  test('each kit sound of the catalog is its own recording', () async {
+    final bank = await SampleBank.load();
+    final sounds = [
+      RunSound.kick,
+      RunSound.snare,
+      RunSound.hihatClosed,
+      RunSound.hihatOpen,
+      RunSound.tomHigh,
+      RunSound.tomFloor,
+      RunSound.crash,
+    ];
+    for (var i = 0; i < sounds.length; i++) {
+      for (var j = i + 1; j < sounds.length; j++) {
+        expect(identical(bank.of(sounds[i]), bank.of(sounds[j])), isFalse,
+            reason: '${sounds[i]} == ${sounds[j]}');
+      }
+      expect(bank.of(sounds[i]), isNot(bank.of(RunSound.pattern)),
+          reason: '${sounds[i]} plays the pad snare');
+    }
+  });
+
+  test('CREDITS lists every new file', () {
     final credits = File('assets/audio/CREDITS.md').readAsStringSync();
-    expect(credits, contains('snare.wav'));
-    if (File('assets/audio/crash.wav').existsSync()) {
-      expect(credits, contains('crash.wav'));
+    final wavs = Directory('assets/audio')
+        .listSync()
+        .whereType<File>()
+        .map((f) => f.uri.pathSegments.last)
+        .where((n) => n.endsWith('.wav'));
+    for (final n in {
+      ...wavs,
+      ...SampleBank.assets.values.map((p) => p.split('/').last)
+    }) {
+      expect(credits, contains('`$n`'), reason: n);
     }
   });
 }

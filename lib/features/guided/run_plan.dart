@@ -1,16 +1,64 @@
 import 'dart:math' as math;
 
 import '../../shared/widgets/kit_layout.dart';
+import '../coaching/midi/kit_instrument.dart';
 import '../lessons/models/pattern_playback.dart';
 import '../lessons/models/rudiment.dart';
-import '../metronome/loop_voices.dart';
 import '../practice/kit_backing.dart';
 import 'models/guided_exercise.dart';
 import 'models/voice_clip.dart';
 
-/// What a bar sounds; the player resolves each to PCM. [crash] is played
-/// for a [CrashEvent] (it is not part of [RunBar.tickVolumes]).
-enum RunSound { pattern, kick, hihatLoud, hihatSoft, click, crash }
+/// What a bar sounds; the player resolves each to PCM (one recording per
+/// kit instrument, Optik-Runde 1: "Crash hört sich an wie snare").
+///
+/// - [pattern]: a pad line — the pad snare recording.
+/// - kit voices: see [runSoundOf]. [snareGhost] never appears in
+///   [RunBar.tickVolumes]: it is the soft sample the renderer uses for
+///   ghost strokes of [snare].
+/// - [crash] also plays for a [CrashEvent] (start of the first groove and
+///   of the ending).
+/// - [click]: count-in, countdown and the play-along-off quarter click.
+enum RunSound {
+  pattern,
+  kick,
+  snare,
+  snareGhost,
+  rim,
+  hihatClosed,
+  hihatOpen,
+  hihatPedal,
+  tomHigh,
+  tomLow,
+  tomFloor,
+  crash,
+  ride,
+  rideBell,
+  click,
+}
+
+/// The sound a kit voice plays. Toms: the high rack tom is [RunSound.tomHigh],
+/// the low rack tom [RunSound.tomLow], both floor toms [RunSound.tomFloor];
+/// every crash-like cymbal (crash 1/2, china, splash) is [RunSound.crash].
+/// The microphone pad (and an unknown note) plays the pad snare.
+RunSound runSoundOf(KitInstrument i) => switch (i) {
+      KitInstrument.kick => RunSound.kick,
+      KitInstrument.snare => RunSound.snare,
+      KitInstrument.snareRim => RunSound.rim,
+      KitInstrument.hiHatClosed => RunSound.hihatClosed,
+      KitInstrument.hiHatOpen => RunSound.hihatOpen,
+      KitInstrument.hiHatPedal => RunSound.hihatPedal,
+      KitInstrument.tom1 => RunSound.tomHigh,
+      KitInstrument.tom2 => RunSound.tomLow,
+      KitInstrument.floorTom1 || KitInstrument.floorTom2 => RunSound.tomFloor,
+      KitInstrument.crash1 ||
+      KitInstrument.crash2 ||
+      KitInstrument.china ||
+      KitInstrument.splash =>
+        RunSound.crash,
+      KitInstrument.ride => RunSound.ride,
+      KitInstrument.rideBell => RunSound.rideBell,
+      KitInstrument.pad || KitInstrument.unknown => RunSound.pattern,
+    };
 
 /// Something placed on a tick of one bar (tick relative to the bar start).
 sealed class RunEvent {
@@ -113,9 +161,6 @@ const double explanationGapMs = 250;
 
 const double _clickVolume = 1.0;
 const double _accentClickVolume = 1.5;
-
-/// Hi-hat ticks from this volume use the loud sample (same as the loop).
-const double _hihatLoudFrom = 0.9;
 
 /// Plans the run at [bpm]. Without [from] it starts at the count-in
 /// (global bar 0); with [from] it returns the sections after the cursor's
@@ -286,31 +331,28 @@ RunBar _countInBar(int bpm, RunOptions options, {required int step}) {
 
 /// A line's sounds over its whole length, sliced bar by bar (a line of
 /// several bars repeats; extra bars of an extended groove repeat it too).
-/// Volumes come from the same helpers as the practice screen.
+/// Volumes come from the same helpers as the practice screen, per voice:
+/// kick and hi-hat from [kitBackingTracks] (band scale, an open hi-hat
+/// always full), every other kit voice from [buildVoicesPlayback] (pattern
+/// scale, as [kitPatternSound]). Voices that share a sound
+/// (both floor toms) mix by their loudest tick, as `buildVoicesPlayback`.
 class _LineSounds {
   _LineSounds(ExerciseLine line, NoteGrid grid) {
-    if (line.beats.isEmpty) return;
+    if (line.beats.isEmpty && !line.isKit) return;
     if (line.isKit) {
-      final kick = <List<double>>[];
-      final hihat = <List<double>>[];
-      for (final t in kitBackingTracks(line.voices, grid)) {
-        (t.sound == KitSound.kick ? kick : hihat).add(t.tickVolumes);
-      }
-      final hh = _maxOf(hihat);
-      _full[RunSound.pattern] = kitPatternSound(line.voices, grid);
-      if (kick.isNotEmpty) _full[RunSound.kick] = _maxOf(kick)!;
-      if (hh != null) {
-        _full[RunSound.hihatLoud] = [
-          for (final v in hh) v >= _hihatLoudFrom ? v : 0.0
-        ];
-        _full[RunSound.hihatSoft] = [
-          for (final v in hh) v < _hihatLoudFrom ? v : 0.0
-        ];
+      for (final v in line.voices) {
+        final sound = runSoundOf(v.instrument);
+        final vols = kitSoundOf(v.instrument) != null
+            ? kitBackingTracks([v], grid).single.tickVolumes
+            : buildVoicesPlayback([v], grid).tickVolumes;
+        final have = _full[sound];
+        _full[sound] = have == null ? vols : _maxOf([have, vols])!;
       }
     } else {
       _full[RunSound.pattern] =
           buildPatternPlayback(line.beats, grid).tickVolumes;
     }
+    if (_full.isEmpty) return;
     _bars = (_full.values.first.length / runTicksPerBar).floor();
   }
 
