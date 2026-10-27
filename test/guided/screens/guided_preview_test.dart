@@ -13,7 +13,11 @@ import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/screens/guided_play_screen.dart';
 import 'package:drum_coach/features/guided/screens/guided_preview_screen.dart';
 import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
+import 'package:drum_coach/features/practice/widgets/line_view.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
+import 'package:drum_coach/features/guided/widgets/guided_panel.dart';
+import 'package:drum_coach/features/lessons/models/pattern_playback.dart';
+import 'package:drum_coach/shared/widgets/kit_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -142,8 +146,8 @@ void main() {
       'preview shows one staff per section kind (groove + each variation)',
       (t) async {
     await _pump(t, _kit.id, const Size(1280, 800), desktop: true);
-    // Off-screen cards are built lazily by nothing: Column in a scroll view
-    // builds all of them.
+    // The cards sit in a Column inside a scroll view, so even off-screen
+    // cards are built (hence skipOffstage: false).
     expect(find.byType(GuidedLineView, skipOffstage: false),
         findsNWidgets(1 + _kit.variationCount));
     expect(
@@ -169,8 +173,7 @@ void main() {
     expect(find.text('SEQUENCE'), findsNothing);
   });
 
-  testWidgets('4 variations and 2-bar lines fit and scroll at 1280x720 desktop',
-      (t) async {
+  testWidgets('4 variations fit and scroll at 1280x720 desktop', (t) async {
     final ex = guidedCatalog.firstWhere((e) => e.variationCount >= 4);
     await _pump(t, ex.id, const Size(1280, 720), desktop: true);
     expect(t.takeException(), isNull);
@@ -185,6 +188,62 @@ void main() {
             .first);
     expect(t.takeException(), isNull);
     expect(last.hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('2-bar lines get a fully visible, unclipped card', (t) async {
+    final cases = {
+      'guided_kit_backbeat_walk': 3,
+      'guided_pad_fives_and_sixes': 2,
+    };
+    for (final e in cases.entries) {
+      final ex = guidedExerciseById(e.key)!;
+      var v = 0;
+      final sec = ex.sections
+          .firstWhere((s) => s.kind == SectionKind.variation && ++v == e.value);
+      final lineBars = ticksOf(sec.line.beats, ex.gridUnit) ~/
+          (guidedBeatsPerBar * kitTicksPerQuarter);
+      expect(lineBars, 2, reason: '${e.key} V${e.value} is a 2-bar line');
+      for (final (size, desktop) in [
+        (const Size(1280, 720), true),
+        (const Size(412, 915), false),
+      ]) {
+        await _pump(t, ex.id, size, desktop: desktop);
+        expect(t.takeException(), isNull);
+        final label =
+            find.textContaining('V${e.value} · ', skipOffstage: false);
+        expect(label, findsOneWidget);
+        await t.scrollUntilVisible(label, 200,
+            scrollable: find
+                .ancestor(
+                    of: find.byKey(const Key('guided-cards')),
+                    matching: find.byType(Scrollable))
+                .first);
+        await t.pumpAndSettle();
+        expect(t.takeException(), isNull);
+        final card =
+            find.ancestor(of: label, matching: find.byType(GuidedPanel));
+        final view =
+            find.descendant(of: card, matching: find.byType(GuidedLineView));
+        final staff =
+            find.descendant(of: view, matching: find.byType(LineView));
+        await t.ensureVisible(card.first);
+        await t.pumpAndSettle();
+        final cardRect = t.getRect(card.first);
+        final viewRect = t.getRect(view);
+        final staffRect = t.getRect(staff);
+        final screen = Offset.zero & size;
+        expect(
+            screen.contains(cardRect.topLeft) &&
+                cardRect.bottom <= size.height + 0.5,
+            isTrue,
+            reason: '${e.key} card reachable: $cardRect in $size');
+        // The staff is not cut off by the card's cap.
+        expect(staffRect.height, lessThanOrEqualTo(viewRect.height + 0.5),
+            reason: '${e.key} staff $staffRect vs view $viewRect');
+        // The card is the staff plus header and padding, nothing more.
+        expect(cardRect.height, lessThan(viewRect.height + 90));
+      }
+    }
   });
 
   testWidgets('start pushes play only once', (t) async {
