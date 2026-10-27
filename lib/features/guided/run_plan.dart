@@ -239,7 +239,7 @@ List<RunBar> buildRun(
       explanationBar = bars - 1 - lead;
     }
 
-    final line = _LineSounds(s.line, ex.gridUnit);
+    final line = _LineSounds(s.line, ex.gridUnit, '${ex.id} section $si');
     for (var b = 0; b < bars; b++) {
       final isCountdown = beforeVariation && b == bars - 1;
       final events = <RunEvent>[];
@@ -337,7 +337,7 @@ RunBar _countInBar(int bpm, RunOptions options, {required int step}) {
 /// scale, as [kitPatternSound]). Voices that share a sound
 /// (both floor toms) mix by their loudest tick, as `buildVoicesPlayback`.
 class _LineSounds {
-  _LineSounds(ExerciseLine line, NoteGrid grid) {
+  _LineSounds(ExerciseLine line, NoteGrid grid, String name) {
     if (line.beats.isEmpty && !line.isKit) return;
     if (line.isKit) {
       for (final v in line.voices) {
@@ -353,6 +353,12 @@ class _LineSounds {
           buildPatternPlayback(line.beats, grid).tickVolumes;
     }
     if (_full.isEmpty) return;
+    // One track per sound now (not one merged playback), so check here
+    // what buildVoicesPlayback used to: every voice spans the same ticks.
+    final lengths = {for (final e in _full.entries) e.key.name: e.value.length};
+    if (lengths.values.toSet().length > 1) {
+      throw ArgumentError('$name: kit voices differ in length: $lengths ticks');
+    }
     _bars = (_full.values.first.length / runTicksPerBar).floor();
   }
 

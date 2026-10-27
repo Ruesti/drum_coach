@@ -470,7 +470,7 @@ void main() {
 
   test('crash plays on the pad quieter than the kit', () {
     expect(crashGainFor(GuidedPackage.pad), 0.4);
-    expect(crashGainFor(GuidedPackage.kit), 1.0);
+    expect(crashGainFor(GuidedPackage.kit), kitMixLevel);
   });
 
   test('isolate backend renders the same bars as inline', () async {

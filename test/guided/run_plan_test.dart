@@ -516,6 +516,37 @@ void main() {
       expect(runSoundOf(KitInstrument.pad), RunSound.pattern);
     });
 
+    test('a kit line whose voices differ in length is rejected', () {
+      final line = ExerciseLine.kit([
+        Voice(KitInstrument.hiHatClosed, [for (var i = 0; i < 8; i++) _r]),
+        Voice(KitInstrument.kick, [for (var i = 0; i < 4; i++) _r]),
+      ]);
+      final ex = GuidedExercise(
+        id: 'broken',
+        name: 'B',
+        description: 'd',
+        package: GuidedPackage.kit,
+        difficulty: Difficulty.beginner,
+        defaultBpm: 100,
+        minBpm: 40,
+        maxBpm: 240,
+        gridUnit: NoteGrid.eighth,
+        sections: [
+          const GuidedSection(
+              kind: SectionKind.intro, line: ExerciseLine([]), bars: 0),
+          GuidedSection(kind: SectionKind.groove, line: line, bars: 2),
+          GuidedSection(kind: SectionKind.outro, line: line, bars: 1),
+        ],
+      );
+      expect(
+          () => buildRun(ex, bpm: 100, options: on, clips: _clips()),
+          throwsA(isA<ArgumentError>().having(
+              (e) => '${e.message}',
+              'message',
+              allOf(contains('broken section 1'), contains('kick'),
+                  contains('hihatClosed')))));
+    });
+
     test('play-along off is click only for kit lines too', () {
       final ex =
           guidedCatalog.firstWhere((e) => e.id == 'guided_kit_backbeat_walk');

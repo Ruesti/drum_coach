@@ -48,6 +48,11 @@ BarJob barJobFor(RunBar bar,
   return BarJob(bpm: bar.bpm, tickVolumes: bar.tickVolumes, hits: hits);
 }
 
+/// Headroom of the kit mix: every kit gain (and the kit's structural
+/// crash, `crashGainFor`) is scaled by this, so kick + crash + snare on
+/// one tick stay below the soft limiter's knee (probe mix peaks ≤ 0.9).
+const double kitMixLevel = 0.62;
+
 /// Loud-sample threshold and track gain per sound. Pattern (pad lines) as
 /// the loop's pattern voice. Kit voices: kick and hi-hat come on the band
 /// scale (normal 0.7, accent 1.0), the rest on the pattern scale (normal
@@ -57,35 +62,46 @@ BarJob barJobFor(RunBar bar,
 /// plays its ghost recording ([_softOf]) below 0.5, i.e. on ghost notes.
 const _voiceSpec = <RunSound, ({double loudFrom, double gain})>{
   RunSound.pattern: (loudFrom: 1.2, gain: 1.0),
-  RunSound.kick: (loudFrom: 1.0, gain: 1.2),
-  RunSound.snare: (loudFrom: 0.5, gain: 0.5),
-  RunSound.rim: (loudFrom: 1.0, gain: 0.5),
-  RunSound.hihatClosed: (loudFrom: 1.0, gain: 0.7),
-  RunSound.hihatOpen: (loudFrom: 1.0, gain: 0.5),
-  RunSound.hihatPedal: (loudFrom: 1.0, gain: 0.5),
-  RunSound.tomHigh: (loudFrom: 1.0, gain: 0.45),
-  RunSound.tomLow: (loudFrom: 1.0, gain: 0.45),
-  RunSound.tomFloor: (loudFrom: 1.0, gain: 0.45),
-  RunSound.crash: (loudFrom: 1.0, gain: 0.9),
-  RunSound.ride: (loudFrom: 1.0, gain: 0.6),
-  RunSound.rideBell: (loudFrom: 1.0, gain: 0.65),
+  RunSound.kick: (loudFrom: 1.0, gain: 1.2 * kitMixLevel),
+  RunSound.snare: (loudFrom: 0.5, gain: 0.5 * kitMixLevel),
+  RunSound.rim: (loudFrom: 1.0, gain: 0.5 * kitMixLevel),
+  RunSound.hihatClosed: (loudFrom: 1.0, gain: 0.7 * kitMixLevel),
+  RunSound.hihatOpen: (loudFrom: 1.0, gain: 0.5 * kitMixLevel),
+  RunSound.hihatPedal: (loudFrom: 1.0, gain: 0.5 * kitMixLevel),
+  RunSound.tomHigh: (loudFrom: 1.0, gain: 0.45 * kitMixLevel),
+  RunSound.tomLow: (loudFrom: 1.0, gain: 0.45 * kitMixLevel),
+  RunSound.tomFloor: (loudFrom: 1.0, gain: 0.45 * kitMixLevel),
+  RunSound.crash: (loudFrom: 1.0, gain: 0.9 * kitMixLevel),
+  RunSound.ride: (loudFrom: 1.0, gain: 0.6 * kitMixLevel),
+  RunSound.rideBell: (loudFrom: 1.0, gain: 0.65 * kitMixLevel),
   RunSound.click: (loudFrom: 1.0, gain: 1.0),
 };
 
 /// The sample a sound plays below its `loudFrom` when it is not its own.
 const _softOf = <RunSound, RunSound>{RunSound.snare: RunSound.snareGhost};
 
+/// Sounds that stop the open hi-hat (the hi-hat closes), like a real hat.
+const _chokers = {RunSound.hihatClosed, RunSound.hihatPedal};
+
 /// Mixes [job] with [renderer] (carry kept across calls). Sounds without
-/// samples in [sounds] stay silent.
+/// samples in [sounds] stay silent. The open hi-hat is a choke group: a
+/// closed or pedal hi-hat stroke stops it, also one in a later bar.
 RenderedBar renderBarJob(
     BarRenderer renderer, Map<RunSound, List<double>> sounds, BarJob job) {
   final voices = <LoopVoice>[];
+  final choked = <LoopVoice>[];
+  final chokeTicks = <int>{
+    for (final e in job.tickVolumes.entries)
+      if (_chokers.contains(e.key))
+        for (var t = 0; t < e.value.length; t++)
+          if (e.value[t] > 0) t,
+  };
   job.tickVolumes.forEach((sound, vols) {
     final s = sounds[sound];
     final spec = _voiceSpec[sound];
     if (s == null || s.isEmpty || spec == null) return;
     final soft = sounds[_softOf[sound]];
-    voices.add(LoopVoice(
+    (sound == RunSound.hihatOpen ? choked : voices).add(LoopVoice(
       tickVolumes: vols,
       loudSamples: s,
       softSamples: soft == null || soft.isEmpty ? s : soft,
@@ -100,7 +116,12 @@ RenderedBar renderBarJob(
     hits.add(SampleHit(tick: h.tick, samples: s, gain: h.gain));
   }
   return renderer.renderBar(
-      bpm: job.bpm, factor: kitTicksPerQuarter, voices: voices, hits: hits);
+      bpm: job.bpm,
+      factor: kitTicksPerQuarter,
+      voices: voices,
+      hits: hits,
+      choked: choked,
+      chokeTicks: chokeTicks);
 }
 
 /// Renders bars in order, keeping the carry between calls.

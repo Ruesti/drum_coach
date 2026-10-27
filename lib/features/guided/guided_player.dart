@@ -19,7 +19,8 @@ const int guidedSampleRate = 44100;
 const double _teacherOffAccent = 1.5;
 
 /// Crash level per package: quieter on the pad (Spec §3.5).
-double crashGainFor(GuidedPackage p) => p == GuidedPackage.pad ? 0.4 : 1.0;
+double crashGainFor(GuidedPackage p) =>
+    p == GuidedPackage.pad ? 0.4 : kitMixLevel;
 
 /// Plays a guided exercise: renders the planned bars one at a time (on a
 /// background isolate by default), appends them to a [PcmSink] ahead of
