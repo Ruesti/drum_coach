@@ -155,7 +155,10 @@ class _GuidedPlayScreenState extends ConsumerState<GuidedPlayScreen> {
                 text: 'Could not load the player: $e', onBack: _leave)),
           );
     }
+    // The whole window: the photo fills it, the content keeps only the
+    // gutters (Uli 27.10., round 2).
     return UncappedContent(
+      maxWidth: double.infinity,
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
         child: screen,
@@ -420,7 +423,7 @@ class _PlayPageState extends State<_PlayPage> {
   }
 
   /// "NOW · V2" + the explanation while a variation plays, then the notes
-  /// (without cursor) and, in the countdown, the number over them — on the
+  /// (a thin playhead line, no note coloured) and, in the countdown, the number over them — on the
   /// wide layout a smaller disc at the right end, so the notes stay
   /// readable.
   Widget _now({required bool large, double? notesMax}) {
@@ -479,7 +482,7 @@ class _PlayPageState extends State<_PlayPage> {
                   activeTick: _cursorOn && p != null
                       ? lineTickFor(p, s.line, _ex.gridUnit)
                       : null,
-                  showCursor: false,
+                  cursorStyle: CursorStyle.line,
                   fillWidth: large,
                   maxStaffHeight: notesMax,
                 ),

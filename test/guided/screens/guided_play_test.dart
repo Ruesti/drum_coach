@@ -10,6 +10,7 @@ import 'package:drum_coach/features/guided/guided_shortcuts.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/run_clock.dart';
 import 'package:drum_coach/features/guided/screens/guided_play_screen.dart';
+import 'package:drum_coach/features/guided/widgets/guided_backdrop.dart';
 import 'package:drum_coach/features/guided/widgets/guided_banner.dart';
 import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
 import 'package:drum_coach/features/practice/widgets/line_view.dart';
@@ -26,6 +27,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../fake_guided_player.dart';
+import '../playhead_probe.dart';
 
 const _photo = 'assets/illustrations/practice/p07_rooftop_dusk_s5.jpg';
 
@@ -200,40 +202,44 @@ void main() {
     expect(cd, findsNothing);
   });
 
-  testWidgets('no cursor on the play screen', (t) async {
-    // Uli 27.10.: "die gespielten Noten nicht highlighten" — the now line
-    // follows the run, but neither a cursor nor a coloured note is drawn.
+  testWidgets('playhead: a thin line over the notes, no note coloured',
+      (t) async {
+    // Uli 27.10. (round 2): "dünne Linie über den Noten", the notes are
+    // not coloured.
     final pad = guidedCatalog.firstWhere((e) => e.package == GuidedPackage.pad);
     for (final (ex, size, desktop) in [
       (_kit, const Size(412, 915), false),
-      (_kit, const Size(1280, 720), true),
+      (_kit, const Size(2560, 1440), true),
       (pad, const Size(1280, 720), true),
     ]) {
       final p = FakeGuidedPlayer();
       await _open(t, p, size: size, desktop: desktop, ex: ex);
       final g = _varIndex(ex, 1) - 1;
       final v = g + 1;
+      final now = find.byKey(const Key('guided-now'));
+      double? lastX;
       for (final pos in [
+        _pos(g, 0, tick: 0),
         _pos(g, 0, tick: 30),
-        _pos(g, 1, tick: 60),
-        _pos(v, 0, tick: 24),
+        _pos(g, 0, tick: 60),
       ]) {
         await _emit(t, p, pos);
-        final now = _nowView(t);
-        expect(now.showCursor, isFalse);
-        expect(now.dimmed, isFalse);
-        final lv = t.widget<LineView>(find.descendant(
-            of: find.byKey(const Key('guided-now')),
-            matching: find.byType(LineView)));
-        expect(lv.activeTick, isNull, reason: '${ex.id} $size');
-        expect(lv.activeIndex, isNull, reason: '${ex.id} $size');
-        for (final w in t.widgetList<SheetStaffWidget>(find.descendant(
-            of: find.byKey(const Key('guided-now')),
-            matching: find.byType(SheetStaffWidget)))) {
-          expect(w.activeTick, isNull);
-          expect(w.activeIndex, isNull);
+        expect(_nowView(t).cursorStyle, CursorStyle.line);
+        expect(_nowView(t).dimmed, isFalse);
+        final c = staffCalls(t, now);
+        expect(c.playheads, hasLength(1), reason: '${ex.id} $size');
+        final ph = c.playheads.single;
+        expect(ph.width, lessThanOrEqualTo(3.0), reason: '${ex.id} $size');
+        expect(c.hasCursorField, isFalse);
+        expect(c.hasNoteRing, isFalse);
+        if (lastX != null) {
+          expect(ph.x, greaterThan(lastX), reason: '${ex.id} $size');
         }
+        lastX = ph.x;
       }
+      // In the variation the line follows too.
+      await _emit(t, p, _pos(v, 0, tick: 24));
+      expect(staffCalls(t, now).playheads, hasLength(1));
       // Where am I stays visible: status line and timeline marker.
       expect(t.widget<Text>(find.byKey(const Key('guided-status'))).data,
           contains('Variation 1'));
@@ -242,14 +248,36 @@ void main() {
     }
   });
 
-  testWidgets('notes span at least 90 % of the width at 1280 and 1600',
-      (t) async {
-    final v2 = _varIndex(_kit, 2);
-    for (final size in [const Size(1280, 720), const Size(1600, 900)]) {
+  testWidgets('photo fills the whole window at 2560 and 1920', (t) async {
+    for (final size in [const Size(2560, 1440), const Size(1920, 1080)]) {
       final p = FakeGuidedPlayer();
       await _open(t, p, size: size, desktop: true);
-      // Content width (1440 at 1600: UncappedContent's cap).
-      final content = t.getSize(find.byType(GuidedPlayScreen)).width;
+      final photo = t.getRect(find.byType(GuidedBackdrop));
+      expect(photo.width, size.width, reason: '$size');
+      expect(photo.left, 0, reason: '$size');
+      // The content runs to the gutters, no cap.
+      final wide = t.getRect(find.byKey(const Key('guided-wide')));
+      expect(wide.width, size.width, reason: '$size');
+      final now = t.getRect(find.byKey(const Key('guided-now')));
+      expect(now.left, AppSpacing.screenPadding, reason: '$size');
+      expect(now.right, size.width - AppSpacing.screenPadding,
+          reason: '$size');
+    }
+  });
+
+  testWidgets('notes span at least 90 % of the window at 1280, 1600, 2560',
+      (t) async {
+    final v2 = _varIndex(_kit, 2);
+    for (final size in [
+      const Size(1280, 720),
+      const Size(1600, 900),
+      const Size(2560, 1440),
+    ]) {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: size, desktop: true);
+      // No cap on the play screen: the window is the content width.
+      expect(t.getSize(find.byType(GuidedPlayScreen)).width, size.width);
+      final content = size.width;
       for (final pos in [_pos(v2 - 1, 0), _pos(v2, 1, tick: 40)]) {
         await _emit(t, p, pos);
         final now = t.getRect(find.byKey(const Key('guided-now')));
@@ -506,17 +534,17 @@ void main() {
         .ancestor(of: find.text(text), matching: find.byType(Scaffold))
         .first);
 
-    testWidgets('play screen is 1440 wide', (t) async {
+    testWidgets('play screen fills the window', (t) async {
       final p = FakeGuidedPlayer();
       await _open(t, p, size: const Size(1600, 900), desktop: true);
-      expect(t.getSize(find.byType(GuidedPlayScreen)).width, 1440);
+      expect(t.getSize(find.byType(GuidedPlayScreen)).width, 1600);
       expect(find.byKey(const Key('guided-wide')), findsOneWidget);
     });
 
     testWidgets('cap returns to 900 on the first frame of the pop', (t) async {
       final p = FakeGuidedPlayer();
       await _open(t, p, size: const Size(1600, 900), desktop: true);
-      expect(t.getSize(find.byType(GuidedPlayScreen)).width, 1440);
+      expect(t.getSize(find.byType(GuidedPlayScreen)).width, 1600);
       await t.sendKeyEvent(LogicalKeyboardKey.escape);
       await t.pump();
       // Pop animation running: both pages there, already capped.
@@ -694,6 +722,16 @@ void main() {
       expect(t.takeException(), isNull);
       await expectLater(find.byKey(const Key('shot')),
           matchesGoldenFile('../../goldens/guided_play_desktop_variation.png'));
+    });
+
+    testWidgets('golden: 2560x1440 mid-variation with playhead', (t) async {
+      final v2 = _varIndex(_kit, 2);
+      await shot(t, const Size(2560, 1440), true, positions: [
+        _pos(v2, 2, tick: 40, bar: 33),
+      ]);
+      expect(t.takeException(), isNull);
+      await expectLater(find.byKey(const Key('shot')),
+          matchesGoldenFile('../../goldens/guided_play_desktop_2560.png'));
     });
 
     testWidgets('golden: end view', (t) async {

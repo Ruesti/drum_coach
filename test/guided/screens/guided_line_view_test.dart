@@ -15,6 +15,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../playhead_probe.dart';
+
 GuidedExercise _first(GuidedPackage p) =>
     guidedCatalog.firstWhere((e) => e.package == p);
 
@@ -156,6 +158,86 @@ void main() {
     expect(
         t.getSize(find.byType(GuidedLineView)).height, lessThanOrEqualTo(200));
     expect(t.takeException(), isNull);
+  });
+
+  group('cursor style', () {
+    Finder lv() => find.byType(GuidedLineView);
+
+    testWidgets('default is the box cursor, unchanged', (t) async {
+      final ex = _first(GuidedPackage.kit);
+      await t.pumpWidget(_host(
+          GuidedLineView(exercise: ex, line: _v1(ex), activeTick: 24), 760));
+      expect(t.widget<GuidedLineView>(lv()).cursorStyle, CursorStyle.box);
+      expect(t.widget<LineView>(find.byType(LineView)).cursorStyle,
+          CursorStyle.box);
+      final c = staffCalls(t, lv());
+      expect(c.hasCursorField, isTrue);
+      expect(c.playheads, isEmpty);
+    });
+
+    testWidgets('none draws neither cursor nor coloured note', (t) async {
+      final ex = _first(GuidedPackage.kit);
+      await t.pumpWidget(_host(
+          GuidedLineView(
+              exercise: ex,
+              line: _v1(ex),
+              activeTick: 24,
+              cursorStyle: CursorStyle.none),
+          760));
+      final c = staffCalls(t, lv());
+      expect(c.hasCursorField, isFalse);
+      expect(c.hasNoteRing, isFalse);
+      expect(c.playheads, isEmpty);
+    });
+
+    for (final package in GuidedPackage.values) {
+      testWidgets('line: thin, full height, moves with the tick ($package)',
+          (t) async {
+        await t.binding.setSurfaceSize(const Size(2560, 1000));
+        addTearDown(() => t.binding.setSurfaceSize(null));
+        final ex = _first(package);
+        final line = _v1(ex);
+        // Wide (scaled up) and narrow (natural size).
+        for (final width in [2400.0, 380.0]) {
+          final xs = <double>[];
+          for (final tick in [0, 24, 48, 72]) {
+            await t.pumpWidget(_host(
+                GuidedLineView(
+                    exercise: ex,
+                    line: line,
+                    activeTick: tick,
+                    cursorStyle: CursorStyle.line),
+                width));
+            final c = staffCalls(t, lv());
+            expect(c.playheads, hasLength(1), reason: '$width $tick');
+            final ph = c.playheads.single;
+            expect(ph.width, lessThanOrEqualTo(3.0), reason: '$width');
+            expect(ph.width, greaterThanOrEqualTo(1.5), reason: '$width');
+            // The whole staff (five lines = 24 units) and more.
+            expect(ph.bottom - ph.top, greaterThan(24 * c.scale + 20));
+            expect(c.hasCursorField, isFalse);
+            expect(c.hasNoteRing, isFalse);
+            // Drawn on top: the last call of its row.
+            final last = c.calls.lastWhere((m) => m.$1 == #drawLine);
+            expect((last.$2[2] as Paint).color.toARGB32(),
+                AppColors.accent.toARGB32());
+            xs.add(ph.x);
+          }
+          for (var i = 1; i < xs.length; i++) {
+            expect(xs[i], greaterThan(xs[i - 1] + 5), reason: '$width $xs');
+          }
+        }
+      });
+    }
+
+    testWidgets('line without a tick draws nothing', (t) async {
+      final ex = _first(GuidedPackage.kit);
+      await t.pumpWidget(_host(
+          GuidedLineView(
+              exercise: ex, line: _v1(ex), cursorStyle: CursorStyle.line),
+          760));
+      expect(staffCalls(t, lv()).playheads, isEmpty);
+    });
   });
 
   testWidgets('golden: kit V1 wide with cursor', (t) async {

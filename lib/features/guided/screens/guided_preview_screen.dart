@@ -112,12 +112,20 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
                 c.maxWidth >= guidedPreviewTwoColumnMinWidth;
             return two ? _wide(ex) : _narrow(ex);
           });
+    // The photo fills the window; only the content stops at
+    // [guidedMaxWidth], centred (Uli 27.10., round 2).
+    final limited = Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: guidedMaxWidth),
+        child: SizedBox.expand(child: content),
+      ),
+    );
     Widget screen = Scaffold(
       backgroundColor: PracticeColors.base,
       body: GuidedBackdrop(
         playing: false,
         photo: widget.photo,
-        child: content,
+        child: limited,
       ),
     );
     if (isDesktopPlatform) {
@@ -128,9 +136,12 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
         child: Focus(autofocus: true, child: screen),
       );
     }
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: screen,
+    return UncappedContent(
+      maxWidth: double.infinity,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: screen,
+      ),
     );
   }
 
@@ -383,7 +394,7 @@ class _NoteCard extends StatelessWidget {
             child: GuidedLineView(
               exercise: exercise,
               line: section.line,
-              showCursor: false,
+              cursorStyle: CursorStyle.none,
               fillWidth: true,
               maxStaffHeight: 220,
             ),

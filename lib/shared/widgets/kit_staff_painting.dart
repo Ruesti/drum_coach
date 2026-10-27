@@ -82,7 +82,7 @@ extension _KitPainting on _StaffPainter {
         _drawText(canvas, count, Offset(x, y0 + _countY),
             _dim(_StaffPainter._letterColor), 10);
       }
-      final active = col.tick == activeTick;
+      final active = col.tick == _boxTick;
       _paintLayerColumn(canvas, col.hands.toList(), x, y0, staffY,
           up: true,
           stemEndY: stemTopY,

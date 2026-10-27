@@ -95,6 +95,46 @@ void main() {
     expect(uncappedContentCount.value, 1);
   });
 
+  testWidgets('maxWidth: infinity lifts the cap to the whole window',
+      (t) async {
+    debugDesktopOverride = true;
+    await t.binding.setSurfaceSize(const Size(2560, 1440));
+    addTearDown(() => t.binding.setSurfaceSize(null));
+    final nav = GlobalKey<NavigatorState>();
+    await t.pumpWidget(MaterialApp(
+      navigatorKey: nav,
+      builder: capContentWidth,
+      home: const SizedBox.expand(key: Key('plain')),
+    ));
+    expect(t.getSize(find.byKey(const Key('plain'))).width, 900);
+
+    nav.currentState!.push(MaterialPageRoute<void>(
+      builder: (_) => const UncappedContent(
+        maxWidth: double.infinity,
+        child: SizedBox.expand(key: Key('full')),
+      ),
+    ));
+    await t.pumpAndSettle();
+    expect(t.getSize(find.byKey(const Key('full'))).width, 2560);
+
+    // A default (1440) route on top: its own limit applies.
+    nav.currentState!.push(MaterialPageRoute<void>(
+      builder: (_) => const UncappedContent(
+        child: SizedBox.expand(key: Key('wide')),
+      ),
+    ));
+    await t.pumpAndSettle();
+    expect(t.getSize(find.byKey(const Key('wide'))).width, 1440);
+
+    nav.currentState!.pop();
+    await t.pumpAndSettle();
+    expect(t.getSize(find.byKey(const Key('full'))).width, 2560);
+    nav.currentState!.pop();
+    await t.pumpAndSettle();
+    expect(t.getSize(find.byKey(const Key('plain'))).width, 900);
+    expect(uncappedContentCount.value, 0);
+  });
+
   testWidgets('backdrop scrim switches with playing', (t) async {
     Future<List<Color>> colors(bool playing) async {
       await t.pumpWidget(MaterialApp(

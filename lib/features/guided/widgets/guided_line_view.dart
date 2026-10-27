@@ -9,6 +9,8 @@ import '../../practice/widgets/line_view.dart';
 import '../models/guided_exercise.dart';
 import '../run_clock.dart';
 
+export '../../../shared/widgets/notation_staff_widget.dart' show CursorStyle;
+
 /// One guided line as an ordinary one-line sheet, so the practice screen's
 /// [LineView] (and with it the app's only notation path) can draw it: kit
 /// lines keep their voices (five-line kit staff), pad lines their sticking.
@@ -44,9 +46,11 @@ int lineTickFor(RunPosition p, ExerciseLine line, NoteGrid grid) {
 /// practice screen's [LineView].
 ///
 /// [activeTick] is the cursor tick within the LINE (the caller maps the
-/// player's position with [lineTickFor]); null = no cursor. [showCursor]
-/// false draws neither cursor nor highlighted note even with a tick (the
-/// play screen, Uli 27.10.: "die gespielten Noten nicht highlighten").
+/// player's position with [lineTickFor]); null = no cursor. [cursorStyle]
+/// says how it shows: [CursorStyle.box] (default) colours the active note,
+/// [CursorStyle.line] draws a thin accent line over the notes and colours
+/// nothing (the play screen, Uli 27.10.), [CursorStyle.none] nothing at
+/// all (the preview).
 /// [fillWidth] spreads the notes over the whole width (the wide play
 /// screen, Uli 27.10.) instead of centring them at the comfort spacing.
 /// [dimmed] draws
@@ -59,7 +63,7 @@ class GuidedLineView extends StatelessWidget {
     required this.exercise,
     required this.line,
     this.activeTick,
-    this.showCursor = true,
+    this.cursorStyle = CursorStyle.box,
     this.fillWidth = false,
     this.dimmed = false,
     this.maxStaffHeight,
@@ -68,7 +72,7 @@ class GuidedLineView extends StatelessWidget {
   final GuidedExercise exercise;
   final ExerciseLine line;
   final int? activeTick;
-  final bool showCursor;
+  final CursorStyle cursorStyle;
   final bool fillWidth;
   final bool dimmed;
   final double? maxStaffHeight;
@@ -86,23 +90,29 @@ class GuidedLineView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rudiment = rudimentForGuidedLine(exercise, line);
-    // Pad lines place their cursor by note index, kit lines by tick.
+    // Pad lines place their box cursor (and the shown row) by note index,
+    // kit lines by tick; the playhead line goes by tick for both.
     int? activeIndex;
-    final tick = showCursor ? activeTick : null;
+    var tick = cursorStyle == CursorStyle.none ? null : activeTick;
     if (tick != null && !line.isKit && line.beats.isNotEmpty) {
       final pb = buildPatternPlayback(line.beats, exercise.gridUnit);
-      activeIndex = pb.noteIndexAtTick(tick % pb.totalTicks);
+      tick %= pb.totalTicks;
+      activeIndex = pb.noteIndexAtTick(tick);
     }
-    Widget view(double width) => SizedBox(
+    final lineStyle = cursorStyle == CursorStyle.line;
+    Widget view(double width, double scale) => SizedBox(
           width: width,
           child: LineView(
             rudiment: rudiment,
             line: 0,
             activeIndex: activeIndex,
-            activeTick: line.isKit ? tick : null,
+            activeTick: line.isKit || lineStyle ? tick : null,
             showCounts: false,
             showLineNumber: false,
             fillWidth: fillWidth,
+            cursorStyle: cursorStyle,
+            // Thin on screen whatever the staff's scale.
+            playheadWidth: playheadLineWidth / scale,
           ),
         );
 
@@ -137,10 +147,10 @@ class GuidedLineView extends StatelessWidget {
           }
         } else {
           return cap == null
-              ? view(width)
+              ? view(width, 1)
               : ConstrainedBox(
                   constraints: BoxConstraints(maxHeight: cap),
-                  child: view(width));
+                  child: view(width, 1));
         }
       }
       final inner = width / scale;
@@ -150,7 +160,7 @@ class GuidedLineView extends StatelessWidget {
         child: FittedBox(
           fit: BoxFit.fitWidth,
           alignment: Alignment.topCenter,
-          child: view(inner),
+          child: view(inner, scale),
         ),
       );
     });

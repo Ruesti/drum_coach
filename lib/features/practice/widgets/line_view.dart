@@ -33,6 +33,13 @@ class LineView extends StatefulWidget {
   /// practice screen keeps the comfort spacing.
   final bool fillWidth;
 
+  /// How the position shows ([SheetStaffWidget.cursorStyle]); the practice
+  /// screen keeps the box.
+  final CursorStyle cursorStyle;
+
+  /// Playhead stroke in layout units ([SheetStaffWidget.playheadWidth]).
+  final double playheadWidth;
+
   const LineView({
     super.key,
     required this.rudiment,
@@ -43,6 +50,8 @@ class LineView extends StatefulWidget {
     this.showCounts = true,
     this.showLineNumber = true,
     this.fillWidth = false,
+    this.cursorStyle = CursorStyle.box,
+    this.playheadWidth = playheadLineWidth,
   });
 
   @override
@@ -132,6 +141,8 @@ class _LineViewState extends State<LineView> {
         showCounts: widget.showCounts,
         showLineNumber: widget.showLineNumber,
         fillWidth: widget.fillWidth,
+        cursorStyle: widget.cursorStyle,
+        playheadWidth: widget.playheadWidth,
       );
       if (!c.maxHeight.isFinite || height <= c.maxHeight) {
         return SizedBox(height: height, child: sheet);

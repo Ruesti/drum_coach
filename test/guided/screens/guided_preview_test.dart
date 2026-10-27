@@ -12,6 +12,8 @@ import 'package:drum_coach/features/guided/guided_shortcuts.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/screens/guided_play_screen.dart';
 import 'package:drum_coach/features/guided/screens/guided_preview_screen.dart';
+import 'package:drum_coach/features/guided/widgets/guided_backdrop.dart';
+import 'package:drum_coach/features/guided/widgets/guided_layout.dart';
 import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
 import 'package:drum_coach/features/practice/widgets/line_view.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
@@ -159,7 +161,7 @@ void main() {
         .byType(GuidedLineView, skipOffstage: false)
         .evaluate()
         .map((e) => e.widget as GuidedLineView)) {
-      expect(w.showCursor, isFalse);
+      expect(w.cursorStyle, CursorStyle.none);
     }
   });
 
@@ -445,18 +447,50 @@ void main() {
       final st = t.getRect(find.byKey(const Key('guided-start')));
       expect(st.left, greaterThan(tl.right - 1));
 
-      // Desktop: inside the 900 cap, two columns.
+      // Desktop: not in the 900 cap any more, two columns.
       await _pump(t, ex.id, const Size(1280, 800), desktop: true);
       expect(t.takeException(), isNull);
       final tl2 = t.getRect(find.byKey(const Key('guided-cards')));
       final st2 = t.getRect(find.byKey(const Key('guided-start')));
       expect(st2.left, greaterThan(tl2.right - 1));
-      expect(tl2.left, greaterThanOrEqualTo(190));
+      expect(tl2.left, AppSpacing.xxl);
+      expect(st2.right, 1280 - AppSpacing.xxl);
 
       // Small landscape phone: still no overflow.
       await _pump(t, ex.id, const Size(700, 360));
       expect(t.takeException(), isNull);
     }
+  });
+
+  testWidgets('photo fills the window, content up to 1440 centred',
+      (t) async {
+    for (final size in [const Size(2560, 1440), const Size(1920, 1080)]) {
+      await _pump(t, _kit.id, size, desktop: true);
+      expect(t.takeException(), isNull);
+      final photo = t.getRect(find.byType(GuidedBackdrop));
+      expect(photo.width, size.width, reason: '$size');
+      expect(photo.left, 0, reason: '$size');
+      final cards = t.getRect(find.byKey(const Key('guided-cards')));
+      final start = t.getRect(find.byKey(const Key('guided-start')));
+      final left = (size.width - guidedMaxWidth) / 2 + AppSpacing.xxl;
+      expect(cards.left, closeTo(left, 0.5), reason: '$size');
+      expect(start.right, closeTo(size.width - left, 0.5), reason: '$size');
+    }
+  });
+
+  testWidgets('home behind the preview keeps the 900 cap', (t) async {
+    final router = await _pump(t, _kit.id, const Size(2560, 1440),
+        desktop: true);
+    router.pop();
+    await t.pumpAndSettle();
+    expect(
+        t
+            .getSize(find
+                .ancestor(of: find.text('home'), matching: find.byType(Scaffold))
+                .first)
+            .width,
+        900);
+    expect(uncappedContentCount.value, 0);
   });
 
   group('goldens', () {
