@@ -60,7 +60,6 @@ void main() {
     expect(bank.of(RunSound.crash), ride); // never the snare for cymbals
     expect(bank.of(RunSound.hihatPedal), closed);
     expect(bank.of(RunSound.hihatOpen), closed);
-    expect(bank.of(RunSound.snareGhost), kit);
     expect(bank.of(RunSound.rim), kit);
     expect(bank.of(RunSound.tomHigh), tom);
     expect(bank.of(RunSound.tomFloor), tom);
@@ -101,6 +100,9 @@ void main() {
     expect(onsetIndex(crash), lessThan(44));
   });
 
+  SampleBank shipped() =>
+      SampleBank.fromFiles((p) => File(p).readAsBytesSync());
+
   test('every sample loads and starts within 1 ms', () async {
     final bank = await SampleBank.load();
     expect(
@@ -109,24 +111,87 @@ void main() {
           RunSound.pattern,
           RunSound.kick,
           RunSound.snare,
-          RunSound.snareGhost,
+          RunSound.rim,
           RunSound.hihatClosed,
           RunSound.hihatOpen,
+          RunSound.hihatPedal,
           RunSound.tomHigh,
           RunSound.tomLow,
           RunSound.tomFloor,
           RunSound.crash,
           RunSound.ride,
+          RunSound.rideBell,
         ]));
-    SampleBank.assets.forEach((sound, path) {
-      final s = decodeMonoWav16(File(path).readAsBytesSync());
-      expect(s, isNotEmpty, reason: path);
-      expect(onsetIndex(s), lessThan(44), reason: '$path onset');
-      expect(_peak(s), inInclusiveRange(0.5, 1.0), reason: '$path peak');
-      expect(s.length, lessThanOrEqualTo(44100 * 2.5 + 1), reason: path);
-      // load() hands out exactly the recording, not a fallback
-      expect(bank.of(sound), s, reason: '$sound from $path');
+    const cymbals = {
+      RunSound.hihatOpen,
+      RunSound.crash,
+      RunSound.ride,
+      RunSound.rideBell
+    };
+    SampleBank.assets.forEach((sound, paths) {
+      expect(paths.length, sound == RunSound.pattern ? 1 : 3, reason: '$sound');
+      final takes = [
+        for (final p in paths) decodeMonoWav16(File(p).readAsBytesSync())
+      ];
+      for (var i = 0; i < takes.length; i++) {
+        final s = takes[i];
+        final path = paths[i];
+        expect(s, isNotEmpty, reason: path);
+        expect(onsetIndex(s), lessThan(44), reason: '$path onset');
+        // pad snare as before; kit takes at their natural level, hard 0.9
+        expect(
+            _peak(s),
+            sound == RunSound.pattern
+                ? inInclusiveRange(0.5, 1.0)
+                : inInclusiveRange(0.05, 0.9 + 1e-3),
+            reason: '$path peak');
+        final maxSec = cymbals.contains(sound) ? 3.0 : 1.0;
+        if (sound != RunSound.pattern) {
+          expect(s.length, lessThanOrEqualTo(44100 * maxSec + 1), reason: path);
+        }
+        // load() hands out exactly the recording, not a fallback
+        final loaded = takes.length == 1
+            ? bank.of(sound)
+            : layerOf(bank.of(sound), StrokeLayer.values[i]);
+        expect(loaded, s, reason: '$sound from $path');
+      }
+      if (takes.length == 3) {
+        // normalised per instrument on the hard take, soft ones quieter
+        expect(_peak(takes[2]), closeTo(0.9, 0.01), reason: '$sound hard');
+        expect(_peak(takes[0]), lessThan(_peak(takes[2])),
+            reason: '$sound soft vs hard');
+      }
     });
+  });
+
+  test('ghost, normal and accent are different recordings of one instrument',
+      () {
+    final bank = shipped();
+    for (final sound in SampleBank.assets.keys) {
+      if (sound == RunSound.pattern) continue;
+      final s = bank.of(sound);
+      expect(s, isA<LayeredSamples>(), reason: '$sound');
+      final takes = [for (final l in StrokeLayer.values) layerOf(s, l)];
+      for (var i = 0; i < 3; i++) {
+        for (var j = i + 1; j < 3; j++) {
+          // different PCM, not one take at another volume
+          expect(takes[i], isNot(takes[j]), reason: '$sound $i/$j');
+          final a = takes[i], b = takes[j];
+          final r = _peak(a) / _peak(b);
+          var sameShape = a.length == b.length;
+          for (var k = 0; sameShape && k < a.length; k += 97) {
+            if ((a[k] - b[k] * r).abs() > 1e-3) sameShape = false;
+          }
+          expect(sameShape, isFalse, reason: '$sound $i/$j scaled copy');
+        }
+      }
+    }
+  });
+
+  test('an instrument with a broken take falls back as a whole', () {
+    final bank = SampleBank.fromFiles((p) =>
+        p.contains('kit_tom_high_soft') ? null : File(p).readAsBytesSync());
+    expect(bank.of(RunSound.tomHigh), same(bank.of(RunSound.tomLow)));
   });
 
   test('each kit sound of the catalog is its own recording', () async {
@@ -150,18 +215,13 @@ void main() {
     }
   });
 
-  test('CREDITS lists every new file', () {
-    final credits = File('assets/audio/CREDITS.md').readAsStringSync();
+  test('no unused audio file ships', () {
     final wavs = Directory('assets/audio')
         .listSync()
         .whereType<File>()
-        .map((f) => f.uri.pathSegments.last)
-        .where((n) => n.endsWith('.wav'));
-    for (final n in {
-      ...wavs,
-      ...SampleBank.assets.values.map((p) => p.split('/').last)
-    }) {
-      expect(credits, contains('`$n`'), reason: n);
-    }
+        .map((f) => f.path.replaceAll(r'\\', '/'))
+        .where((n) => n.endsWith('.wav'))
+        .toSet();
+    expect(wavs, SampleBank.assetPaths.toSet());
   });
 }

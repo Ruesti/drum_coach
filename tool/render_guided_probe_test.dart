@@ -1,10 +1,12 @@
-// Klang-Probe for the guided player (Optik-Runde 1, Task 3): renders the
-// groove and the last variation of every kit exercise of the catalog (two
-// bars each, so two-bar lines are whole) through the real bar renderer with
-// the shipped recordings, plus one bar of a pad exercise, and prints peak /
-// RMS per voice. Not part of `flutter test` (lives in tool/):
+// Klang-Probe for the guided player (Optik-Runde 1 Task 3; Runde 2 Task 2:
+// DRSKit with velocity takes): renders the groove and the last variation of
+// every kit exercise of the catalog (two bars each, so two-bar lines are
+// whole) through the real bar renderer with the shipped recordings, plus one
+// bar of a pad exercise, and prints peak / RMS per voice, then the peak of
+// the full mix (voice clips + clicks + kit) once. Not part of `flutter test` (lives in tool/):
 //   flutter test tool/render_guided_probe_test.dart [--dart-define=OUT=dir]
 // Default output: ~/gefuehrt-klang-probe/
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -16,7 +18,7 @@ import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/models/voice_clip.dart';
 import 'package:drum_coach/features/guided/run_plan.dart';
 import 'package:drum_coach/features/guided/sample_bank.dart';
-import 'package:drum_coach/features/metronome/snare_sample.dart';
+import 'package:drum_coach/features/guided/voice_assets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _bars = 2;
@@ -101,11 +103,8 @@ void main() {
         ? const String.fromEnvironment('OUT')
         : '${Platform.environment['HOME']}/gefuehrt-klang-probe')
       ..createSync(recursive: true);
-    final rec = {
-      for (final e in SampleBank.assets.entries)
-        e.key: decodeMonoWav16(File(e.value).readAsBytesSync()).toList(),
-    };
-    final sounds = SampleBank(recordings: rec).toSoundMap();
+    final sounds =
+        SampleBank.fromFiles((p) => File(p).readAsBytesSync()).toSoundMap();
     final lines = <String>[];
     final exercises = [
       ...guidedCatalog.where((e) => e.package == GuidedPackage.kit),
@@ -158,6 +157,48 @@ void main() {
         }
       }
     }
+    // Full mix once: teacher on (real voice clips), count-in and countdown
+    // clicks, the first 16 bars of every kit exercise.
+    final manifestJson =
+        jsonDecode(File('assets/voice/manifest.json').readAsStringSync())
+            as Map<String, dynamic>;
+    final manifest = ClipManifest.fromJson(manifestJson);
+    final clips = <String, Float32List>{
+      for (final c in manifestJson['clips'] as List)
+        (c as Map<String, dynamic>)['id'] as String: decodeVoiceWav(
+            File('assets/voice/${c['id']}.wav').readAsBytesSync()),
+    };
+    var fullPeak = 0.0, voiceClickPeak = 0.0;
+    for (final ex
+        in guidedCatalog.where((e) => e.package == GuidedPackage.kit)) {
+      final run = buildRun(ex,
+          bpm: ex.defaultBpm, options: const RunOptions(), clips: manifest);
+      final full = InlineBarRenderBackend();
+      final bare = InlineBarRenderBackend();
+      await full.init(sounds);
+      await bare.init(sounds);
+      for (final bar in run.take(16)) {
+        final job =
+            barJobFor(bar, clips: clips, crashGain: crashGainFor(ex.package));
+        for (final v in await full.render(job)) {
+          fullPeak = math.max(fullPeak, v.abs());
+        }
+        // the same bar without the kit: voice clips and clicks only
+        final click = job.tickVolumes[RunSound.click];
+        final noKit = BarJob(bpm: job.bpm, tickVolumes: {
+          if (click != null) RunSound.click: click
+        }, hits: [
+          for (final h in job.hits)
+            if (h.samples != null) h
+        ]);
+        for (final v in await bare.render(noKit)) {
+          voiceClickPeak = math.max(voiceClickPeak, v.abs());
+        }
+      }
+    }
+    lines.add('full mix (voice + clicks + kit, first 16 bars of each kit '
+        'exercise) peak ${fullPeak.toStringAsFixed(2)}; voice + clicks '
+        'alone ${voiceClickPeak.toStringAsFixed(2)}');
     File('${outDir.path}/balance.txt')
         .writeAsStringSync('${lines.join('\n')}\n');
     // ignore: avoid_print

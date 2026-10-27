@@ -325,6 +325,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
             ),
           ),
+          const SizedBox(height: 8),
+          AppCard(
+            key: const ValueKey('settings-credits'),
+            padding: EdgeInsets.zero,
+            onTap: () => context.push('/settings/credits'),
+            child: const ListTile(
+              leading: Icon(Icons.info_outline, color: AppColors.textMuted),
+              title: Text('Credits', style: TextStyle(fontSize: 14)),
+              subtitle: Text('Who recorded the sounds, and their licences',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              trailing: Icon(Icons.chevron_right, color: AppColors.textMuted),
+            ),
+          ),
           const SizedBox(height: 24),
           // Long press opens the hidden guided listening page (no menu
           // entry on purpose).

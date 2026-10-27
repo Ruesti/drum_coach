@@ -9,12 +9,12 @@ import 'models/guided_exercise.dart';
 import 'models/voice_clip.dart';
 
 /// What a bar sounds; the player resolves each to PCM (one recording per
-/// kit instrument, Optik-Runde 1: "Crash hört sich an wie snare").
+/// kit instrument, Optik-Runde 1: "Crash hört sich an wie snare"; each with
+/// soft / medium / hard takes, Optik-Runde 2 — the renderer picks the take
+/// from the tick volume, see `strokeLayerOf`).
 ///
 /// - [pattern]: a pad line — the pad snare recording.
-/// - kit voices: see [runSoundOf]. [snareGhost] never appears in
-///   [RunBar.tickVolumes]: it is the soft sample the renderer uses for
-///   ghost strokes of [snare].
+/// - kit voices: see [runSoundOf].
 /// - [crash] also plays for a [CrashEvent] (start of the first groove and
 ///   of the ending).
 /// - [click]: count-in, countdown and the play-along-off quarter click.
@@ -22,7 +22,6 @@ enum RunSound {
   pattern,
   kick,
   snare,
-  snareGhost,
   rim,
   hihatClosed,
   hihatOpen,

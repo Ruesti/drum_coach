@@ -9,7 +9,6 @@ import 'package:drum_coach/features/guided/models/voice_clip.dart';
 import 'package:drum_coach/features/guided/run_plan.dart';
 import 'package:drum_coach/features/guided/sample_bank.dart';
 import 'package:drum_coach/features/metronome/click_loop_renderer.dart';
-import 'package:drum_coach/features/metronome/snare_sample.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _sr = 44100;
@@ -79,9 +78,8 @@ void main() {
               clips: _clipsFor(ex))
           .where((b) => b.sectionIndex == si && b.barInSection < 4)
           .toList();
-      final open = decodeMonoWav16(
-              File(SampleBank.assets[RunSound.hihatOpen]!).readAsBytesSync())
-          .toList();
+      final open = SampleBank.fromFiles((p) => File(p).readAsBytesSync())
+          .of(RunSound.hihatOpen);
       // Only the open hat sounds; the closed hat is silent but still chokes.
       final sounds = {
         RunSound.hihatOpen: open,
@@ -134,10 +132,8 @@ void main() {
   }
 
   test('kit mix keeps headroom: groove and V-last peak ≤ 0.9', () async {
-    final sounds = SampleBank(recordings: {
-      for (final e in SampleBank.assets.entries)
-        e.key: decodeMonoWav16(File(e.value).readAsBytesSync()).toList(),
-    }).toSoundMap();
+    final sounds =
+        SampleBank.fromFiles((p) => File(p).readAsBytesSync()).toSoundMap();
     for (final ex
         in guidedCatalog.where((e) => e.package == GuidedPackage.kit)) {
       final run = buildRun(ex,

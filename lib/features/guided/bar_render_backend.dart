@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:isolate';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../../shared/widgets/kit_layout.dart';
 import '../metronome/click_loop_renderer.dart';
 import 'bar_renderer.dart';
 import 'run_plan.dart';
+import 'sample_bank.dart';
 
 /// A one-shot sound of a [BarJob]: either a [sound] from the backend's
 /// sample table (crash) or its own [samples] (voice clip).
@@ -50,35 +52,82 @@ BarJob barJobFor(RunBar bar,
 
 /// Headroom of the kit mix: every kit gain (and the kit's structural
 /// crash, `crashGainFor`) is scaled by this, so kick + crash + snare on
-/// one tick stay below the soft limiter's knee (probe mix peaks ≤ 0.9).
-const double kitMixLevel = 0.62;
+/// one tick stay below the soft limiter's knee (probe kit mix peaks ≤ 0.82
+/// with the DRSKit takes, Optik-Runde 2; test: ≤ 0.9).
+const double kitMixLevel = 0.7;
 
-/// Loud-sample threshold and track gain per sound. Pattern (pad lines) as
-/// the loop's pattern voice. Kit voices: kick and hi-hat come on the band
-/// scale (normal 0.7, accent 1.0), the rest on the pattern scale (normal
-/// 0.85, accent 2.0, ghost 0.25) — the gains even that out into one kit
-/// mix: kick and snare forward, hi-hat back, cymbals not on top (balance
-/// measured with tool/render_guided_probe_test.dart, Optik-Runde 1). The snare
-/// plays its ghost recording ([_softOf]) below 0.5, i.e. on ghost notes.
-const _voiceSpec = <RunSound, ({double loudFrom, double gain})>{
+/// Sounds with one sample, mixed as the loop's voices: the pad line's snare
+/// (the loop's pattern voice, linear in the tick volume) and the click.
+const _plainSpec = <RunSound, ({double loudFrom, double gain})>{
   RunSound.pattern: (loudFrom: 1.2, gain: 1.0),
-  RunSound.kick: (loudFrom: 1.0, gain: 1.2 * kitMixLevel),
-  RunSound.snare: (loudFrom: 0.5, gain: 0.5 * kitMixLevel),
-  RunSound.rim: (loudFrom: 1.0, gain: 0.5 * kitMixLevel),
-  RunSound.hihatClosed: (loudFrom: 1.0, gain: 0.7 * kitMixLevel),
-  RunSound.hihatOpen: (loudFrom: 1.0, gain: 0.5 * kitMixLevel),
-  RunSound.hihatPedal: (loudFrom: 1.0, gain: 0.5 * kitMixLevel),
-  RunSound.tomHigh: (loudFrom: 1.0, gain: 0.45 * kitMixLevel),
-  RunSound.tomLow: (loudFrom: 1.0, gain: 0.45 * kitMixLevel),
-  RunSound.tomFloor: (loudFrom: 1.0, gain: 0.45 * kitMixLevel),
-  RunSound.crash: (loudFrom: 1.0, gain: 0.9 * kitMixLevel),
-  RunSound.ride: (loudFrom: 1.0, gain: 0.6 * kitMixLevel),
-  RunSound.rideBell: (loudFrom: 1.0, gain: 0.65 * kitMixLevel),
   RunSound.click: (loudFrom: 1.0, gain: 1.0),
 };
 
-/// The sample a sound plays below its `loudFrom` when it is not its own.
-const _softOf = <RunSound, RunSound>{RunSound.snare: RunSound.snareGhost};
+/// Ticks below this volume are ghost strokes on both scales (band ghost
+/// 0.35 / normal 0.7, pattern ghost and grace 0.25 / normal 0.85).
+const double softStrokeBelow = 0.6;
+
+/// Volume of a ghost / normal / accent stroke on the band scale
+/// (`kitBandVolume`: kick and hi-hat) and on the pattern scale
+/// (`buildVoicesPlayback`: every other kit voice).
+const _band = (soft: 0.35, medium: 0.7, hard: 1.0);
+const _pattern = (soft: 0.25, medium: 0.85, hard: 2.0);
+
+/// Kit voices: their volume scale, the volume from which a stroke takes
+/// the hard take (an accent: 1.0 on the band scale, 2.0 on the pattern
+/// scale, so from 1.2) and the track gain of a normal stroke. The gains
+/// even the takes out into one kit mix: kick and snare forward, hi-hat
+/// back, cymbals not on top (balance measured with
+/// tool/render_guided_probe_test.dart). The open hi-hat comes always at
+/// 1.0 (the band scale has no accent for it), so it never takes the hard
+/// take.
+const _kitSpec = <RunSound,
+    ({
+  ({double soft, double medium, double hard}) scale,
+  double hardFrom,
+  double gain
+})>{
+  RunSound.kick: (scale: _band, hardFrom: 1.0, gain: 1.3 * kitMixLevel),
+  RunSound.snare: (scale: _pattern, hardFrom: 1.2, gain: 1.2 * kitMixLevel),
+  RunSound.rim: (scale: _pattern, hardFrom: 1.2, gain: 1.0 * kitMixLevel),
+  RunSound.hihatClosed: (scale: _band, hardFrom: 1.0, gain: 0.5 * kitMixLevel),
+  RunSound.hihatOpen: (
+    scale: _band,
+    hardFrom: double.infinity,
+    gain: 0.75 * kitMixLevel
+  ),
+  RunSound.hihatPedal: (scale: _band, hardFrom: 1.0, gain: 0.5 * kitMixLevel),
+  RunSound.tomHigh: (scale: _pattern, hardFrom: 1.2, gain: 1.0 * kitMixLevel),
+  RunSound.tomLow: (scale: _pattern, hardFrom: 1.2, gain: 1.0 * kitMixLevel),
+  RunSound.tomFloor: (scale: _pattern, hardFrom: 1.2, gain: 1.0 * kitMixLevel),
+  RunSound.crash: (scale: _pattern, hardFrom: 1.2, gain: 0.7 * kitMixLevel),
+  RunSound.ride: (scale: _pattern, hardFrom: 1.2, gain: 0.6 * kitMixLevel),
+  RunSound.rideBell: (scale: _pattern, hardFrom: 1.2, gain: 0.65 * kitMixLevel),
+};
+
+/// The take a kit stroke of [volume] plays: ghost → soft, accent → hard,
+/// else medium. Null for a sound without takes (pad snare, click).
+StrokeLayer? strokeLayerOf(RunSound sound, double volume) {
+  final spec = _kitSpec[sound];
+  if (spec == null) return null;
+  if (volume < softStrokeBelow) return StrokeLayer.soft;
+  if (volume >= spec.hardFrom) return StrokeLayer.hard;
+  return StrokeLayer.medium;
+}
+
+/// Within a take the volume still shapes the stroke, but only moderately
+/// (the take already carries the dynamics): the square root of the volume
+/// relative to the take's nominal stroke, so a normal stroke plays the
+/// medium take at the track gain.
+double _layerVolume(
+    double v, StrokeLayer l, ({double soft, double medium, double hard}) s) {
+  final nominal = switch (l) {
+    StrokeLayer.soft => s.soft,
+    StrokeLayer.medium => s.medium,
+    StrokeLayer.hard => s.hard,
+  };
+  return math.sqrt(v / nominal);
+}
 
 /// Sounds that stop the open hi-hat (the hi-hat closes), like a real hat.
 const _chokers = {RunSound.hihatClosed, RunSound.hihatPedal};
@@ -98,20 +147,45 @@ RenderedBar renderBarJob(
   };
   job.tickVolumes.forEach((sound, vols) {
     final s = sounds[sound];
-    final spec = _voiceSpec[sound];
-    if (s == null || s.isEmpty || spec == null) return;
-    final soft = sounds[_softOf[sound]];
-    (sound == RunSound.hihatOpen ? choked : voices).add(LoopVoice(
-      tickVolumes: vols,
-      loudSamples: s,
-      softSamples: soft == null || soft.isEmpty ? s : soft,
-      loudFrom: spec.loudFrom,
-      gain: spec.gain,
-    ));
+    if (s == null || s.isEmpty) return;
+    final into = sound == RunSound.hihatOpen ? choked : voices;
+    final plain = _plainSpec[sound];
+    if (plain != null) {
+      into.add(LoopVoice(
+        tickVolumes: vols,
+        loudSamples: s,
+        softSamples: s,
+        loudFrom: plain.loudFrom,
+        gain: plain.gain,
+      ));
+      return;
+    }
+    final spec = _kitSpec[sound];
+    if (spec == null) return;
+    // One voice per take, each with only the strokes of its layer.
+    for (final layer in StrokeLayer.values) {
+      final lv = [
+        for (final v in vols)
+          v > 0 && strokeLayerOf(sound, v) == layer
+              ? _layerVolume(v, layer, spec.scale)
+              : 0.0
+      ];
+      if (!lv.any((v) => v > 0)) continue;
+      final take = layerOf(s, layer);
+      if (take.isEmpty) continue;
+      into.add(LoopVoice(
+          tickVolumes: lv,
+          loudSamples: take,
+          softSamples: take,
+          gain: spec.gain));
+    }
   });
   final hits = <SampleHit>[];
   for (final h in job.hits) {
-    final s = h.samples ?? (h.sound == null ? null : sounds[h.sound]);
+    // A structural crash (start of the groove, the ending) is a hard hit.
+    final table = h.sound == null ? null : sounds[h.sound];
+    final s =
+        h.samples ?? (table == null ? null : layerOf(table, StrokeLayer.hard));
     if (s == null || s.isEmpty) continue;
     hits.add(SampleHit(tick: h.tick, samples: s, gain: h.gain));
   }

@@ -18,6 +18,7 @@ import '../features/program/program_screen.dart';
 import '../features/program/program_setup_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
 import '../features/guided/debug_guided_screen.dart';
+import '../features/settings/credits_screen.dart';
 import '../features/settings/kit_learn_screen.dart';
 import '../features/guided/screens/guided_play_screen.dart';
 import '../features/guided/screens/guided_preview_screen.dart';
@@ -184,6 +185,11 @@ final router = GoRouter(
       path: '/settings',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/settings/credits',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, __) => const CreditsScreen(),
     ),
     GoRoute(
       path: '/settings/latency-calibration',

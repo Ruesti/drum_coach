@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:drum_coach/features/guided/bar_render_backend.dart';
 import 'package:drum_coach/features/guided/bar_renderer.dart';
 import 'package:drum_coach/features/guided/run_plan.dart';
+import 'package:drum_coach/features/guided/sample_bank.dart';
 import 'package:drum_coach/features/metronome/click_loop_renderer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -143,29 +144,82 @@ void main() {
     expect(r.flush().every((x) => x.abs() <= 0.98 + 1e-6), isTrue);
   });
 
-  test('snare: ghost strokes use the ghost recording, others the accent one',
+  int at(int tick) => (tick * 60 / 120 / 24 * _sr).round();
+
+  for (final (sound, ghost, normal, accent) in [
+    (RunSound.snare, 0.25, 0.85, 2.0), // pattern scale
+    (RunSound.tomFloor, 0.25, 0.85, 2.0),
+    (RunSound.kick, 0.35, 0.7, 1.0), // band scale
+    (RunSound.hihatClosed, 0.35, 0.7, 1.0),
+  ]) {
+    test(
+        '${sound.name}: ghost, normal and accent play the soft, medium and '
+        'hard take', () {
+      final vols = List<double>.filled(96, 0.0)
+        ..[0] = accent
+        ..[24] = normal
+        ..[48] = ghost;
+      final pcm = renderBarJob(
+        BarRenderer(),
+        {
+          sound: LayeredSamples(
+              soft: const [0.01], medium: const [-0.02], hard: const [0.03]),
+        },
+        BarJob(bpm: 120, tickVolumes: {sound: vols}),
+      ).pcm;
+      expect(strokeLayerOf(sound, ghost), StrokeLayer.soft);
+      expect(strokeLayerOf(sound, normal), StrokeLayer.medium);
+      expect(strokeLayerOf(sound, accent), StrokeLayer.hard);
+      expect(pcm[at(0)], greaterThan(0)); // hard take
+      expect(pcm[at(24)], lessThan(0)); // medium take
+      expect(pcm[at(48)], greaterThan(0)); // soft take
+      // within a take the volume still counts, moderately
+      expect(pcm[at(48)], lessThan(pcm[at(0)]));
+    });
+  }
+
+  test('the open hi-hat (always 1.0 on the band scale) plays its medium take',
       () {
-    final vols = List<double>.filled(96, 0.0)
-      ..[0] = 2.0 // accent
-      ..[24] = 0.85 // normal
-      ..[48] = 0.25; // ghost
+    expect(strokeLayerOf(RunSound.hihatOpen, 1.0), StrokeLayer.medium);
+    expect(strokeLayerOf(RunSound.hihatOpen, 0.35), StrokeLayer.soft);
+  });
+
+  test('a structural crash hit plays the hard take', () {
     final pcm = renderBarJob(
       BarRenderer(),
       {
-        RunSound.snare: [0.5],
-        RunSound.snareGhost: [-0.5],
+        RunSound.crash: LayeredSamples(
+            soft: const [-0.1], medium: const [-0.1], hard: const [0.1]),
       },
-      BarJob(bpm: 120, tickVolumes: {RunSound.snare: vols}),
+      const BarJob(
+          bpm: 120,
+          tickVolumes: {},
+          hits: [JobHit(tick: 0, sound: RunSound.crash)]),
     ).pcm;
-    int at(int tick) => (tick * 60 / 120 / 24 * _sr).round();
-    expect(pcm[at(0)], greaterThan(0));
-    expect(pcm[at(24)], greaterThan(0));
-    expect(pcm[at(48)], lessThan(0));
+    expect(pcm[0], greaterThan(0));
+  });
+
+  test('pad line unchanged: the pad snare mixes as the loop pattern voice', () {
+    final snd = List<double>.generate(500, (i) => 0.3 * (1 - i / 500));
+    final vols = List<double>.filled(96, 0.0)
+      ..[0] = 2.0
+      ..[24] = 0.85
+      ..[48] = 0.25;
+    final got = renderBarJob(BarRenderer(), {RunSound.pattern: snd},
+        BarJob(bpm: 100, tickVolumes: {RunSound.pattern: vols})).pcm;
+    final want = BarRenderer().renderBar(bpm: 100, factor: 24, voices: [
+      LoopVoice(
+          tickVolumes: vols,
+          loudSamples: snd,
+          softSamples: snd,
+          loudFrom: 1.2,
+          gain: 1.0)
+    ]).pcm;
+    expect(got, want);
   });
 
   test('every playable RunSound has a mix spec', () {
     for (final s in RunSound.values) {
-      if (s == RunSound.snareGhost) continue; // soft sample of the snare only
       final pcm = renderBarJob(
         BarRenderer(),
         {
