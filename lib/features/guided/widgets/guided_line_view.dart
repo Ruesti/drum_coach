@@ -113,24 +113,40 @@ class GuidedLineView extends StatelessWidget {
       if (scale > 1.0) {
         final maxH = maxStaffHeight ??
             (c.maxHeight.isFinite ? c.maxHeight : double.infinity);
-        final h = _heightAt(rudiment, width / scale, fillWidth);
+        final h = naturalHeightAt(rudiment, width / scale, fillWidth);
         if (h * scale > maxH) {
-          scale =
-              (maxH / _heightAt(rudiment, width, fillWidth)).clamp(1.0, scale);
+          scale = (maxH / naturalHeightAt(rudiment, width, fillWidth))
+              .clamp(1.0, scale);
         }
       }
       if (scale <= 1.0) {
         final cap = maxStaffHeight;
-        return cap == null
-            ? view(width)
-            : ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: cap),
-                child: view(width));
+        // A multi-row line taller than the cap would be cut to a window of
+        // whole rows by LineView: scale it DOWN instead, so every row stays
+        // visible (laid out wider, drawn smaller, until it fits the cap).
+        if (cap != null &&
+            _rowCountAt(rudiment, width, fillWidth) > 1 &&
+            naturalHeightAt(rudiment, width, fillWidth) > cap) {
+          scale = cap / naturalHeightAt(rudiment, width, fillWidth);
+          for (var i = 0;
+              i < 20 &&
+                  naturalHeightAt(rudiment, width / scale, fillWidth) * scale >
+                      cap;
+              i++) {
+            scale *= 0.92;
+          }
+        } else {
+          return cap == null
+              ? view(width)
+              : ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: cap),
+                  child: view(width));
+        }
       }
       final inner = width / scale;
       return SizedBox(
         width: width,
-        height: _heightAt(rudiment, inner, fillWidth) * scale,
+        height: naturalHeightAt(rudiment, inner, fillWidth) * scale,
         child: FittedBox(
           fit: BoxFit.fitWidth,
           alignment: Alignment.topCenter,
@@ -143,7 +159,14 @@ class GuidedLineView extends StatelessWidget {
   }
 
   /// Natural height of the one-line card at [width] (as [LineView] sizes it).
-  static double _heightAt(Rudiment r, double width, bool fillWidth) {
+  static int _rowCountAt(Rudiment r, double width, bool fillWidth) =>
+      computeSheetGeometry(r, width - 2 * SheetStaffWidget.hPad,
+              showCounts: false, clefLine: 0, fillWidth: fillWidth)
+          .layouts[0]
+          .rowCount;
+
+  @visibleForTesting
+  static double naturalHeightAt(Rudiment r, double width, bool fillWidth) {
     final SheetGeometry geo = computeSheetGeometry(
         r, width - 2 * SheetStaffWidget.hPad,
         showCounts: false, clefLine: 0, fillWidth: fillWidth);

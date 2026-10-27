@@ -231,6 +231,25 @@ void main() {
         final cardRect = t.getRect(card.first);
         final viewRect = t.getRect(view);
         final staffRect = t.getRect(staff);
+        // Natural staff height at the card width vs the 220 cap: when it
+        // does not fit, the staff must be scaled down whole, not cut to a
+        // window of rows.
+        final natural = GuidedLineView.naturalHeightAt(
+            rudimentForGuidedLine(ex, sec.line), viewRect.width, true);
+        if (natural > 220) {
+          expect(viewRect.height, lessThanOrEqualTo(220.5));
+          // The drawn staff shows every row: its scaled content is the
+          // complete natural height at the (wider) layout width.
+          final fitted =
+              find.descendant(of: view, matching: find.byType(FittedBox));
+          expect(fitted, findsOneWidget,
+              reason: '${e.key} natural $natural > cap: must scale down');
+          final inner = t.getSize(staff);
+          expect(
+              inner.height,
+              GuidedLineView.naturalHeightAt(
+                  rudimentForGuidedLine(ex, sec.line), inner.width, true));
+        }
         final screen = Offset.zero & size;
         expect(
             screen.contains(cardRect.topLeft) &&
