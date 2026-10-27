@@ -129,28 +129,67 @@ void main() {
     expect(SettingsService.guidedPlayAlong, isFalse);
   });
 
-  testWidgets('shows timeline with every variation text', (t) async {
+  testWidgets('shows header and badges', (t) async {
     await _pump(t, _kit.id, const Size(1280, 800), desktop: true);
     expect(find.text(_kit.name), findsOneWidget);
     expect(find.text(_kit.description), findsOneWidget);
     expect(find.text(guidedDurationLabel(_kit)), findsOneWidget);
     expect(find.text('SET'), findsOneWidget);
-    var n = 0;
-    for (final s in _kit.sections) {
-      if (s.kind != SectionKind.variation) continue;
-      n++;
-      expect(find.text(s.textEn!), findsOneWidget);
-      expect(find.text('V$n'), findsOneWidget);
+    expect(find.text('Ending'), findsNothing);
+  });
+
+  testWidgets(
+      'preview shows one staff per section kind (groove + each variation)',
+      (t) async {
+    await _pump(t, _kit.id, const Size(1280, 800), desktop: true);
+    // Off-screen cards are built lazily by nothing: Column in a scroll view
+    // builds all of them.
+    expect(find.byType(GuidedLineView, skipOffstage: false),
+        findsNWidgets(1 + _kit.variationCount));
+    expect(
+        find.textContaining('GROOVE · ', skipOffstage: false), findsOneWidget);
+    for (var n = 1; n <= _kit.variationCount; n++) {
+      expect(
+          find.textContaining('V$n · ', skipOffstage: false), findsOneWidget);
     }
-    expect(n, _kit.variationCount);
-    final grooves = _kit.sections.where((s) => s.kind == SectionKind.groove);
-    expect(find.text('Groove'), findsNWidgets(grooves.length));
-    expect(find.text('Ending'), findsOneWidget);
-    expect(find.byType(GuidedLineView), findsOneWidget);
+    for (final w in find
+        .byType(GuidedLineView, skipOffstage: false)
+        .evaluate()
+        .map((e) => e.widget as GuidedLineView)) {
+      expect(w.showCursor, isFalse);
+    }
+  });
+
+  testWidgets('no explanation text in the preview', (t) async {
+    await _pump(t, _kit.id, const Size(1280, 800), desktop: true);
+    for (final s in _kit.sections) {
+      if (s.textEn == null) continue;
+      expect(find.text(s.textEn!, skipOffstage: false), findsNothing);
+    }
+    expect(find.text('SEQUENCE'), findsNothing);
+  });
+
+  testWidgets('4 variations and 2-bar lines fit and scroll at 1280x720 desktop',
+      (t) async {
+    final ex = guidedCatalog.firstWhere((e) => e.variationCount >= 4);
+    await _pump(t, ex.id, const Size(1280, 720), desktop: true);
+    expect(t.takeException(), isNull);
+    final last =
+        find.textContaining('V${ex.variationCount} · ', skipOffstage: false);
+    expect(last, findsOneWidget);
+    await t.scrollUntilVisible(last, 200,
+        scrollable: find
+            .ancestor(
+                of: find.byKey(const Key('guided-cards')),
+                matching: find.byType(Scrollable))
+            .first);
+    expect(t.takeException(), isNull);
+    expect(last.hitTestable(), findsOneWidget);
   });
 
   testWidgets('start pushes play only once', (t) async {
-    final router = await _pump(t, _kit.id, const Size(1280, 800), desktop: true);
+    final router =
+        await _pump(t, _kit.id, const Size(1280, 800), desktop: true);
     await t.sendKeyEvent(LogicalKeyboardKey.space);
     await t.sendKeyEvent(LogicalKeyboardKey.space);
     await t.pumpAndSettle();
@@ -325,14 +364,14 @@ void main() {
       // Tablet portrait: two columns.
       await _pump(t, ex.id, const Size(820, 1180));
       expect(t.takeException(), isNull);
-      final tl = t.getRect(find.byKey(const Key('guided-timeline')));
+      final tl = t.getRect(find.byKey(const Key('guided-cards')));
       final st = t.getRect(find.byKey(const Key('guided-start')));
       expect(st.left, greaterThan(tl.right - 1));
 
       // Desktop: inside the 900 cap, two columns.
       await _pump(t, ex.id, const Size(1280, 800), desktop: true);
       expect(t.takeException(), isNull);
-      final tl2 = t.getRect(find.byKey(const Key('guided-timeline')));
+      final tl2 = t.getRect(find.byKey(const Key('guided-cards')));
       final st2 = t.getRect(find.byKey(const Key('guided-start')));
       expect(st2.left, greaterThan(tl2.right - 1));
       expect(tl2.left, greaterThanOrEqualTo(190));

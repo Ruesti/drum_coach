@@ -25,9 +25,8 @@ import 'guided_play_screen.dart' show GuidedPlayResult;
 /// phones one).
 const double guidedPreviewTwoColumnMinWidth = 820;
 
-/// `/guided/:id`: introduces one guided exercise — its sequence of sections
-/// with the explanations, the groove notes, tempo, Teacher / Play along —
-/// and starts it.
+/// `/guided/:id`: introduces one guided exercise — the note lines of the
+/// groove and each variation, tempo, Teacher / Play along — and starts it.
 class GuidedPreviewScreen extends StatefulWidget {
   const GuidedPreviewScreen({super.key, required this.id, this.photo});
 
@@ -78,9 +77,9 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
     final ex = _ex!;
     final GuidedPlayResult? result;
     try {
-      result = await context.push<GuidedPlayResult>(
-          '/guided/${ex.id}/play?bpm=$_bpm'
-          '&teacher=${_teacher ? 1 : 0}&along=${_along ? 1 : 0}');
+      result =
+          await context.push<GuidedPlayResult>('/guided/${ex.id}/play?bpm=$_bpm'
+              '&teacher=${_teacher ? 1 : 0}&along=${_along ? 1 : 0}');
     } finally {
       _starting = false;
     }
@@ -171,10 +170,8 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _Timeline(
-                            key: const Key('guided-timeline'), exercise: ex),
-                        const SizedBox(height: AppSpacing.lg),
-                        _GroovePanel(exercise: ex),
+                        _NoteCards(
+                            key: const Key('guided-cards'), exercise: ex),
                       ],
                     ),
                   ),
@@ -222,9 +219,7 @@ class _GuidedPreviewScreenState extends State<GuidedPreviewScreen> {
               children: [
                 _header(ex, large: false),
                 const SizedBox(height: AppSpacing.xl),
-                _Timeline(key: const Key('guided-timeline'), exercise: ex),
-                const SizedBox(height: AppSpacing.lg),
-                _GroovePanel(exercise: ex),
+                _NoteCards(key: const Key('guided-cards'), exercise: ex),
                 const SizedBox(height: AppSpacing.lg),
                 _settings(ex),
               ],
@@ -314,183 +309,82 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// The sequence of sections as a vertical timeline: quiet groove rows,
-/// variation rows with an accent dot, their number, bars and explanation.
-class _Timeline extends StatelessWidget {
-  const _Timeline({super.key, required this.exercise});
-  final GuidedExercise exercise;
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = <Widget>[];
-    final sections =
-        exercise.sections.where((s) => s.kind != SectionKind.intro).toList();
-    var v = 0;
-    for (var i = 0; i < sections.length; i++) {
-      final s = sections[i];
-      if (s.kind == SectionKind.variation) v++;
-      rows.add(_TimelineRow(
-        section: s,
-        variation: s.kind == SectionKind.variation ? v : null,
-        first: i == 0,
-        last: i == sections.length - 1,
-      ));
-    }
-    final bars = sections.fold<int>(0, (n, s) => n + s.bars);
-    return GuidedPanel(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.cardPadding,
-          AppSpacing.cardPadding, AppSpacing.cardPadding, AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          GuidedPanelLabel('SEQUENCE', trailing: '$bars BARS'),
-          ...rows,
-        ],
-      ),
-    );
-  }
-}
-
 String _barsLabel(int n) => n == 1 ? '1 bar' : '$n bars';
 
-class _TimelineRow extends StatelessWidget {
-  const _TimelineRow({
-    required this.section,
-    required this.variation,
-    required this.first,
-    required this.last,
-  });
-
-  final GuidedSection section;
-  final int? variation;
-  final bool first;
-  final bool last;
-
-  static const _gutter = 28.0;
-  static const _railColor = Color(0x33FFFFFF);
-
-  @override
-  Widget build(BuildContext context) {
-    final isVar = variation != null;
-    final isOutro = section.kind == SectionKind.outro;
-    final dotSize = isVar ? 11.0 : 7.0;
-    final Color dotColor = isVar
-        ? PracticeColors.accent
-        : isOutro
-            ? PracticeColors.textSecondary
-            : PracticeColors.textMuted;
-    final headStyle = isVar
-        ? PracticeTypography.label.copyWith(
-            color: PracticeColors.accent, fontSize: 14, letterSpacing: 1)
-        : PracticeTypography.body.copyWith(
-            color: isOutro
-                ? PracticeColors.textSecondary
-                : PracticeColors.textMuted,
-            height: 1.3);
-    final barsStyle = PracticeTypography.label
-        .copyWith(color: PracticeColors.textMuted, fontWeight: FontWeight.w500);
-    // The dot sits on the first text line.
-    const dotTop = 15.0;
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            width: _gutter,
-            child: Stack(
-              alignment: Alignment.topCenter,
-              children: [
-                Positioned(
-                  top: first ? dotTop : 0,
-                  bottom: last ? null : 0,
-                  height: last ? dotTop : null,
-                  child: Container(width: 1.5, color: _railColor),
-                ),
-                Positioned(
-                  top: dotTop - dotSize / 2,
-                  child: Container(
-                    width: dotSize,
-                    height: dotSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: dotColor,
-                      boxShadow: isVar
-                          ? [
-                              BoxShadow(
-                                color: PracticeColors.accent
-                                    .withValues(alpha: 0.45),
-                                blurRadius: 8,
-                              )
-                            ]
-                          : null,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                  top: 5, bottom: isVar ? AppSpacing.md : AppSpacing.sm),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 20,
-                    child: Row(
-                      children: [
-                        Text(
-                          isVar
-                              ? 'V$variation'
-                              : isOutro
-                                  ? 'Ending'
-                                  : 'Groove',
-                          style: headStyle,
-                        ),
-                        const Spacer(),
-                        Text(_barsLabel(section.bars), style: barsStyle),
-                      ],
-                    ),
-                  ),
-                  if (isVar && section.textEn != null) ...[
-                    const SizedBox(height: 2),
-                    Text(section.textEn!,
-                        style: PracticeTypography.body.copyWith(height: 1.4)),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The groove's notes, so the drummer sees the base pattern before starting.
-class _GroovePanel extends StatelessWidget {
-  const _GroovePanel({required this.exercise});
+/// The note lines as a preview: one card per distinct section line, in
+/// order — the groove first, then V1…Vn. No text, just the notes (Uli
+/// 27.10.: "nicht textlich anzeigen was gespielt wird").
+class _NoteCards extends StatelessWidget {
+  const _NoteCards({super.key, required this.exercise});
   final GuidedExercise exercise;
 
   @override
   Widget build(BuildContext context) {
-    final groove = exercise.sections
-        .where((s) => s.kind == SectionKind.groove)
-        .firstOrNull;
-    if (groove == null) return const SizedBox.shrink();
+    final cards = <Widget>[];
+    var v = 0;
+    var grooveDone = false;
+    for (final s in exercise.sections) {
+      final String label;
+      if (s.kind == SectionKind.groove) {
+        if (grooveDone) continue;
+        grooveDone = true;
+        label = 'GROOVE';
+      } else if (s.kind == SectionKind.variation) {
+        label = 'V${++v}';
+      } else {
+        continue;
+      }
+      if (cards.isNotEmpty) cards.add(const SizedBox(height: AppSpacing.lg));
+      cards.add(_NoteCard(
+        exercise: exercise,
+        section: s,
+        label: label,
+        isVariation: s.kind == SectionKind.variation,
+      ));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: cards,
+    );
+  }
+}
+
+class _NoteCard extends StatelessWidget {
+  const _NoteCard({
+    required this.exercise,
+    required this.section,
+    required this.label,
+    required this.isVariation,
+  });
+
+  final GuidedExercise exercise;
+  final GuidedSection section;
+  final String label;
+  final bool isVariation;
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        isVariation ? PracticeColors.accent : PracticeColors.textMuted;
     return GuidedPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const GuidedPanelLabel('GROOVE'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: Text(
+              '$label · ${_barsLabel(section.bars)}',
+              style: PracticeTypography.label
+                  .copyWith(color: color, fontSize: 13, letterSpacing: 1),
+            ),
+          ),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.chip),
             child: GuidedLineView(
               exercise: exercise,
-              line: groove.line,
+              line: section.line,
+              showCursor: false,
+              fillWidth: true,
               maxStaffHeight: 220,
             ),
           ),
