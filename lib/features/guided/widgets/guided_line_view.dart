@@ -44,7 +44,12 @@ int lineTickFor(RunPosition p, ExerciseLine line, NoteGrid grid) {
 /// practice screen's [LineView].
 ///
 /// [activeTick] is the cursor tick within the LINE (the caller maps the
-/// player's position with [lineTickFor]); null = no cursor. [dimmed] draws
+/// player's position with [lineTickFor]); null = no cursor. [showCursor]
+/// false draws neither cursor nor highlighted note even with a tick (the
+/// play screen, Uli 27.10.: "die gespielten Noten nicht highlighten").
+/// [fillWidth] spreads the notes over the whole width (the wide play
+/// screen, Uli 27.10.) instead of centring them at the comfort spacing.
+/// [dimmed] draws
 /// the line at 45 % for "coming up". The view fills the width it gets; on
 /// a wide layout the staff grows (scaled, not re-spaced) until it reaches
 /// [maxStaffHeight] — at phone width it is drawn at its natural size.
@@ -54,6 +59,8 @@ class GuidedLineView extends StatelessWidget {
     required this.exercise,
     required this.line,
     this.activeTick,
+    this.showCursor = true,
+    this.fillWidth = false,
     this.dimmed = false,
     this.maxStaffHeight,
   });
@@ -61,6 +68,8 @@ class GuidedLineView extends StatelessWidget {
   final GuidedExercise exercise;
   final ExerciseLine line;
   final int? activeTick;
+  final bool showCursor;
+  final bool fillWidth;
   final bool dimmed;
   final double? maxStaffHeight;
 
@@ -79,7 +88,7 @@ class GuidedLineView extends StatelessWidget {
     final rudiment = rudimentForGuidedLine(exercise, line);
     // Pad lines place their cursor by note index, kit lines by tick.
     int? activeIndex;
-    final tick = activeTick;
+    final tick = showCursor ? activeTick : null;
     if (tick != null && !line.isKit && line.beats.isNotEmpty) {
       final pb = buildPatternPlayback(line.beats, exercise.gridUnit);
       activeIndex = pb.noteIndexAtTick(tick % pb.totalTicks);
@@ -93,6 +102,7 @@ class GuidedLineView extends StatelessWidget {
             activeTick: line.isKit ? tick : null,
             showCounts: false,
             showLineNumber: false,
+            fillWidth: fillWidth,
           ),
         );
 
@@ -103,9 +113,10 @@ class GuidedLineView extends StatelessWidget {
       if (scale > 1.0) {
         final maxH = maxStaffHeight ??
             (c.maxHeight.isFinite ? c.maxHeight : double.infinity);
-        final h = _heightAt(rudiment, width / scale);
+        final h = _heightAt(rudiment, width / scale, fillWidth);
         if (h * scale > maxH) {
-          scale = (maxH / _heightAt(rudiment, width)).clamp(1.0, scale);
+          scale =
+              (maxH / _heightAt(rudiment, width, fillWidth)).clamp(1.0, scale);
         }
       }
       if (scale <= 1.0) {
@@ -119,7 +130,7 @@ class GuidedLineView extends StatelessWidget {
       final inner = width / scale;
       return SizedBox(
         width: width,
-        height: _heightAt(rudiment, inner) * scale,
+        height: _heightAt(rudiment, inner, fillWidth) * scale,
         child: FittedBox(
           fit: BoxFit.fitWidth,
           alignment: Alignment.topCenter,
@@ -132,10 +143,10 @@ class GuidedLineView extends StatelessWidget {
   }
 
   /// Natural height of the one-line card at [width] (as [LineView] sizes it).
-  static double _heightAt(Rudiment r, double width) {
+  static double _heightAt(Rudiment r, double width, bool fillWidth) {
     final SheetGeometry geo = computeSheetGeometry(
         r, width - 2 * SheetStaffWidget.hPad,
-        showCounts: false, clefLine: 0);
+        showCounts: false, clefLine: 0, fillWidth: fillWidth);
     return geo.layouts[0].rowCount * geo.rowPitch + 2 * SheetStaffWidget.vPad;
   }
 }

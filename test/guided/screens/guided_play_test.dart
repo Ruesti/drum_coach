@@ -10,8 +10,12 @@ import 'package:drum_coach/features/guided/guided_shortcuts.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/run_clock.dart';
 import 'package:drum_coach/features/guided/screens/guided_play_screen.dart';
+import 'package:drum_coach/features/guided/widgets/guided_banner.dart';
 import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
+import 'package:drum_coach/features/practice/widgets/line_view.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
+import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
+import 'package:drum_coach/shared/widgets/sheet_geometry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -81,11 +85,9 @@ Future<GoRouter> _open(
   ]);
   await t.pumpWidget(ProviderScope(
     overrides: [
-      guidedRigProvider.overrideWith(
-          (ref) => rig != null
-              ? rig()
-              : Future.value(
-                  GuidedRig(player: p, clips: fakeClipManifest()))),
+      guidedRigProvider.overrideWith((ref) => rig != null
+          ? rig()
+          : Future.value(GuidedRig(player: p, clips: fakeClipManifest()))),
     ],
     child: RepaintBoundary(
       key: const Key('shot'),
@@ -198,18 +200,125 @@ void main() {
     expect(cd, findsNothing);
   });
 
-  testWidgets('cursor follows run position', (t) async {
-    final p = FakeGuidedPlayer();
-    await _open(t, p);
-    final g = _varIndex(_kit, 1) - 1;
-    final line = _kit.sections[g].line;
-    await _emit(t, p, _pos(g, 0, tick: 30));
-    expect(_nowView(t).activeTick,
-        lineTickFor(_pos(g, 0, tick: 30), line, _kit.gridUnit));
-    await _emit(t, p, _pos(g, 1, tick: 60));
-    expect(_nowView(t).activeTick,
-        lineTickFor(_pos(g, 1, tick: 60), line, _kit.gridUnit));
-    expect(_nowView(t).dimmed, isFalse);
+  testWidgets('no cursor on the play screen', (t) async {
+    // Uli 27.10.: "die gespielten Noten nicht highlighten" — the now line
+    // follows the run, but neither a cursor nor a coloured note is drawn.
+    final pad = guidedCatalog.firstWhere((e) => e.package == GuidedPackage.pad);
+    for (final (ex, size, desktop) in [
+      (_kit, const Size(412, 915), false),
+      (_kit, const Size(1280, 720), true),
+      (pad, const Size(1280, 720), true),
+    ]) {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: size, desktop: desktop, ex: ex);
+      final g = _varIndex(ex, 1) - 1;
+      final v = g + 1;
+      for (final pos in [
+        _pos(g, 0, tick: 30),
+        _pos(g, 1, tick: 60),
+        _pos(v, 0, tick: 24),
+      ]) {
+        await _emit(t, p, pos);
+        final now = _nowView(t);
+        expect(now.showCursor, isFalse);
+        expect(now.dimmed, isFalse);
+        final lv = t.widget<LineView>(find.descendant(
+            of: find.byKey(const Key('guided-now')),
+            matching: find.byType(LineView)));
+        expect(lv.activeTick, isNull, reason: '${ex.id} $size');
+        expect(lv.activeIndex, isNull, reason: '${ex.id} $size');
+        for (final w in t.widgetList<SheetStaffWidget>(find.descendant(
+            of: find.byKey(const Key('guided-now')),
+            matching: find.byType(SheetStaffWidget)))) {
+          expect(w.activeTick, isNull);
+          expect(w.activeIndex, isNull);
+        }
+      }
+      // Where am I stays visible: status line and timeline marker.
+      expect(t.widget<Text>(find.byKey(const Key('guided-status'))).data,
+          contains('Variation 1'));
+      expect(find.byKey(const Key('guided-timeline-marker')), findsOneWidget);
+      expect(_nowView(t).line, same(ex.sections[v].line));
+    }
+  });
+
+  testWidgets('notes span at least 90 % of the width at 1280 and 1600',
+      (t) async {
+    final v2 = _varIndex(_kit, 2);
+    for (final size in [const Size(1280, 720), const Size(1600, 900)]) {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: size, desktop: true);
+      // Content width (1440 at 1600: UncappedContent's cap).
+      final content = t.getSize(find.byType(GuidedPlayScreen)).width;
+      for (final pos in [_pos(v2 - 1, 0), _pos(v2, 1, tick: 40)]) {
+        await _emit(t, p, pos);
+        final now = t.getRect(find.byKey(const Key('guided-now')));
+        expect(now.width, greaterThanOrEqualTo(0.9 * content),
+            reason: '$size section ${pos.sectionIndex}');
+        // The drawn staff, not just its card: lay the line out at the
+        // card's own (unscaled) width and scale its end to the screen.
+        final lvFinder = find.descendant(
+            of: find.byKey(const Key('guided-now')),
+            matching: find.byType(LineView));
+        final lv = t.widget<LineView>(lvFinder);
+        expect(lv.fillWidth, isTrue);
+        final inner = t.getSize(lvFinder).width - 2 * SheetStaffWidget.hPad;
+        final l = computeSheetGeometry(lv.rudiment, inner,
+                showCounts: false, fillWidth: lv.fillWidth)
+            .layouts[0];
+        // Not centred in a wider card: the row starts at the left edge.
+        expect(l.xOffset, 0, reason: '$size');
+        final rowEnd = l.originX +
+            l.barsPerRow * (l.beatsPerBar * l.pxPerQuarter + l.barGap) -
+            l.barGap;
+        final onScreen = t.getRect(lvFinder).width / (inner + 8) * rowEnd;
+        expect(onScreen, greaterThanOrEqualTo(0.9 * content),
+            reason: '$size section ${pos.sectionIndex}');
+        // Review Focus 3: wide, but not absurdly high.
+        expect(now.height, lessThanOrEqualTo(300), reason: '$size');
+        // The banner below spans the full width too.
+        if (pos.sectionIndex == v2 - 1) {
+          final b = t.getRect(find.byKey(const Key('guided-banner')));
+          expect(b.width, greaterThanOrEqualTo(0.9 * content));
+          expect(b.top, greaterThan(now.bottom));
+        }
+      }
+      // Countdown disc: small, at the right end of the notes.
+      await _emit(t, p, _pos(v2 - 1, 3, tick: 30, countdown: 2));
+      final now = t.getRect(find.byKey(const Key('guided-now')));
+      final disc = t.getRect(find.byType(GuidedCountdown));
+      expect(disc.width, lessThanOrEqualTo(100));
+      expect(disc.left, greaterThan(now.left + 0.75 * now.width));
+      expect(disc.right, lessThanOrEqualTo(now.right));
+    }
+  });
+
+  testWidgets('progress bar height ≤ half of before', (t) async {
+    // Before 27.10. the horizontal bar's track was 8 px high (marker 14,
+    // the whole bar with labels 34); the wide layout even had a vertical
+    // column of the full height.
+    const before = 8.0;
+    const beforeWidget = 34.0;
+    for (final (size, desktop) in [
+      (const Size(412, 915), false),
+      (const Size(1280, 720), true),
+    ]) {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: size, desktop: desktop);
+      await _emit(t, p, _pos(_varIndex(_kit, 1), 0));
+      final track = t.getSize(find.byKey(const Key('guided-timeline-track')));
+      expect(track.height, lessThanOrEqualTo(before / 2), reason: '$size');
+      expect(track.width, greaterThan(track.height * 20),
+          reason: 'horizontal on every layout');
+      final bar = t.getSize(find.byKey(const Key('guided-timeline')));
+      expect(bar.height, lessThan(beforeWidget), reason: '$size');
+      // The labels stay readable.
+      final v1 = find.descendant(
+          of: find.byKey(const Key('guided-timeline')),
+          matching: find.text('V1'));
+      expect(v1, findsOneWidget);
+      expect(t.widget<Text>(v1).style!.fontSize, greaterThanOrEqualTo(12));
+    }
   });
 
   testWidgets('timeline marker advances', (t) async {
@@ -225,13 +334,15 @@ void main() {
     expect(b, greaterThan(a));
     expect(c, greaterThan(b));
 
-    // Desktop: vertical, it moves down.
+    // Desktop: the same thin bar under the header, it moves right.
     final q = FakeGuidedPlayer();
     await _open(t, q, size: const Size(1280, 720), desktop: true);
     await _emit(t, q, _pos(1, 0));
-    final d = t.getCenter(marker).dy;
+    final d = t.getCenter(marker).dx;
     await _emit(t, q, _pos(_varIndex(_kit, 2), 0));
-    expect(t.getCenter(marker).dy, greaterThan(d));
+    expect(t.getCenter(marker).dx, greaterThan(d));
+    expect(t.getCenter(marker).dy,
+        lessThan(t.getRect(find.byKey(const Key('guided-now'))).top));
   });
 
   testWidgets('resizing while playing keeps the run', (t) async {
@@ -402,8 +513,7 @@ void main() {
       expect(find.byKey(const Key('guided-wide')), findsOneWidget);
     });
 
-    testWidgets('cap returns to 900 on the first frame of the pop',
-        (t) async {
+    testWidgets('cap returns to 900 on the first frame of the pop', (t) async {
       final p = FakeGuidedPlayer();
       await _open(t, p, size: const Size(1600, 900), desktop: true);
       expect(t.getSize(find.byType(GuidedPlayScreen)).width, 1440);
@@ -486,6 +596,8 @@ void main() {
     final v2 = _varIndex(_kit, 2);
     for (final (size, desktop) in [
       (const Size(1280, 720), true),
+      (const Size(1600, 900), true),
+      (const Size(1024, 768), true),
       (const Size(412, 915), false),
       (const Size(820, 1180), false),
     ]) {
@@ -507,6 +619,9 @@ void main() {
             expect(s.position.maxScrollExtent, 0,
                 reason: 'section ${pos.sectionIndex}');
           }
+          final hint = t.renderObject<RenderParagraph>(
+              find.byKey(const Key('guided-key-hint')));
+          expect(hint.didExceedMaxLines, isFalse, reason: '$size');
         }
       }
       p.finishedCtrl.add(null);

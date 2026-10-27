@@ -190,13 +190,28 @@ class GuidedKeyHint extends StatelessWidget {
   const GuidedKeyHint(this.text, {super.key});
   final String text;
 
+  static TextStyle get style => PracticeTypography.label
+      .copyWith(fontSize: 12, color: PracticeColors.textMuted);
+
+  /// Width [text] needs on its (at most two) lines.
+  static double widthOf(BuildContext context, String text) {
+    final tp = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 2,
+    )..layout();
+    final w = tp.width;
+    tp.dispose();
+    return w;
+  }
+
   @override
   Widget build(BuildContext context) => Text(
         text,
         key: const Key('guided-key-hint'),
         maxLines: 2,
         textAlign: TextAlign.center,
-        style: PracticeTypography.label.copyWith(
-            fontSize: 12, color: PracticeColors.textMuted),
+        style: style,
       );
 }

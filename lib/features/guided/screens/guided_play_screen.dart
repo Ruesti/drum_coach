@@ -26,14 +26,17 @@ import '../widgets/guided_panel.dart';
 import '../widgets/guided_timeline_bar.dart';
 
 /// `/guided/:id/play`: plays one guided exercise (Plan 3a, Task 5) — the
-/// notes of the line playing with the cursor, the "coming up" banner with
+/// notes of the line playing (no cursor, no highlighted note: Uli 27.10.;
+/// where you are shows in the status line and the timeline), the
+/// "coming up" banner with
 /// the explanation and the next variation, the big 3 · 2 · 1 · GO, the
 /// whole run as a timeline, live tempo / Teacher / Play along, and a calm
 /// end view.
 ///
-/// Desktop first: from [guidedWide] two columns (notes and banner left,
-/// timeline and controls right) over the full window ([UncappedContent]);
-/// narrower one column like the phone practice screen. Leaving (Back, Esc,
+/// Desktop first: from [guidedWide] one column over the full window
+/// ([UncappedContent]) — header, a thin timeline, the notes and the banner
+/// over the full width (Optik-Runde 1, 27.10.), the controls in one bar at
+/// the bottom; narrower one column like the phone practice screen. Leaving (Back, Esc,
 /// Stop) stops the player and pops with a [GuidedPlayResult].
 class GuidedPlayScreen extends ConsumerStatefulWidget {
   const GuidedPlayScreen({
@@ -242,7 +245,7 @@ class _PlayPageState extends State<_PlayPage> {
   }
 
   /// Section whose notes are shown: the one playing; before the first
-  /// groove (count-in, an empty intro) the first groove, without cursor.
+  /// groove (count-in, an empty intro) the first groove.
   int get _nowSection {
     final p = _pos;
     final secs = _ex.sections;
@@ -417,7 +420,9 @@ class _PlayPageState extends State<_PlayPage> {
   }
 
   /// "NOW · V2" + the explanation while a variation plays, then the notes
-  /// with the cursor and, in the countdown, the big number over them.
+  /// (without cursor) and, in the countdown, the number over them — on the
+  /// wide layout a smaller disc at the right end, so the notes stay
+  /// readable.
   Widget _now({required bool large, double? notesMax}) {
     final si = _nowSection;
     final s = _ex.sections[si];
@@ -474,30 +479,43 @@ class _PlayPageState extends State<_PlayPage> {
                   activeTick: _cursorOn && p != null
                       ? lineTickFor(p, s.line, _ex.gridUnit)
                       : null,
+                  showCursor: false,
+                  fillWidth: large,
                   maxStaffHeight: notesMax,
                 ),
               ),
             ),
-            if (countdown != null)
-              KeyedSubtree(
-                key: const Key('guided-countdown'),
-                child: TweenAnimationBuilder<double>(
-                  key: ValueKey(countdown),
-                  tween: Tween(begin: 0.6, end: 1),
-                  duration: const Duration(milliseconds: 160),
-                  curve: Curves.easeOutBack,
-                  builder: (_, v, child) => Opacity(
-                      opacity: ((v - 0.6) / 0.4).clamp(0.0, 1.0),
-                      child: Transform.scale(scale: v, child: child)),
-                  child: GuidedCountdown(
-                      remaining: countdown, size: large ? 150 : 112),
+            if (countdown != null && large)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: AppSpacing.lg,
+                child: Align(
+                  widthFactor: 1,
+                  child: _countdown(countdown, size: 96),
                 ),
-              ),
+              )
+            else if (countdown != null)
+              _countdown(countdown, size: 112),
           ],
         ),
       ],
     );
   }
+
+  Widget _countdown(int countdown, {required double size}) => KeyedSubtree(
+        key: const Key('guided-countdown'),
+        child: TweenAnimationBuilder<double>(
+          key: ValueKey(countdown),
+          tween: Tween(begin: 0.6, end: 1),
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutBack,
+          builder: (_, v, child) => Opacity(
+              opacity: ((v - 0.6) / 0.4).clamp(0.0, 1.0),
+              child: Transform.scale(scale: v, child: child)),
+          child: GuidedCountdown(remaining: countdown, size: size),
+        ),
+      );
 
   Widget? _banner({required bool large, double? lineMax}) {
     final i = _comingVariation;
@@ -551,116 +569,108 @@ class _PlayPageState extends State<_PlayPage> {
   Widget _wide() {
     return Padding(
       key: const Key('guided-wide'),
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.xxl, AppSpacing.lg, AppSpacing.xxl, AppSpacing.xl),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding,
+          AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _header(large: true),
+          const SizedBox(height: AppSpacing.md),
+          GuidedTimelineBar(
+            key: const Key('guided-timeline'),
+            segments: _segments,
+            progress: _run.progress,
+            current: _currentSegment,
+          ),
           const SizedBox(height: AppSpacing.lg),
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: LayoutBuilder(builder: (context, c) {
-                    final banner = _comingVariation != null;
-                    // Room for the staffs once labels, text and the
-                    // banner's own lines are taken off.
-                    final room = c.maxHeight - (banner ? 190 : 110);
-                    final notesMax = banner
-                        ? (room * 0.58).clamp(120.0, 300.0)
-                        : room.clamp(140.0, 400.0);
-                    final lineMax = (room * 0.42).clamp(90.0, 200.0);
-                    final b = _banner(large: true, lineMax: lineMax);
-                    return SingleChildScrollView(
-                      key: const Key('guided-main-scroll'),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _now(large: true, notesMax: notesMax),
-                          if (b != null) ...[
-                            const SizedBox(height: AppSpacing.lg),
-                            b,
-                          ],
-                        ],
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(width: AppSpacing.xl),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: GuidedPanel(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              GuidedPanelLabel('SEQUENCE',
-                                  trailing: '${_ex.variationCount} VARIATIONS'),
-                              Expanded(
-                                child: GuidedTimelineBar(
-                                  key: const Key('guided-timeline'),
-                                  axis: Axis.vertical,
-                                  segments: _segments,
-                                  progress: _run.progress,
-                                  current: _currentSegment,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      GuidedPanel(
-                        padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.cardPadding,
-                            AppSpacing.md,
-                            AppSpacing.cardPadding,
-                            AppSpacing.xs),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _tempo,
-                            const SizedBox(height: AppSpacing.sm),
-                            const Divider(height: 1, color: Color(0x1FFFFFFF)),
-                            GuidedSwitchRow(
-                              key: const Key('guided-teacher'),
-                              title: 'Teacher',
-                              subtitle: 'A voice explains each variation',
-                              value: _run.options.teacher,
-                              onChanged: _setTeacher,
-                            ),
-                            const Divider(height: 1, color: Color(0x1FFFFFFF)),
-                            GuidedSwitchRow(
-                              key: const Key('guided-along'),
-                              title: 'Play along',
-                              subtitle: 'Hear the notes played with you',
-                              value: _run.options.playAlong,
-                              onChanged: _setAlong,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _playButtons(),
-                      if (isDesktopPlatform) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        const GuidedKeyHint(guidedPlayKeyHint),
-                      ],
+            child: LayoutBuilder(builder: (context, c) {
+              // Room for the two staffs once the labels, the explanation
+              // and the banner's own lines are taken off. The same split
+              // with and without banner, so the notes do not jump; capped,
+              // so a very wide window spreads the notes instead of making
+              // them ever taller (Review Focus 3).
+              final room = c.maxHeight - 170;
+              final notesMax = (room * 0.6).clamp(120.0, 280.0);
+              final lineMax = (room * 0.4).clamp(80.0, 180.0);
+              final b = _banner(large: true, lineMax: lineMax);
+              return SingleChildScrollView(
+                key: const Key('guided-main-scroll'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _now(large: true, notesMax: notesMax),
+                    if (b != null) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      b,
                     ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            }),
           ),
+          const SizedBox(height: AppSpacing.md),
+          _wideControls(),
         ],
       ),
     );
   }
+
+  /// Tempo, Teacher, Play along, key hint, Pause/Stop in one bar; the
+  /// key hint moves under the bar when the window is too narrow for it.
+  Widget _wideControls() => LayoutBuilder(builder: (context, c) {
+        const fixed = 230 + 140 + 160 + 240 + 3 * AppSpacing.lg + AppSpacing.md;
+        final hintW = isDesktopPlatform
+            ? GuidedKeyHint.widthOf(context, guidedPlayKeyHint)
+            : 0.0;
+        final inline =
+            !isDesktopPlatform || c.maxWidth - fixed - AppSpacing.lg >= hintW;
+        final bar = Row(
+          children: [
+            SizedBox(width: 230, child: _tempo),
+            const SizedBox(width: AppSpacing.lg),
+            SizedBox(width: 140, child: _teacherChip),
+            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: 160, child: _alongChip),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: isDesktopPlatform && inline
+                  ? const Center(child: GuidedKeyHint(guidedPlayKeyHint))
+                  : const SizedBox.shrink(),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            SizedBox(width: 240, child: _playButtons()),
+          ],
+        );
+        if (inline) return bar;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            bar,
+            const SizedBox(height: AppSpacing.sm),
+            const Align(
+                alignment: Alignment.centerRight,
+                child: GuidedKeyHint(guidedPlayKeyHint)),
+          ],
+        );
+      });
+
+  Widget get _teacherChip => _ToggleChip(
+        key: const Key('guided-teacher'),
+        icon: Icons.record_voice_over_outlined,
+        label: 'Teacher',
+        value: _run.options.teacher,
+        onChanged: _setTeacher,
+      );
+
+  Widget get _alongChip => _ToggleChip(
+        key: const Key('guided-along'),
+        icon: Icons.music_note_outlined,
+        label: 'Play along',
+        value: _run.options.playAlong,
+        onChanged: _setAlong,
+      );
 
   Widget _narrow() {
     final b = _banner(large: false, lineMax: 200);
@@ -710,25 +720,9 @@ class _PlayPageState extends State<_PlayPage> {
               const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
-                  Expanded(
-                    child: _ToggleChip(
-                      key: const Key('guided-teacher'),
-                      icon: Icons.record_voice_over_outlined,
-                      label: 'Teacher',
-                      value: _run.options.teacher,
-                      onChanged: _setTeacher,
-                    ),
-                  ),
+                  Expanded(child: _teacherChip),
                   const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _ToggleChip(
-                      key: const Key('guided-along'),
-                      icon: Icons.music_note_outlined,
-                      label: 'Play along',
-                      value: _run.options.playAlong,
-                      onChanged: _setAlong,
-                    ),
-                  ),
+                  Expanded(child: _alongChip),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
@@ -743,8 +737,7 @@ class _PlayPageState extends State<_PlayPage> {
 
 const _shadow = [Shadow(color: Color(0x99000000), blurRadius: 8)];
 
-/// Compact on/off pill for the phone controls (the wide layout uses
-/// [GuidedSwitchRow]).
+/// Compact on/off pill for the controls (phone and the wide bottom bar).
 class _ToggleChip extends StatelessWidget {
   const _ToggleChip({
     super.key,

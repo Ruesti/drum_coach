@@ -127,6 +127,10 @@ class SheetStaffWidget extends StatelessWidget {
   /// for guided lines, where "1" means nothing).
   final bool showLineNumber;
 
+  /// Spread every line over the whole width (no comfort cap on the note
+  /// spacing); must match the [geometry] passed in.
+  final bool fillWidth;
+
   const SheetStaffWidget({
     super.key,
     required this.rudiment,
@@ -138,6 +142,7 @@ class SheetStaffWidget extends StatelessWidget {
     this.geometry,
     this.onlyLine,
     this.showLineNumber = true,
+    this.fillWidth = false,
   });
 
   static const hPad = 4.0;
@@ -159,7 +164,9 @@ class SheetStaffWidget extends StatelessWidget {
       final only = onlyLine;
       final geo = geometry ??
           computeSheetGeometry(rudiment, contentWidth,
-              showCounts: showCounts, clefLine: only ?? 0);
+              showCounts: showCounts,
+              clefLine: only ?? 0,
+              fillWidth: fillWidth);
       final footLetters = rudiment.hasFootSides;
       final sheet = rudiment.sheet;
       final shown =
@@ -185,6 +192,7 @@ class SheetStaffWidget extends StatelessWidget {
                   grid: rudiment.gridUnit,
                   beatsPerBar: rudiment.beatsPerBar,
                   maxWidth: contentWidth,
+                  fillWidth: fillWidth,
                   rowPitch: geo.rowPitch,
                   activeIndex: activeLine == i ? activeIndex : null,
                   activeTick: activeLine == i ? activeTick : null,
@@ -260,6 +268,9 @@ class _StaffPainter extends CustomPainter {
   final int beatsPerBar;
   final double maxWidth;
 
+  /// No comfort cap on the note spacing: the line spans [maxWidth].
+  final bool fillWidth;
+
   /// Height of one row; the staff band itself is always [_staffBandH] high,
   /// extra pitch is the count band below.
   final double rowPitch;
@@ -303,6 +314,7 @@ class _StaffPainter extends CustomPainter {
     required this.grid,
     required this.beatsPerBar,
     required this.maxWidth,
+    this.fillWidth = false,
     required this.rowPitch,
     this.activeIndex,
     this.activeTick,
@@ -344,7 +356,11 @@ class _StaffPainter extends CustomPainter {
           rightPad: _rightPad,
           systemPad: _systemPad,
           barGap: sheetBarGap,
+          preferredPxPerQuarter: _preferredPxq,
         );
+
+  late final double _preferredPxq =
+      preferredPxPerQuarterFor(fillWidth: fillWidth);
 
   /// Duration-proportional layout — the single source of horizontal geometry,
   /// beam runs and tuplet groups (a kit line: its hands layer). Computed
@@ -359,6 +375,7 @@ class _StaffPainter extends CustomPainter {
         rightPad: _rightPad,
         systemPad: _systemPad,
         barGap: sheetBarGap,
+        preferredPxPerQuarter: _preferredPxq,
       );
 
   // ── Layout metrics ────────────────────────────────────────────────────────
@@ -931,6 +948,7 @@ class _StaffPainter extends CustomPainter {
       old.beatsPerBar != beatsPerBar ||
       old.activeIndex != activeIndex ||
       old.maxWidth != maxWidth ||
+      old.fillWidth != fillWidth ||
       old.rowPitch != rowPitch ||
       old.lineNumber != lineNumber ||
       old.repeat != repeat ||

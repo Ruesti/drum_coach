@@ -19,18 +19,16 @@ class GuidedTimelineSegment {
   final String? label;
 }
 
-/// The whole run as one bar (Plan 3a, Task 5): quiet groove segments,
+/// The whole run as one thin bar (Plan 3a, Task 5; Optik-Runde 1, 27.10.:
+/// half as high, horizontal on every layout): quiet groove segments,
 /// accent-tinted variations, the played part filled, a marker at the
-/// current place. [Axis.horizontal] for the narrow layout (variation labels
-/// under the bar), [Axis.vertical] for the side column (labels to the right,
-/// the current section highlighted).
+/// current place, variation labels under the bar.
 class GuidedTimelineBar extends StatelessWidget {
   const GuidedTimelineBar({
     super.key,
     required this.segments,
     required this.progress,
     this.current,
-    this.axis = Axis.horizontal,
   });
 
   final List<GuidedTimelineSegment> segments;
@@ -40,16 +38,20 @@ class GuidedTimelineBar extends StatelessWidget {
 
   /// Index into [segments] of the section playing; null = none.
   final int? current;
-  final Axis axis;
 
-  static const thickness = 8.0;
-  static const markerSize = 14.0;
+  /// Track height (8 before 27.10.).
+  static const thickness = 4.0;
+  static const markerSize = 10.0;
+
+  /// Variation labels, never under the design label size.
+  static const labelSize = 12.0;
+  static const _labelGap = 2.0;
+  static const _labelHeight = 16.0;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, c) {
-      final vertical = axis == Axis.vertical;
-      final length = vertical ? c.maxHeight : c.maxWidth;
+      final length = c.maxWidth;
       final total = segments.fold<double>(0, (a, s) => a + s.ms);
       final p = progress.clamp(0.0, 1.0);
       final at = p * length;
@@ -64,13 +66,9 @@ class GuidedTimelineBar extends StatelessWidget {
       }
 
       final bar = CustomPaint(
-        size: vertical ? Size(thickness, length) : Size(length, thickness),
-        painter: _BarPainter(
-          segments: segments,
-          spans: spans,
-          at: at,
-          vertical: vertical,
-        ),
+        key: const Key('guided-timeline-track'),
+        size: Size(length, thickness),
+        painter: _BarPainter(segments: segments, spans: spans, at: at),
       );
       final marker = Container(
         key: const Key('guided-timeline-marker'),
@@ -79,11 +77,11 @@ class GuidedTimelineBar extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white,
-          border: Border.all(color: PracticeColors.accent, width: 3),
+          border: Border.all(color: PracticeColors.accent, width: 2),
           boxShadow: [
             BoxShadow(
                 color: PracticeColors.accent.withValues(alpha: 0.6),
-                blurRadius: 10),
+                blurRadius: 8),
           ],
         ),
       );
@@ -91,72 +89,37 @@ class GuidedTimelineBar extends StatelessWidget {
       final labels = <Widget>[];
       for (var i = 0; i < segments.length; i++) {
         final s = segments[i];
-        final isCurrent = i == current;
-        final String? text = s.label ??
-            (vertical && s.kind == GuidedSegmentKind.outro ? 'End' : null);
+        final text = s.label;
         if (text == null) continue;
         final (a, b) = spans[i];
         final mid = (a + b) / 2;
         final isVar = s.kind == GuidedSegmentKind.variation;
-        final style = PracticeTypography.label.copyWith(
-          fontSize: vertical ? 13 : 11,
-          color: isCurrent
-              ? PracticeColors.textPrimary
-              : isVar
-                  ? PracticeColors.accent.withValues(alpha: 0.85)
-                  : PracticeColors.textMuted,
-        );
-        if (vertical) {
-          labels.add(Positioned(
-            left: thickness + AppSpacing.md,
-            right: 0,
-            top: mid - 9,
-            height: 18,
-            child: Row(children: [
-              Text(text, style: style),
-              if (isCurrent) ...[
-                const SizedBox(width: AppSpacing.sm),
-                Container(
-                  width: 5,
-                  height: 5,
-                  decoration: const BoxDecoration(
-                      color: PracticeColors.accent, shape: BoxShape.circle),
-                ),
-              ],
-            ]),
-          ));
-        } else {
-          labels.add(Positioned(
-            left: mid - 20,
-            width: 40,
-            top: markerSize + 4,
-            child: Text(text, textAlign: TextAlign.center, style: style),
-          ));
-        }
+        labels.add(Positioned(
+          left: mid - 20,
+          width: 40,
+          top: markerSize + _labelGap,
+          height: _labelHeight,
+          child: Text(text,
+              textAlign: TextAlign.center,
+              style: PracticeTypography.label.copyWith(
+                fontSize: labelSize,
+                height: 1.2,
+                color: i == current
+                    ? PracticeColors.textPrimary
+                    : isVar
+                        ? PracticeColors.accent.withValues(alpha: 0.85)
+                        : PracticeColors.textMuted,
+              )),
+        ));
       }
 
-      final markerAt = at - markerSize / 2;
-      if (vertical) {
-        return SizedBox(
-          width: c.maxWidth,
-          height: length,
-          child: Stack(clipBehavior: Clip.none, children: [
-            Positioned(left: 0, top: 0, child: bar),
-            ...labels,
-            Positioned(
-                left: (thickness - markerSize) / 2,
-                top: markerAt,
-                child: marker),
-          ]),
-        );
-      }
       return SizedBox(
         width: length,
-        height: markerSize + 4 + 16,
+        height: markerSize + _labelGap + _labelHeight,
         child: Stack(clipBehavior: Clip.none, children: [
           Positioned(left: 0, top: (markerSize - thickness) / 2, child: bar),
           ...labels,
-          Positioned(left: markerAt, top: 0, child: marker),
+          Positioned(left: at - markerSize / 2, top: 0, child: marker),
         ]),
       );
     });
@@ -168,13 +131,11 @@ class _BarPainter extends CustomPainter {
     required this.segments,
     required this.spans,
     required this.at,
-    required this.vertical,
   });
 
   final List<GuidedTimelineSegment> segments;
   final List<(double, double)> spans;
   final double at;
-  final bool vertical;
 
   static const _gap = 2.0;
 
@@ -192,16 +153,14 @@ class _BarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final t = vertical ? size.width : size.height;
+    final t = size.height;
     final r = Radius.circular(t / 2);
     for (var i = 0; i < segments.length; i++) {
       var (a, b) = spans[i];
       if (i > 0) a += _gap / 2;
       if (i < segments.length - 1) b -= _gap / 2;
       if (b - a <= 0.5) continue;
-      Rect rect(double from, double to) => vertical
-          ? Rect.fromLTRB(0, from, t, to)
-          : Rect.fromLTRB(from, 0, to, t);
+      Rect rect(double from, double to) => Rect.fromLTRB(from, 0, to, t);
       final kind = segments[i].kind;
       canvas.drawRRect(RRect.fromRectAndRadius(rect(a, b), r),
           Paint()..color = _color(kind, false));
@@ -216,7 +175,6 @@ class _BarPainter extends CustomPainter {
   @override
   bool shouldRepaint(_BarPainter old) =>
       old.at != at ||
-      old.vertical != vertical ||
       !identical(old.segments, segments) ||
       old.spans.length != spans.length;
 }
