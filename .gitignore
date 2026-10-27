@@ -51,3 +51,8 @@ app.*.map.json
 # Local reference PDFs for exercise inspiration — mixed copyright status,
 # never checked in. See docs/Übungen/README.md.
 /docs/Übungen/*.pdf
+
+# Piper venv + downloaded voices (tool/stimme/spike_clip.sh)
+tool/stimme/.venv/
+__pycache__/
+.pytest_cache/

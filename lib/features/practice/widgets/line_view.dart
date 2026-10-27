@@ -26,6 +26,20 @@ class LineView extends StatefulWidget {
   final bool showSticking;
   final bool showCounts;
 
+  /// The line-number box (off for guided lines, Ruling R3).
+  final bool showLineNumber;
+
+  /// Spread the notes over the whole width (guided play screen); the
+  /// practice screen keeps the comfort spacing.
+  final bool fillWidth;
+
+  /// How the position shows ([SheetStaffWidget.cursorStyle]); the practice
+  /// screen keeps the box.
+  final CursorStyle cursorStyle;
+
+  /// Playhead stroke in layout units ([SheetStaffWidget.playheadWidth]).
+  final double playheadWidth;
+
   const LineView({
     super.key,
     required this.rudiment,
@@ -34,6 +48,10 @@ class LineView extends StatefulWidget {
     this.activeTick,
     this.showSticking = true,
     this.showCounts = true,
+    this.showLineNumber = true,
+    this.fillWidth = false,
+    this.cursorStyle = CursorStyle.box,
+    this.playheadWidth = playheadLineWidth,
   });
 
   @override
@@ -49,6 +67,7 @@ class _LineViewState extends State<LineView> {
   double _geoWidth = -1;
   bool _geoCounts = true;
   int _geoLine = -1;
+  bool _geoFill = false;
 
   SheetGeometry _geometryFor(double contentWidth, int line) {
     final cached = _geo;
@@ -56,16 +75,20 @@ class _LineViewState extends State<LineView> {
         identical(_geoRudiment, widget.rudiment) &&
         _geoWidth == contentWidth &&
         _geoCounts == widget.showCounts &&
-        _geoLine == line) {
+        _geoLine == line &&
+        _geoFill == widget.fillWidth) {
       return cached;
     }
     final geo = computeSheetGeometry(widget.rudiment, contentWidth,
-        showCounts: widget.showCounts, clefLine: line);
+        showCounts: widget.showCounts,
+        clefLine: line,
+        fillWidth: widget.fillWidth);
     _geo = geo;
     _geoRudiment = widget.rudiment;
     _geoWidth = contentWidth;
     _geoCounts = widget.showCounts;
     _geoLine = line;
+    _geoFill = widget.fillWidth;
     return geo;
   }
 
@@ -116,6 +139,10 @@ class _LineViewState extends State<LineView> {
         activeTick: widget.activeTick,
         showSticking: widget.showSticking,
         showCounts: widget.showCounts,
+        showLineNumber: widget.showLineNumber,
+        fillWidth: widget.fillWidth,
+        cursorStyle: widget.cursorStyle,
+        playheadWidth: widget.playheadWidth,
       );
       if (!c.maxHeight.isFinite || height <= c.maxHeight) {
         return SizedBox(height: height, child: sheet);

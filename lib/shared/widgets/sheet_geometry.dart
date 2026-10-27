@@ -31,6 +31,12 @@ const double sheetRepeatSystemPad = 22; // "|:" after the clef / line start
 const double sheetGraceSystemPad = 14; // flam/drag graces before note 1
 const double sheetBarGap = 12;
 
+/// Upper bound of the note spacing (px per quarter) of a line: the comfort
+/// size, or none with `fillWidth` — the line then always spans its row
+/// (the guided play screen, Uli 27.10.: "über die volle Bildschirmbreite").
+double preferredPxPerQuarterFor({required bool fillWidth}) =>
+    fillWidth ? double.infinity : 56;
+
 /// Kit lines without a clef: the number box would sit on the first hands
 /// beam (kit stems reach higher), so the line starts right of the box.
 const double kitBoxPad = sheetNumberBox + 4;
@@ -112,9 +118,11 @@ class SheetGeometry {
 ///
 /// [clefLine] is the line that carries clef and time signature — line 0 on
 /// a whole sheet; the one-line view shows its line alone, so that line
-/// gets them (and the matching start room).
+/// gets them (and the matching start room). [fillWidth] spreads every line
+/// over the whole width ([preferredPxPerQuarterFor]).
 SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
-    {required bool showCounts, int clefLine = 0}) {
+    {required bool showCounts, int clefLine = 0, bool fillWidth = false}) {
+  final pxq = preferredPxPerQuarterFor(fillWidth: fillWidth);
   final sheet = r.sheet;
   final counts = showCounts && sheet.any((l) => l.counts);
   final kit = sheet.any((l) => l.isKit);
@@ -145,6 +153,7 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
         rightPad: rightPad,
         systemPad: systemPad,
         barGap: sheetBarGap,
+        preferredPxPerQuarter: pxq,
       );
       layouts.add(kl.hands);
       kitLayouts.add(kl);
@@ -159,6 +168,7 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
         rightPad: rightPad,
         systemPad: systemPad,
         barGap: sheetBarGap,
+        preferredPxPerQuarter: pxq,
       );
       layouts.add(layout);
       kitLayouts.add(null);

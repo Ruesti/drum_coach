@@ -11,6 +11,23 @@ import 'staff_layout.dart';
 
 part 'kit_staff_painting.dart';
 
+/// How a staff shows the playback position.
+enum CursorStyle {
+  /// No cursor at all, whatever position is passed.
+  none,
+
+  /// Amber field behind the active note plus a ring around it (practice
+  /// screen).
+  box,
+
+  /// A thin accent line over the notes at the current tick, drawn on top;
+  /// no note is coloured (guided play screen, Uli 27.10.).
+  line,
+}
+
+/// On-screen width of the [CursorStyle.line] playhead (≤ 3 px).
+const double playheadLineWidth = 2.5;
+
 /// Renders a pattern as an engraved five-line drum staff on warm off-white
 /// "paper" — black ink on a light field reads better at arm's length than
 /// light notation on dark: a percussion clef, time signature, noteheads on
@@ -123,6 +140,22 @@ class SheetStaffWidget extends StatelessWidget {
   /// Draw only this line; null = the whole sheet.
   final int? onlyLine;
 
+  /// Draw the line-number box at the start of each line (Ruling R3: off
+  /// for guided lines, where "1" means nothing).
+  final bool showLineNumber;
+
+  /// Spread every line over the whole width (no comfort cap on the note
+  /// spacing); must match the [geometry] passed in.
+  final bool fillWidth;
+
+  /// How the position shows. [CursorStyle.line] places the line at
+  /// [activeTick] for pad lines too.
+  final CursorStyle cursorStyle;
+
+  /// Stroke of the [CursorStyle.line] playhead in layout units — a caller
+  /// that scales the staff passes [playheadLineWidth] / scale.
+  final double playheadWidth;
+
   const SheetStaffWidget({
     super.key,
     required this.rudiment,
@@ -133,6 +166,10 @@ class SheetStaffWidget extends StatelessWidget {
     this.showCounts = true,
     this.geometry,
     this.onlyLine,
+    this.showLineNumber = true,
+    this.fillWidth = false,
+    this.cursorStyle = CursorStyle.box,
+    this.playheadWidth = playheadLineWidth,
   });
 
   static const hPad = 4.0;
@@ -154,7 +191,9 @@ class SheetStaffWidget extends StatelessWidget {
       final only = onlyLine;
       final geo = geometry ??
           computeSheetGeometry(rudiment, contentWidth,
-              showCounts: showCounts, clefLine: only ?? 0);
+              showCounts: showCounts,
+              clefLine: only ?? 0,
+              fillWidth: fillWidth);
       final footLetters = rudiment.hasFootSides;
       final sheet = rudiment.sheet;
       final shown =
@@ -180,10 +219,13 @@ class SheetStaffWidget extends StatelessWidget {
                   grid: rudiment.gridUnit,
                   beatsPerBar: rudiment.beatsPerBar,
                   maxWidth: contentWidth,
+                  fillWidth: fillWidth,
                   rowPitch: geo.rowPitch,
                   activeIndex: activeLine == i ? activeIndex : null,
                   activeTick: activeLine == i ? activeTick : null,
-                  lineNumber: i + 1,
+                  cursorStyle: cursorStyle,
+                  playheadWidth: playheadWidth,
+                  lineNumber: showLineNumber ? i + 1 : null,
                   repeat: sheet[i].repeat,
                   finalBar: only != null || i == sheet.length - 1,
                   showTimeSig: only != null || i == 0,
@@ -255,13 +297,22 @@ class _StaffPainter extends CustomPainter {
   final int beatsPerBar;
   final double maxWidth;
 
+  /// No comfort cap on the note spacing: the line spans [maxWidth].
+  final bool fillWidth;
+
   /// Height of one row; the staff band itself is always [_staffBandH] high,
   /// extra pitch is the count band below.
   final double rowPitch;
   final int? activeIndex;
 
-  /// Cursor tick of a kit line; [activeIndex] is ignored there.
+  /// Cursor tick of a kit line; [activeIndex] is ignored there. With
+  /// [CursorStyle.line] also the playhead tick of a pad line.
   final int? activeTick;
+
+  final CursorStyle cursorStyle;
+
+  /// Stroke of the [CursorStyle.line] playhead (layout units).
+  final double playheadWidth;
 
   /// Number in the box at the left of the first row; null = no box.
   final int? lineNumber;
@@ -298,9 +349,12 @@ class _StaffPainter extends CustomPainter {
     required this.grid,
     required this.beatsPerBar,
     required this.maxWidth,
+    this.fillWidth = false,
     required this.rowPitch,
     this.activeIndex,
     this.activeTick,
+    this.cursorStyle = CursorStyle.box,
+    this.playheadWidth = playheadLineWidth,
     this.lineNumber,
     this.repeat = false,
     this.finalBar = true,
@@ -315,6 +369,12 @@ class _StaffPainter extends CustomPainter {
   });
 
   bool get isKit => voices != null;
+
+  /// Box cursor only: the note index to ring and field.
+  int? get _boxIndex => cursorStyle == CursorStyle.box ? activeIndex : null;
+
+  /// Box cursor only: the kit tick to ring and field.
+  int? get _boxTick => cursorStyle == CursorStyle.box ? activeTick : null;
 
   late final double _leftPad = leftPadFor(numbered: lineNumber != null);
   late final double _rightPad = rightPadFor(repeat: repeat);
@@ -339,7 +399,11 @@ class _StaffPainter extends CustomPainter {
           rightPad: _rightPad,
           systemPad: _systemPad,
           barGap: sheetBarGap,
+          preferredPxPerQuarter: _preferredPxq,
         );
+
+  late final double _preferredPxq =
+      preferredPxPerQuarterFor(fillWidth: fillWidth);
 
   /// Duration-proportional layout — the single source of horizontal geometry,
   /// beam runs and tuplet groups (a kit line: its hands layer). Computed
@@ -354,6 +418,7 @@ class _StaffPainter extends CustomPainter {
         rightPad: _rightPad,
         systemPad: _systemPad,
         barGap: sheetBarGap,
+        preferredPxPerQuarter: _preferredPxq,
       );
 
   // ── Layout metrics ────────────────────────────────────────────────────────
@@ -400,6 +465,7 @@ class _StaffPainter extends CustomPainter {
   static const _accentColor = AppColors.paperAccent;
   static const _cursorField = AppColors.live; // amber field behind active note
   static const _cursorLine = AppColors.paperCursorLine;
+  static const _playheadColor = AppColors.accent;
   static const _ghostColor = Color(0x7317181A); // ink @ 45%
   static const _letterColor = Color(0x9917181A); // ink @ 60%
 
@@ -507,25 +573,45 @@ class _StaffPainter extends CustomPainter {
 
     if (isKit) {
       final kit = _kit!;
-      final tick = activeTick;
+      final tick = _boxTick;
       if (tick != null && kit.rowOfTick(tick) == row) {
         _drawCursorField(canvas, kit.xOfTick(tick), y0);
       }
       _paintKitRow(canvas, row, y0, staffY);
-      return;
-    }
-
-    // Cursor field: the active note's slot turns amber; ink stays black.
-    if (activeIndex != null) {
-      for (final p in rowPlacements) {
-        if (p.index != activeIndex) continue;
-        _drawCursorField(canvas, p.xCenter, y0);
-        break;
+    } else {
+      // Cursor field: the active note's slot turns amber; ink stays black.
+      final index = _boxIndex;
+      if (index != null) {
+        for (final p in rowPlacements) {
+          if (p.index != index) continue;
+          _drawCursorField(canvas, p.xCenter, y0);
+          break;
+        }
       }
+
+      // Beams / tuplet brackets, then individual note heads / flags /
+      // letters.
+      _paintBeamsAndNotes(canvas, row, rowPlacements, y0, staffY);
     }
 
-    // Beams / tuplet brackets, then individual note heads / flags / letters.
-    _paintBeamsAndNotes(canvas, row, rowPlacements, y0, staffY);
+    // The playhead goes on top of the ink.
+    final tick = activeTick;
+    if (cursorStyle == CursorStyle.line &&
+        tick != null &&
+        _layout.rowOfTick(tick) == row) {
+      _drawPlayhead(canvas, _layout.xOfTick(tick), y0);
+    }
+  }
+
+  /// Thin accent line over the whole staff band at [x] (the same x the
+  /// notes of that tick use).
+  void _drawPlayhead(Canvas canvas, double x, double y0) {
+    canvas.drawLine(
+        Offset(x, y0 + 4),
+        Offset(x, y0 + _staffBandH - 4),
+        Paint()
+          ..color = _playheadColor
+          ..strokeWidth = playheadWidth);
   }
 
   /// Amber field and line behind the active column; ink stays black.
@@ -585,7 +671,7 @@ class _StaffPainter extends CustomPainter {
       final beat = beats[p.index];
       final resolved = p.resolved;
       final x = p.xCenter;
-      final isActive = p.index == activeIndex;
+      final isActive = p.index == _boxIndex;
 
       final noteBeamCount = beamCountFor(resolved.value);
 
@@ -926,6 +1012,7 @@ class _StaffPainter extends CustomPainter {
       old.beatsPerBar != beatsPerBar ||
       old.activeIndex != activeIndex ||
       old.maxWidth != maxWidth ||
+      old.fillWidth != fillWidth ||
       old.rowPitch != rowPitch ||
       old.lineNumber != lineNumber ||
       old.repeat != repeat ||
@@ -941,5 +1028,7 @@ class _StaffPainter extends CustomPainter {
       old.showSticking != showSticking ||
       old.footLetters != footLetters ||
       old.voices != voices ||
-      old.activeTick != activeTick;
+      old.activeTick != activeTick ||
+      old.cursorStyle != cursorStyle ||
+      old.playheadWidth != playheadWidth;
 }

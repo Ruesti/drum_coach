@@ -19,6 +19,9 @@ set_more.py    fünf weitere Kit-Blätter: set_fill_linear, set_fill_double_bass
                groove_linear, groove_kick_sixteenths, groove_halftime_shuffle
 build_page.py  Kurations-Seite → <ausgabe.html> [satz]
 gen_dart.py    lib/features/lessons/data/sheets/<id>_sheet.dart (xPattern, xSheet, xLesson) [satz]
+gefuehrt_blatt.py  GuidedSheet/Variation: geführte Übung (Groove + 3–5 Variationen mit Satz), Prüfung
+gefuehrt.py    die geführten Übungen (Daten; Stand Task 2: zwei Fixtures = die Demos)
+gen_gefuehrt.py  lib/features/guided/data/guided_catalog.dart + tool/stimme/saetze_gefuehrt.py <repo_root>
 patch_seed.py  rudiments_seed.dart: Einträge auf Pattern/Lesson/Sheet umstellen, neue anhängen (alle Sätze)
 ```
 
@@ -60,6 +63,42 @@ Automatik `autoBackingStyle`), `grid` (NoteGrid neuer Seed-Einträge),
 `new_seed` (noch nicht im Basis-Katalog). Fill-Blätter: Takt 1 jeder Zeile
 beginnt mit Akzent (die Eins nach dem Fill); auf der Kurationsseite steht
 „Fill" über dem vierten Takt, in der App nicht.
+
+## Geführte Übungen (gefuehrt.py)
+
+Eine geführte Übung (`GuidedSheet`) ist ein Grundgroove plus 3–5 Variationen, jede mit
+einem englischen Satz (`Variation(line, text, after='after_good')`, die letzte mit
+`after=None`); Zeilen sind 1–2 ganze 4/4-Takte, Pad-Token oder Kit-Spuren wie oben.
+`gen_gefuehrt.py <repo_root>` schreibt daraus
+
+- `lib/features/guided/data/guided_catalog.dart` — `guidedCatalog`; Abschnitte
+  ausgeschrieben: Intro (0 Takte), je Variation Groove (`groove_bars`, 12) +
+  Variation (`variation_bars`, 24, `textEn`, `speechClipId` = `g_<id>_v<n>`,
+  `afterClipId`), Schluss-Groove, Outro (Groove-Zeile, 1 Takt);
+- `tool/stimme/saetze_gefuehrt.py` — `GEFUEHRT` (Clip-ID → Satz), das
+  `tool/stimme/saetze.py` in `SAETZE` übernimmt; danach rendert
+  `render_clips.py` die neuen Clips.
+
+Keine Zeitstempel: ein zweiter Lauf schreibt dieselben Bytes. Beide Dateien nie
+von Hand ändern.
+
+| Datei | Inhalt |
+|---|---|
+| `gefuehrt_blatt.py` | `GuidedSheet`/`Variation` + Formprüfung (Groove genau 1 Takt; 2-Takt-Variation nur bei geradem `variation_bars`) |
+| `gefuehrt.py` | Runde-1-Daten (8 Übungen) + Übersicht |
+| `gen_gefuehrt.py` | schreibt Dart-Katalog und `saetze_gefuehrt.py` |
+| `build_gefuehrt_page.py` | Kurations-Seite (Noten + Clips anhören) |
+
+```
+python3 tool/katalog/gefuehrt.py                       # prüft + Übersicht (Dauer bei default_bpm)
+python3 tool/katalog/gen_gefuehrt.py .
+dart format lib/features/guided/data/guided_catalog.dart
+tool/stimme/.venv/bin/python tool/stimme/render_clips.py --prune-prefix g_
+python3 tool/katalog/build_gefuehrt_page.py <out.html>
+(cd tool/katalog && python3 -m unittest -v)
+tool/stimme/.venv/bin/python -m pytest tool/stimme
+flutter test test/guided/
+```
 
 ## Ablauf
 

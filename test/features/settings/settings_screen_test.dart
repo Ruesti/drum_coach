@@ -46,4 +46,20 @@ void main() {
             .value,
         4);
   });
+
+  testWidgets('Settings has a Credits entry', (tester) async {
+    final onError = FlutterError.onError;
+    FlutterError.onError = (details) {
+      if (details.exceptionAsString().contains('ink splashes')) return;
+      onError?.call(details);
+    };
+    addTearDown(() => FlutterError.onError = onError);
+    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+    await tester.pump();
+    final entry = find.byKey(const ValueKey('settings-credits'));
+    await tester.scrollUntilVisible(entry, 300,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.descendant(of: entry, matching: find.text('Credits')),
+        findsOneWidget);
+  });
 }
