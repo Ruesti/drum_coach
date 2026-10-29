@@ -1,7 +1,7 @@
 # Neue Übungsansicht, Trainingsraum, Song-Import — Gesamtbild
 
 Stand: Entwurf 29.10.2026 · Branch `spec-trainingsraum` (gestapelt auf
-`spec-gefuehrte-uebungen`, Draft-PR #36) · Status: **wartet auf Ulis Freigabe**
+`spec-gefuehrte-uebungen`, Draft-PR #36) · Status: **von Uli freigegeben 29.10. 22:19** (Teil 1 zum Bau; Teil 2/3 als Richtung)
 
 Drei Vorhaben, die aufeinander aufbauen. **Teil 1 ist ausgearbeitet und wird als
 Nächstes gebaut.** Teil 2 und 3 stehen hier nur als Richtung; jedes bekommt vor dem
