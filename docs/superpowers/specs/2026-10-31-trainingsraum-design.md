@@ -1,6 +1,6 @@
 # Trainingsraum — Techniken und Grooves von Beginner bis Profi
 
-Stand: Entwurf 31.10.2026 · Branch `spec-trainingsraum` (Draft-PR #37) · Status: **wartet auf Ulis Freigabe**
+Stand: Entwurf 31.10.2026 · Branch `spec-trainingsraum` (Draft-PR #37) · Status: **von Uli freigegeben 31.10. 13:22**
 
 Teil 2 des Gesamtbilds `2026-10-29-uebungsansicht-trainingsraum-design.md`. Teil 1 (neue Übungsansicht)
 wird gerade gebaut; der Trainingsraum nutzt diese Ansicht.
