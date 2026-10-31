@@ -1,5 +1,6 @@
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/lessons/rudiment_filter.dart';
+import 'package:drum_coach/features/room/training_area.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Rudiment _r(
@@ -8,6 +9,7 @@ Rudiment _r(
   Set<Genre> genres = const {},
   Set<Limb> limbs = const {Limb.hands},
   NoteGrid gridUnit = NoteGrid.eighth,
+  TrainingArea? area,
 }) {
   return Rudiment(
     id: id,
@@ -21,18 +23,43 @@ Rudiment _r(
     genres: genres,
     limbs: limbs,
     gridUnit: gridUnit,
+    area: area,
   );
 }
 
 void main() {
   final control = _r('control', skills: {Skill.control});
-  final coordination =
-      _r('coordination', skills: {Skill.coordination}, gridUnit: NoteGrid.sixteenth);
-  final drumCorps = _r('drumCorps',
-      skills: {Skill.control}, genres: {Genre.drumCorps});
+  final coordination = _r('coordination',
+      skills: {Skill.coordination}, gridUnit: NoteGrid.sixteenth);
+  final drumCorps =
+      _r('drumCorps', skills: {Skill.control}, genres: {Genre.drumCorps});
   final feetEndurance =
       _r('feetEndurance', skills: {Skill.endurance}, limbs: {Limb.feet});
   final all = [control, coordination, drumCorps, feetEndurance];
+
+  group('filter by area', () {
+    final hand =
+        _r('hand', skills: {Skill.control}, area: TrainingArea.handTechnique);
+    final grv = _r('grv', skills: {Skill.control}, area: TrainingArea.groove);
+    final none = _r('none', skills: {Skill.control});
+    final list = [hand, grv, none];
+    test('OR within axis, untagged excluded', () {
+      expect(
+          filterRudiments(
+              list,
+              const RudimentFilters(
+                  areas: {TrainingArea.handTechnique, TrainingArea.groove})),
+          [hand, grv]);
+    });
+    test('AND with other axes', () {
+      expect(
+          filterRudiments(
+              list,
+              const RudimentFilters(
+                  areas: {TrainingArea.groove}, skills: {Skill.endurance})),
+          isEmpty);
+    });
+  });
 
   group('filterRudiments', () {
     test('empty filters returns everything', () {
@@ -45,7 +72,8 @@ void main() {
       expect(result, [control, drumCorps]);
     });
 
-    test('two skills selected match rudiments with either (OR within axis)', () {
+    test('two skills selected match rudiments with either (OR within axis)',
+        () {
       final result = filterRudiments(
         all,
         const RudimentFilters(skills: {Skill.control, Skill.endurance}),

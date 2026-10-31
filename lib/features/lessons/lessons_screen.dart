@@ -12,6 +12,7 @@ import 'exercise_entry.dart';
 import 'lessons_provider.dart';
 import 'models/rudiment.dart';
 import 'models/sheet_plan.dart';
+import '../room/training_area.dart';
 import 'rudiment_filter.dart';
 
 class LessonsScreen extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
   Set<Genre> _selectedGenres = {};
   Set<Limb> _selectedLimbs = {};
   Set<NoteGrid> _selectedSubdivisions = {};
+  Set<TrainingArea> _selectedAreas = {};
 
   /// 'exercises' | 'guided', remembered in [SettingsService].
   late String _mode = _storedMode();
@@ -57,10 +59,13 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
         genres: _selectedGenres,
         limbs: _selectedLimbs,
         subdivisions: _selectedSubdivisions,
+        areas: _selectedAreas,
       ),
     );
 
     final presentGenres = all.expand((r) => r.genres).toSet();
+    final presentAreas =
+        all.map((r) => r.area).whereType<TrainingArea>().toSet();
     final presentSubdivisions = all.map((r) => r.gridUnit).toSet();
 
     // The photo header runs up behind the status bar: light system icons.
@@ -101,6 +106,15 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
                   selected: _selectedGenres,
                   labelOf: (g) => g.label,
                   onChanged: (v) => setState(() => _selectedGenres = v),
+                ),
+              if (presentAreas.isNotEmpty)
+                _FilterAxisRow<TrainingArea>(
+                  label: 'Area',
+                  values:
+                      TrainingArea.values.where(presentAreas.contains).toList(),
+                  selected: _selectedAreas,
+                  labelOf: (a) => a.label,
+                  onChanged: (v) => setState(() => _selectedAreas = v),
                 ),
               _FilterAxisRow<Limb>(
                 label: 'Limbs',

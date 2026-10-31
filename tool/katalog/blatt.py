@@ -8,6 +8,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+# Werte = Dart-Enum TrainingArea (lib/features/room/training_area.dart)
+AREAS = ('handTechnique', 'rudiments', 'feet', 'coordination', 'groove', 'metal', 'fills')
+
 from sheetlang import KitLine, Line, check_hands, check_sheet, parse_kit_line, parse_line
 
 
@@ -31,6 +34,12 @@ class Sheet:
     grid: str = 'eighth'  # NoteGrid für neue Seed-Einträge
     kit: bool = False  # Spuren-Blatt (Phase B.1): Zeilen als `HH: … / SN: … / BD: …`
     limbs: tuple[str, ...] = ('hands',)  # Limb-Tags des Seed-Eintrags
+    area: str | None = None  # Trainingsraum-Bereich (Dart-Enum-Name aus AREAS)
+    song: str | None = None  # Songhinweis als Text ("Like in: …")
+
+    def __post_init__(self):
+        if self.area is not None and self.area not in AREAS:
+            raise ValueError(f'{self.id}: unknown area {self.area!r}, expected one of {AREAS}')
 
     def _parse(self, text: str, where: str = '', **kw) -> Line | KitLine:
         if not self.kit:

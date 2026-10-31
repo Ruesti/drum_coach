@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../coaching/midi/kit_instrument.dart';
 import '../../coaching/services/stroke_source.dart';
+import '../../room/training_area.dart';
 
 enum Hand { right, left }
 
@@ -318,6 +319,12 @@ class Rudiment {
   /// voice. [sticking] is then its first voice. Empty for pad exercises.
   final List<Voice> patternVoices;
 
+  /// The training room area this exercise belongs to (null = not assigned).
+  final TrainingArea? area;
+
+  /// Plain-text song reference ("Like in: …"), no transcription. Optional.
+  final String? songHint;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -341,6 +348,8 @@ class Rudiment {
     this.requiredSensor = SensorLevel.mic,
     this.lines = const [],
     this.patternVoices = const [],
+    this.area,
+    this.songHint,
   });
 
   /// The sheet: [lines] when authored, else the plain [sticking] as one
@@ -381,5 +390,7 @@ class Rudiment {
         collectionGroup: collectionGroup,
         backing: backing,
         patternVoices: patternVoices,
+        area: area,
+        songHint: songHint,
       );
 }

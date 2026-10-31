@@ -33,6 +33,11 @@ def _scalar(src: str, start: int, key: str) -> tuple[int, int] | None:
     return (m.start() + 1, m.end()) if m else None
 
 
+def _area_lines(s) -> str:
+    return ((f"    area: TrainingArea.{s.area},\n" if s.area else '')
+            + (f"    songHint: {dart_str(s.song)},\n" if s.song else ''))
+
+
 def _entry(s) -> str:
     c = camel(s.id)
     skills = ', '.join(f'Skill.{k}' for k in s.skills)
@@ -51,10 +56,11 @@ def _entry(s) -> str:
         + (f"    backing: '{s.backing}',\n" if s.backing else '')
         + (f"    limbs: {{{limbs}}},\n" if s.limbs != ('hands',) else '')
         + kit
+        + _area_lines(s)
         + f"    sticking: {c}Pattern,\n    technique: {c}Lesson,\n    lines: {c}Sheet,\n  ),\n")
 
 
-def _update(src: str, at: int, c: str) -> str:
+def _update(src: str, at: int, c: str, s=None) -> str:
     """Vorhandener Eintrag: sticking/technique/lines auf die generierten Namen."""
     span = _block(src, at, 'sticking') or _scalar(src, at, 'sticking')
     src = src[:span[0]] + f'    sticking: {c}Pattern,' + src[span[1]:]
@@ -67,6 +73,18 @@ def _update(src: str, at: int, c: str) -> str:
     if not _scalar(src, at, 'lines'):
         end = src.index('\n  ),\n', at)
         src = src[:end] + f'\n    lines: {c}Sheet,' + src[end:]
+    if s is not None:
+        for key, val in (('area', f'TrainingArea.{s.area}' if s.area else None),
+                         ('songHint', dart_str(s.song) if s.song else None)):
+            if val is None:
+                continue
+            line = f'    {key}: {val},'
+            span = _scalar(src, at, key)
+            if span:
+                src = src[:span[0]] + line + src[span[1]:]
+            else:
+                end = src.index('\n  ),\n', at)
+                src = src[:end] + '\n' + line + src[end:]
     return src
 
 
@@ -75,6 +93,10 @@ def patch(path: pathlib.Path) -> None:
     imports = ''.join(f"import 'sheets/{s.id}_sheet.dart';\n" for s in all_sheets())
     src = re.sub(r"(import 'sheets/[a-z0-9_]+_sheet\.dart';\n)+", '', src)
     src = src.replace("import '../models/rudiment.dart';\n", "import '../models/rudiment.dart';\n" + imports, 1)
+
+    if any(s.area for s in all_sheets()) and 'room/training_area.dart' not in src:
+        src = src.replace("import '../models/rudiment.dart';\n",
+                          "import '../../room/training_area.dart';\nimport '../models/rudiment.dart';\n", 1)
 
     if any(s.kit for s in all_sheets()) and "coaching/services/stroke_source.dart" not in src:
         src = src.replace("import '../models/rudiment.dart';\n",
@@ -88,7 +110,7 @@ def patch(path: pathlib.Path) -> None:
             if at < 0:
                 new_entries.append(_entry(s))
             else:
-                src = _update(src, at, camel(s.id))
+                src = _update(src, at, camel(s.id), s)
                 updated += 1
         if new_entries:
             marker = f'\n  // ─── {st.seed_marker} ' + '─' * max(0, 70 - len(st.seed_marker)) + '\n'
