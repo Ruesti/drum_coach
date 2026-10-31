@@ -49,6 +49,16 @@ import 'sheets/set_fill_double_bass_sheet.dart';
 import 'sheets/groove_linear_sheet.dart';
 import 'sheets/groove_kick_sixteenths_sheet.dart';
 import 'sheets/groove_halftime_shuffle_sheet.dart';
+import 'sheets/tech_grip_rebound_sheet.dart';
+import 'sheets/tech_full_stroke_tap_sheet.dart';
+import 'sheets/tech_even_singles_sheet.dart';
+import 'sheets/tech_accent_basics_sheet.dart';
+import 'sheets/tech_single_hand_control_sheet.dart';
+import 'sheets/tech_down_up_strokes_sheet.dart';
+import 'sheets/tech_moving_accents_sheet.dart';
+import 'sheets/tech_doubles_control_sheet.dart';
+import 'sheets/tech_ghost_accent_contrast_sheet.dart';
+import 'sheets/tech_speed_bursts_sheet.dart';
 
 // A plain list (not const) since 30.09.: the sample sheet is built with the
 // étude DSL, which is not const-constructible.
@@ -2320,5 +2330,167 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     technique: grooveHalftimeShuffleLesson,
     lines: grooveHalftimeShuffleSheet,
     area: TrainingArea.groove,
+  ),
+  // ─── TRAININGSRAUM: hand technique ─────────────────────────────────────────
+
+  Rudiment(
+    id: 'tech_grip_rebound',
+    name: "Grip & Rebound",
+    skills: {Skill.control},
+    description:
+        "Quarters and eighths with a loose grip: throw the stick, let it bounce back, catch it high. One hand, the other hand, then both.",
+    minBpm: 60,
+    targetBpm: 100,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.eighth,
+    area: TrainingArea.handTechnique,
+    sticking: techGripReboundPattern,
+    technique: techGripReboundLesson,
+    lines: techGripReboundSheet,
+  ),
+
+  Rudiment(
+    id: 'tech_full_stroke_tap',
+    name: "Full Stroke & Tap",
+    skills: {Skill.control},
+    description:
+        "Two heights, two volumes: full strokes start high and come back high, taps start low and stay low. First a whole bar of each, then one hand loud and one soft, then the heights change inside one hand.",
+    minBpm: 60,
+    targetBpm: 100,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techFullStrokeTapPattern,
+    technique: techFullStrokeTapLesson,
+    lines: techFullStrokeTapSheet,
+  ),
+
+  Rudiment(
+    id: 'tech_even_singles',
+    name: "Even Singles",
+    skills: {Skill.control, Skill.endurance},
+    description:
+        "Alternating strokes that sound like one hand: eighths, then a beat of sixteenths that walks through the bar, then more and more sixteenths until the whole line is one even stream.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techEvenSinglesPattern,
+    technique: techEvenSinglesLesson,
+    lines: techEvenSinglesSheet,
+  ),
+
+  Rudiment(
+    id: 'tech_accent_basics',
+    name: "Accent Basics",
+    skills: {Skill.control},
+    description:
+        "Accents on the counts: first only on 1, then on 1 and 3, then on every beat, with the left hand leading too, then in sixteenths and finally on the backbeat, 2 and 4.",
+    minBpm: 60,
+    targetBpm: 100,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techAccentBasicsPattern,
+    technique: techAccentBasicsLesson,
+    lines: techAccentBasicsSheet,
+  ),
+
+  Rudiment(
+    id: 'tech_single_hand_control',
+    name: "Single-Hand Control",
+    skills: {Skill.control, Skill.endurance},
+    description:
+        "One hand alone: quarters, eighths, a galloping rhythm and short bursts of sixteenths, first right, then left, then switching hands every bar and every half bar.",
+    minBpm: 60,
+    targetBpm: 96,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techSingleHandControlPattern,
+    technique: techSingleHandControlLesson,
+    lines: techSingleHandControlSheet,
+  ),
+
+  Rudiment(
+    id: 'tech_down_up_strokes',
+    name: "Down & Up Strokes",
+    skills: {Skill.control},
+    description:
+        "The accent motion: a down stroke plays the accent and stops low, an up stroke plays a tap and lifts the stick for the next accent. One hand first, then alternating sixteenths with the accent on 1, e, & and a of the beat.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techDownUpStrokesPattern,
+    technique: techDownUpStrokesLesson,
+    lines: techDownUpStrokesSheet,
+  ),
+
+  Rudiment(
+    id: 'tech_moving_accents',
+    name: "Moving Accents",
+    skills: {Skill.control, Skill.coordination},
+    description:
+        "The accent wanders through the sixteenths: bar by bar, beat by beat, forwards and backwards, in groups of three across the bar line, in pairs and in a 3-3-2 phrase.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techMovingAccentsPattern,
+    technique: techMovingAccentsLesson,
+    lines: techMovingAccentsSheet,
+  ),
+
+  Rudiment(
+    id: 'tech_doubles_control',
+    name: "Doubles Control",
+    skills: {Skill.control, Skill.endurance},
+    description:
+        "Double strokes from open to closed: eighth-note doubles with space, then with the second stroke accented, then doubles changing gear between eighths and sixteenths, finally a full bar of sixteenth-note doubles from either hand.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techDoublesControlPattern,
+    technique: techDoublesControlLesson,
+    lines: techDoublesControlSheet,
+  ),
+
+  Rudiment(
+    id: 'tech_ghost_accent_contrast',
+    name: "Ghost & Accent Contrast",
+    skills: {Skill.control, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "The widest dynamic range: ghost notes barely touch the pad, accents are full strokes. From eighths with one loud and one ghost hand to the funk backbeat with ghosts in between, ghosted doubles and a shuffle in triplets.",
+    minBpm: 60,
+    targetBpm: 100,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techGhostAccentContrastPattern,
+    technique: techGhostAccentContrastLesson,
+    lines: techGhostAccentContrastSheet,
+  ),
+
+  Rudiment(
+    id: 'tech_speed_bursts',
+    name: "Speed Bursts",
+    skills: {Skill.endurance, Skill.control},
+    description:
+        "Short groups of fast sixteenths, then a rest to relax: four notes, eight, pickups into the beat, twelve, a whole bar, bursts that start and land on an accent, and finally two bars without a break.",
+    minBpm: 80,
+    targetBpm: 160,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techSpeedBurstsPattern,
+    technique: techSpeedBurstsLesson,
+    lines: techSpeedBurstsSheet,
   ),
 ];

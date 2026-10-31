@@ -15,6 +15,7 @@ import grooves
 import rudimente
 import set_fills
 import set_more
+import technik
 from blatt import Sheet
 
 
@@ -82,6 +83,18 @@ SETS: list[SheetSet] = [
              'Shuffle. Sag mir je Blatt und Zeilennummer, was raus, anders oder länger soll.',
         seed_marker='PHASE B.4c: more fills and grooves',
         sheets=set_more.SHEETS,
+    ),
+    SheetSet(
+        key='technik', step='Raum 1', title='Hände-Technik: zehn Pad-Übungen (Beginner + Intermediate)',
+        lead='Trainingsraum, Bereich Hände-Technik: die neuen Hauptübungen der Zelle, nur Hände am Pad. '
+             'Beginner (die ersten fünf): Griff und Rückprall, Full Stroke und Tap, gleichmäßige Einzelschläge, '
+             'Akzente auf den Zählzeiten, eine Hand allein. Intermediate (die letzten fünf): Down- und Up-Strokes, '
+             'wandernde Akzente, Doppelschläge offen bis geschlossen, Ghost Notes gegen Akzente, Speed Bursts. '
+             'Je Blatt acht Zeilen à vier Takte, von Zeile 1 nach Zeile 8 schwerer; jede Zeile im eigenen Tempo '
+             'spielbar. Oben der Kasten mit der Grundgestalt, die Lektion (Why / How / Tips / Song examples) ist '
+             'eingeklappt. Sag mir je Blatt und Zeilennummer, was raus, anders oder länger soll.',
+        seed_marker='TRAININGSRAUM: hand technique',
+        sheets=technik.SHEETS,
     ),
 ]
 

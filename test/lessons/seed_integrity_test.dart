@@ -44,6 +44,32 @@ void main() {
     expect(missing, isEmpty, reason: 'no area: $missing');
   });
 
+  test('seed contains the 10 technik sheets with area handTechnique', () {
+    const ids = {
+      'tech_grip_rebound': Difficulty.beginner,
+      'tech_full_stroke_tap': Difficulty.beginner,
+      'tech_even_singles': Difficulty.beginner,
+      'tech_accent_basics': Difficulty.beginner,
+      'tech_single_hand_control': Difficulty.beginner,
+      'tech_down_up_strokes': Difficulty.intermediate,
+      'tech_moving_accents': Difficulty.intermediate,
+      'tech_doubles_control': Difficulty.intermediate,
+      'tech_ghost_accent_contrast': Difficulty.intermediate,
+      'tech_speed_bursts': Difficulty.intermediate,
+    };
+    for (final e in ids.entries) {
+      final r = rudimentsSeedData.where((r) => r.id == e.key).firstOrNull;
+      expect(r, isNotNull, reason: 'missing ${e.key}');
+      expect(r!.area, TrainingArea.handTechnique, reason: e.key);
+      expect(r.difficulty, e.value, reason: e.key);
+      expect(r.lines.length, 8, reason: e.key);
+      expect(r.technique.map((t) => t.title).toList(),
+          ['Why', 'How', 'Tips', 'Song examples'],
+          reason: e.key);
+      expect(r.minBpm < r.targetBpm, isTrue, reason: e.key);
+    }
+  });
+
   test(
       'area counts per cell: the six core areas have a beginner or '
       'intermediate exercise', () {
