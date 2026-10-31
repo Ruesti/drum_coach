@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 /// Swap every hand in [hands] (R↔L) — used to build the mirrored half of
 /// each sticking étude below.
@@ -34,6 +35,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
           'mirrored again — an 8-bar study with one common thread instead '
           'of loose sticking snippets.',
       collection: ExerciseCollection.padWorkouts,
+      area: TrainingArea.handTechnique,
       collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.beginner,
       minBpm: 70,
@@ -58,6 +60,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
           'Motif L R R L L R L R: first as single strokes, then densified '
           'into doubles — each repeated in mirror image.',
       collection: ExerciseCollection.padWorkouts,
+      area: TrainingArea.handTechnique,
       collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.beginner,
       minBpm: 70,
@@ -82,6 +85,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
           'Motif R R L R L L R L: first as single strokes, then densified '
           'into doubles — each repeated in mirror image.',
       collection: ExerciseCollection.padWorkouts,
+      area: TrainingArea.handTechnique,
       collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.beginner,
       minBpm: 75,
@@ -107,6 +111,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
           'strokes, then densified into doubles — each repeated in '
           'mirror image.',
       collection: ExerciseCollection.padWorkouts,
+      area: TrainingArea.handTechnique,
       collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.intermediate,
       minBpm: 90,
@@ -132,6 +137,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
           'strokes, then densified into doubles — each repeated in '
           'mirror image.',
       collection: ExerciseCollection.padWorkouts,
+      area: TrainingArea.handTechnique,
       collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.intermediate,
       minBpm: 95,
@@ -157,6 +163,7 @@ final List<Rudiment> stickingPatternEtudes = <Rudiment>[
           'strokes, then densified into doubles — each repeated in '
           'mirror image.',
       collection: ExerciseCollection.padWorkouts,
+      area: TrainingArea.handTechnique,
       collectionGroup: 'Sticking Patterns',
       difficulty: Difficulty.intermediate,
       minBpm: 100,

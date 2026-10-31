@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 // --- Double-paradiddle group builders --------------------------------------
 // A double paradiddle (RLRLRR / LRLRLL) is 6 notes. In eighth-note-triplet
@@ -74,6 +75,7 @@ final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
     description:
         'Pure double paradiddles in a triplet feel, accent on the first stroke of each group.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.beginner,
     minBpm: 50,
@@ -94,6 +96,7 @@ final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
     description:
         'Like Etude 1, but the trailing double (RR/LL) is ghosted – more dynamic range between loud and soft.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.beginner,
     minBpm: 60,
@@ -114,6 +117,7 @@ final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
     description:
         'Phrased: one group closes on a quarter note instead of the six-note triplet group – creates space in the run.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
@@ -134,6 +138,7 @@ final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
     description:
         'Four alternating bars: a double paradiddle bar (feel of six) against a straight eighth-note accent bar (feel of two).',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.advanced,
     minBpm: 85,
@@ -160,6 +165,7 @@ final List<Rudiment> doubleParadiddleEtudes = <Rudiment>[
     description:
         'Challenge: a moving accent across all six positions of the group; the last bar gets denser with ghost notes and a flam ending.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Paradiddle',
     difficulty: Difficulty.professional,
     minBpm: 100,

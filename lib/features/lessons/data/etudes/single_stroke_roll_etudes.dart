@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 /// Five Single Stroke Roll (RLRL) études, rising complexity and tempo:
 /// 1) plain accented 16ths, 2) downbeat-only accents, 3) phrased with rests,
@@ -10,6 +11,7 @@ final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
     name: 'Single Stroke Roll · Etude 1',
     description: 'Pure 16th-note single strokes with an accent on every stroke.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.beginner,
     minBpm: 60,
@@ -28,6 +30,7 @@ final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
     name: 'Single Stroke Roll · Etude 2',
     description: '16th-note single strokes with accents on beats 1 and 3.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.beginner,
     minBpm: 70,
@@ -47,6 +50,7 @@ final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
     name: 'Single Stroke Roll · Etude 3',
     description: 'Phrased 16ths with rests – a musical motif.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.intermediate,
     minBpm: 80,
@@ -82,6 +86,7 @@ final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
     name: 'Single Stroke Roll · Etude 4',
     description: 'From straight 16ths into 16th-note sextuplets – a faster feel.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.advanced,
     minBpm: 95,
@@ -103,6 +108,7 @@ final List<Rudiment> singleStrokeRollEtudes = <Rudiment>[
     name: 'Single Stroke Roll · Etude 5',
     description: 'A moving accent over continuous 16ths – top speed.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Stroke Roll',
     difficulty: Difficulty.professional,
     minBpm: 110,

@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 // --- Five Stroke Roll group builder -----------------------------------------
 // A five-stroke roll (RRLL R> / LLRR L>) is two 16th-note doubles plus an
@@ -50,6 +51,7 @@ final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
     name: 'Five Stroke Roll · Etude 1',
     description: 'Pure alternating five stroke rolls – RRLL R> and LLRR L>, clean and slow.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.beginner,
     minBpm: 50,
@@ -71,6 +73,7 @@ final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
     name: 'Five Stroke Roll · Etude 2',
     description: 'The roll is ghosted so the accented release stroke stands out clearly.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.beginner,
     minBpm: 60,
@@ -92,6 +95,7 @@ final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
     name: 'Five Stroke Roll · Etude 3',
     description: 'The closing accent is phrased as a crisp eighth note with an eighth rest.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
@@ -113,6 +117,7 @@ final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
     name: 'Five Stroke Roll · Etude 4',
     description: 'Five stroke roll bars alternating with a continuous double stroke bar for endurance.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.advanced,
     minBpm: 85,
@@ -145,6 +150,7 @@ final List<Rudiment> fiveStrokeRollEtudes = <Rudiment>[
     description:
         'Challenge: the accent moves through all five positions of the group before the roll gets denser at top speed.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Five Stroke Roll',
     difficulty: Difficulty.professional,
     minBpm: 100,

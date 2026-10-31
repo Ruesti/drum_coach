@@ -33,6 +33,7 @@ def phrase(t1: str, t: str, fill: str) -> str:
 
 
 def fill_sheet(**kw) -> Sheet:
+    kw.setdefault('area', 'fills')
     kw.setdefault('line_bars', 4)
     kw.setdefault('new_seed', True)
     kw.setdefault('genres', [])

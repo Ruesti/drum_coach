@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 // --- Sticking building blocks -----------------------------------------
 //
@@ -50,6 +51,7 @@ final List<Rudiment> flamEtudes = <Rudiment>[
     name: 'Flam · Etude 1',
     description: 'Quarter-note flams with the lead hand alternating evenly.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam',
     difficulty: Difficulty.beginner,
     minBpm: 50,
@@ -68,6 +70,7 @@ final List<Rudiment> flamEtudes = <Rudiment>[
     description:
         'A flam on every beat, followed by an eighth-note tap – alternating lead hand.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam',
     difficulty: Difficulty.beginner,
     minBpm: 60,
@@ -89,6 +92,7 @@ final List<Rudiment> flamEtudes = <Rudiment>[
     description:
         'Flam tap feel: flam and tap on the same hand, alternating between right and left.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
@@ -110,6 +114,7 @@ final List<Rudiment> flamEtudes = <Rudiment>[
     name: 'Flam · Etude 4',
     description: 'Flams embedded in a 16th-note phrase with rests for extra space.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam',
     difficulty: Difficulty.advanced,
     minBpm: 80,
@@ -130,6 +135,7 @@ final List<Rudiment> flamEtudes = <Rudiment>[
     name: 'Flam · Etude 5',
     description: 'Demanding flam accents in dense 16th-note rhythms at top speed.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam',
     difficulty: Difficulty.professional,
     minBpm: 90,

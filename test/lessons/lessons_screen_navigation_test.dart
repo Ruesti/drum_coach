@@ -56,7 +56,8 @@ void main() {
         // The tile's onTap awaits suggestedBpmProvider (an Isar lookup) before
         // navigating — override it so this test doesn't need a real database.
         overrides: [
-          suggestedBpmProvider('single_stroke_roll').overrideWith((ref) async => 100),
+          suggestedBpmProvider('single_stroke_roll')
+              .overrideWith((ref) async => 100),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -71,7 +72,12 @@ void main() {
     expect(_textStartingWith('explanation:'), findsNothing);
   });
 
-  testWidgets('tapping the info icon opens the explanation on demand', (tester) async {
+  testWidgets('tapping the info icon opens the explanation on demand',
+      (tester) async {
+    // The Area filter row pushes the list down; give the viewport room.
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     final router = buildRouter();
     await tester.pumpWidget(
       ProviderScope(child: MaterialApp.router(routerConfig: router)),

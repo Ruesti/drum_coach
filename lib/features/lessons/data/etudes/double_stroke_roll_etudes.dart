@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 /// Double Stroke Roll (RRLL RRLL) étude progression: 5 exercises, rising
 /// difficulty and tempo, all built on the RRLL double-stroke sticking.
@@ -9,6 +10,7 @@ final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
     name: 'Double Stroke Roll · Etude 1',
     description: 'Clean double strokes on a 16th-note grid, with no accents at all.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.beginner,
     minBpm: 50,
@@ -34,6 +36,7 @@ final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
     name: 'Double Stroke Roll · Etude 2',
     description: 'Double strokes with the first note accented on beats 1 and 3.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.beginner,
     minBpm: 60,
@@ -59,6 +62,7 @@ final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
     name: 'Double Stroke Roll · Etude 3',
     description: 'Double strokes with short breathing rests for extra phrasing.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
@@ -88,6 +92,7 @@ final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
     name: 'Double Stroke Roll · Etude 4',
     description: 'Alternate between dense 16th-note and more open 8th-note doubles.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.advanced,
     minBpm: 85,
@@ -120,6 +125,7 @@ final List<Rudiment> doubleStrokeRollEtudes = <Rudiment>[
     description:
         'Accented double strokes at high tempo — every 2-bar phrase ends on an accented single stroke.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Double Stroke Roll',
     difficulty: Difficulty.professional,
     minBpm: 100,

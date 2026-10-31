@@ -98,6 +98,7 @@ LESSON_ROCK8 = {
 
 
 def groove(**kw) -> Sheet:
+    kw.setdefault('area', 'groove')
     kw.setdefault('kit', True)
     kw.setdefault('limbs', ('allFour',))
     kw.setdefault('line_bars', 2)

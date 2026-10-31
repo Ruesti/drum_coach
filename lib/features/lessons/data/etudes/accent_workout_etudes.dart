@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 /// Six groove-flavored pieces instead of abstract "accent walks a beat
 /// forward" drills — real single-surface drum vocabulary (funk ghost-note
@@ -100,6 +101,7 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
         'accents on the "&" of 2 and the "a" of 4 — the pocket that sits '
         'under every funk beat.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
@@ -126,6 +128,7 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
         'music, transferred here to hand-to-hand alternation: five clear hits '
         'with plenty of silence in between.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.intermediate,
     minBpm: 80,
@@ -148,6 +151,7 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
         'Continuous eighths with a hard-cracked backbeat (beats 2+4) — '
         'the same drive as a rock snare, just on one voice.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.beginner,
     minBpm: 80,
@@ -166,6 +170,7 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
         'A light, syncopated bossa nova feel — fewer ghost notes than '
         'funk, but a gentle pickup lean in the accents.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.intermediate,
     minBpm: 80,
@@ -192,6 +197,7 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
         'the long-short lope that makes a shuffle swing instead of '
         'clattering mechanically.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.advanced,
     minBpm: 70,
@@ -212,6 +218,7 @@ final List<Rudiment> accentWorkoutEtudes = <Rudiment>[
         'the "&" of 3) over a bed of quiet ghost notes — space rather '
         'than density.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Grooves',
     difficulty: Difficulty.advanced,
     minBpm: 60,

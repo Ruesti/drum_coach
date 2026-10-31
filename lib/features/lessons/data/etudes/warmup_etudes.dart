@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 /// One bar (16 sixteenths, 4.0 quarters) of steady alternating singles
 /// (RLRL…) played at a single dynamic level: [ghost] for pp, [accent] for
@@ -32,6 +33,7 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
         'joined into one continuous play-in exercise: single hand, '
         'alternating, then built up to 16ths.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.beginner,
     minBpm: 40,
@@ -67,6 +69,7 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
         'Three sticking blocks (3 bars of 16ths each) joined into one '
         'warm-up — from groups of 2 through 3 up to 4.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.intermediate,
     minBpm: 60,
@@ -98,6 +101,7 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
         '3 bars normal (mf), 3 bars accented (f); the last bar puts '
         'ghost and accent side by side within one line.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.intermediate,
     minBpm: 50,
@@ -133,6 +137,7 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
         '4 bars, then densified into 16ths for 4 bars — '
         'same idea, double the speed.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.intermediate,
     minBpm: 60,
@@ -162,6 +167,7 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
         'control of the weaker hand; finally one bar that brings both '
         'directions together.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.beginner,
     minBpm: 50,
@@ -195,6 +201,7 @@ final List<Rudiment> warmupEtudes = <Rudiment>[
         '(alternating singles) through groups of 2 and 3 up to '
         'groups of 4, each led once by the right and once by the left.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Warm-Up',
     difficulty: Difficulty.intermediate,
     minBpm: 55,

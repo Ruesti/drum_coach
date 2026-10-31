@@ -12,7 +12,7 @@ from sheetlang import Line
 
 SHEETS: list[Sheet] = [
     Sheet(
-        id='single_stroke_roll', name='Single Stroke Roll', min_bpm=60, target_bpm=200,
+        id='single_stroke_roll', area='rudiments', name='Single Stroke Roll', min_bpm=60, target_bpm=200,
         difficulty='beginner', skills=['control'], genres=[], count_lines=2,
         description='Alternating single strokes, R L R L. The first and most used rudiment: even strokes at every tempo.',
         pattern='R8 L8 R8 L8 R8 L8 R8 L8',
@@ -34,7 +34,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='double_stroke_roll', name='Double Stroke Roll', min_bpm=60, target_bpm=180,
+        id='double_stroke_roll', area='rudiments', name='Double Stroke Roll', min_bpm=60, target_bpm=180,
         difficulty='beginner', skills=['control'], genres=[], count_lines=2,
         description='Two strokes per hand, R R L L. The second stroke is the hard one: it has to be as loud as the first.',
         pattern='R8 R8 L8 L8 R8 R8 L8 L8',
@@ -56,7 +56,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='single_paradiddle', name='Single Paradiddle', min_bpm=60, target_bpm=120,
+        id='single_paradiddle', area='rudiments', name='Single Paradiddle', min_bpm=60, target_bpm=120,
         difficulty='beginner', skills=['control', 'coordination'], genres=[], count_lines=2,
         description='R L R R, L R L L. Two singles and a double; the lead hand switches every group.',
         pattern='R8 L8 R8 R8 L8 R8 L8 L8',
@@ -78,7 +78,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='double_paradiddle', name='Double Paradiddle', min_bpm=50, target_bpm=100,
+        id='double_paradiddle', area='rudiments', name='Double Paradiddle', min_bpm=50, target_bpm=100,
         difficulty='intermediate', skills=['control', 'coordination'], genres=[],
         description='R L R L R R, L R L R L L. A six-note paradiddle that lives in triplets and crosses the beat in sixteenths.',
         pattern='3(R8 L8 R8) 3(L8 R8 R8) 3(L8 R8 L8) 3(R8 L8 L8)',
@@ -100,7 +100,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='paradiddle_diddle', name='Paradiddle-Diddle', min_bpm=60, target_bpm=100,
+        id='paradiddle_diddle', area='rudiments', name='Paradiddle-Diddle', min_bpm=60, target_bpm=100,
         difficulty='intermediate', skills=['control', 'coordination'], genres=[],
         description='R L R R L L. Two singles and two doubles; the lead hand stays the same, so the pattern rolls.',
         pattern='3(R8 L8 R8) 3(R8 L8 L8) 3(R8 L8 R8) 3(R8 L8 L8)',
@@ -122,7 +122,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='flam', name='Flam', min_bpm=60, target_bpm=120,
+        id='flam', area='rudiments', name='Flam', min_bpm=60, target_bpm=120,
         difficulty='intermediate', skills=['control'], genres=[],
         description='A quiet grace note just before the main stroke, played with the other hand. One fat note instead of two.',
         pattern='R4f> L4f> R4f> L4f>',
@@ -144,7 +144,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='flam_accent', name='Flam Accent', min_bpm=50, target_bpm=100,
+        id='flam_accent', area='rudiments', name='Flam Accent', min_bpm=50, target_bpm=100,
         difficulty='intermediate', skills=['control'], genres=[],
         description='Flam on the first note of each triplet, hands alternating: lR L R, rL R L. The flam carries the accent.',
         pattern='3(R8f> L8 R8) 3(L8f> R8 L8) 3(R8f> L8 R8) 3(L8f> R8 L8)',
@@ -166,7 +166,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='flam_tap', name='Flam Tap', min_bpm=50, target_bpm=150,
+        id='flam_tap', area='rudiments', name='Flam Tap', min_bpm=50, target_bpm=150,
         difficulty='intermediate', skills=['control'], genres=['drumCorps'],
         description='A flam followed by a tap with the same hand: lR R, rL L. A double stroke that starts with a flam.',
         pattern='R8f R8 L8f L8 R8f R8 L8f L8',
@@ -188,7 +188,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='single_drag', name='Single Drag', min_bpm=60, target_bpm=120,
+        id='single_drag', area='rudiments', name='Single Drag', min_bpm=60, target_bpm=120,
         difficulty='intermediate', skills=['control'], genres=[],
         description='Two quiet grace notes (a short double) before the main stroke: llR, rrL. A buzz that lands on a note.',
         pattern='R4d L4d R4d L4d',
@@ -210,7 +210,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='five_stroke_roll', name='Five Stroke Roll', min_bpm=60, target_bpm=140,
+        id='five_stroke_roll', area='rudiments', name='Five Stroke Roll', min_bpm=60, target_bpm=140,
         difficulty='intermediate', skills=['control'], genres=['drumCorps'], new_seed=True, grid='sixteenth',
         description='Two doubles and an accent: R R L L R, L L R R L. The shortest roll that already sounds like a roll.',
         pattern='R32 R32 L32 L32 R8> L32 L32 R32 R32 L8> R32 R32 L32 L32 R8> L32 L32 R32 R32 L8>',
@@ -232,7 +232,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='seven_stroke_roll', name='Seven Stroke Roll', min_bpm=50, target_bpm=120,
+        id='seven_stroke_roll', area='rudiments', name='Seven Stroke Roll', min_bpm=50, target_bpm=120,
         difficulty='intermediate', skills=['control'], genres=['drumCorps'], new_seed=True, grid='sixteenthTriplet',
         description='Three doubles and an accent: R R L L R R L. Six fast notes into one landing.',
         pattern='6(R16 R16 L16 L16 R16 R16) L4> 6(L16 L16 R16 R16 L16 L16) R4>',
@@ -254,7 +254,7 @@ SHEETS: list[Sheet] = [
         },
     ),
     Sheet(
-        id='swiss_army_triplet', name='Swiss Army Triplet', min_bpm=50, target_bpm=110,
+        id='swiss_army_triplet', area='rudiments', name='Swiss Army Triplet', min_bpm=50, target_bpm=110,
         difficulty='advanced', skills=['control', 'coordination'], genres=['drumCorps'], new_seed=True, grid='triplet',
         description='A flam, a tap with the same hand, then the other hand: lR R L, as triplets. Fast and oddly comfortable.',
         pattern='3(R8f> R8 L8) 3(R8f> R8 L8) 3(R8f> R8 L8) 3(R8f> R8 L8)',
