@@ -86,9 +86,9 @@ SHEETS: list[Sheet] = [
                    'the same tone, just a different size.',
             'Tips': 'Freeze after the last note of a bar and look: high hand high, low hand low? Do not let the taps '
                     'creep up next to the full strokes, and do not hit the full strokes harder, just from higher. '
-                    'Line 7 is the first time one hand changes height inside the bar: let the stick stop low after '
+                    'From line 7 on, one hand changes height from note to note: let the stick stop low after '
                     'the loud note, then lift it again in time.',
-            'Song examples': 'Ravel\'s Boléro: the snare plays the same rhythm for fifteen minutes, all quiet taps. '
+            'Song examples': 'Ravel\'s Boléro: the snare plays the same rhythm for fifteen minutes and starts as quiet taps. '
                              'When the Levee Breaks (Led Zeppelin): John Bonham\'s backbeat, big full strokes. '
                              'In the Air Tonight (Phil Collins): soft and sparse until the famous fill.',
         },
@@ -170,9 +170,10 @@ SHEETS: list[Sheet] = [
         lines=[
             'R4 R4 R4 R4 | R8 R8 R8 R8 R4 R4 | R4 R4 R4 R4 | R8 R8 R8 R8 R8 R8 R4',
             'L4 L4 L4 L4 | L8 L8 L8 L8 L4 L4 | L4 L4 L4 L4 | L8 L8 L8 L8 L8 L8 L4',
-            'R8 R8 R8 R8 R8 R8 R8 R8 | R8 R8 R8 R8 R4 -4 | R8 R8 R8 R8 R8 R8 R8 R8 | R8 R8 R8 R8 R8 R8 R4',
-            'L8 L8 L8 L8 L8 L8 L8 L8 | L8 L8 L8 L8 L4 -4 | L8 L8 L8 L8 L8 L8 L8 L8 | L8 L8 L8 L8 L8 L8 L4',
-            'R8 R8 R8 R8 R8 R8 R8 R8 | L8 L8 L8 L8 L8 L8 L8 L8 | R8 R8 R8 R8 R8 R8 R4 | L8 L8 L8 L8 L8 L8 L4',
+            'R8 R8 R4 -8 R8 R4 | R4 -8 R8 R8 R8 R4 | R8 R8 R8 R8 -8 R8 R4 | -8 R8 R8 R8 R4 -4',
+            'L8 L8 L4 -8 L8 L4 | L4 -8 L8 L8 L8 L4 | L8 L8 L8 L8 -8 L8 L4 | -8 L8 L8 L8 L4 -4',
+            'R8 R8 R8 R16 R16 R4 R4 | L8 L8 L8 L16 L16 L4 L4 | R8 R16 R16 R8 R8 R8 R16 R16 R4 | '
+            'L8 L16 L16 L8 L8 L8 L16 L16 L4',
             'R8 R8 R8 R8 L8 L8 L8 L8 | R8 R8 R8 R8 L8 L8 L4 | R8 R8 L8 L8 R8 R8 L8 L8 | R8 R8 L8 L8 R4 L4',
             'R8 R16 R16 R8 R16 R16 R8 R8 R4 | L8 L16 L16 L8 L16 L16 L8 L8 L4 | '
             'R8 R16 R16 R8 R16 R16 R8 R16 R16 R4 | L8 L16 L16 L8 L16 L16 L8 L16 L16 L4',
@@ -184,12 +185,13 @@ SHEETS: list[Sheet] = [
                    'keep its height and keep relaxed by itself. On the kit one hand often plays the hi-hat or ride '
                    'for minutes while the other does something else: this is where that stamina starts.',
             'How': 'Play from the wrist, stick about 10 cm high, and let every stroke rebound before the next one. '
-                   'Faster notes mean a smaller, quicker wrist motion, not a tighter grip: in the sixteenths of '
-                   'line 8 the fingers start helping, the back fingers gently pulling the stick back up. The resting '
+                   'Faster notes mean a smaller, quicker wrist motion, not a tighter grip. In the sixteenths of '
+                   'line 8 the fingers start helping: they close gently to play the note, and the rebound lifts the '
+                   'stick back up. The resting '
                    'hand lies still on your leg.',
             'Tips': 'Count out loud, a single hand drifts in time more easily than two. Compare the left hand with '
                     'the right: same sound, same height? If the forearm gets tight, stop, shake out, start again '
-                    'slower. Line 7 is a gallop (eighth, two sixteenths): keep the eighth note long.',
+                    'slower. Lines 5 and 7 use a gallop (eighth, two sixteenths): keep the eighth note long.',
             'Song examples': 'Back in Black (AC/DC): one hand plays eighths on the hi-hat for the whole song. The '
                              'one-handed sixteenth hi-hat of disco and Motown records. Billie Jean (Michael '
                              'Jackson): a single hand on the hi-hat, steady as a machine.',
@@ -218,7 +220,7 @@ SHEETS: list[Sheet] = [
             'R16> L16 R16 L16> R16 L16 R16> L16 R16 L16 R16> L16 R8> L8 | '
             'R16> L16 R16 L16> R16 L16 R16> L16 R16> L16 R16 L16> R16 L16 R16> L16 | '
             'R16> L16 R16 L16> R16 L16 R16> L16 R16> L16 R16 L16> R4>',
-            f'{x("R16> L16 R16 L16", 4)} | {x("R16 L16 R16> L16", 4)} | {x("R16 L16> R16 L16", 4)} | '
+            f'{x("R16> L16 R16 L16", 4)} | {x("R16 L16> R16 L16", 4)} | {x("R16 L16 R16> L16", 4)} | '
             f'{x("R16 L16 R16 L16>", 3)} R4>',
         ],
         lesson={
@@ -304,8 +306,8 @@ SHEETS: list[Sheet] = [
             f'{x(RR, 2)} R8 L8 R8 L8 | R8 L8 R8 L8 {x(RR, 2)} | {x(RR, 2)} R8 L8 R8 L8 | {x(RR, 3)} R4',
             f'{x(RR, 4)} | {x(RR, 2)} R8 R8 L8 L8 | {x(RR, 4)} | {x(RR, 3)} R4',
             f'{x(LL, 4)} | {x(LL, 2)} L8 L8 R8 R8 | {x(LL, 4)} | {x(LL, 3)} L4',
-            f'{x("R16> R16 L16 L16", 4)} | {x("R16> R16 L16 L16", 2)} R8> R8 L8> L8 | {x("L16> L16 R16 R16", 4)} | '
-            f'{x("R16> R16 L16 L16", 3)} R4>',
+            f'{x("R16> R16 L16 L16", 4)} | {x("R16> R16 L16 L16", 3)} R8> R8 | {x("L16> L16 R16 R16", 4)} | '
+            f'{x("L16> L16 R16 R16", 3)} L4>',
         ],
         lesson={
             'Why': 'Double strokes let the stick do half the work: one motion, two notes. They are the engine of '
@@ -364,7 +366,8 @@ SHEETS: list[Sheet] = [
                    'than a normal tap. Accent: full height, about 25 cm. Moving from accent to ghost is a down '
                    'stroke (stop low after the accent); moving from ghost to accent is an up stroke (the ghost '
                    'lifts the stick). The grip stays loose; ghosts come from low height, not from squeezing.',
-            'Tips': 'If you cannot hear the ghosts at all, they are fine; if they sound like taps, go lower. The '
+            'Tips': 'Ghosts should be barely audible, but audible: you (and the microphone) must still hear '
+                    'every one. If they sound like taps, go lower; if they vanish, lift a touch. The '
                     'accents must not shrink because the ghosts are low. Line 4 is the funk backbeat on 2 and 4. '
                     'Line 6 ghosts two notes with the same hand. Line 7 is a shuffle feel in triplets: accent, '
                     'ghost, ghost.',
@@ -401,7 +404,8 @@ SHEETS: list[Sheet] = [
                    'and the landing note is part of it. In the rest, deliberately drop the shoulders and soften '
                    'the hands before the next burst.',
             'Tips': 'Only go as fast as the bursts stay even; uneven fast notes are not faster, just messier. If the '
-                    'forearms burn, the grip is too tight or the sticks too high. Line 4 and line 5 give you a full '
+                    'forearms burn, the grip is too tight or the sticks too high. Line 4 gives you a whole bar of rest '
+                    'after each burst, line 5 a landing note and three beats of rest: '
                     'bar of rest: use it. Line 8 is two bars without a break, the test of everything before it.',
             'Song examples': 'In the Air Tonight (Phil Collins): one famous sixteenth-note burst around the toms, '
                              'then the groove. Tom Sawyer (Rush): Neil Peart\'s quick fills between steady grooves. '

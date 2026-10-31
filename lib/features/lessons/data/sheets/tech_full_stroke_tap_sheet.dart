@@ -283,11 +283,11 @@ const List<TechniqueSection> techFullStrokeTapLesson = [
   TechniqueSection(
     title: "Tips",
     body:
-        "Freeze after the last note of a bar and look: high hand high, low hand low? Do not let the taps creep up next to the full strokes, and do not hit the full strokes harder, just from higher. Line 7 is the first time one hand changes height inside the bar: let the stick stop low after the loud note, then lift it again in time.",
+        "Freeze after the last note of a bar and look: high hand high, low hand low? Do not let the taps creep up next to the full strokes, and do not hit the full strokes harder, just from higher. From line 7 on, one hand changes height from note to note: let the stick stop low after the loud note, then lift it again in time.",
   ),
   TechniqueSection(
     title: "Song examples",
     body:
-        "Ravel's Boléro: the snare plays the same rhythm for fifteen minutes, all quiet taps. When the Levee Breaks (Led Zeppelin): John Bonham's backbeat, big full strokes. In the Air Tonight (Phil Collins): soft and sparse until the famous fill.",
+        "Ravel's Boléro: the snare plays the same rhythm for fifteen minutes and starts as quiet taps. When the Levee Breaks (Led Zeppelin): John Bonham's backbeat, big full strokes. In the Air Tonight (Phil Collins): soft and sparse until the famous fill.",
   ),
 ];

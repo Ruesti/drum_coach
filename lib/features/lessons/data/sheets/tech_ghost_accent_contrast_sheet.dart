@@ -446,7 +446,7 @@ const List<TechniqueSection> techGhostAccentContrastLesson = [
   TechniqueSection(
     title: "Tips",
     body:
-        "If you cannot hear the ghosts at all, they are fine; if they sound like taps, go lower. The accents must not shrink because the ghosts are low. Line 4 is the funk backbeat on 2 and 4. Line 6 ghosts two notes with the same hand. Line 7 is a shuffle feel in triplets: accent, ghost, ghost.",
+        "Ghosts should be barely audible, but audible: you (and the microphone) must still hear every one. If they sound like taps, go lower; if they vanish, lift a touch. The accents must not shrink because the ghosts are low. Line 4 is the funk backbeat on 2 and 4. Line 6 ghosts two notes with the same hand. Line 7 is a shuffle feel in triplets: accent, ghost, ghost.",
   ),
   TechniqueSection(
     title: "Song examples",

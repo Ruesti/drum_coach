@@ -358,7 +358,7 @@ const List<TechniqueSection> techSpeedBurstsLesson = [
   TechniqueSection(
     title: "Tips",
     body:
-        "Only go as fast as the bursts stay even; uneven fast notes are not faster, just messier. If the forearms burn, the grip is too tight or the sticks too high. Line 4 and line 5 give you a full bar of rest: use it. Line 8 is two bars without a break, the test of everything before it.",
+        "Only go as fast as the bursts stay even; uneven fast notes are not faster, just messier. If the forearms burn, the grip is too tight or the sticks too high. Line 4 gives you a whole bar of rest after each burst, line 5 a landing note and three beats of rest: bar of rest: use it. Line 8 is two bars without a break, the test of everything before it.",
   ),
   TechniqueSection(
     title: "Song examples",
