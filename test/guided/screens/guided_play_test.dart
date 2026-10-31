@@ -15,6 +15,7 @@ import 'package:drum_coach/features/guided/widgets/guided_banner.dart';
 import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
 import 'package:drum_coach/features/guided/widgets/guided_page_view.dart';
 import 'package:drum_coach/features/guided/widgets/guided_stage.dart';
+import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -323,13 +324,16 @@ void main() {
       final disc = t.getRect(find.byType(GuidedCountdown));
       final banner = t.getRect(find.byKey(const Key('guided-banner')));
       expect(disc.width, lessThanOrEqualTo(100));
+      // Disc left of the banner, the pair centred at the bottom.
+      expect(disc.right, lessThanOrEqualTo(banner.left));
+      expect((disc.left + banner.right) / 2, closeTo(size.width / 2, 1),
+          reason: '$size');
       for (final r in [disc, banner]) {
         expect(
             stage.contains(r.topLeft) &&
                 stage.contains(r.bottomRight - const Offset(0.01, 0.01)),
             isTrue,
             reason: '$size $r in $stage');
-        expect(r.center.dx, closeTo(size.width / 2, 1), reason: '$size');
         expect(r.center.dy, greaterThan(stage.center.dy), reason: '$size');
       }
     }
@@ -697,9 +701,10 @@ void main() {
       for (final r in [stage, sheet, controls]) {
         expect(r.width, 1920);
       }
-      // The stage gets the most, the sheet about the Richtwert (38 %).
-      expect(stage.height, greaterThan(sheet.height));
-      expect(sheet.height, inInclusiveRange(0.28 * 1080, 0.42 * 1080));
+      // Sheet: at most half the window (staff readable, spec 1.3 fixed
+      // rule), the stage keeps the rest.
+      expect(sheet.height, inInclusiveRange(0.3 * 1080, 0.5 * 1080 + 1));
+      expect(stage.height, greaterThanOrEqualTo(0.4 * 1080));
       expect(controls.height, lessThanOrEqualTo(0.09 * 1080));
       // White sheet.
       expect(t.widget<ColoredBox>(find.byKey(const Key('guided-sheet'))).color,
@@ -767,6 +772,42 @@ void main() {
       expect(t.getRect(find.byTooltip('Back')).right,
           lessThanOrEqualTo(t.getRect(find.text(_kit.name)).left));
       expect(t.takeException(), isNull);
+    });
+
+    testWidgets('staff height: 8th-note kit page at least 55 px at 1920x1080',
+        (t) async {
+      final ex = guidedCatalog.firstWhere((e) => e.name == 'Backbeat Walk');
+      expect(ex.gridUnit, NoteGrid.eighth);
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1920, 1080), desktop: true, ex: ex);
+      final g = firstGroove(ex);
+      await _emit(t, p, _pos(g, 1, tick: 30));
+      final now = find.byKey(const Key('guided-now'));
+      final h = staffCalls(t, now).staffHeight;
+      expect(h, greaterThanOrEqualTo(55));
+      // One scale for the whole exercise: the variation's staff is as high.
+      await _emit(t, p, _pos(_varIndex(ex, 1), 0, tick: 30));
+      expect(staffCalls(t, now).staffHeight, closeTo(h, 0.01));
+      // Still four bars in one row over the full width.
+      expect(_nowView(t).page.bars, 4);
+      expect(
+          t
+              .getSize(
+                  find.descendant(of: now, matching: find.byType(FittedBox)))
+              .width,
+          greaterThanOrEqualTo(1920 - 2 * AppSpacing.screenPadding - 1));
+    });
+
+    testWidgets('staff height: 16th-note kit page at least 40 px at 1920x1080',
+        (t) async {
+      final ex = guidedCatalog.firstWhere((e) => e.name == 'Funk Sixteenths');
+      expect(ex.gridUnit, NoteGrid.sixteenth);
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1920, 1080), desktop: true, ex: ex);
+      await _emit(t, p, _pos(_varIndex(ex, 1), 0, tick: 30));
+      final now = find.byKey(const Key('guided-now'));
+      expect(staffCalls(t, now).staffHeight, greaterThanOrEqualTo(40));
+      expect(_nowView(t).page.bars, 4);
     });
 
     testWidgets('sheet spans the window width minus gutter at 2560', (t) async {

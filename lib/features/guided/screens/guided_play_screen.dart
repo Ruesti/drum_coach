@@ -553,6 +553,8 @@ class _PlayPageState extends State<_PlayPage> {
               child: view(pages.now,
                   tick: countIn ? null : guidedPageTick(pages.now, p)),
             ),
+            // Air between the kick stems above and the next label.
+            const SizedBox(height: AppSpacing.sm),
             if (next != null) ...[
               label('guided-label-next', 'Next · ${_pageName(next)}',
                   dim: true),
@@ -646,6 +648,9 @@ class _PlayPageState extends State<_PlayPage> {
       AppSpacing.sm +
       _alongW;
 
+  /// Most of the window height the sheet may take (wide layout).
+  static const _sheetShare = 0.5;
+
   /// The timeline keeps at least this much before the key hint moves
   /// from the control bar onto the stage.
   static const _minTimeline = 360.0;
@@ -659,11 +664,16 @@ class _PlayPageState extends State<_PlayPage> {
     final hintInBar = isDesktopPlatform &&
         size.width - _controlsFixed - AppSpacing.lg - hintW >= _minTimeline;
     final hintOnStage = isDesktopPlatform && !hintInBar;
-    // Sheet ≈ 38 % of the window: two pages and their labels.
+    // Sheet: at most half the window for two pages and their labels — the
+    // spec's fixed rule (staff readable at 1920x1080) beats the 38 %
+    // Richtwert. Pages that are wider than high take less (the sheet is
+    // only as high as its pages), the stage gets the rest.
     final labelSize = size.height >= 1000 ? 14.0 : 13.0;
-    final pageMax =
-        ((0.38 * size.height - AppSpacing.sm - 2 * (labelSize * 1.2 + 2)) / 2)
-            .clamp(90.0, 420.0);
+    final pageMax = ((_sheetShare * size.height -
+                2 * AppSpacing.sm -
+                2 * (labelSize * 1.2 + 2)) /
+            2)
+        .clamp(90.0, 420.0);
     return Column(
       key: const Key('guided-wide'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -749,7 +759,8 @@ class _PlayPageState extends State<_PlayPage> {
                           fontFeatures: const [FontFeature.tabularFigures()])),
                 if (coming != null) ...[
                   const SizedBox(height: AppSpacing.xs),
-                  Text('Coming up: ${_ex.sections[coming].titleEn}',
+                  Text(
+                      'Coming up: ${_ex.sections[coming].titleEn ?? 'Variation ${guidedVariationNumber(_ex, coming)}'}',
                       key: const Key('guided-coming-up'),
                       textAlign: TextAlign.right,
                       maxLines: 2,
@@ -771,13 +782,15 @@ class _PlayPageState extends State<_PlayPage> {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 720),
-                child: Column(
+                // Side by side: a low stage (1280x720) keeps most of the
+                // photo free.
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (countdown != null) _countdown(countdown, size: 96),
                     if (countdown != null && banner != null)
-                      const SizedBox(height: AppSpacing.md),
-                    if (banner != null) banner,
+                      const SizedBox(width: AppSpacing.md),
+                    if (banner != null) Flexible(child: banner),
                   ],
                 ),
               ),
