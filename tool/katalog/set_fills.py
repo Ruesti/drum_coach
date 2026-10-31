@@ -198,6 +198,7 @@ def set_fill(pad_id: str, *, groove: str, name: str, description: str, lesson: d
     kw.setdefault('min_bpm', pad.min_bpm)
     kw.setdefault('target_bpm', pad.target_bpm)
     kw.setdefault('difficulty', pad.difficulty)
+    kw.setdefault('area', 'fills')
     kw.setdefault('grid', pad.grid)
     kw.setdefault('kit', True)
     kw.setdefault('limbs', ('allFour',))
@@ -343,7 +344,7 @@ SHEETS: list[Sheet] = [
         lesson=LESSON_ROLL,
     ),
     Sheet(
-        id='set_around_the_kit', name='Around the Kit', min_bpm=60, target_bpm=120,
+        id='set_around_the_kit', area='fills', name='Around the Kit', min_bpm=60, target_bpm=120,
         difficulty='intermediate', skills=['fill', 'coordination'], genres=[], grid='sixteenth',
         description='Simple stickings around all four toms, one drum per beat, with crash, china or ride bell on the one.',
         pattern=kit(_around_bars(0)[1]),

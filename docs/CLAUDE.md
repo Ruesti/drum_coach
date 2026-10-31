@@ -9,7 +9,7 @@ Flutter app (Android, Linux desktop) for training and improving drum rudiments o
 2. **Lessons Library** – Drum rudiments with descriptions, difficulty, target BPM range, embedded metronome
 3. **Practice Session Tracking** – Log duration + BPM per session, stored locally
 4. **Stats & Progress** – Daily practice time, BPM progress per rudiment, streak calendar
-5. **Learning System** – BPM Progression + Spaced Repetition + Daily Routine Generator (see below)
+5. **Learning System** – Trainingsraum (today's session: warm-up + one focus area, tempo ladder, "sits") + Spaced Repetition; BPM progression for free practice (see below)
 
 ## Tech Stack
 | Concern | Package |
@@ -87,13 +87,11 @@ lib/
 │   │   ├── stats_screen.dart
 │   │   └── stats_provider.dart
 │   ├── learning/
-│   │   ├── daily_routine_screen.dart
-│   │   ├── routine_provider.dart         # generates today's plan
 │   │   ├── spaced_repetition_service.dart
 │   │   └── bpm_progression_service.dart
 │   └── today/                        # start screen (K2): path step + library door
 │       ├── today_screen.dart
-│       ├── next_step.dart            # pure: first open program block / routine item
+│       ├── next_step.dart            # pure: "Continue" = today's room session
 │       └── next_step_provider.dart
 ├── shared/
 │   ├── widgets/             # Reusable UI components
@@ -214,7 +212,7 @@ enum Hand { right, left }
   ascending order, "Play all" the whole sheet, ⓘ = info page; the last
   practised line is framed. Library and collection tiles go through
   `openExercise`: multi-line sheets open the line list, one-line exercises
-  practise directly. Today, routine and program always play all lines
+  practise directly. Today's session (`/room`) always plays all lines
   (`lines=all`).
 - The lesson text (`technique` sections: Why it matters / How to play it /
   Practice tips / Song examples) appears only on the Library info page
@@ -319,8 +317,12 @@ class PracticeSession {
   - Rating 3 (Solid) → +5 BPM
   - Rating 2 (OK)    → +2 BPM
   - Rating 1 (Struggled) → stay at current BPM
-- Never exceed the rudiment's `targetBpm`; mark as **Mastered** when reached
+- Never exceed the rudiment's `targetBpm`; mastery stops at **proficient**
+  (best tempo ≥ 85 % of the target) — only "sits" in the room
+  (`RoomProgressService`) sets **mastered**; a mastered row stays mastered
 - Update `RudimentProgress.currentBpm` and `bestBpm` after every session
+  (Library / free practice). The room's warm-up (`?warmup=1`) saves the
+  session and spaced repetition only — tempo, best tempo and mastery stay
 
 ### Spaced Repetition (simplified SM-2)
 Implemented in `spaced_repetition_service.dart`:
@@ -335,34 +337,24 @@ Rating 3 (Solid)     → repetitions++
 - Update `RudimentProgress.srInterval`, `srRepetitions`, `nextReviewDate` after session
 - A rudiment is **due for review** when `nextReviewDate <= today`
 
-### Daily Routine Generator
-`routine_provider.dart` generates today's plan at app launch:
-
-**Selection algorithm (in priority order):**
-1. All rudiments with `nextReviewDate <= today` (overdue reviews first)
-2. Active rudiments (started but not mastered, not yet due for review)
-3. 1 new rudiment (lowest difficulty not yet started), if total time < target
-
-**Time budgeting:**
-- Default target: 20–30 min (user can set in settings)
-- Each rudiment slot: 5–8 min depending on difficulty
-- Cap at 5 rudiments per day to avoid overwhelm
-
-**Output – `DailyRoutine` model:**
-```dart
-class DailyRoutineItem {
-  final String rudimentId;
-  final RoutineItemType type;   // enum: review, progression, newRudiment
-  final int suggestedBpm;
-  final int suggestedDurationMinutes;
-}
-```
+### Today's session (Trainingsraum, 31.10.)
+The Trainingsraum replaced the training program (`features/program`) and the
+daily routine (`routine_provider`). `features/room/session_planner.dart`
+plans warm-up (one per hand technique / rudiments / feet) + one focus area
+(due reviews first, then the next exercise that doesn't sit yet; within an
+area exercises with `Rudiment.roomOrder` come first — the 10 `tech_*`
+sheets, `Sheet.room_order` in `tool/katalog/technik.py`);
+`room_screen.dart` (`/room`) shows it with an area picker. Deepen opens
+`/practice/:id?room=1` at the stored tempo (tempo ladder +4 / 0 / −4 per
+round); warm-up opens `?warmup=1` at `max(minBpm, currentBpm − 8)`. Old
+`program_*` SharedPreferences keys are deleted at start
+(`SettingsService.clearLegacyProgramKeys`); `CleanTempo` stays registered in
+Isar but is unused.
 
 ### Navigation (K2, 2026-09)
 ```
 Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
-/routine              → DailyRoutineScreen   (top-level, no tab anymore)
-/routine/:rudimentId  → PracticeSessionScreen (from routine context)
+/room                 → RoomScreen           (today's session, top-level)
 /exercise/:rudimentId → LineListScreen       (line list, ?lines= into practice)
 /lessons, /lessons/:id, /stats → redirect to /library, /library/:id, /progress
 ```
@@ -371,8 +363,8 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
 - A random portrait photo (`nextBackdrop()`, the practice pool) filling the
   whole screen; "TODAY" and the greeting in white on it, the doors on paper
   below a fade (29.09.). Status bar icons light.
-- "Continue the path": the next step — first open block of today's program
-  day, or the first routine item without a program — with one Start button
+- "Continue": today's session (warm-up + the suggested area), one Start
+  button into `/room`
 - "Practice freely": one button into the Library
 - Streak and minutes today, compact
 - Library: borderless photo header (a third of the screen, title on it),
@@ -467,7 +459,7 @@ StickingPatternWidget({
 - **Dark theme only** – optimized for low-light practice environments
 - Primary color: deep orange / amber accent (energy, drumming feel)
 - Keep screens uncluttered – large touch targets (practice pad users have sticks in hand)
-- Bottom navigation: Dashboard | Lessons | Metronome | Stats
+- Bottom navigation: Today | Library | Progress (see Navigation above)
 - Metronome screen: BPM front and center, large and readable from a distance
 
 ## State Management Conventions
@@ -477,18 +469,10 @@ StickingPatternWidget({
 - Never put business logic in widgets
 
 ## Navigation (go_router)
-```
-/                       → DashboardScreen
-/routine                → DailyRoutineScreen
-/routine/:rudimentId    → PracticeSessionScreen (routine context)
-/lessons                → LessonsScreen
-/lessons/:id            → LessonDetailScreen
-/practice/:rudimentId   → PracticeSessionScreen (free practice)
-/metronome              → MetronomeScreen
-/stats                  → StatsScreen
-```
-
-Bottom navigation: **Dashboard | Routine | Lessons | Stats**
+Routes and bottom nav: see "Navigation (K2, 2026-09)" above. Practice is
+top-level: `/practice/:rudimentId` (`?bpm=` `?lines=` `?line=` `?min=`
+`?ctx=`, `?room=1` tempo ladder, `?warmup=1` room warm-up); `/metronome`,
+`/settings` likewise.
 
 ## Code Style
 - Dart 3, null-safe, use `sealed class` / pattern matching where appropriate

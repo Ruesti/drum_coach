@@ -1,4 +1,5 @@
 import '../../coaching/services/stroke_source.dart';
+import '../../room/training_area.dart';
 import '../models/rudiment.dart';
 import 'sheets/single_stroke_roll_sheet.dart';
 import 'sheets/double_stroke_roll_sheet.dart';
@@ -48,6 +49,16 @@ import 'sheets/set_fill_double_bass_sheet.dart';
 import 'sheets/groove_linear_sheet.dart';
 import 'sheets/groove_kick_sixteenths_sheet.dart';
 import 'sheets/groove_halftime_shuffle_sheet.dart';
+import 'sheets/tech_grip_rebound_sheet.dart';
+import 'sheets/tech_full_stroke_tap_sheet.dart';
+import 'sheets/tech_even_singles_sheet.dart';
+import 'sheets/tech_accent_basics_sheet.dart';
+import 'sheets/tech_single_hand_control_sheet.dart';
+import 'sheets/tech_down_up_strokes_sheet.dart';
+import 'sheets/tech_moving_accents_sheet.dart';
+import 'sheets/tech_doubles_control_sheet.dart';
+import 'sheets/tech_ghost_accent_contrast_sheet.dart';
+import 'sheets/tech_speed_bursts_sheet.dart';
 
 // A plain list (not const) since 30.09.: the sample sheet is built with the
 // étude DSL, which is not const-constructible.
@@ -67,6 +78,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: singleStrokeRollPattern,
     technique: singleStrokeRollLesson,
     lines: singleStrokeRollSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
@@ -82,10 +94,12 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: doubleStrokeRollPattern,
     technique: doubleStrokeRollLesson,
     lines: doubleStrokeRollSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
     id: 'multiple_bounce_roll',
+    area: TrainingArea.rudiments,
     name: 'Multiple Bounce Roll',
     skills: {Skill.control},
     description:
@@ -143,6 +157,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: singleParadiddlePattern,
     technique: singleParadiddleLesson,
     lines: singleParadiddleSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
@@ -158,6 +173,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: doubleParadiddlePattern,
     technique: doubleParadiddleLesson,
     lines: doubleParadiddleSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
@@ -173,6 +189,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: paradiddleDiddlePattern,
     technique: paradiddleDiddleLesson,
     lines: paradiddleDiddleSheet,
+    area: TrainingArea.rudiments,
   ),
 
   // ─── FLAMS ────────────────────────────────────────────────────────────────
@@ -190,6 +207,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: flamPattern,
     technique: flamLesson,
     lines: flamSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
@@ -205,10 +223,12 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: flamAccentPattern,
     technique: flamAccentLesson,
     lines: flamAccentSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
     id: 'flam_paradiddle',
+    area: TrainingArea.rudiments,
     name: 'Flam Paradiddle',
     skills: {Skill.control},
     description:
@@ -279,10 +299,12 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: singleDragPattern,
     technique: singleDragLesson,
     lines: singleDragSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
     id: 'double_drag',
+    area: TrainingArea.rudiments,
     name: 'Double Drag',
     skills: {Skill.control},
     description:
@@ -338,6 +360,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'lesson_25',
+    area: TrainingArea.rudiments,
     name: 'Lesson 25',
     skills: {Skill.control},
     description:
@@ -395,6 +418,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'ghost_note_groove',
+    area: TrainingArea.coordination,
     name: 'Ghost Note Groove',
     skills: {Skill.control},
     description:
@@ -446,6 +470,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'dynamics_control',
+    area: TrainingArea.handTechnique,
     name: 'Dynamics Control',
     skills: {Skill.control},
     description:
@@ -499,6 +524,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'linear_beat_1',
+    area: TrainingArea.coordination,
     name: 'Linear Beat 1',
     skills: {Skill.coordination, Skill.fill},
     description:
@@ -550,6 +576,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'linear_beat_2',
+    area: TrainingArea.coordination,
     name: 'Linear Beat 2',
     skills: {Skill.coordination, Skill.fill},
     description: 'A second linear combination exploring a different grouping. '
@@ -603,6 +630,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'akzent_alle_viertel',
+    area: TrainingArea.handTechnique,
     name: 'Accents on Every Quarter Note',
     skills: {Skill.control},
     description:
@@ -634,6 +662,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'akzent_zwei_vier',
+    area: TrainingArea.handTechnique,
     name: 'Accents on 2 and 4',
     skills: {Skill.control},
     description: 'Backbeat training: accent the strokes on beats 2 and 4 while '
@@ -663,6 +692,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'akzent_wandernd',
+    area: TrainingArea.handTechnique,
     name: 'Moving Accent',
     skills: {Skill.control},
     description:
@@ -699,6 +729,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'ghostnote_training',
+    area: TrainingArea.handTechnique,
     name: 'Ghost Note Training',
     skills: {Skill.control},
     description:
@@ -742,6 +773,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'paradiddle_diddle_corps',
+    area: TrainingArea.rudiments,
     name: 'Paradiddle-Diddle',
     skills: {Skill.control},
     description:
@@ -781,6 +813,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'six_stroke_roll',
+    area: TrainingArea.rudiments,
     name: 'Six Stroke Roll',
     skills: {Skill.control},
     description: 'RLLRRL — six strokes with two doubles in the middle. '
@@ -812,6 +845,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'gleichmaessigkeit_16tel',
+    area: TrainingArea.handTechnique,
     name: 'Evenness — Sixteenth Notes',
     skills: {Skill.control},
     description: 'Sixteenth notes in strict alternation, no accents. '
@@ -855,6 +889,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'moeller_motion',
+    area: TrainingArea.handTechnique,
     name: 'Moeller Motion',
     skills: {Skill.control},
     description:
@@ -895,6 +930,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'doppelschlag_basis',
+    area: TrainingArea.handTechnique,
     name: 'Double Strokes (Basics)',
     skills: {Skill.control},
     description:
@@ -930,6 +966,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'speed_singles_basis',
+    area: TrainingArea.handTechnique,
     name: 'Single Stroke Speed (Basics)',
     skills: {Skill.control},
     description:
@@ -974,6 +1011,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'speed_bursts',
+    area: TrainingArea.handTechnique,
     name: 'Speed Bursts',
     skills: {Skill.control},
     description:
@@ -1010,6 +1048,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'speed_doubles',
+    area: TrainingArea.handTechnique,
     name: 'Double Stroke Speed',
     skills: {Skill.control},
     description: 'Fast double strokes (RRLL) as sixteenths. Speed is built on '
@@ -1052,6 +1091,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'ausdauer_dauerlauf',
+    area: TrainingArea.handTechnique,
     name: 'Sixteenth-Note Marathon',
     skills: {Skill.endurance},
     description: 'Continuous sixteenths for several minutes without a break. '
@@ -1094,6 +1134,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'ausdauer_doubles',
+    area: TrainingArea.handTechnique,
     name: 'Double Stroke Endurance',
     skills: {Skill.endurance},
     description: 'Continuous double strokes (RRLL) to build forearm and finger '
@@ -1137,6 +1178,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'akzent_offbeat',
+    area: TrainingArea.handTechnique,
     name: 'Offbeat Accents',
     skills: {Skill.control},
     description:
@@ -1173,6 +1215,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'ghost_um_akzent',
+    area: TrainingArea.handTechnique,
     name: 'Ghost Notes Around the Accent',
     skills: {Skill.control},
     description:
@@ -1218,6 +1261,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'timing_achtel_triolen',
+    area: TrainingArea.handTechnique,
     name: 'Even Eighth-Note Triplets',
     skills: {Skill.control},
     description:
@@ -1258,6 +1302,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'timing_galopp',
+    area: TrainingArea.handTechnique,
     name: 'Gallop Rhythm',
     skills: {Skill.control},
     description:
@@ -1304,6 +1349,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'eight_on_a_hand',
+    area: TrainingArea.handTechnique,
     name: 'Eight on a Hand',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
@@ -1349,6 +1395,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'flam_accent_corps',
+    area: TrainingArea.rudiments,
     name: 'Flam Accent',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
@@ -1391,10 +1438,12 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: flamTapPattern,
     technique: flamTapLesson,
     lines: flamTapSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
     id: 'flamacue',
+    area: TrainingArea.rudiments,
     name: 'Flamacue',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
@@ -1426,6 +1475,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'flam_paradiddle_corps',
+    area: TrainingArea.rudiments,
     name: 'Flam Paradiddle',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
@@ -1457,6 +1507,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'cheese',
+    area: TrainingArea.rudiments,
     name: 'Cheese (Flam Diddle)',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
@@ -1488,6 +1539,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
 
   Rudiment(
     id: 'inverted_flam_tap',
+    area: TrainingArea.rudiments,
     name: 'Inverted Flam Tap',
     skills: {Skill.control},
     genres: {Genre.drumCorps},
@@ -1532,6 +1584,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fiveStrokeRollPattern,
     technique: fiveStrokeRollLesson,
     lines: fiveStrokeRollSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
@@ -1548,6 +1601,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: sevenStrokeRollPattern,
     technique: sevenStrokeRollLesson,
     lines: sevenStrokeRollSheet,
+    area: TrainingArea.rudiments,
   ),
 
   Rudiment(
@@ -1564,6 +1618,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: swissArmyTripletPattern,
     technique: swissArmyTripletLesson,
     lines: swissArmyTripletSheet,
+    area: TrainingArea.rudiments,
   ),
   // ─── KATALOG 3b: fill stickings ────────────────────────────────────────────
 
@@ -1580,6 +1635,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fillSixteenthSinglesPattern,
     technique: fillSixteenthSinglesLesson,
     lines: fillSixteenthSinglesSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1595,6 +1651,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fillDoublesPattern,
     technique: fillDoublesLesson,
     lines: fillDoublesSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1611,6 +1668,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fillParadiddlePattern,
     technique: fillParadiddleLesson,
     lines: fillParadiddleSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1626,6 +1684,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fillTripletsPattern,
     technique: fillTripletsLesson,
     lines: fillTripletsSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1641,6 +1700,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fillFlamsPattern,
     technique: fillFlamsLesson,
     lines: fillFlamsSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1657,6 +1717,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fillSextupletsPattern,
     technique: fillSextupletsLesson,
     lines: fillSextupletsSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1673,6 +1734,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fillSixGroupsPattern,
     technique: fillSixGroupsLesson,
     lines: fillSixGroupsSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1688,6 +1750,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: fillRollPattern,
     technique: fillRollLesson,
     lines: fillRollSheet,
+    area: TrainingArea.fills,
   ),
   // ─── PHASE B.4: kit grooves ────────────────────────────────────────────────
 
@@ -1709,6 +1772,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveRock8Pattern,
     technique: grooveRock8Lesson,
     lines: grooveRock8Sheet,
+    area: TrainingArea.groove,
   ),
 
   Rudiment(
@@ -1729,6 +1793,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveRock16Pattern,
     technique: grooveRock16Lesson,
     lines: grooveRock16Sheet,
+    area: TrainingArea.groove,
   ),
 
   Rudiment(
@@ -1749,6 +1814,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveHalftimePattern,
     technique: grooveHalftimeLesson,
     lines: grooveHalftimeSheet,
+    area: TrainingArea.groove,
   ),
 
   Rudiment(
@@ -1769,6 +1835,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveShufflePattern,
     technique: grooveShuffleLesson,
     lines: grooveShuffleSheet,
+    area: TrainingArea.groove,
   ),
 
   Rudiment(
@@ -1789,6 +1856,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveSwingPattern,
     technique: grooveSwingLesson,
     lines: grooveSwingSheet,
+    area: TrainingArea.groove,
   ),
 
   Rudiment(
@@ -1809,6 +1877,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveFunk16Pattern,
     technique: grooveFunk16Lesson,
     lines: grooveFunk16Sheet,
+    area: TrainingArea.groove,
   ),
 
   Rudiment(
@@ -1829,6 +1898,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveHihatOpenPattern,
     technique: grooveHihatOpenLesson,
     lines: grooveHihatOpenSheet,
+    area: TrainingArea.groove,
   ),
   // ─── PHASE B.4: kit fills ──────────────────────────────────────────────────
 
@@ -1849,6 +1919,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillSixteenthSinglesPattern,
     technique: setFillSixteenthSinglesLesson,
     lines: setFillSixteenthSinglesSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1868,6 +1939,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillDoublesPattern,
     technique: setFillDoublesLesson,
     lines: setFillDoublesSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1887,6 +1959,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillParadiddlePattern,
     technique: setFillParadiddleLesson,
     lines: setFillParadiddleSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1906,6 +1979,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillTripletsPattern,
     technique: setFillTripletsLesson,
     lines: setFillTripletsSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1925,6 +1999,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillFlamsPattern,
     technique: setFillFlamsLesson,
     lines: setFillFlamsSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1944,6 +2019,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillSextupletsPattern,
     technique: setFillSextupletsLesson,
     lines: setFillSextupletsSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1963,6 +2039,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillSixGroupsPattern,
     technique: setFillSixGroupsLesson,
     lines: setFillSixGroupsSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -1982,6 +2059,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillRollPattern,
     technique: setFillRollLesson,
     lines: setFillRollSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -2001,6 +2079,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setAroundTheKitPattern,
     technique: setAroundTheKitLesson,
     lines: setAroundTheKitSheet,
+    area: TrainingArea.fills,
   ),
   // ─── PHASE B.4c: feet ──────────────────────────────────────────────────────
 
@@ -2021,6 +2100,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: feetKickControlPattern,
     technique: feetKickControlLesson,
     lines: feetKickControlSheet,
+    area: TrainingArea.feet,
   ),
 
   Rudiment(
@@ -2040,6 +2120,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: feetKickSixteenthsPattern,
     technique: feetKickSixteenthsLesson,
     lines: feetKickSixteenthsSheet,
+    area: TrainingArea.feet,
   ),
 
   Rudiment(
@@ -2060,6 +2141,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: feetDoubleBassEighthsPattern,
     technique: feetDoubleBassEighthsLesson,
     lines: feetDoubleBassEighthsSheet,
+    area: TrainingArea.feet,
   ),
 
   Rudiment(
@@ -2080,6 +2162,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: feetDoubleBassSixteenthsPattern,
     technique: feetDoubleBassSixteenthsLesson,
     lines: feetDoubleBassSixteenthsSheet,
+    area: TrainingArea.feet,
   ),
 
   Rudiment(
@@ -2100,6 +2183,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: feetDoubleBassTripletsPattern,
     technique: feetDoubleBassTripletsLesson,
     lines: feetDoubleBassTripletsSheet,
+    area: TrainingArea.feet,
   ),
 
   Rudiment(
@@ -2119,6 +2203,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: feetHihatFootPattern,
     technique: feetHihatFootLesson,
     lines: feetHihatFootSheet,
+    area: TrainingArea.feet,
   ),
 
   Rudiment(
@@ -2139,6 +2224,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: feetOstinatosPattern,
     technique: feetOstinatosLesson,
     lines: feetOstinatosSheet,
+    area: TrainingArea.coordination,
   ),
   // ─── PHASE B.4c: more fills and grooves ────────────────────────────────────
 
@@ -2159,6 +2245,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillLinearPattern,
     technique: setFillLinearLesson,
     lines: setFillLinearSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -2179,6 +2266,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: setFillDoubleBassPattern,
     technique: setFillDoubleBassLesson,
     lines: setFillDoubleBassSheet,
+    area: TrainingArea.fills,
   ),
 
   Rudiment(
@@ -2199,6 +2287,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveLinearPattern,
     technique: grooveLinearLesson,
     lines: grooveLinearSheet,
+    area: TrainingArea.coordination,
   ),
 
   Rudiment(
@@ -2219,6 +2308,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveKickSixteenthsPattern,
     technique: grooveKickSixteenthsLesson,
     lines: grooveKickSixteenthsSheet,
+    area: TrainingArea.coordination,
   ),
 
   Rudiment(
@@ -2239,5 +2329,178 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: grooveHalftimeShufflePattern,
     technique: grooveHalftimeShuffleLesson,
     lines: grooveHalftimeShuffleSheet,
+    area: TrainingArea.groove,
+  ),
+  // ─── TRAININGSRAUM: hand technique ─────────────────────────────────────────
+
+  Rudiment(
+    id: 'tech_grip_rebound',
+    name: "Grip & Rebound",
+    skills: {Skill.control},
+    description:
+        "Quarters and eighths with a loose grip: throw the stick, let it bounce back, catch it high. One hand, the other hand, then both.",
+    minBpm: 60,
+    targetBpm: 100,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.eighth,
+    area: TrainingArea.handTechnique,
+    sticking: techGripReboundPattern,
+    technique: techGripReboundLesson,
+    lines: techGripReboundSheet,
+    roomOrder: 1,
+  ),
+
+  Rudiment(
+    id: 'tech_full_stroke_tap',
+    name: "Full Stroke & Tap",
+    skills: {Skill.control},
+    description:
+        "Two heights, two volumes: full strokes start high and come back high, taps start low and stay low. First a whole bar of each, then one hand loud and one soft, then the heights change inside one hand.",
+    minBpm: 60,
+    targetBpm: 100,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techFullStrokeTapPattern,
+    technique: techFullStrokeTapLesson,
+    lines: techFullStrokeTapSheet,
+    roomOrder: 2,
+  ),
+
+  Rudiment(
+    id: 'tech_even_singles',
+    name: "Even Singles",
+    skills: {Skill.control, Skill.endurance},
+    description:
+        "Alternating strokes that sound like one hand: eighths, then a beat of sixteenths that walks through the bar, then more and more sixteenths until the whole line is one even stream.",
+    minBpm: 60,
+    targetBpm: 110,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techEvenSinglesPattern,
+    technique: techEvenSinglesLesson,
+    lines: techEvenSinglesSheet,
+    roomOrder: 3,
+  ),
+
+  Rudiment(
+    id: 'tech_accent_basics',
+    name: "Accent Basics",
+    skills: {Skill.control},
+    description:
+        "Accents on the counts: first only on 1, then on 1 and 3, then on every beat, with the left hand leading too, then in sixteenths and finally on the backbeat, 2 and 4.",
+    minBpm: 60,
+    targetBpm: 100,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techAccentBasicsPattern,
+    technique: techAccentBasicsLesson,
+    lines: techAccentBasicsSheet,
+    roomOrder: 4,
+  ),
+
+  Rudiment(
+    id: 'tech_single_hand_control',
+    name: "Single-Hand Control",
+    skills: {Skill.control, Skill.endurance},
+    description:
+        "One hand alone: quarters, eighths, a galloping rhythm and short bursts of sixteenths, first right, then left, then switching hands every bar and every half bar.",
+    minBpm: 60,
+    targetBpm: 96,
+    difficulty: Difficulty.beginner,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techSingleHandControlPattern,
+    technique: techSingleHandControlLesson,
+    lines: techSingleHandControlSheet,
+    roomOrder: 5,
+  ),
+
+  Rudiment(
+    id: 'tech_down_up_strokes',
+    name: "Down & Up Strokes",
+    skills: {Skill.control},
+    description:
+        "The accent motion: a down stroke plays the accent and stops low, an up stroke plays a tap and lifts the stick for the next accent. One hand first, then alternating sixteenths with the accent on 1, e, & and a of the beat.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techDownUpStrokesPattern,
+    technique: techDownUpStrokesLesson,
+    lines: techDownUpStrokesSheet,
+    roomOrder: 6,
+  ),
+
+  Rudiment(
+    id: 'tech_moving_accents',
+    name: "Moving Accents",
+    skills: {Skill.control, Skill.coordination},
+    description:
+        "The accent wanders through the sixteenths: bar by bar, beat by beat, forwards and backwards, in groups of three across the bar line, in pairs and in a 3-3-2 phrase.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techMovingAccentsPattern,
+    technique: techMovingAccentsLesson,
+    lines: techMovingAccentsSheet,
+    roomOrder: 7,
+  ),
+
+  Rudiment(
+    id: 'tech_doubles_control',
+    name: "Doubles Control",
+    skills: {Skill.control, Skill.endurance},
+    description:
+        "Double strokes from open to closed: eighth-note doubles with space, then with the second stroke accented, then doubles changing gear between eighths and sixteenths, finally a full bar of sixteenth-note doubles from either hand.",
+    minBpm: 60,
+    targetBpm: 120,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techDoublesControlPattern,
+    technique: techDoublesControlLesson,
+    lines: techDoublesControlSheet,
+    roomOrder: 8,
+  ),
+
+  Rudiment(
+    id: 'tech_ghost_accent_contrast',
+    name: "Ghost & Accent Contrast",
+    skills: {Skill.control, Skill.coordination},
+    genres: {Genre.funk},
+    description:
+        "The widest dynamic range: ghost notes barely touch the pad, accents are full strokes. From eighths with one loud and one ghost hand to the funk backbeat with ghosts in between, ghosted doubles and a shuffle in triplets.",
+    minBpm: 60,
+    targetBpm: 100,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techGhostAccentContrastPattern,
+    technique: techGhostAccentContrastLesson,
+    lines: techGhostAccentContrastSheet,
+    roomOrder: 9,
+  ),
+
+  Rudiment(
+    id: 'tech_speed_bursts',
+    name: "Speed Bursts",
+    skills: {Skill.endurance, Skill.control},
+    description:
+        "Short groups of fast sixteenths, then a rest to relax: four notes, eight, pickups into the beat, twelve, a whole bar, bursts that start and land on an accent, and finally two bars without a break.",
+    minBpm: 80,
+    targetBpm: 160,
+    difficulty: Difficulty.intermediate,
+    gridUnit: NoteGrid.sixteenth,
+    area: TrainingArea.handTechnique,
+    sticking: techSpeedBurstsPattern,
+    technique: techSpeedBurstsLesson,
+    lines: techSpeedBurstsSheet,
+    roomOrder: 10,
   ),
 ];

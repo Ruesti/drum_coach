@@ -4,6 +4,9 @@ import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/screens/guided_preview_screen.dart';
 import 'package:drum_coach/features/lessons/line_list_screen.dart';
+import 'package:drum_coach/features/practice/practice_session_screen.dart';
+import 'package:drum_coach/features/room/room_provider.dart';
+import 'package:drum_coach/features/room/room_screen.dart';
 import 'package:drum_coach/features/stats/stats_provider.dart';
 import 'package:drum_coach/features/today/next_step.dart';
 import 'package:drum_coach/features/today/next_step_provider.dart';
@@ -15,11 +18,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 Widget _app() => ProviderScope(
       overrides: [
         nextStepProvider.overrideWith((ref) async => const PathStep(
-              kind: PathStepKind.setup,
-              title: 'Set up your path',
-              detail: 'Pick duration and level.',
-              route: '/program/setup',
+              title: "Today's session",
+              detail: 'Warm-up + Rudiments',
+              minutes: 30,
+              route: '/room',
             )),
+        roomPlanProvider.overrideWith((ref) async => null),
         streakDaysProvider.overrideWith((ref) async => 0),
         todayStatusProvider.overrideWith(
             (ref) async => const TodayStatus(minutes: 0, goalMinutes: 20)),
@@ -55,6 +59,13 @@ void main() {
     // the tab label plus the header title.
     expect(find.byType(AppBar), findsNothing);
     expect(find.text('Library'), findsNWidgets(2));
+    // The header scrolls with the list: scroll down to the first tile.
+    await tester.scrollUntilVisible(find.text('Single Stroke Roll'), 200,
+        scrollable: find
+            .descendant(
+                of: find.byType(CustomScrollView),
+                matching: find.byType(Scrollable))
+            .first);
     expect(find.text('Single Stroke Roll'), findsOneWidget);
   });
 
@@ -74,6 +85,29 @@ void main() {
     expect(find.byType(LineListScreen), findsOneWidget);
   });
 
+  testWidgets('/room opens the room over the shell', (tester) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+    router.push('/room');
+    await tester.pumpAndSettle();
+    expect(find.byType(RoomScreen), findsOneWidget);
+    // Full screen: pushed on the root navigator, no bottom nav on top.
+    expect(find.byType(BottomNavigationBar), findsNothing);
+  });
+
+  test('/program and /routine no longer exist', () {
+    for (final path in const [
+      '/program',
+      '/program/setup',
+      '/routine',
+      '/routine/single_paradiddle',
+    ]) {
+      expect(router.configuration.findMatch(Uri.parse(path)).isEmpty, isTrue,
+          reason: path);
+    }
+    expect(router.configuration.findMatch(Uri.parse('/room')).isEmpty, isFalse);
+  });
+
   testWidgets('/guided/:id opens the preview', (tester) async {
     await tester.pumpWidget(_app());
     await tester.pumpAndSettle();
@@ -81,5 +115,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(GuidedPreviewScreen), findsOneWidget);
     expect(find.text(guidedCatalog.first.name), findsOneWidget);
+  });
+
+  testWidgets('/practice passes room and warm-up flags', (tester) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+    router.push('/practice/single_paradiddle?bpm=60&warmup=1');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    var screen = tester
+        .widget<PracticeSessionScreen>(find.byType(PracticeSessionScreen));
+    expect(screen.warmup, isTrue);
+    expect(screen.room, isFalse);
+    router.pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    router.push('/practice/single_paradiddle?bpm=60&room=1');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    screen = tester
+        .widget<PracticeSessionScreen>(find.byType(PracticeSessionScreen));
+    expect(screen.warmup, isFalse);
+    expect(screen.room, isTrue);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 5));
   });
 }

@@ -159,6 +159,7 @@ DOUBLE_BASS_FILLS: list[tuple[str, list[str | None]]] = [
 
 def feet_fill(*, id: str, fills_: list[tuple[str, list[str | None]]], **kw) -> Sheet:
     """Fill-Blatt am Set mit eigenen Fuß-Tokens: drei Takte rock16, ein Fill-Takt, Crash auf der Eins."""
+    kw.setdefault('area', 'fills')
     kw.setdefault('kit', True)
     kw.setdefault('line_bars', 4)
     kw.setdefault('new_seed', True)
@@ -225,7 +226,7 @@ SHEETS: list[Sheet] = [
         fills_=DOUBLE_BASS_FILLS, lesson=LESSON_DOUBLE_BASS_FILL,
     ),
     groove(
-        id='groove_linear', name='Linear Groove', min_bpm=60, target_bpm=120,
+        id='groove_linear', area='coordination', name='Linear Groove', min_bpm=60, target_bpm=120,
         difficulty='intermediate', skills=['groove', 'coordination'], genres=['funk'], grid='sixteenth',
         description='Hi-hat, snare and kick never play together: every sixteenth belongs to one voice, with ghost notes between the backbeats.',
         pattern=kit(LIN_A),
@@ -233,7 +234,7 @@ SHEETS: list[Sheet] = [
         lesson=LESSON_LINEAR_GROOVE,
     ),
     groove(
-        id='groove_kick_sixteenths', name='Sixteenth Kick Groove', min_bpm=60, target_bpm=120,
+        id='groove_kick_sixteenths', area='coordination', name='Sixteenth Kick Groove', min_bpm=60, target_bpm=120,
         difficulty='intermediate', skills=['groove', 'coordination'], genres=['rock', 'funk'], grid='sixteenth',
         description='A steady rock backbeat with the kick on the "e" and "a" between the eighths, from eighth to sixteenth hats.',
         pattern=kit(K16_1),

@@ -12,6 +12,10 @@ class BpmProgressionService {
   }
 
   /// Mutates [progress] in-place and returns it for convenience.
+  ///
+  /// Never sets `mastered`: only "sitting" in the Trainingsraum
+  /// (`RoomProgressService`) does; the best-tempo ratio stops at
+  /// `proficient`. A row that is mastered stays so.
   RudimentProgress updateProgress(
     RudimentProgress progress,
     int achievedBpm,
@@ -20,13 +24,14 @@ class BpmProgressionService {
   ) {
     progress.currentBpm = nextSuggestedBpm(progress, rating, targetBpm);
     if (achievedBpm > progress.bestBpm) progress.bestBpm = achievedBpm;
-    progress.mastery = _mastery(progress.bestBpm, targetBpm);
+    if (progress.mastery != MasteryLevel.mastered) {
+      progress.mastery = _mastery(progress.bestBpm, targetBpm);
+    }
     return progress;
   }
 
   MasteryLevel _mastery(int bestBpm, int targetBpm) {
     final ratio = bestBpm / targetBpm;
-    if (ratio >= 1.0) return MasteryLevel.mastered;
     if (ratio >= 0.85) return MasteryLevel.proficient;
     if (ratio >= 0.65) return MasteryLevel.competent;
     if (ratio >= 0.40) return MasteryLevel.developing;

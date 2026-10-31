@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 // --- Sticking building blocks -----------------------------------------
 //
@@ -92,6 +93,7 @@ final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
     name: 'Single Paradiddle · Etude 1',
     description: 'Pure paradiddles, accent on the first note of each group.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.beginner,
     minBpm: 60,
@@ -113,6 +115,7 @@ final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
     description:
         'Accent on the lead note, the double stroke (RR/LL) played as ghost notes for dynamic contrast.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.beginner,
     minBpm: 70,
@@ -138,6 +141,7 @@ final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
     description:
         'Phrased paradiddles: three groups plus an eighth-note breather for a musical phrase.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.intermediate,
     minBpm: 80,
@@ -157,6 +161,7 @@ final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
     description:
         'Alternating paradiddles: a 16th-note bar, an eighth-triplet bar, a 16th-note bar, an eighth-triplet bar.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.advanced,
     minBpm: 95,
@@ -178,6 +183,7 @@ final List<Rudiment> singleParadiddleEtudes = <Rudiment>[
     description:
         'A moving accent across all four notes of the group (double stroke included, inward/outward), with a fill-like closing hit.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Single Paradiddle',
     difficulty: Difficulty.professional,
     minBpm: 105,

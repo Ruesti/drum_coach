@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 // ── Reusable phrase blocks ───────────────────────────────────────────────
 // Each solo is built the way a real short snare solo is written: state a
@@ -83,6 +84,7 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
         '16th-note passage, returning to the theme and closing with a '
         'cadence — a solo with one clear thread instead of loose figures.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Pad Solo',
     difficulty: Difficulty.intermediate,
     minBpm: 60,
@@ -109,6 +111,7 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
         'run through twice with alternating lead hand, '
         'closing with a roll fill and cadence.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Pad Solo',
     difficulty: Difficulty.intermediate,
     minBpm: 66,
@@ -134,6 +137,7 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
         'A continuous 16th-note theme with a moving accent (0→1→2→3) that '
         'completes one full walk before a breath leads into the cadence.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Pad Solo',
     difficulty: Difficulty.advanced,
     minBpm: 78,
@@ -159,6 +163,7 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
         'An eighth-note groove theme interrupted by a striking break (quarter '
         'rest + roll fill) before the theme and cadence return.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Pad Solo',
     difficulty: Difficulty.advanced,
     minBpm: 80,
@@ -184,6 +189,7 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
         'A theme that builds bar by bar — from quarters through eighths '
         'to 16ths — and ends in a double roll-fill finale.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Pad Solo',
     difficulty: Difficulty.intermediate,
     minBpm: 64,
@@ -209,6 +215,7 @@ final List<Rudiment> padSoloEtudes = <Rudiment>[
         'varied three times (lead hand, accent position) before the big '
         'finale closes with two roll fills.',
     collection: ExerciseCollection.padWorkouts,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Pad Solo',
     difficulty: Difficulty.advanced,
     minBpm: 84,

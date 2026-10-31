@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 // --- Swiss Army Triplet group builders --------------------------------------
 // A Swiss Army Triplet beat is a flammed, accented lead-hand note, a second
@@ -46,6 +47,7 @@ final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
     description:
         'Pure Swiss Army Triplets in a triplet feel, led by the right hand throughout (flam-R, R, L).',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.beginner,
     minBpm: 60,
@@ -64,6 +66,7 @@ final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
     description:
         'Like Etude 1, but the two tap notes are ghosted – the accented flam stands out more.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.beginner,
     minBpm: 70,
@@ -82,6 +85,7 @@ final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
     description:
         'Phrased: one stroke is replaced by an accented quarter note – creates space in the triplet run.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.intermediate,
     minBpm: 80,
@@ -106,6 +110,7 @@ final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
     description:
         'Four bars: the lead hand switches every two strokes, contrasted with straight eighth-note accent bars.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.advanced,
     minBpm: 90,
@@ -130,6 +135,7 @@ final List<Rudiment> swissArmyTripletEtudes = <Rudiment>[
     description:
         'Challenge: continuous Swiss Army Triplets up to the target tempo; the lead switches every bar, and the last bar gets denser with accented taps.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Swiss Army Triplet',
     difficulty: Difficulty.professional,
     minBpm: 100,

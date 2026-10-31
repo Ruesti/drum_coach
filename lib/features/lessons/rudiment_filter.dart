@@ -1,3 +1,4 @@
+import '../room/training_area.dart';
 import 'models/rudiment.dart';
 
 /// Selected values per tag axis for the Lessons-screen filter UI. Empty sets
@@ -7,16 +8,22 @@ class RudimentFilters {
   final Set<Genre> genres;
   final Set<Limb> limbs;
   final Set<NoteGrid> subdivisions;
+  final Set<TrainingArea> areas;
 
   const RudimentFilters({
     this.skills = const {},
     this.genres = const {},
     this.limbs = const {},
     this.subdivisions = const {},
+    this.areas = const {},
   });
 
   bool get isEmpty =>
-      skills.isEmpty && genres.isEmpty && limbs.isEmpty && subdivisions.isEmpty;
+      skills.isEmpty &&
+      genres.isEmpty &&
+      limbs.isEmpty &&
+      subdivisions.isEmpty &&
+      areas.isEmpty;
 }
 
 /// Filters [all] by [filters]: within one axis, a selected value matches if
@@ -40,6 +47,9 @@ List<Rudiment> filterRudiments(List<Rudiment> all, RudimentFilters filters) {
     }
     if (filters.subdivisions.isNotEmpty &&
         !filters.subdivisions.contains(r.gridUnit)) {
+      return false;
+    }
+    if (filters.areas.isNotEmpty && !filters.areas.contains(r.area)) {
       return false;
     }
     return true;

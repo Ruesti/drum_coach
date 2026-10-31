@@ -55,7 +55,7 @@ def _rows(ln, bars_per_row: int = 2, fill_every: int = 0):
 
 def abc_for_sheet(sheet) -> str:
     parts = []
-    fill_every = 4 if sheet.line_bars == 4 else 0
+    fill_every = 4 if sheet.line_bars == 4 and sheet.fill_bar else 0
     for i, ln in enumerate(sheet.parsed()):
         label = f'{i + 1} {ln.title}' if ln.title else str(i + 1)
         parts.append(f'P:{label}\\n')
@@ -115,7 +115,7 @@ def _kit_rows(kl, bars_per_row: int = 4, fill_every: int = 0) -> str:
 def abc_for_kit_sheet(sheet) -> str:
     """Kit-Blatt: zwei Stimmen auf einem System (Hände oben, Füße unten), echte Zeilenumbrüche."""
     parts = []
-    fill_every = 4 if sheet.line_bars == 4 else 0
+    fill_every = 4 if sheet.line_bars == 4 and sheet.fill_bar else 0
     for i, ln in enumerate(sheet.parsed()):
         label = f'{i + 1} {ln.title}' if ln.title else str(i + 1)
         parts.append(f'P:{label}\n' + _kit_rows(ln, fill_every=fill_every))

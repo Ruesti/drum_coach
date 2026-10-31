@@ -9,7 +9,7 @@ import 'models/rudiment.dart';
 /// Browse screen for a named [ExerciseCollection] (e.g. Rudiment-Étüden),
 /// grouped by [Rudiment.collectionGroup] (e.g. per rudiment name), preserving
 /// first-seen order. Mirrors the dark-theme visual language of
-/// [ProgramScreen]/[LessonsScreen].
+/// [LessonsScreen].
 class CollectionScreen extends ConsumerWidget {
   final ExerciseCollection collection;
   const CollectionScreen({super.key, required this.collection});

@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 // --- Study 1 & 2: accent-walk / accent-ghost building blocks ---------------
 //
@@ -91,6 +92,7 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
         'Continuous 16th-note single strokes; the accent shifts one 16th '
         'later from beat to beat.',
     collection: ExerciseCollection.techniqueStudies,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Accent Studies',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
@@ -119,6 +121,7 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
         'in-between notes — trains the dynamic gap between accent '
         'and ghost note.',
     collection: ExerciseCollection.techniqueStudies,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Accent Studies',
     difficulty: Difficulty.advanced,
     minBpm: 80,
@@ -145,6 +148,7 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
         'A short phrase alternating a single paradiddle bar with a '
         'single-stroke-four bar — connects two sticking concepts.',
     collection: ExerciseCollection.techniqueStudies,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Combination Studies',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
@@ -166,6 +170,7 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
         'A flam figure, a drag figure, and a double stroke roll are introduced '
         'one after another, then joined into a flowing phrase in the last bar.',
     collection: ExerciseCollection.techniqueStudies,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Combination Studies',
     difficulty: Difficulty.advanced,
     minBpm: 80,
@@ -203,6 +208,7 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
         'Continuous double strokes (RRLL) building over four bars from '
         'ghost notes through normal volume up to accents.',
     collection: ExerciseCollection.techniqueStudies,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Roll & Endurance Studies',
     difficulty: Difficulty.intermediate,
     minBpm: 60,
@@ -239,6 +245,7 @@ final List<Rudiment> techniqueStudies = <Rudiment>[
         'Four bars of continuous 16th-note single strokes with an accent on '
         'every beat — pure endurance work up to the target tempo.',
     collection: ExerciseCollection.techniqueStudies,
+    area: TrainingArea.handTechnique,
     collectionGroup: 'Roll & Endurance Studies',
     difficulty: Difficulty.advanced,
     minBpm: 90,

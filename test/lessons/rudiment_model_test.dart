@@ -1,4 +1,5 @@
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
+import 'package:drum_coach/features/room/training_area.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Rudiment _makeRudiment({
@@ -112,7 +113,10 @@ void main() {
           minBpm: 60,
           targetBpm: 100,
           difficulty: Difficulty.beginner,
-          sticking: [a, b],
+          sticking: [
+            a,
+            b
+          ],
           lines: [
             ExerciseLine([a, b]),
             ExerciseLine([b, a],
@@ -150,6 +154,41 @@ void main() {
       expect(u.difficulty, Difficulty.advanced);
       expect(u.lines, isEmpty);
       expect(u.sheet.first.beats.length, 3);
+    });
+  });
+
+  group('area and songHint', () {
+    test('withSticking keeps area and songHint', () {
+      const r = Rudiment(
+          id: 's',
+          name: 'S',
+          description: 'd',
+          minBpm: 60,
+          targetBpm: 100,
+          difficulty: Difficulty.advanced,
+          sticking: [StrokeBeat(hand: Hand.right)],
+          area: TrainingArea.metal,
+          songHint: 'Like in: Master of Puppets');
+      final u = r.withSticking(const [StrokeBeat(hand: Hand.left)]);
+      expect(u.area, TrainingArea.metal);
+      expect(u.songHint, 'Like in: Master of Puppets');
+    });
+    test('defaults to null', () {
+      const r = Rudiment(
+          id: 's',
+          name: 'S',
+          description: 'd',
+          minBpm: 60,
+          targetBpm: 100,
+          difficulty: Difficulty.advanced,
+          sticking: [StrokeBeat(hand: Hand.right)]);
+      expect(r.area, isNull);
+      expect(r.songHint, isNull);
+    });
+    test('area labels', () {
+      expect(TrainingArea.handTechnique.label, 'Hand technique');
+      expect(TrainingArea.groove.label, 'Grooves');
+      expect(TrainingArea.values.length, 7);
     });
   });
 

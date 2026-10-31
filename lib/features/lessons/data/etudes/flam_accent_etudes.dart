@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 // --- Flam Accent group builders ---------------------------------------------
 // A flam accent beat is a flammed, accented note followed by two plain taps,
@@ -46,6 +47,7 @@ final List<Rudiment> flamAccentEtudes = <Rudiment>[
     description:
         'Pure flam accents in a triplet feel, the lead alternating between right and left on every beat.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.beginner,
     minBpm: 60,
@@ -64,6 +66,7 @@ final List<Rudiment> flamAccentEtudes = <Rudiment>[
     description:
         'Like Etude 1, but the two tap notes are ghosted – more dynamic contrast with the accented flam.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.beginner,
     minBpm: 70,
@@ -82,6 +85,7 @@ final List<Rudiment> flamAccentEtudes = <Rudiment>[
     description:
         'Phrased: one beat is replaced by a sustained quarter note instead of the triplet group – creates space in the run.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.intermediate,
     minBpm: 80,
@@ -106,6 +110,7 @@ final List<Rudiment> flamAccentEtudes = <Rudiment>[
     description:
         'Four alternating bars: a flam accent bar in triplet feel against a straight eighth-note accent bar, with rising accent density.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.advanced,
     minBpm: 90,
@@ -130,6 +135,7 @@ final List<Rudiment> flamAccentEtudes = <Rudiment>[
     description:
         'Challenge: continuous flam accents up to the target tempo; the last bar gets denser with a double accent and a ghost note per beat.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Flam Accent',
     difficulty: Difficulty.professional,
     minBpm: 100,

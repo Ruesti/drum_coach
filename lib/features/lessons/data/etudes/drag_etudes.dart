@@ -1,5 +1,6 @@
 import '../../models/rudiment.dart';
 import '../etude_dsl.dart';
+import '../../../room/training_area.dart';
 
 // --- Drag building blocks -----------------------------------------------
 //
@@ -48,6 +49,7 @@ final List<Rudiment> dragEtudes = <Rudiment>[
     description:
         'Pure quarter-note drags, constantly alternating between right and left lead hand.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Drag',
     difficulty: Difficulty.beginner,
     minBpm: 50,
@@ -73,6 +75,7 @@ final List<Rudiment> dragEtudes = <Rudiment>[
     description:
         'Single drag tap: a drag plus a tap on each beat, with the tap note carrying the accent.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Drag',
     difficulty: Difficulty.beginner,
     minBpm: 60,
@@ -92,6 +95,7 @@ final List<Rudiment> dragEtudes = <Rudiment>[
     description:
         'Drags embedded in a stream of eighth notes, with rests for extra space between phrases.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Drag',
     difficulty: Difficulty.intermediate,
     minBpm: 70,
@@ -118,6 +122,7 @@ final List<Rudiment> dragEtudes = <Rudiment>[
     description:
         'A drag on beat 1 leads into continuous 16th-note taps – four bars, alternating lead hand.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Drag',
     difficulty: Difficulty.advanced,
     minBpm: 80,
@@ -138,6 +143,7 @@ final List<Rudiment> dragEtudes = <Rudiment>[
     description:
         'Challenge: alternating accented drag taps, with the last bar condensed into 16ths.',
     collection: ExerciseCollection.rudimentEtudes,
+    area: TrainingArea.rudiments,
     collectionGroup: 'Drag',
     difficulty: Difficulty.professional,
     minBpm: 90,

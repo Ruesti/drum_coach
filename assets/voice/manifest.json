@@ -279,6 +279,66 @@
       "ms": 3698,
       "text": "Last one: back to the five five six accents, now as flams.",
       "hash": "486612197252a41b"
+    },
+    {
+      "id": "h_tech_grip_rebound",
+      "ms": 11836,
+      "text": "Hold the stick a third from the end, between thumb and index finger, with the other fingers loose. Start high. Let the wrist drop the stick, and let it bounce straight back up. Never press it down.",
+      "hash": "d96fa660a7e26277"
+    },
+    {
+      "id": "h_tech_full_stroke_tap",
+      "ms": 12915,
+      "text": "Full stroke: start high, throw the stick down, and let it rebound all the way back up. Tap: start low, play, and come back to the same low height. Same loose grip, same motion. Only the height changes.",
+      "hash": "ce0ffe1f3f019439"
+    },
+    {
+      "id": "h_tech_even_singles",
+      "ms": 14080,
+      "text": "Alternate right, left, right, left. Both sticks start from the same height, with the same angle, on the same spot. Each stroke rebounds to where it began. When you play faster, do not tighten up. Just move twice as often.",
+      "hash": "39b9a48f7b4f8a62"
+    },
+    {
+      "id": "h_tech_accent_basics",
+      "ms": 12184,
+      "text": "An accent is a full stroke from high. The notes between are low taps. Count out loud, one and two and, and let the accent land on the number. Lift early, and throw the stick. Do not hit it.",
+      "hash": "d8848d3db6dd3f6f"
+    },
+    {
+      "id": "h_tech_single_hand_control",
+      "ms": 14797,
+      "text": "Play from the wrist, with the stick about ten centimetres high, and let every stroke rebound. Faster notes mean a smaller, quicker wrist motion. Do not squeeze. In the sixteenths, the fingers start to help. The other hand rests still.",
+      "hash": "1e6a87dc1975fbb2"
+    },
+    {
+      "id": "h_tech_down_up_strokes",
+      "ms": 12542,
+      "text": "Down stroke: start high, play the accent, and stop the stick low by closing the back fingers. Up stroke: play a soft tap, and use that motion to lift the stick high again. Every accent is prepared one note earlier.",
+      "hash": "c4736ae8231fa694"
+    },
+    {
+      "id": "h_tech_moving_accents",
+      "ms": 14810,
+      "text": "The accent is a down stroke. The tap just before it is an up stroke. Everything else is a low tap. Keep the sixteenths alternating, right, left, right, left, wherever the accent falls. Then it changes hands by itself.",
+      "hash": "3db2bd015b329a26"
+    },
+    {
+      "id": "h_tech_doubles_control",
+      "ms": 12165,
+      "text": "Slow doubles are two separate wrist strokes, each with a full rebound. Fast doubles are one wrist throw, then the fingers pull the stick back for the second note. Make it as loud as the first. Go slowly in between.",
+      "hash": "e5438b1303a620af"
+    },
+    {
+      "id": "h_tech_ghost_accent_contrast",
+      "ms": 13707,
+      "text": "A ghost note starts barely one or two centimetres above the pad and just touches it. An accent starts from full height. After an accent, stop low. After a ghost, lift the stick. Keep the grip loose. Do not squeeze.",
+      "hash": "017ee4555ace3753"
+    },
+    {
+      "id": "h_tech_speed_bursts",
+      "ms": 11308,
+      "text": "Keep the sticks low, the grip loose, and let them rebound on every note. At speed, the fingers help the wrists. Start the burst relaxed, not with a jolt. In the rest, drop your shoulders.",
+      "hash": "c94120df5ef32589"
     }
   ]
 }

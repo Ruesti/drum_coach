@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../coaching/midi/kit_instrument.dart';
 import '../../coaching/services/stroke_source.dart';
+import '../../room/training_area.dart';
 
 enum Hand { right, left }
 
@@ -71,9 +72,12 @@ class ResolvedNote {
 /// Maps an old uniform [NoteGrid] cell to its equivalent note value, so
 /// pre-existing patterns (whose [StrokeBeat.value] is null) resolve unchanged.
 ResolvedNote gridToNote(NoteGrid grid) => switch (grid) {
-      NoteGrid.quarter => const ResolvedNote(NoteValue.quarter, false, Tuplet.none),
-      NoteGrid.eighth => const ResolvedNote(NoteValue.eighth, false, Tuplet.none),
-      NoteGrid.triplet => const ResolvedNote(NoteValue.eighth, false, Tuplet.triplet),
+      NoteGrid.quarter =>
+        const ResolvedNote(NoteValue.quarter, false, Tuplet.none),
+      NoteGrid.eighth =>
+        const ResolvedNote(NoteValue.eighth, false, Tuplet.none),
+      NoteGrid.triplet =>
+        const ResolvedNote(NoteValue.eighth, false, Tuplet.triplet),
       NoteGrid.sixteenth =>
         const ResolvedNote(NoteValue.sixteenth, false, Tuplet.none),
       NoteGrid.sixteenthTriplet =>
@@ -318,6 +322,16 @@ class Rudiment {
   /// voice. [sticking] is then its first voice. Empty for pad exercises.
   final List<Voice> patternVoices;
 
+  /// The training room area this exercise belongs to (null = not assigned).
+  final TrainingArea? area;
+
+  /// Plain-text song reference ("Like in: …"), no transcription. Optional.
+  final String? songHint;
+
+  /// Place in the training room's offer within its area and level: set
+  /// exercises come first (ascending), the rest follow in catalog order.
+  final int? roomOrder;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -341,6 +355,9 @@ class Rudiment {
     this.requiredSensor = SensorLevel.mic,
     this.lines = const [],
     this.patternVoices = const [],
+    this.area,
+    this.songHint,
+    this.roomOrder,
   });
 
   /// The sheet: [lines] when authored, else the plain [sticking] as one
@@ -381,5 +398,8 @@ class Rudiment {
         collectionGroup: collectionGroup,
         backing: backing,
         patternVoices: patternVoices,
+        area: area,
+        songHint: songHint,
+        roomOrder: roomOrder,
       );
 }

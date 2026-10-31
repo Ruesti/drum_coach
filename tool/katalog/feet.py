@@ -71,6 +71,7 @@ BOSSA_BD = 'K4 -8 K8 K4 -8 K8'  # 1, „2 +", 3, „4 +"
 
 def feet_sheet(**kw) -> Sheet:
     """Wie `grooves.groove`, aber `limbs` und `skills` gibt jedes Blatt selbst an."""
+    kw.setdefault('area', 'feet')
     kw.setdefault('kit', True)
     kw.setdefault('line_bars', 2)
     kw.setdefault('new_seed', True)
@@ -264,7 +265,7 @@ SHEETS: list[Sheet] = [
         lesson=LESSON_HIHAT_FOOT,
     ),
     feet_sheet(
-        id='feet_ostinatos', name='Foot Ostinatos', min_bpm=60, target_bpm=140,
+        id='feet_ostinatos', area='coordination', name='Foot Ostinatos', min_bpm=60, target_bpm=140,
         difficulty='advanced', skills=['independence', 'groove'], genres=['latin', 'jazz'], grid='sixteenth',
         limbs=('allFour',),
         description='Foot patterns that never change — bossa nova, samba and jazz — while the hands play clave, samba sticking and ride on top.',

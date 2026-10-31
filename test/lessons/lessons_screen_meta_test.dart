@@ -13,7 +13,7 @@ void main() {
     expect(find.text('60–200 BPM · 8 lines · 16 bars'), findsOneWidget);
     // The filter chip rows scroll too — drag the list itself.
     final list = find.descendant(
-        of: find.byType(ListView), matching: find.byType(Scrollable));
+        of: find.byType(CustomScrollView), matching: find.byType(Scrollable)).first;
     // Multiple Bounce Roll stays a one-line exercise: tempo only.
     await tester.scrollUntilVisible(find.text('Multiple Bounce Roll'), 200,
         scrollable: list);
@@ -37,7 +37,7 @@ void main() {
             matching: find.text('KIT')),
         findsNothing);
     final list = find.descendant(
-        of: find.byType(ListView), matching: find.byType(Scrollable));
+        of: find.byType(CustomScrollView), matching: find.byType(Scrollable)).first;
     await tester.scrollUntilVisible(find.text('Rock 8ths Groove'), 300,
         scrollable: list);
     final tile = find.ancestor(

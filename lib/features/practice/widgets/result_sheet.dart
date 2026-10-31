@@ -68,6 +68,7 @@ class ResultSheet extends StatefulWidget {
     required this.onRate,
     required this.onDone,
     required this.onExport,
+    this.ratingSubs,
   });
 
   final String rudimentName;
@@ -91,6 +92,11 @@ class ResultSheet extends StatefulWidget {
   /// Exports the session log; returns a line to show under the button
   /// (e.g. where the file was saved on the desktop), or null.
   final Future<String?> Function() onExport;
+
+  /// Lines under Struggled / OK / Solid; null = the BPM progression's
+  /// "same BPM / +2 BPM / +5 BPM". An empty string drops the line (the
+  /// Trainingsraum passes its own, or none once rounds were measured).
+  final List<String>? ratingSubs;
 
   @override
   State<ResultSheet> createState() => _ResultSheetState();
@@ -191,7 +197,7 @@ class _ResultSheetState extends State<ResultSheet> {
               Expanded(
                 child: _RatingChip(
                     label: 'Struggled',
-                    sub: 'same BPM',
+                    sub: widget.ratingSubs?[0] ?? 'same BPM',
                     selected: _rating == 1,
                     onTap: () => _rate(1)),
               ),
@@ -199,7 +205,7 @@ class _ResultSheetState extends State<ResultSheet> {
               Expanded(
                 child: _RatingChip(
                     label: 'OK',
-                    sub: '+2 BPM',
+                    sub: widget.ratingSubs?[1] ?? '+2 BPM',
                     selected: _rating == 2,
                     onTap: () => _rate(2)),
               ),
@@ -207,7 +213,7 @@ class _ResultSheetState extends State<ResultSheet> {
               Expanded(
                 child: _RatingChip(
                     label: 'Solid',
-                    sub: '+5 BPM',
+                    sub: widget.ratingSubs?[2] ?? '+5 BPM',
                     selected: _rating == 3,
                     onTap: () => _rate(3)),
               ),
@@ -385,11 +391,13 @@ class _RatingChip extends StatelessWidget {
                           color: selected
                               ? AppColors.accent
                               : AppColors.textPrimary)),
-                  const SizedBox(height: 2),
-                  Text(sub,
-                      textAlign: TextAlign.center,
-                      style: AppTypography.label.copyWith(
-                          fontSize: 11, color: AppColors.textMuted)),
+                  if (sub.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(sub,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.label.copyWith(
+                            fontSize: 11, color: AppColors.textMuted)),
+                  ],
                 ],
               ),
             ),
