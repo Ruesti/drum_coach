@@ -187,8 +187,7 @@ SHEETS: list[Sheet] = [
             'How': 'Play from the wrist, stick about 10 cm high, and let every stroke rebound before the next one. '
                    'Faster notes mean a smaller, quicker wrist motion, not a tighter grip. In the sixteenths of '
                    'line 8 the fingers start helping: they close gently to play the note, and the rebound lifts the '
-                   'stick back up. The resting '
-                   'hand lies still on your leg.',
+                   'stick back up. The resting hand lies still on your leg.',
             'Tips': 'Count out loud, a single hand drifts in time more easily than two. Compare the left hand with '
                     'the right: same sound, same height? If the forearm gets tight, stop, shake out, start again '
                     'slower. Lines 5 and 7 use a gallop (eighth, two sixteenths): keep the eighth note long.',
@@ -405,8 +404,8 @@ SHEETS: list[Sheet] = [
                    'the hands before the next burst.',
             'Tips': 'Only go as fast as the bursts stay even; uneven fast notes are not faster, just messier. If the '
                     'forearms burn, the grip is too tight or the sticks too high. Line 4 gives you a whole bar of rest '
-                    'after each burst, line 5 a landing note and three beats of rest: '
-                    'bar of rest: use it. Line 8 is two bars without a break, the test of everything before it.',
+                    'after each burst, line 5 a landing note and three beats of rest. Use them. Line 8 is two bars '
+                    'without a break, the test of everything before it.',
             'Song examples': 'In the Air Tonight (Phil Collins): one famous sixteenth-note burst around the toms, '
                              'then the groove. Tom Sawyer (Rush): Neil Peart\'s quick fills between steady grooves. '
                              'Smells Like Teen Spirit (Nirvana): the burst of a fill that kicks off the song.',
