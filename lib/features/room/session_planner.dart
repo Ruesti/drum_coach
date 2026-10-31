@@ -26,7 +26,8 @@ const _maxDeepen = 5;
 bool _due(RudimentProgress? p, DateTime now) =>
     p != null && !p.nextReviewDate.isAfter(now);
 
-RoomSession planSession({
+/// Returns null when no exercise has an area (nothing to plan).
+RoomSession? planSession({
   required List<Rudiment> catalog,
   required Map<String, RudimentProgress> progress,
   required DateTime now,
@@ -53,6 +54,7 @@ RoomSession planSession({
   }
 
   final area = _pickArea(inArea, progress, now, chosen);
+  if (area == null) return null;
 
   // Deepen: due reviews first (earliest due first), then next unmastered.
   final due = inArea[area]!.where((r) => _due(progress[r.id], now)).toList()
@@ -74,7 +76,7 @@ RoomSession planSession({
   );
 }
 
-TrainingArea _pickArea(
+TrainingArea? _pickArea(
   Map<TrainingArea, List<Rudiment>> inArea,
   Map<String, RudimentProgress> progress,
   DateTime now,
@@ -82,9 +84,7 @@ TrainingArea _pickArea(
 ) {
   if (chosen != null && inArea[chosen] != null) return chosen;
   final areas = TrainingArea.values.where((a) => inArea[a] != null).toList();
-  if (areas.isEmpty) {
-    throw StateError('No exercises with an area in the catalog');
-  }
+  if (areas.isEmpty) return null;
 
   int dueCount(TrainingArea a) =>
       inArea[a]!.where((r) => _due(progress[r.id], now)).length;

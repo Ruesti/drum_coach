@@ -50,7 +50,7 @@ void main() {
       ex('f1', f),
       ex('g1', g),
     ];
-    final s = planSession(catalog: cat, progress: {}, now: now, chosen: g);
+    final s = planSession(catalog: cat, progress: {}, now: now, chosen: g)!;
     expect(s.warmup, ['h1', 'r1', 'f1']);
   });
 
@@ -60,13 +60,13 @@ void main() {
       'h1': prog('h1', next: DateTime(2026, 10, 1)), // due
       'h2': prog('h2'),
     };
-    final s = planSession(catalog: cat, progress: p, now: now, chosen: g);
+    final s = planSession(catalog: cat, progress: p, now: now, chosen: g)!;
     expect(s.warmup, ['h2', 'r1']);
   });
 
   test('warmup omits an empty area', () {
     final cat = [ex('h1', h), ex('f1', f), ex('g1', g)];
-    final s = planSession(catalog: cat, progress: {}, now: now);
+    final s = planSession(catalog: cat, progress: {}, now: now)!;
     expect(s.warmup, ['h1', 'f1']);
   });
 
@@ -77,16 +77,16 @@ void main() {
       'm1': prog('m1',
           last: DateTime(2026, 10, 30), next: DateTime(2026, 10, 30)),
     };
-    expect(planSession(catalog: cat, progress: p, now: now).area, mt);
+    expect(planSession(catalog: cat, progress: p, now: now)!.area, mt);
   });
 
   test('never-played area counts as longest', () {
     final cat = [ex('g1', g), ex('m1', mt)];
     expect(
-        planSession(catalog: cat, progress: {'g1': prog('g1')}, now: now).area,
+        planSession(catalog: cat, progress: {'g1': prog('g1')}, now: now)!.area,
         mt);
     expect(
-        planSession(catalog: cat, progress: {'m1': prog('m1')}, now: now).area,
+        planSession(catalog: cat, progress: {'m1': prog('m1')}, now: now)!.area,
         g);
   });
 
@@ -96,20 +96,21 @@ void main() {
       'g1': prog('g1', last: DateTime(2026, 10, 25)),
       'm1': prog('m1', last: DateTime(2026, 10, 10)),
     };
-    expect(planSession(catalog: cat, progress: p, now: now).area, mt);
+    expect(planSession(catalog: cat, progress: p, now: now)!.area, mt);
   });
 
   test('chosen area overrides', () {
     final cat = [ex('g1', g), ex('m1', mt)];
     final p = {'m1': prog('m1', next: DateTime(2026, 10, 1))};
-    expect(planSession(catalog: cat, progress: p, now: now, chosen: g).area, g);
+    expect(
+        planSession(catalog: cat, progress: p, now: now, chosen: g)!.area, g);
   });
 
   test('empty area is never suggested', () {
     final cat = [ex('g1', g), ex('x', null)];
-    expect(planSession(catalog: cat, progress: {}, now: now).area, g);
+    expect(planSession(catalog: cat, progress: {}, now: now)!.area, g);
     expect(
-        planSession(catalog: cat, progress: {}, now: now, chosen: mt).area, g);
+        planSession(catalog: cat, progress: {}, now: now, chosen: mt)!.area, g);
   });
 
   test('deepen lists due reviews first, max 5', () {
@@ -118,14 +119,14 @@ void main() {
       'g6': prog('g6', next: DateTime(2026, 10, 5)),
       'g7': prog('g7', next: DateTime(2026, 10, 3)),
     };
-    final s = planSession(catalog: cat, progress: p, now: now, chosen: g);
+    final s = planSession(catalog: cat, progress: p, now: now, chosen: g)!;
     expect(s.deepen, ['g7', 'g6', 'g0', 'g1', 'g2']);
   });
 
   test('deepen skips mastered exercises', () {
     final cat = [ex('g1', g), ex('g2', g)];
     final p = {'g1': prog('g1', m: MasteryLevel.mastered)};
-    final s = planSession(catalog: cat, progress: p, now: now, chosen: g);
+    final s = planSession(catalog: cat, progress: p, now: now, chosen: g)!;
     expect(s.deepen, ['g2']);
   });
 
@@ -135,8 +136,19 @@ void main() {
       'g1': prog('g1', m: MasteryLevel.mastered),
       'g2': prog('g2', m: MasteryLevel.mastered),
     };
-    final s = planSession(catalog: cat, progress: p, now: now, chosen: g);
+    final s = planSession(catalog: cat, progress: p, now: now, chosen: g)!;
     expect(s.area, g);
     expect(s.deepen, isEmpty);
+  });
+
+  test('empty catalog plans nothing', () {
+    expect(planSession(catalog: [], progress: {}, now: now), isNull);
+  });
+
+  test('catalog with only area-less exercises plans nothing', () {
+    final cat = [ex('x', null), ex('y', null)];
+    expect(planSession(catalog: cat, progress: {}, now: now), isNull);
+    expect(
+        planSession(catalog: cat, progress: {}, now: now, chosen: g), isNull);
   });
 }
