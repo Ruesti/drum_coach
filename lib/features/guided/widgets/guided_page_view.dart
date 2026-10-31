@@ -56,11 +56,28 @@ class GuidedPageView extends StatelessWidget {
   /// Bars the row is laid out for: a full page, always.
   int get _rowBars => page.bars >= fullPageBars ? page.bars : fullPageBars;
 
-  @override
-  Widget build(BuildContext context) {
-    final rudiment = rudimentForGuidedLine(exercise, page.line);
+  /// Fits of recent pages: the play screen rebuilds the page on every
+  /// playhead step, the shrink loop below must not run each time.
+  static final _fits =
+      <Object, ({double scale, double layoutWidth, double h})>{};
+
+  /// Scale, layout width and drawn height of the page at [width] under the
+  /// height [cap].
+  ({double scale, double layoutWidth, double h}) _fit(
+      Rudiment rudiment, int fullBars, double width, double cap) {
+    final key = (
+      exercise,
+      page.sectionIndex,
+      page.firstBar,
+      page.bars,
+      fullBars,
+      width,
+      cap,
+    );
+    final hit = _fits[key];
+    if (hit != null) return hit;
+
     // A full-width reference page of the same section fixes the bar width.
-    final fullBars = page.bars >= fullPageBars ? page.bars : fullPageBars;
     final fullRudiment = page.bars == fullBars
         ? rudiment
         : rudimentForGuidedLine(
@@ -69,36 +86,43 @@ class GuidedPageView extends StatelessWidget {
                 exercise.sections[page.sectionIndex].line, exercise.gridUnit,
                 firstBar: 0, bars: fullBars));
 
+    // Largest scale (smallest layout width) that keeps the full page in
+    // one row and the staff within the height cap.
+    var scale = (width / GuidedLineView.naturalWidth)
+        .clamp(1.0, GuidedLineView.maxScale);
+    SheetGeometry geo = _geometry(fullRudiment, width / scale);
+    double height() =>
+        geo.layouts[0].rowCount * geo.rowPitch + 2 * SheetStaffWidget.vPad;
+    if (height() * scale > cap) {
+      scale = cap / height();
+      geo = _geometry(fullRudiment, width / scale);
+    }
+    for (var i = 0; i < 60 && geo.layouts[0].rowCount > 1; i++) {
+      scale *= 0.92;
+      geo = _geometry(fullRudiment, width / scale);
+    }
+    var layoutWidth = width / scale;
+    if (page.bars < fullBars) {
+      final l = geo.layouts[0];
+      final barWidth = l.beatsPerBar * l.pxPerQuarter + l.barGap;
+      layoutWidth -= (fullBars - page.bars) * barWidth;
+    }
+    final fit = (scale: scale, layoutWidth: layoutWidth, h: height() * scale);
+    if (_fits.length >= 64) _fits.clear();
+    return _fits[key] = fit;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rudiment = rudimentForGuidedLine(exercise, page.line);
+    final fullBars = _rowBars;
+
     final content = LayoutBuilder(builder: (context, c) {
       final width =
           c.maxWidth.isFinite ? c.maxWidth : MediaQuery.of(context).size.width;
       final cap = maxStaffHeight ??
           (c.maxHeight.isFinite ? c.maxHeight : double.infinity);
-
-      // Largest scale (smallest layout width) that keeps the full page in
-      // one row and the staff within the height cap.
-      var scale = (width / GuidedLineView.naturalWidth)
-          .clamp(1.0, GuidedLineView.maxScale);
-      SheetGeometry geo = _geometry(fullRudiment, width / scale);
-      double height() =>
-          geo.layouts[0].rowCount * geo.rowPitch + 2 * SheetStaffWidget.vPad;
-      if (height() * scale > cap) {
-        scale = cap / height();
-        geo = _geometry(fullRudiment, width / scale);
-      }
-      for (var i = 0; i < 60 && geo.layouts[0].rowCount > 1; i++) {
-        scale *= 0.92;
-        geo = _geometry(fullRudiment, width / scale);
-      }
-      var layoutWidth = width / scale;
-      if (page.bars < fullBars) {
-        final l = geo.layouts[0];
-        final barWidth = l.beatsPerBar * l.pxPerQuarter + l.barGap;
-        layoutWidth -= (fullBars - page.bars) * barWidth;
-      }
-      final h =
-          (geo.layouts[0].rowCount * geo.rowPitch + 2 * SheetStaffWidget.vPad) *
-              scale;
+      final (:scale, :layoutWidth, :h) = _fit(rudiment, fullBars, width, cap);
 
       return Align(
         alignment: Alignment.topLeft,

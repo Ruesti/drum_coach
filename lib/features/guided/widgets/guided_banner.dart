@@ -19,6 +19,7 @@ class GuidedBanner extends StatelessWidget {
     required this.line,
     this.lineMaxHeight,
     this.large = false,
+    this.showLine = true,
   });
 
   final GuidedExercise exercise;
@@ -31,6 +32,10 @@ class GuidedBanner extends StatelessWidget {
 
   /// Wide layout: a little more type.
   final bool large;
+
+  /// Draw [line] under the text. Off on the play screen's stage: the
+  /// coming variation's notes are on the sheet below.
+  final bool showLine;
 
   @override
   Widget build(BuildContext context) {
@@ -66,16 +71,18 @@ class GuidedBanner extends StatelessWidget {
                     : PracticeTypography.subtitle)
                 .copyWith(color: PracticeColors.textSecondary, height: 1.3),
           ),
-          const SizedBox(height: AppSpacing.md),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.chip),
-            child: GuidedLineView(
-              exercise: exercise,
-              line: line,
-              dimmed: true,
-              maxStaffHeight: lineMaxHeight,
+          if (showLine) ...[
+            const SizedBox(height: AppSpacing.md),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.chip),
+              child: GuidedLineView(
+                exercise: exercise,
+                line: line,
+                dimmed: true,
+                maxStaffHeight: lineMaxHeight,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

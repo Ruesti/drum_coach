@@ -21,9 +21,12 @@ class StaffCalls {
       calls.where((c) => c.$1 == m);
 
   /// Accent-coloured lines = the playhead.
-  List<Playhead> get playheads => [
+  List<Playhead> get playheads => playheadsIn(AppColors.accent);
+
+  /// Lines in [colour] (the guided page's blue playhead).
+  List<Playhead> playheadsIn(Color colour) => [
         for (final c in _of(#drawLine))
-          if (_is(c.$2[2] as Paint, AppColors.accent))
+          if (_is(c.$2[2] as Paint, colour))
             (
               x: origin.dx + (c.$2[0] as Offset).dx * scale,
               top: (c.$2[0] as Offset).dy * scale,

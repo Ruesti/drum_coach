@@ -7,11 +7,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/design_tokens.dart';
 import '../../../app/platform_support.dart';
+import '../../../app/theme.dart';
 import '../../../data/local/settings_service.dart';
 import '../../practice/backdrop.dart';
 import '../../practice/widgets/tempo_row.dart';
 import '../data/guided_lookup.dart';
 import '../guided_format.dart';
+import '../guided_pages.dart';
 import '../guided_rig_provider.dart';
 import '../guided_run_controller.dart';
 import '../guided_shortcuts.dart';
@@ -21,23 +23,23 @@ import '../run_plan.dart';
 import '../widgets/guided_backdrop.dart';
 import '../widgets/guided_banner.dart';
 import '../widgets/guided_layout.dart';
-import '../widgets/guided_line_view.dart';
+import '../widgets/guided_page_view.dart';
 import '../widgets/guided_panel.dart';
+import '../widgets/guided_stage.dart';
 import '../widgets/guided_timeline_bar.dart';
 
-/// `/guided/:id/play`: plays one guided exercise (Plan 3a, Task 5) — the
-/// notes of the line playing (no cursor, no highlighted note: Uli 27.10.;
-/// where you are shows in the status line and the timeline), the
-/// "coming up" banner with
-/// the explanation and the next variation, the big 3 · 2 · 1 · GO, the
-/// whole run as a timeline, live tempo / Teacher / Play along, and a calm
-/// end view.
+/// `/guided/:id/play`: plays one guided exercise in the Drumeo-lesson look
+/// (Spec 2026-10-29, Teil 1.3): the photo stage on top (title, bar count,
+/// "coming up", teacher banner, 3 · 2 · 1 · GO), the white sheet with the
+/// page being played (four written-out bars, blue playhead) and the next
+/// page dimmed under it, and one dark control bar (play, time, timeline,
+/// tempo, Teacher, Play along, keys). Pages turn with the first beat of
+/// the next page, no scrolling.
 ///
-/// Desktop first: from [guidedWide] one column over the full window
-/// ([UncappedContent]) — header, a thin timeline, the notes and the banner
-/// over the full width (Optik-Runde 1, 27.10.), the controls in one bar at
-/// the bottom; narrower one column like the phone practice screen. Leaving (Back, Esc,
-/// Stop) stops the player and pops with a [GuidedPlayResult].
+/// From [guidedWide] on over the full window ([UncappedContent]); narrower
+/// the stage is a strip, the pages have two bars and the controls stack as
+/// on the phone practice screen. Leaving (Back, Esc, Stop) stops the player
+/// and pops with a [GuidedPlayResult].
 class GuidedPlayScreen extends ConsumerStatefulWidget {
   const GuidedPlayScreen({
     super.key,
@@ -247,24 +249,6 @@ class _PlayPageState extends State<_PlayPage> {
     return p == null || p.sectionIndex >= _ex.sections.length ? null : p;
   }
 
-  /// Section whose notes are shown: the one playing; before the first
-  /// groove (count-in, an empty intro) the first groove.
-  int get _nowSection {
-    final p = _pos;
-    final secs = _ex.sections;
-    if (p != null && p.sectionIndex >= 0) {
-      final s = secs[p.sectionIndex];
-      if (s.line.beats.isNotEmpty) return p.sectionIndex;
-    }
-    final g = secs.indexWhere((s) => s.kind == SectionKind.groove);
-    return g < 0 ? 0 : g;
-  }
-
-  bool get _cursorOn {
-    final p = _pos;
-    return p != null && p.sectionIndex == _nowSection;
-  }
-
   /// The variation coming next while its explanation runs (the groove
   /// right before it); null otherwise.
   int? get _comingVariation {
@@ -311,29 +295,83 @@ class _PlayPageState extends State<_PlayPage> {
     return i < 0 ? null : i;
   }
 
+  // The pages only change at a page turn (or a new plan): cut them out of
+  // the line once, not on every playhead step.
+  Object? _pagesKey;
+  ({GuidedPage now, GuidedPage? next})? _pagesCache;
+
+  /// The page being played and the one after it, [pageBars] bars each.
+  ({GuidedPage now, GuidedPage? next}) _pages(int pageBars) {
+    final p = _pos;
+    final inRun = p != null && p.sectionIndex >= 0;
+    final key = (
+      inRun ? p.sectionIndex : -1,
+      inRun ? p.barInSection ~/ pageBars : 0,
+      pageBars,
+      _run.plan,
+    );
+    if (key != _pagesKey || _pagesCache == null) {
+      _pagesKey = key;
+      _pagesCache = guidedPagesAt(_ex, _run.plan, p, pageBars: pageBars);
+    }
+    return _pagesCache!;
+  }
+
+  /// `Groove`, `Variation 2 · Kick on the 16ths`, `Ending`.
+  String _pageName(GuidedPage page) {
+    final s = _ex.sections[page.sectionIndex];
+    return switch (s.kind) {
+      SectionKind.variation =>
+        'Variation ${guidedVariationNumber(_ex, page.sectionIndex)}'
+            '${s.titleEn == null ? '' : ' · ${s.titleEn}'}',
+      SectionKind.outro => 'Ending',
+      SectionKind.intro => 'Intro',
+      SectionKind.groove => 'Groove',
+    };
+  }
+
+  /// `Bar 3 / 8`: bar in the section and its length from the plan; null in
+  /// the count-in.
+  String? get _barCount {
+    final p = _pos;
+    if (p == null || p.sectionIndex < 0) return null;
+    final bars = _run.plan
+        .where((s) => s.sectionIndex == p.sectionIndex)
+        .fold<int>(0, (n, s) => n + s.bars);
+    if (bars <= 0) return null;
+    return 'Bar ${p.barInSection + 1} / $bars';
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     Widget page = Scaffold(
       backgroundColor: PracticeColors.base,
-      body: GuidedBackdrop(
-        playing: _run.running || _run.finished,
-        photo: widget.photo,
-        child: _run.finished
-            ? _EndView(
-                exercise: _ex,
-                playedMs: _run.elapsedMs,
-                bpm: _run.bpm,
-                onAgain: () => unawaited(_run.start()),
-                onLibrary: () {
-                  unawaited(_run.stop());
-                  context.go('/library');
-                },
-              )
-            : LayoutBuilder(
-                builder: (context, c) =>
-                    guidedWide(c.maxWidth) ? _wide() : _narrow()),
+      body: Theme(
+        data: drumCoachPracticeTheme,
+        child: Material(
+          color: Colors.transparent,
+          child: _run.finished
+              ? GuidedStage(
+                  key: const Key('guided-stage'),
+                  photo: widget.photo,
+                  child: _EndView(
+                    exercise: _ex,
+                    playedMs: _run.elapsedMs,
+                    bpm: _run.bpm,
+                    onAgain: () => unawaited(_run.start()),
+                    onLibrary: () {
+                      unawaited(_run.stop());
+                      context.go('/library');
+                    },
+                  ),
+                )
+              : LayoutBuilder(
+                  builder: (context, c) => guidedWide(c.maxWidth)
+                      ? _wide(c.biggest)
+                      : _narrow(c.biggest)),
+        ),
       ),
     );
     if (isDesktopPlatform) {
@@ -362,33 +400,48 @@ class _PlayPageState extends State<_PlayPage> {
     );
   }
 
-  Widget _header({required bool large}) {
-    final total = _run.totalMs;
+  Widget get _backButton => IconButton(
+        tooltip: 'Back',
+        onPressed: _leave,
+        constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+        icon: const Icon(Icons.arrow_back, color: PracticeColors.textPrimary),
+      );
+
+  Text _status({required double fontSize}) => Text(_statusLine,
+      key: const Key('guided-status'),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: PracticeTypography.label.copyWith(
+          fontSize: fontSize,
+          color: _run.error != null
+              ? PracticeColors.struggled
+              : PracticeColors.textSecondary,
+          shadows: _shadow));
+
+  /// Phone header on the stage strip: back, name, status, time.
+  Widget _narrowHeader() {
     final time = Text.rich(
       TextSpan(children: [
         TextSpan(
             text: guidedMmss(_run.elapsedMs),
             style: PracticeTypography.label.copyWith(
-                fontSize: large ? 22 : 17,
+                fontSize: 17,
                 color: PracticeColors.textPrimary,
+                shadows: _shadow,
                 fontFeatures: const [FontFeature.tabularFigures()])),
         TextSpan(
-            text: ' / ~${guidedMmss(total)}',
+            text: ' / ~${guidedMmss(_run.totalMs)}',
             style: PracticeTypography.label.copyWith(
-                fontSize: large ? 15 : 13,
-                color: PracticeColors.textMuted,
+                fontSize: 13,
+                color: PracticeColors.textSecondary,
+                shadows: _shadow,
                 fontFeatures: const [FontFeature.tabularFigures()])),
       ]),
       key: const Key('guided-time'),
     );
     return Row(
       children: [
-        IconButton(
-          tooltip: 'Back',
-          onPressed: _leave,
-          constraints: const BoxConstraints.tightFor(width: 44, height: 44),
-          icon: const Icon(Icons.arrow_back, color: PracticeColors.textPrimary),
-        ),
+        _backButton,
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(
@@ -398,110 +451,15 @@ class _PlayPageState extends State<_PlayPage> {
               Text(_ex.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: (large
-                          ? PracticeTypography.title
-                          : PracticeTypography.subtitle)
-                      .copyWith(shadows: _shadow)),
+                  style:
+                      PracticeTypography.subtitle.copyWith(shadows: _shadow)),
               const SizedBox(height: 2),
-              Text(_statusLine,
-                  key: const Key('guided-status'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: PracticeTypography.label.copyWith(
-                      fontSize: large ? 13 : 12,
-                      color: _run.error != null
-                          ? PracticeColors.struggled
-                          : PracticeColors.textSecondary,
-                      shadows: _shadow)),
+              _status(fontSize: 12),
             ],
           ),
         ),
         const SizedBox(width: AppSpacing.md),
         time,
-      ],
-    );
-  }
-
-  /// "NOW · V2" + the explanation while a variation plays, then the notes
-  /// (a thin playhead line, no note coloured) and, in the countdown, the number over them — on the
-  /// wide layout a smaller disc at the right end, so the notes stay
-  /// readable.
-  Widget _now({required bool large, double? notesMax}) {
-    final si = _nowSection;
-    final s = _ex.sections[si];
-    final p = _pos;
-    final isVar = s.kind == SectionKind.variation && _cursorOn;
-    final tag = p == null || p.sectionIndex < 0
-        ? 'COUNT-IN'
-        : switch (s.kind) {
-            SectionKind.variation => 'V${guidedVariationNumber(_ex, si)}',
-            SectionKind.outro => 'ENDING',
-            _ => 'GROOVE',
-          };
-    final countdown = p?.countdown;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Text('NOW',
-                style: PracticeTypography.label.copyWith(
-                    color: PracticeColors.textPrimary, letterSpacing: 1.4)),
-            const SizedBox(width: AppSpacing.sm),
-            Text(tag,
-                style: PracticeTypography.label.copyWith(
-                    color: isVar
-                        ? PracticeColors.accent
-                        : PracticeColors.textMuted)),
-          ],
-        ),
-        if (isVar) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            s.textEn!,
-            key: const Key('guided-now-text'),
-            style: PracticeTypography.body.copyWith(
-                fontSize: large ? 17 : 15,
-                height: 1.35,
-                color: PracticeColors.textSecondary,
-                shadows: _shadow),
-          ),
-        ],
-        const SizedBox(height: AppSpacing.sm),
-        Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
-          children: [
-            KeyedSubtree(
-              key: const Key('guided-now'),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.card),
-                child: GuidedLineView(
-                  exercise: _ex,
-                  line: s.line,
-                  activeTick: _cursorOn && p != null
-                      ? lineTickFor(p, s.line, _ex.gridUnit)
-                      : null,
-                  cursorStyle: CursorStyle.line,
-                  fillWidth: large,
-                  maxStaffHeight: notesMax,
-                ),
-              ),
-            ),
-            if (countdown != null && large)
-              Positioned(
-                top: 0,
-                bottom: 0,
-                right: AppSpacing.lg,
-                child: Align(
-                  widthFactor: 1,
-                  child: _countdown(countdown, size: 96),
-                ),
-              )
-            else if (countdown != null)
-              _countdown(countdown, size: 112),
-          ],
-        ),
       ],
     );
   }
@@ -520,7 +478,9 @@ class _PlayPageState extends State<_PlayPage> {
         ),
       );
 
-  Widget? _banner({required bool large, double? lineMax}) {
+  /// "Coming up" with the next variation's explanation. On the stage
+  /// without the notes ([showLine] false): they are on the sheet.
+  Widget? _banner({required bool large, required bool showLine}) {
     final i = _comingVariation;
     if (i == null) return null;
     final v = _ex.sections[i];
@@ -530,36 +490,123 @@ class _PlayPageState extends State<_PlayPage> {
       variation: guidedVariationNumber(_ex, i),
       text: v.textEn!,
       line: v.line,
-      lineMaxHeight: lineMax,
+      lineMaxHeight: 200,
       large: large,
+      showLine: showLine,
     );
   }
 
-  Widget _playButtons() => Row(
-        children: [
-          Expanded(
-            child: GuidedAccentButton(
-              key: const Key('guided-play-toggle'),
-              icon: !_run.running || _run.showResume
-                  ? Icons.play_arrow_rounded
-                  : Icons.pause_rounded,
-              label: !_run.running
-                  ? 'Start'
-                  : _run.showResume
-                      ? 'Resume'
-                      : 'Pause',
-              onPressed: _toggle,
+  /// The white sheet: the page being played (with the blue playhead) and,
+  /// dimmed under it, the next one, each with its label. Pages turn
+  /// without scrolling; the sheet keeps its height when no next page is
+  /// left (the outro).
+  Widget _sheet({
+    required int pageBars,
+    required double pageMax,
+    required double gutter,
+    required double labelSize,
+  }) {
+    final pages = _pages(pageBars);
+    final p = _pos;
+    final countIn = p == null || p.sectionIndex < 0;
+    final labelStyle = PracticeTypography.label.copyWith(
+        fontSize: labelSize,
+        height: 1.2,
+        letterSpacing: 0.6,
+        color: const Color(0xFF1C1C1C));
+    Widget label(String key, String text, {bool dim = false}) => Padding(
+          padding: const EdgeInsets.only(bottom: 2),
+          child: Text(text,
+              key: Key(key),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: dim
+                  ? labelStyle.copyWith(color: const Color(0xFF8A8A8A))
+                  : labelStyle),
+        );
+    Widget view(GuidedPage page, {int? tick, bool dimmed = false}) =>
+        RepaintBoundary(
+          child: GuidedPageView(
+            exercise: _ex,
+            page: page,
+            activeTick: tick,
+            dimmed: dimmed,
+            maxStaffHeight: pageMax,
+            fullPageBars: pageBars,
+          ),
+        );
+
+    final next = pages.next;
+    return ColoredBox(
+      key: const Key('guided-sheet'),
+      color: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(gutter, AppSpacing.sm, gutter, 0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            label('guided-label-now',
+                countIn ? 'Count-in' : 'Now · ${_pageName(pages.now)}'),
+            KeyedSubtree(
+              key: const Key('guided-now'),
+              child: view(pages.now,
+                  tick: countIn ? null : guidedPageTick(pages.now, p)),
             ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          GuidedGhostButton(
-            key: const Key('guided-play-stop'),
-            icon: Icons.stop_rounded,
-            tooltip: 'Stop',
-            onPressed: _leave,
-          ),
-        ],
-      );
+            if (next != null) ...[
+              label('guided-label-next', 'Next · ${_pageName(next)}',
+                  dim: true),
+              KeyedSubtree(
+                key: const Key('guided-next'),
+                child: view(next, dimmed: true),
+              ),
+            ] else
+              // Same height as a next page: the stage does not jump.
+              Visibility(
+                visible: false,
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [label('guided-label-spare', ''), view(pages.now)],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _playButtons({double? toggleWidth}) {
+    final toggle = GuidedAccentButton(
+      key: const Key('guided-play-toggle'),
+      icon: !_run.running || _run.showResume
+          ? Icons.play_arrow_rounded
+          : Icons.pause_rounded,
+      label: !_run.running
+          ? 'Start'
+          : _run.showResume
+              ? 'Resume'
+              : 'Pause',
+      onPressed: _toggle,
+    );
+    return Row(
+      children: [
+        if (toggleWidth == null)
+          Expanded(child: toggle)
+        else
+          SizedBox(width: toggleWidth, child: toggle),
+        const SizedBox(width: AppSpacing.sm),
+        GuidedGhostButton(
+          key: const Key('guided-play-stop'),
+          icon: Icons.stop_rounded,
+          tooltip: 'Stop',
+          onPressed: _leave,
+        ),
+      ],
+    );
+  }
 
   TempoRow get _tempo => TempoRow(
         bpm: _run.bpm,
@@ -569,95 +616,238 @@ class _PlayPageState extends State<_PlayPage> {
         max: _ex.maxBpm,
       );
 
-  Widget _wide() {
-    return Padding(
+  GuidedTimelineBar get _timeline => GuidedTimelineBar(
+        key: const Key('guided-timeline'),
+        segments: _segments,
+        progress: _run.progress,
+        current: _currentSegment,
+      );
+
+  // Control bar widths (wide).
+  static const _toggleW = 156.0;
+  static const _tempoW = 220.0;
+  static const _teacherW = 136.0;
+  static const _alongW = 156.0;
+  static const _controlsPad = 8.0;
+
+  /// Width the control bar needs without the timeline and the key hint.
+  static const _controlsFixed = 2 * AppSpacing.screenPadding +
+      _toggleW +
+      AppSpacing.sm +
+      56 +
+      AppSpacing.lg +
+      48 +
+      2 * AppSpacing.md +
+      56 +
+      AppSpacing.lg +
+      _tempoW +
+      AppSpacing.md +
+      _teacherW +
+      AppSpacing.sm +
+      _alongW;
+
+  /// The timeline keeps at least this much before the key hint moves
+  /// from the control bar onto the stage.
+  static const _minTimeline = 360.0;
+
+  /// Wide layout (Drumeo lesson): photo stage on top, the white sheet with
+  /// two four-bar pages, the dark control bar in one row at the bottom.
+  Widget _wide(Size size) {
+    final hintW = isDesktopPlatform
+        ? GuidedKeyHint.widthOf(context, guidedPlayKeyHint)
+        : 0.0;
+    final hintInBar = isDesktopPlatform &&
+        size.width - _controlsFixed - AppSpacing.lg - hintW >= _minTimeline;
+    final hintOnStage = isDesktopPlatform && !hintInBar;
+    // Sheet ≈ 38 % of the window: two pages and their labels.
+    final labelSize = size.height >= 1000 ? 14.0 : 13.0;
+    final pageMax =
+        ((0.38 * size.height - AppSpacing.sm - 2 * (labelSize * 1.2 + 2)) / 2)
+            .clamp(90.0, 420.0);
+    return Column(
       key: const Key('guided-wide'),
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding,
-          AppSpacing.lg, AppSpacing.screenPadding, AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _header(large: true),
-          const SizedBox(height: AppSpacing.md),
-          GuidedTimelineBar(
-            key: const Key('guided-timeline'),
-            segments: _segments,
-            progress: _run.progress,
-            current: _currentSegment,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: GuidedStage(
+            key: const Key('guided-stage'),
+            photo: widget.photo,
+            child: _wideStage(hint: hintOnStage),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          Expanded(
-            child: LayoutBuilder(builder: (context, c) {
-              // Room for the two staffs once the labels, the explanation
-              // and the banner's own lines are taken off. The same split
-              // with and without banner, so the notes do not jump; capped,
-              // so a very wide window spreads the notes instead of making
-              // them ever taller (Review Focus 3).
-              final room = c.maxHeight - 170;
-              final notesMax = (room * 0.6).clamp(120.0, 280.0);
-              final lineMax = (room * 0.4).clamp(80.0, 180.0);
-              final b = _banner(large: true, lineMax: lineMax);
-              return SingleChildScrollView(
-                key: const Key('guided-main-scroll'),
+        ),
+        _sheet(
+          pageBars: 4,
+          pageMax: pageMax,
+          gutter: AppSpacing.screenPadding,
+          labelSize: labelSize,
+        ),
+        _wideControls(hint: hintInBar),
+      ],
+    );
+  }
+
+  /// Overlays of the wide stage: title top left, bar count and "coming up"
+  /// top right, banner and countdown bottom centre.
+  Widget _wideStage({required bool hint}) {
+    final p = _pos;
+    final countdown = p?.countdown;
+    final banner = _banner(large: true, showLine: false);
+    final coming = _comingVariation;
+    final barCount = _barCount;
+    final tag = '${_ex.package == GuidedPackage.kit ? 'SET' : 'PAD'}'
+        ' · ${_ex.difficulty.label.toUpperCase()}';
+    return Stack(
+      children: [
+        Positioned(
+          left: AppSpacing.sm,
+          top: AppSpacing.md,
+          right: AppSpacing.screenPadding + 320,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _backButton,
+              const SizedBox(width: AppSpacing.sm),
+              Flexible(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _now(large: true, notesMax: notesMax),
-                    if (b != null) ...[
-                      const SizedBox(height: AppSpacing.lg),
-                      b,
-                    ],
+                    Text(tag,
+                        style: PracticeTypography.label.copyWith(
+                            color: PracticeColors.accent,
+                            letterSpacing: 1.4,
+                            shadows: _shadow)),
+                    const SizedBox(height: 2),
+                    Text(_ex.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: PracticeTypography.title
+                            .copyWith(shadows: _shadow)),
+                    const SizedBox(height: 2),
+                    _status(fontSize: 14),
                   ],
                 ),
-              );
-            }),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          _wideControls(),
+        ),
+        Positioned(
+          right: AppSpacing.screenPadding,
+          top: AppSpacing.md + 4,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (barCount != null)
+                  Text(barCount,
+                      key: const Key('guided-bar-count'),
+                      style: PracticeTypography.label.copyWith(
+                          fontSize: 20,
+                          color: PracticeColors.textPrimary,
+                          shadows: _shadow,
+                          fontFeatures: const [FontFeature.tabularFigures()])),
+                if (coming != null) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('Coming up: ${_ex.sections[coming].titleEn}',
+                      key: const Key('guided-coming-up'),
+                      textAlign: TextAlign.right,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: PracticeTypography.label.copyWith(
+                          fontSize: 14,
+                          color: PracticeColors.accent,
+                          shadows: _shadow)),
+                ],
+              ],
+            ),
+          ),
+        ),
+        if (banner != null || countdown != null)
+          Positioned(
+            left: AppSpacing.screenPadding,
+            right: AppSpacing.screenPadding,
+            bottom: AppSpacing.lg,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (countdown != null) _countdown(countdown, size: 96),
+                    if (countdown != null && banner != null)
+                      const SizedBox(height: AppSpacing.md),
+                    if (banner != null) banner,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        if (hint)
+          const Positioned(
+            right: AppSpacing.screenPadding,
+            bottom: AppSpacing.md,
+            child: GuidedKeyHint(guidedPlayKeyHint),
+          ),
+      ],
+    );
+  }
+
+  /// One dark row: Play/Pause + Stop, time, the timeline, total, tempo,
+  /// Teacher, Play along and (when it fits) the key hint.
+  Widget _wideControls({required bool hint}) {
+    final tabular = const [FontFeature.tabularFigures()];
+    return Container(
+      key: const Key('guided-controls'),
+      color: PracticeColors.inset,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenPadding, vertical: _controlsPad),
+      child: Row(
+        children: [
+          _playButtons(toggleWidth: _toggleW),
+          const SizedBox(width: AppSpacing.lg),
+          SizedBox(
+            width: 48,
+            child: Text(guidedMmss(_run.elapsedMs),
+                key: const Key('guided-time'),
+                textAlign: TextAlign.right,
+                style: PracticeTypography.label.copyWith(
+                    fontSize: 16,
+                    color: PracticeColors.textPrimary,
+                    fontFeatures: tabular)),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          // The bar's labels hang under the track: centre the track.
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: _timeline,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          SizedBox(
+            width: 56,
+            child: Text('~${guidedMmss(_run.totalMs)}',
+                key: const Key('guided-total'),
+                style: PracticeTypography.label.copyWith(
+                    fontSize: 14,
+                    color: PracticeColors.textMuted,
+                    fontFeatures: tabular)),
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          SizedBox(width: _tempoW, child: _tempo),
+          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: _teacherW, child: _teacherChip),
+          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: _alongW, child: _alongChip),
+          if (hint) ...[
+            const SizedBox(width: AppSpacing.lg),
+            const GuidedKeyHint(guidedPlayKeyHint),
+          ],
         ],
       ),
     );
   }
-
-  /// Tempo, Teacher, Play along, key hint, Pause/Stop in one bar; the
-  /// key hint moves under the bar when the window is too narrow for it.
-  Widget _wideControls() => LayoutBuilder(builder: (context, c) {
-        const fixed = 230 + 140 + 160 + 240 + 3 * AppSpacing.lg + AppSpacing.md;
-        final hintW = isDesktopPlatform
-            ? GuidedKeyHint.widthOf(context, guidedPlayKeyHint)
-            : 0.0;
-        final inline =
-            !isDesktopPlatform || c.maxWidth - fixed - AppSpacing.lg >= hintW;
-        final bar = Row(
-          children: [
-            SizedBox(width: 230, child: _tempo),
-            const SizedBox(width: AppSpacing.lg),
-            SizedBox(width: 140, child: _teacherChip),
-            const SizedBox(width: AppSpacing.md),
-            SizedBox(width: 160, child: _alongChip),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(
-              child: isDesktopPlatform && inline
-                  ? const Center(child: GuidedKeyHint(guidedPlayKeyHint))
-                  : const SizedBox.shrink(),
-            ),
-            const SizedBox(width: AppSpacing.lg),
-            SizedBox(width: 240, child: _playButtons()),
-          ],
-        );
-        if (inline) return bar;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            bar,
-            const SizedBox(height: AppSpacing.sm),
-            const Align(
-                alignment: Alignment.centerRight,
-                child: GuidedKeyHint(guidedPlayKeyHint)),
-          ],
-        );
-      });
 
   Widget get _teacherChip => _ToggleChip(
         key: const Key('guided-teacher'),
@@ -675,47 +865,92 @@ class _PlayPageState extends State<_PlayPage> {
         onChanged: _setAlong,
       );
 
-  Widget _narrow() {
-    final b = _banner(large: false, lineMax: 200);
+  /// Phone and narrow windows: the stage as a strip with the title, the
+  /// timeline, the sheet with two 2-bar pages, banner / explanation, and
+  /// the controls as before at the bottom.
+  Widget _narrow(Size size) {
+    final p = _pos;
+    final countdown = p?.countdown;
+    final b = _banner(large: false, showLine: false);
+    final s =
+        p == null || p.sectionIndex < 0 ? null : _ex.sections[p.sectionIndex];
+    final varText =
+        s != null && s.kind == SectionKind.variation ? s.textEn : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, AppSpacing.sm, 16, 0),
-          child: _header(large: false),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
-          child: GuidedTimelineBar(
-            key: const Key('guided-timeline'),
-            segments: _segments,
-            progress: _run.progress,
-            current: _currentSegment,
-          ),
-        ),
-        // Notes stay at the top: they must not jump when the banner comes
-        // and goes. Taller content scrolls.
-        Expanded(
-          child: SingleChildScrollView(
-            key: const Key('guided-main-scroll'),
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+        SizedBox(
+          height: 0.3 * size.height,
+          child: GuidedStage(
+            key: const Key('guided-stage'),
+            photo: widget.photo,
+            child: Stack(
               children: [
-                _now(large: false),
-                if (b != null) ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  b,
-                ],
+                SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(4, AppSpacing.sm, 16, 0),
+                    child: _narrowHeader(),
+                  ),
+                ),
+                if (countdown != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: AppSpacing.md,
+                    child: Center(child: _countdown(countdown, size: 96)),
+                  ),
               ],
             ),
           ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+              AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+          child: _timeline,
+        ),
+        // The sheet stays on top: it must not jump when the banner comes
+        // and goes. Taller content scrolls.
+        Expanded(
+          child: SingleChildScrollView(
+            key: const Key('guided-main-scroll'),
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _sheet(
+                  pageBars: 2,
+                  pageMax: 130,
+                  gutter: AppSpacing.md,
+                  labelSize: 12,
+                ),
+                if (varText != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+                    child: Text(
+                      varText,
+                      key: const Key('guided-now-text'),
+                      style: PracticeTypography.body.copyWith(
+                          fontSize: 15,
+                          height: 1.35,
+                          color: PracticeColors.textSecondary),
+                    ),
+                  ),
+                if (b != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+                    child: b,
+                  ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

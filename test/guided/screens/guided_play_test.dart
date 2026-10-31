@@ -9,14 +9,13 @@ import 'package:drum_coach/features/guided/guided_rig_provider.dart';
 import 'package:drum_coach/features/guided/guided_shortcuts.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/run_clock.dart';
+import 'package:drum_coach/features/guided/run_plan.dart';
 import 'package:drum_coach/features/guided/screens/guided_play_screen.dart';
-import 'package:drum_coach/features/guided/widgets/guided_backdrop.dart';
 import 'package:drum_coach/features/guided/widgets/guided_banner.dart';
 import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
-import 'package:drum_coach/features/practice/widgets/line_view.dart';
+import 'package:drum_coach/features/guided/widgets/guided_page_view.dart';
+import 'package:drum_coach/features/guided/widgets/guided_stage.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
-import 'package:drum_coach/shared/widgets/notation_staff_widget.dart';
-import 'package:drum_coach/shared/widgets/sheet_geometry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -125,10 +124,35 @@ Future<void> _key(WidgetTester t, LogicalKeyboardKey k,
   await t.pumpAndSettle();
 }
 
-GuidedLineView _nowView(WidgetTester t) =>
-    t.widget<GuidedLineView>(find.descendant(
-        of: find.byKey(const Key('guided-now')),
-        matching: find.byType(GuidedLineView)));
+GuidedPageView _pageView(WidgetTester t, String key) =>
+    t.widget<GuidedPageView>(find.descendant(
+        of: find.byKey(Key(key)), matching: find.byType(GuidedPageView)));
+
+/// The page being played (upper row of the sheet).
+GuidedPageView _nowView(WidgetTester t) => _pageView(t, 'guided-now');
+
+/// The page after it (lower row, dimmed).
+GuidedPageView _nextView(WidgetTester t) => _pageView(t, 'guided-next');
+
+String _text(WidgetTester t, String key) {
+  final w = t.widget(find.byKey(Key(key)));
+  return w is Text
+      ? (w.data ?? w.textSpan!.toPlainText())
+      : t
+          .widget<Text>(find.descendant(
+              of: find.byKey(Key(key)), matching: find.byType(Text)))
+          .data!;
+}
+
+/// Planned bars of section [i] in the run (the extension included).
+int _planBars(GuidedExercise ex, int i,
+        {int bpm = 92, bool teacher = true, bool along = true}) =>
+    buildRun(ex,
+            bpm: bpm,
+            options: RunOptions(teacher: teacher, playAlong: along),
+            clips: fakeClipManifest())
+        .where((b) => b.sectionIndex == i)
+        .length;
 
 void main() {
   setUp(() async {
@@ -167,19 +191,23 @@ void main() {
     expect(find.byKey(const Key('guided-banner')), findsOneWidget);
     expect(find.text('COMING UP'), findsOneWidget);
     expect(find.text(_kit.sections[v1].textEn!), findsOneWidget);
-    // The coming variation, dimmed, inside the banner.
-    final next = t.widget<GuidedLineView>(find.descendant(
-        of: find.byKey(const Key('guided-banner')),
-        matching: find.byType(GuidedLineView)));
-    expect(next.dimmed, isTrue);
-    expect(next.line, same(_kit.sections[v1].line));
+    // Text only (Task 6): the coming variation's notes are on the sheet,
+    // so the banner fits on the phone without scrolling.
+    final banner =
+        t.widget<GuidedBanner>(find.byKey(const Key('guided-banner')));
+    expect(banner.showLine, isFalse);
+    expect(banner.variation, 1);
+    expect(
+        t.getRect(find.byKey(const Key('guided-banner'))).bottom,
+        lessThanOrEqualTo(
+            t.getRect(find.byKey(const Key('guided-play-toggle'))).top));
 
     // During the variation: no banner, the text stays small over the notes.
     await _emit(t, p, _pos(v1, 0));
     expect(find.byKey(const Key('guided-banner')), findsNothing);
     expect(t.widget<Text>(find.byKey(const Key('guided-now-text'))).data,
         _kit.sections[v1].textEn);
-    expect(_nowView(t).line, same(_kit.sections[v1].line));
+    expect(_nowView(t).page.sectionIndex, v1);
   });
 
   testWidgets(
@@ -224,11 +252,12 @@ void main() {
         _pos(g, 0, tick: 60),
       ]) {
         await _emit(t, p, pos);
-        expect(_nowView(t).cursorStyle, CursorStyle.line);
         expect(_nowView(t).dimmed, isFalse);
         final c = staffCalls(t, now);
-        expect(c.playheads, hasLength(1), reason: '${ex.id} $size');
-        final ph = c.playheads.single;
+        expect(c.playheads, isEmpty, reason: 'blue, not accent');
+        final heads = c.playheadsIn(guidedPlayheadBlue);
+        expect(heads, hasLength(1), reason: '${ex.id} $size');
+        final ph = heads.single;
         expect(ph.width, lessThanOrEqualTo(3.0), reason: '${ex.id} $size');
         expect(c.hasCursorField, isFalse);
         expect(c.hasNoteRing, isFalse);
@@ -239,29 +268,28 @@ void main() {
       }
       // In the variation the line follows too.
       await _emit(t, p, _pos(v, 0, tick: 24));
-      expect(staffCalls(t, now).playheads, hasLength(1));
+      expect(staffCalls(t, now).playheadsIn(guidedPlayheadBlue), hasLength(1));
       // Where am I stays visible: status line and timeline marker.
       expect(t.widget<Text>(find.byKey(const Key('guided-status'))).data,
           contains('Variation 1'));
       expect(find.byKey(const Key('guided-timeline-marker')), findsOneWidget);
-      expect(_nowView(t).line, same(ex.sections[v].line));
+      expect(_nowView(t).page.sectionIndex, v);
     }
   });
 
-  testWidgets('photo fills the whole window at 2560 and 1920', (t) async {
+  testWidgets('stage spans the whole window at 2560 and 1920', (t) async {
     for (final size in [const Size(2560, 1440), const Size(1920, 1080)]) {
       final p = FakeGuidedPlayer();
       await _open(t, p, size: size, desktop: true);
-      final photo = t.getRect(find.byType(GuidedBackdrop));
-      expect(photo.width, size.width, reason: '$size');
-      expect(photo.left, 0, reason: '$size');
-      // The content runs to the gutters, no cap.
+      final stage = t.getRect(find.byType(GuidedStage));
+      expect(stage.width, size.width, reason: '$size');
+      expect(stage.left, 0, reason: '$size');
       final wide = t.getRect(find.byKey(const Key('guided-wide')));
       expect(wide.width, size.width, reason: '$size');
+      // The pages run to the gutters, no cap.
       final now = t.getRect(find.byKey(const Key('guided-now')));
       expect(now.left, AppSpacing.screenPadding, reason: '$size');
-      expect(now.right, size.width - AppSpacing.screenPadding,
-          reason: '$size');
+      expect(now.right, size.width - AppSpacing.screenPadding, reason: '$size');
     }
   });
 
@@ -275,49 +303,35 @@ void main() {
     ]) {
       final p = FakeGuidedPlayer();
       await _open(t, p, size: size, desktop: true);
-      // No cap on the play screen: the window is the content width.
       expect(t.getSize(find.byType(GuidedPlayScreen)).width, size.width);
-      final content = size.width;
       for (final pos in [_pos(v2 - 1, 0), _pos(v2, 1, tick: 40)]) {
         await _emit(t, p, pos);
-        final now = t.getRect(find.byKey(const Key('guided-now')));
-        expect(now.width, greaterThanOrEqualTo(0.9 * content),
-            reason: '$size section ${pos.sectionIndex}');
-        // The drawn staff, not just its card: lay the line out at the
-        // card's own (unscaled) width and scale its end to the screen.
-        final lvFinder = find.descendant(
-            of: find.byKey(const Key('guided-now')),
-            matching: find.byType(LineView));
-        final lv = t.widget<LineView>(lvFinder);
-        expect(lv.fillWidth, isTrue);
-        final inner = t.getSize(lvFinder).width - 2 * SheetStaffWidget.hPad;
-        final l = computeSheetGeometry(lv.rudiment, inner,
-                showCounts: false, fillWidth: lv.fillWidth)
-            .layouts[0];
-        // Not centred in a wider card: the row starts at the left edge.
-        expect(l.xOffset, 0, reason: '$size');
-        final rowEnd = l.originX +
-            l.barsPerRow * (l.beatsPerBar * l.pxPerQuarter + l.barGap) -
-            l.barGap;
-        final onScreen = t.getRect(lvFinder).width / (inner + 8) * rowEnd;
-        expect(onScreen, greaterThanOrEqualTo(0.9 * content),
-            reason: '$size section ${pos.sectionIndex}');
-        // Review Focus 3: wide, but not absurdly high.
-        expect(now.height, lessThanOrEqualTo(300), reason: '$size');
-        // The banner below spans the full width too.
-        if (pos.sectionIndex == v2 - 1) {
-          final b = t.getRect(find.byKey(const Key('guided-banner')));
-          expect(b.width, greaterThanOrEqualTo(0.9 * content));
-          expect(b.top, greaterThan(now.bottom));
+        for (final key in ['guided-now', 'guided-next']) {
+          final staff = t.getRect(find.descendant(
+              of: find.byKey(Key(key)), matching: find.byType(FittedBox)));
+          expect(staff.width, greaterThanOrEqualTo(0.9 * size.width),
+              reason: '$size $key section ${pos.sectionIndex}');
         }
+        // Review Focus 3: wide, but not absurdly high.
+        expect(t.getSize(find.byKey(const Key('guided-now'))).height,
+            lessThanOrEqualTo(400),
+            reason: '$size');
       }
-      // Countdown disc: small, at the right end of the notes.
+      // Countdown disc and banner: on the stage, bottom centre.
       await _emit(t, p, _pos(v2 - 1, 3, tick: 30, countdown: 2));
-      final now = t.getRect(find.byKey(const Key('guided-now')));
+      final stage = t.getRect(find.byKey(const Key('guided-stage')));
       final disc = t.getRect(find.byType(GuidedCountdown));
+      final banner = t.getRect(find.byKey(const Key('guided-banner')));
       expect(disc.width, lessThanOrEqualTo(100));
-      expect(disc.left, greaterThan(now.left + 0.75 * now.width));
-      expect(disc.right, lessThanOrEqualTo(now.right));
+      for (final r in [disc, banner]) {
+        expect(
+            stage.contains(r.topLeft) &&
+                stage.contains(r.bottomRight - const Offset(0.01, 0.01)),
+            isTrue,
+            reason: '$size $r in $stage');
+        expect(r.center.dx, closeTo(size.width / 2, 1), reason: '$size');
+        expect(r.center.dy, greaterThan(stage.center.dy), reason: '$size');
+      }
     }
   });
 
@@ -369,8 +383,9 @@ void main() {
     final d = t.getCenter(marker).dx;
     await _emit(t, q, _pos(_varIndex(_kit, 2), 0));
     expect(t.getCenter(marker).dx, greaterThan(d));
+    // In the control bar under the sheet.
     expect(t.getCenter(marker).dy,
-        lessThan(t.getRect(find.byKey(const Key('guided-now'))).top));
+        greaterThan(t.getRect(find.byKey(const Key('guided-next'))).bottom));
   });
 
   testWidgets('resizing while playing keeps the run', (t) async {
@@ -525,8 +540,10 @@ void main() {
     expect(para.size.height, lessThan(3 * 12 * 1.3));
     expect(para.text.style!.fontSize, greaterThanOrEqualTo(12),
         reason: 'key hint is at least 12 px');
-    final stop = t.getRect(find.byKey(const Key('guided-play-stop')));
-    expect(t.getRect(hint).right, lessThanOrEqualTo(stop.right + 0.5));
+    // Never over the notes.
+    final sheet = t.getRect(find.byKey(const Key('guided-sheet')));
+    expect(t.getRect(hint).overlaps(sheet), isFalse);
+    expect(t.getRect(hint).right, lessThanOrEqualTo(1280));
   });
 
   group('content cap at 1600 wide', () {
@@ -658,6 +675,338 @@ void main() {
     }
   });
 
+  group('Drumeo look', () {
+    int firstGroove(GuidedExercise ex) =>
+        ex.sections.indexWhere((s) => s.kind == SectionKind.groove);
+
+    Rect staffRect(WidgetTester t, String key) => t.getRect(find.descendant(
+        of: find.byKey(Key(key)), matching: find.byType(FittedBox)));
+
+    testWidgets('wide play shows stage, sheet and controls in that order',
+        (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1920, 1080), desktop: true);
+      await _emit(t, p, _pos(firstGroove(_kit), 1, tick: 30));
+      final stage = t.getRect(find.byKey(const Key('guided-stage')));
+      final sheet = t.getRect(find.byKey(const Key('guided-sheet')));
+      final controls = t.getRect(find.byKey(const Key('guided-controls')));
+      expect(stage.top, 0);
+      expect(sheet.top, closeTo(stage.bottom, 0.5));
+      expect(controls.top, closeTo(sheet.bottom, 0.5));
+      expect(controls.bottom, 1080);
+      for (final r in [stage, sheet, controls]) {
+        expect(r.width, 1920);
+      }
+      // The stage gets the most, the sheet about the Richtwert (38 %).
+      expect(stage.height, greaterThan(sheet.height));
+      expect(sheet.height, inInclusiveRange(0.28 * 1080, 0.42 * 1080));
+      expect(controls.height, lessThanOrEqualTo(0.09 * 1080));
+      // White sheet.
+      expect(t.widget<ColoredBox>(find.byKey(const Key('guided-sheet'))).color,
+          Colors.white);
+      // Two pages in the sheet, the lower one dimmed.
+      final now = t.getRect(find.byKey(const Key('guided-now')));
+      final next = t.getRect(find.byKey(const Key('guided-next')));
+      expect(sheet.contains(now.center) && sheet.contains(next.center), isTrue);
+      expect(next.top, greaterThanOrEqualTo(now.bottom));
+      expect(_nowView(t).dimmed, isFalse);
+      expect(_nextView(t).dimmed, isTrue);
+      // Little empty paper: the two pages fill most of the sheet.
+      expect(now.height + next.height, greaterThan(0.7 * sheet.height));
+      // Both pages at their natural size: over the full width.
+      for (final key in ['guided-now', 'guided-next']) {
+        expect(staffRect(t, key).width,
+            greaterThanOrEqualTo(1920 - 2 * AppSpacing.screenPadding - 1),
+            reason: key);
+      }
+      // One row of controls, everything inside the bar.
+      final row = [
+        'guided-play-toggle',
+        'guided-play-stop',
+        'guided-time',
+        'guided-timeline',
+        'guided-total',
+        'guided-teacher',
+        'guided-along',
+        'guided-key-hint',
+      ];
+      for (final k in row) {
+        final r = t.getRect(find.byKey(Key(k)));
+        expect(r.top, greaterThanOrEqualTo(controls.top), reason: k);
+        expect(r.bottom, lessThanOrEqualTo(controls.bottom), reason: k);
+        expect(r.left, greaterThanOrEqualTo(0), reason: k);
+        expect(r.right, lessThanOrEqualTo(1920), reason: k);
+      }
+      final tempo = t.getRect(find.byType(TempoRow));
+      expect(controls.contains(tempo.center), isTrue);
+      double x(String k) => t.getRect(find.byKey(Key(k))).left;
+      expect(x('guided-play-toggle'), lessThan(x('guided-play-stop')));
+      expect(x('guided-play-stop'), lessThan(x('guided-time')));
+      expect(x('guided-time'), lessThan(x('guided-timeline')));
+      expect(x('guided-timeline'), lessThan(x('guided-total')));
+      expect(x('guided-total'), lessThan(tempo.left));
+      expect(tempo.left, lessThan(x('guided-teacher')));
+      expect(x('guided-teacher'), lessThan(x('guided-along')));
+      expect(x('guided-along'), lessThan(x('guided-key-hint')));
+      expect(t.getSize(find.byKey(const Key('guided-timeline'))).width,
+          greaterThan(400));
+      expect(_text(t, 'guided-total'), startsWith('~'));
+      // Stage overlays: package · level, name, status, back before the title.
+      final tag = '${_kit.package == GuidedPackage.kit ? 'SET' : 'PAD'}'
+          ' · ${_kit.difficulty.label.toUpperCase()}';
+      for (final f in [
+        find.text(tag),
+        find.text(_kit.name),
+        find.byKey(const Key('guided-status')),
+        find.byKey(const Key('guided-bar-count')),
+        find.byTooltip('Back'),
+      ]) {
+        expect(f, findsOneWidget);
+        expect(stage.contains(t.getCenter(f)), isTrue);
+      }
+      expect(t.getRect(find.byTooltip('Back')).right,
+          lessThanOrEqualTo(t.getRect(find.text(_kit.name)).left));
+      expect(t.takeException(), isNull);
+    });
+
+    testWidgets('sheet spans the window width minus gutter at 2560', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(2560, 1440), desktop: true);
+      await _emit(t, p, _pos(firstGroove(_kit), 0, tick: 30));
+      const min = 2560 - 2 * AppSpacing.screenPadding - 1;
+      expect(t.getSize(find.byKey(const Key('guided-sheet'))).width,
+          greaterThanOrEqualTo(min));
+      for (final key in ['guided-now', 'guided-next']) {
+        final r = staffRect(t, key);
+        expect(r.width, greaterThanOrEqualTo(min), reason: key);
+        expect(r.left, closeTo(AppSpacing.screenPadding, 0.5), reason: key);
+      }
+    });
+
+    testWidgets('now and next pages show 4 bars each when wide', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1280, 720), desktop: true);
+      final g = firstGroove(_kit);
+      await _emit(t, p, _pos(g, 1, tick: 30));
+      expect(_nowView(t).page.bars, 4);
+      expect(_nowView(t).fullPageBars, 4);
+      expect(_nowView(t).page.firstBar, 0);
+      expect(_nextView(t).page.bars, 4);
+      expect(_nextView(t).fullPageBars, 4);
+      // Written out, no repeat sign.
+      expect(_nowView(t).page.line.repeat, isFalse);
+      expect(_text(t, 'guided-label-now'), 'Now · Groove');
+      expect(_text(t, 'guided-label-next'), 'Next · Groove');
+    });
+
+    testWidgets('sheet labels name the section of each page', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1280, 720), desktop: true);
+      final v2 = _varIndex(_kit, 2);
+      final title = _kit.sections[v2].titleEn!;
+      final lastPage = (_planBars(_kit, v2 - 1) - 1) ~/ 4 * 4;
+      await _emit(t, p, _pos(v2 - 1, lastPage));
+      expect(_text(t, 'guided-label-now'), 'Now · Groove');
+      expect(_text(t, 'guided-label-next'), 'Next · Variation 2 · $title');
+      expect(_nextView(t).page.sectionIndex, v2);
+      await _emit(t, p, _pos(v2, 0, tick: 10));
+      expect(_text(t, 'guided-label-now'), 'Now · Variation 2 · $title');
+      final outro = _kit.sections.length - 1;
+      await _emit(t, p, _pos(outro, 0));
+      expect(_text(t, 'guided-label-now'), 'Now · Ending');
+      expect(find.byKey(const Key('guided-label-next')), findsNothing);
+      expect(find.byKey(const Key('guided-next')), findsNothing);
+      expect(t.takeException(), isNull);
+    });
+
+    testWidgets('page turns when bar 5 of a section starts', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1920, 1080), desktop: true);
+      final g = _varIndex(_kit, 1) - 1;
+      expect(_planBars(_kit, g), greaterThanOrEqualTo(8));
+      await _emit(t, p, _pos(g, 3, tick: 72));
+      expect(_nowView(t).page.firstBar, 0);
+      expect(_nowView(t).activeTick, 3 * 96 + 72);
+      expect(_nextView(t).page.sectionIndex, g);
+      expect(_nextView(t).page.firstBar, 4);
+      final nowTop = t.getRect(find.byKey(const Key('guided-now'))).top;
+      await _emit(t, p, _pos(g, 4));
+      expect(_nowView(t).page.firstBar, 4);
+      expect(_nowView(t).activeTick, 0);
+      // No scrolling: the upper row stays where it was.
+      expect(t.getRect(find.byKey(const Key('guided-now'))).top, nowTop);
+    });
+
+    testWidgets('tempo change keeps the page and tick', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1280, 720), desktop: true);
+      final g = _varIndex(_kit, 1) - 1;
+      await _emit(t, p, _pos(g, 5, tick: 30));
+      final page = _nowView(t).page;
+      final tick = _nowView(t).activeTick;
+      final next = _nextView(t).page;
+      await _key(t, LogicalKeyboardKey.arrowUp);
+      expect(p.setBpmCalls, isNotEmpty);
+      expect(_nowView(t).page, page);
+      expect(_nowView(t).activeTick, tick);
+      expect(_nextView(t).page, next);
+    });
+
+    testWidgets('count-in shows the first groove page without playhead',
+        (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1920, 1080), desktop: true);
+      await _emit(t, p, _pos(-1, 0, tick: 48, bar: 0));
+      final now = _nowView(t);
+      expect(now.page.sectionIndex, firstGroove(_kit));
+      expect(now.page.firstBar, 0);
+      expect(now.activeTick, isNull);
+      expect(
+          staffCalls(t, find.byKey(const Key('guided-now')))
+              .playheadsIn(guidedPlayheadBlue),
+          isEmpty);
+      expect(_text(t, 'guided-label-now'), 'Count-in');
+      expect(find.byKey(const Key('guided-bar-count')), findsNothing);
+    });
+
+    testWidgets('paused keeps the page and freezes the playhead', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1920, 1080), desktop: true);
+      final g = firstGroove(_kit);
+      await _emit(t, p, _pos(g, 2, tick: 40));
+      double head() => staffCalls(t, find.byKey(const Key('guided-now')))
+          .playheadsIn(guidedPlayheadBlue)
+          .single
+          .x;
+      final page = _nowView(t).page;
+      final x = head();
+      await t.tap(find.byKey(const Key('guided-play-toggle')));
+      await t.pump();
+      expect(p.calls.last, 'pause');
+      await t.pump(const Duration(seconds: 2));
+      expect(_nowView(t).page, page);
+      expect(_nowView(t).activeTick, 2 * 96 + 40);
+      expect(head(), x);
+    });
+
+    testWidgets('resize from wide to narrow while playing shows 2-bar pages',
+        (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1280, 720), desktop: true);
+      final g = _varIndex(_kit, 1) - 1;
+      await _emit(t, p, _pos(g, 5, tick: 30));
+      expect(_nowView(t).page.bars, 4);
+      expect(_nowView(t).page.firstBar, 4);
+      await t.binding.setSurfaceSize(const Size(412, 915));
+      await t.pumpAndSettle();
+      expect(t.takeException(), isNull);
+      expect(find.byKey(const Key('guided-wide')), findsNothing);
+      expect(_nowView(t).page.bars, 2);
+      expect(_nowView(t).fullPageBars, 2);
+      expect(_nowView(t).page.firstBar, 4);
+      expect(_nowView(t).activeTick, 96 + 30);
+      expect(_nextView(t).page.firstBar, 6);
+      expect(_nextView(t).dimmed, isTrue);
+      expect(p.calls, ['start']);
+      // And back.
+      await t.binding.setSurfaceSize(const Size(1280, 720));
+      await t.pumpAndSettle();
+      expect(_nowView(t).page.bars, 4);
+      expect(_nowView(t).activeTick, 96 + 30);
+    });
+
+    testWidgets('coming up shows the variation title', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1920, 1080), desktop: true);
+      final v1 = _varIndex(_kit, 1);
+      await _emit(t, p, _pos(v1 - 1, 0));
+      expect(_text(t, 'guided-coming-up'),
+          'Coming up: ${_kit.sections[v1].titleEn}');
+      final stage = t.getRect(find.byKey(const Key('guided-stage')));
+      final c = t.getRect(find.byKey(const Key('guided-coming-up')));
+      expect(stage.contains(c.center), isTrue);
+      expect(c.center.dx, greaterThan(1920 / 2), reason: 'top right');
+      expect(
+          c.top,
+          greaterThan(
+              t.getRect(find.byKey(const Key('guided-bar-count'))).top));
+      await _emit(t, p, _pos(v1, 0));
+      expect(find.byKey(const Key('guided-coming-up')), findsNothing);
+    });
+
+    testWidgets(
+        'bar count shows bar in section and section length from the '
+        'plan', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1920, 1080), desktop: true);
+      final g = _varIndex(_kit, 1) - 1;
+      await _emit(t, p, _pos(g, 2));
+      expect(_text(t, 'guided-bar-count'), 'Bar 3 / ${_planBars(_kit, g)}');
+      final v1 = g + 1;
+      await _emit(t, p, _pos(v1, 0));
+      expect(_text(t, 'guided-bar-count'), 'Bar 1 / ${_planBars(_kit, v1)}');
+      final r = t.getRect(find.byKey(const Key('guided-bar-count')));
+      expect(r.right, greaterThan(1920 - 200), reason: 'top right');
+      expect(r.top, lessThan(200));
+    });
+
+    testWidgets('banner on the stage has no note line', (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p, size: const Size(1920, 1080), desktop: true);
+      final v1 = _varIndex(_kit, 1);
+      await _emit(t, p, _pos(v1 - 1, 0));
+      final banner = find.byKey(const Key('guided-banner'));
+      expect(t.widget<GuidedBanner>(banner).showLine, isFalse);
+      expect(find.descendant(of: banner, matching: find.byType(GuidedLineView)),
+          findsNothing);
+      expect(
+          find.descendant(
+              of: banner, matching: find.text(_kit.sections[v1].textEn!)),
+          findsOneWidget);
+      final stage = t.getRect(find.byKey(const Key('guided-stage')));
+      expect(stage.contains(t.getRect(banner).center), isTrue);
+    });
+
+    testWidgets('photo is not covered by the sheet', (t) async {
+      for (final size in [
+        const Size(1920, 1080),
+        const Size(1366, 768),
+        const Size(2560, 1440),
+      ]) {
+        final p = FakeGuidedPlayer();
+        await _open(t, p, size: size, desktop: true);
+        await _emit(t, p, _pos(_varIndex(_kit, 1) - 1, 0));
+        final stage = t.getRect(find.byKey(const Key('guided-stage')));
+        final sheet = t.getRect(find.byKey(const Key('guided-sheet')));
+        final controls = t.getRect(find.byKey(const Key('guided-controls')));
+        expect(stage.overlaps(sheet), isFalse, reason: '$size');
+        expect(stage.overlaps(controls), isFalse, reason: '$size');
+        // The 4:3 photo at full stage height.
+        final photo = t.getRect(find.byKey(const ValueKey('stage-photo')));
+        expect(photo.height, closeTo(stage.height, 0.5), reason: '$size');
+        expect(photo.width, closeTo(stage.height * 4 / 3, 0.5),
+            reason: '$size');
+        expect(photo.overlaps(sheet), isFalse, reason: '$size');
+      }
+    });
+
+    testWidgets('phone: stage strip on top, two 2-bar pages under it',
+        (t) async {
+      final p = FakeGuidedPlayer();
+      await _open(t, p);
+      await _emit(t, p, _pos(firstGroove(_kit), 1, tick: 30));
+      final stage = t.getRect(find.byKey(const Key('guided-stage')));
+      expect(stage.top, 0);
+      expect(stage.height, closeTo(0.3 * 915, 1));
+      expect(stage.contains(t.getCenter(find.text(_kit.name))), isTrue);
+      final now = t.getRect(find.byKey(const Key('guided-now')));
+      expect(now.top, greaterThanOrEqualTo(stage.bottom));
+      expect(_nowView(t).page.bars, 2);
+      expect(_nextView(t).page.bars, 2);
+      expect(t.takeException(), isNull);
+    });
+  });
+
   group('goldens', () {
     setUpAll(() async {
       final bytes = await File('assets/fonts/Bravura.otf').readAsBytes();
@@ -684,7 +1033,7 @@ void main() {
 
     testWidgets('golden: desktop mid-run, banner and countdown', (t) async {
       final v2 = _varIndex(_kit, 2);
-      await shot(t, const Size(1280, 720), true, positions: [
+      await shot(t, const Size(1920, 1080), true, positions: [
         _pos(v2 - 2, 4, bar: 20),
         _pos(v2 - 1, 3, tick: 54, bar: 30, countdown: 2),
       ]);
@@ -716,7 +1065,8 @@ void main() {
 
     testWidgets('golden: desktop in a variation', (t) async {
       final v2 = _varIndex(_kit, 2);
-      await shot(t, const Size(1280, 720), true, positions: [
+      // A laptop window (anti-goal: notes too small at 1366x768).
+      await shot(t, const Size(1366, 768), true, positions: [
         _pos(v2, 2, tick: 40, bar: 33),
       ]);
       expect(t.takeException(), isNull);
