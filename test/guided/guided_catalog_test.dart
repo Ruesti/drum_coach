@@ -6,6 +6,7 @@ import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/models/voice_clip.dart';
 import 'package:drum_coach/features/guided/run_plan.dart';
+import 'package:drum_coach/shared/widgets/kit_layout.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _manifestJson() =>
@@ -34,6 +35,19 @@ void main() {
           continue;
         }
         expect(s.bars % guidedPhraseBars, 0, reason: '${ex.id}: ${s.kind}');
+      }
+    }
+  });
+
+  test('catalog lines are four bars', () {
+    const ticksPerBar = guidedBeatsPerBar * kitTicksPerQuarter;
+    for (final ex in guidedCatalog) {
+      for (final s in ex.sections) {
+        if (s.kind != SectionKind.groove && s.kind != SectionKind.variation) {
+          continue;
+        }
+        expect(ticksOf(s.line.beats, ex.gridUnit) ~/ ticksPerBar, 4,
+            reason: '${ex.id}: ${s.kind} ${s.titleEn ?? ''}');
       }
     }
   });

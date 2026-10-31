@@ -68,7 +68,9 @@ beginnt mit Akzent (die Eins nach dem Fill); auf der Kurationsseite steht
 
 Eine geführte Übung (`GuidedSheet`) ist ein Grundgroove plus 3–5 Variationen, jede mit
 einem englischen Satz (`Variation(line, text, after='after_good')`, die letzte mit
-`after=None`); Zeilen sind 1–2 ganze 4/4-Takte, Pad-Token oder Kit-Spuren wie oben.
+`after=None`, Kurzname `title=`); Zeilen sind 1, 2 oder 4 ganze 4/4-Takte, Pad-Token oder
+Kit-Spuren wie oben. Im Katalog ist jede Groove-/Variationszeile 4 Takte: Takt 1–3 die Figur,
+Takt 4 eine kleine Steigerung (Helfer `rise`, `line4`, `rise_pad`, `lin_rise` in `gefuehrt.py`).
 `gen_gefuehrt.py <repo_root>` schreibt daraus
 
 - `lib/features/guided/data/guided_catalog.dart` — `guidedCatalog`; Abschnitte

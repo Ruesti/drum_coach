@@ -36,9 +36,10 @@ def flow(s: GuidedSheet) -> str:
 
 
 def line_abc(s: GuidedSheet, ln) -> str:
+    """Eine Zeile (bis 4 Takte) als eine abc-Reihe, wie eine Seite in der App."""
     if s.package == 'kit':
-        return KIT_ABC_HEADER + _kit_rows(ln)
-    return HDR + ''.join(f'{abc}\\nw: {sticking_words(sub)}\\n' for abc, sub in _rows(ln))
+        return KIT_ABC_HEADER + _kit_rows(ln, bars_per_row=4)
+    return HDR + ''.join(f'{abc}\\nw: {sticking_words(sub)}\\n' for abc, sub in _rows(ln, bars_per_row=4))
 
 
 def _clip(clip_id: str, text: str, manifest: dict) -> str:
@@ -65,7 +66,7 @@ def main(out: pathlib.Path, sheets: list[GuidedSheet] | None = None) -> None:
         for i, (v, ln) in enumerate(zip(s.variations, vs), 1):
             data[f'{s.id}_v{i}'] = line_abc(s, ln)
             blocks.append(
-                f'<h3>Variation {i}</h3><div class="abc" id="abc_{s.id}_v{i}"></div>'
+                f'<h3>Variation {i} · {html.escape(v.title)}</h3><div class="abc" id="abc_{s.id}_v{i}"></div>'
                 f'<p class="say">{html.escape(v.text)}</p>{_clip(s.clip_id(i), v.text, manifest)}')
         sections.append(f'''
   <section class="sheet" id="{s.id}">
@@ -81,6 +82,7 @@ def main(out: pathlib.Path, sheets: list[GuidedSheet] | None = None) -> None:
     page = f'''<title>Geführte Übungen Kuration</title>
 {STYLE}
 <style>
+  main {{ max-width:1240px; }}
   .legend {{ font-size:13px; color:var(--fg2); margin:0 0 12px; padding:8px 12px; border:1px solid var(--line); border-radius:8px; max-width:72ch; }}
   .sheet h3 {{ font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:#2F3F5C; margin:18px 0 4px; }}
   .flow {{ font-family:"Space Mono",ui-monospace,monospace; font-size:12px; color:#555; margin:0 0 6px; }}
@@ -93,14 +95,14 @@ def main(out: pathlib.Path, sheets: list[GuidedSheet] | None = None) -> None:
 <main>
   <p class="eyebrow">drum_coach · Geführte Übungen · Kuration</p>
   <h1>Geführte Übungen</h1>
-  <p class="lead">Je Übung Groove und Variationen mit der gesprochenen Erklärung. Dauer bei Standardtempo, ohne automatische Verlängerung für lange Ansagen.</p>{legend}
+  <p class="lead">Je Übung Groove und Variationen als Vier-Takt-Zeilen: Takt 1–3 die Figur, Takt 4 eine kleine Steigerung (Bassdrum, Ghost Note, Akzent, kurzer Fill). Darunter die gesprochene Erklärung. Dauer bei Standardtempo, ohne automatische Verlängerung für lange Ansagen.</p>{legend}
   <p class="toc">{toc}</p>
   {''.join(sections)}
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.4.4/abcjs-basic-min.js"></script>
 <script>
 const DATA = {json.dumps(data)};
-const opts = {{ responsive: 'resize', staffwidth: 800, paddingtop: 0, paddingbottom: 0, add_classes: true,
+const opts = {{ responsive: 'resize', staffwidth: 1100, paddingtop: 0, paddingbottom: 0, add_classes: true,
   format: {{ partsfont: 'Space Grotesk 13 bold', vocalfont: 'Space Mono 12', partsbox: true }} }};
 for (const [id, abc] of Object.entries(DATA)) {{ ABCJS.renderAbc('abc_' + id, abc.replace(/\\\\n/g, '\\n'), opts); }}
 </script>

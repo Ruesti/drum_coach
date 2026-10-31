@@ -222,6 +222,39 @@ class Generator(unittest.TestCase):
             self.assertEqual(sum(gaps), len(ln.notes), i)
             self.assertTrue(all(g >= 4 for g in gaps), (i, gaps))  # no broken short group
 
+    def _lines(self):
+        from gefuehrt import SHEETS
+        for s in SHEETS:
+            groove, vs = s.parsed()
+            yield f'{s.id} groove', groove
+            for i, ln in enumerate(vs, 1):
+                yield f'{s.id} v{i}', ln
+
+    @staticmethod
+    def _bar_events(ln, bar):
+        """Non-rest notes of one bar as (track, tick in bar, hand, value, flags)."""
+        from sheetlang import TPQ
+        tracks = getattr(ln, 'tracks', None) or [type('T', (), {'key': '', 'notes': ln.notes})]
+        out = set()
+        for t in tracks:
+            tick = 0
+            for n in t.notes:
+                if not n.rest and tick // (4 * TPQ) == bar:
+                    out.add((t.key, tick % (4 * TPQ), n.hand, n.value, n.dotted, n.accent,
+                             n.ghost, n.graces, n.tuplet, n.side))
+                tick += n.ticks()
+        return out
+
+    def test_every_line_is_four_bars(self):
+        for where, ln in self._lines():
+            self.assertEqual(ln.bars, 4, where)
+
+    def test_bar_four_differs(self):
+        for where, ln in self._lines():
+            self.assertEqual(ln.bars, 4, where)  # a 1-bar line has an empty bar 4
+            self.assertTrue(self._bar_events(ln, 3), where)
+            self.assertNotEqual(self._bar_events(ln, 0), self._bar_events(ln, 3), where)
+
     def test_linear_groove_is_linear(self):
         from gefuehrt import LINEAR_SHIFT, is_linear
         for line in [LINEAR_SHIFT.groove] + [v.line for v in LINEAR_SHIFT.variations]:
@@ -245,6 +278,23 @@ class Page(unittest.TestCase):
         self.assertEqual(page.count('data:audio/wav;base64,'),
                          sum(len(s.variations) for s in SHEETS))
         self.assertIn('<script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.4.4/abcjs-basic-min.js">', page)
+
+    def test_page_shows_titles_and_four_bar_rows(self):
+        import html
+        import pathlib
+        import tempfile
+        import build_gefuehrt_page
+        from gefuehrt import ACCENT_WALK, SHEETS
+        with tempfile.TemporaryDirectory() as d:
+            out = pathlib.Path(d) / 'p.html'
+            build_gefuehrt_page.main(out)
+            page = out.read_text()
+        for s in SHEETS:
+            for i, v in enumerate(s.variations, 1):
+                self.assertIn(f'Variation {i} · {html.escape(v.title)}', page)
+        # a pad line of 4 bars stays one abc row (one w: sticking line)
+        groove, _ = ACCENT_WALK.parsed()
+        self.assertEqual(build_gefuehrt_page.line_abc(ACCENT_WALK, groove).count('w: '), 1)
 
     def test_duration_at_default_bpm(self):
         import build_gefuehrt_page
