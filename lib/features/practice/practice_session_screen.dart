@@ -41,8 +41,11 @@ import '../metronome/backing_styles.dart';
 import '../metronome/loop_voices.dart' show KitSoundTrack;
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
-import '../program/program_provider.dart';
-import 'ladder_plan.dart';
+import '../room/lesson_voice.dart';
+import '../room/room_progress_service.dart';
+import '../room/round_tracker.dart';
+import '../room/round_verdict.dart';
+import '../room/tempo_ladder.dart';
 import 'line_selection.dart';
 import 'practice_provider.dart';
 import 'practice_shortcuts.dart';
@@ -62,17 +65,19 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   final String rudimentId;
   final bool isFromRoutine;
 
-  /// Optional target tempo to preset the metronome to (e.g. a program's tempo
-  /// ladder gate). Null presets the exercise's own suggested tempo instead.
+  /// Optional tempo to preset the metronome to. Null presets the exercise's
+  /// own suggested tempo instead.
   final int? targetBpm;
 
   /// Suggested session length (e.g. a program block's duration). Presets the
   /// countdown; the user can still pick another length before starting.
   final int? targetMinutes;
 
-  /// True when launched as a program tempo-ladder block: the session climbs
-  /// through [buildLadderPlan]'s steps and ends with the clean-pass question.
-  final bool isLadder;
+  /// Trainingsraum mode (`?room=1`): one round = once through the selected
+  /// lines; each measured round steps the tempo +4 / 0 / −4, two clean
+  /// rounds at the target tempo "sit". Without measurement the rating at
+  /// the end decides one round. "How to play" explains on request only.
+  final bool room;
 
   /// Second header line under the exercise name, e.g. the path position
   /// "Day 9 · Step 2 of 3 · 84 BPM". Null shows the exercise's difficulty.
@@ -92,18 +97,26 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   /// MIDI port access; null = the real plugin (test seam).
   final MidiPortService? ports;
 
+  /// Opens this stroke source instead of the planned one (test seam).
+  final StrokeSource Function()? strokeSource;
+
+  /// Spoken lesson behind "How to play"; null = the voice assets (seam).
+  final LessonVoice? lessonVoice;
+
   const PracticeSessionScreen({
     super.key,
     required this.rudimentId,
     required this.isFromRoutine,
     this.targetBpm,
     this.targetMinutes,
-    this.isLadder = false,
+    this.room = false,
     this.contextLine,
     this.phase,
     this.lines,
     this.line,
     this.ports,
+    this.strokeSource,
+    this.lessonVoice,
   });
 
   @override
@@ -159,14 +172,19 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   bool _sessionFinished = false;
   bool _finishing = false; // result sheet is opening or open
 
-  // Tempo ladder (program block): plan + current step. The gate is the
-  // clean-pass tempo the ladder climbs to (+4 above it is the top step);
-  // it starts at the program's target and follows manual BPM changes.
-  LadderPlan? _ladderPlan;
-  int _ladderStepIndex = 0;
-  int? _gateBpm;
-
-  bool get _ladderActive => widget.isLadder && _gateBpm != null;
+  // Trainingsraum rounds (room mode): boundaries from the beat stream, the
+  // judged rounds of this session, where the running round starts in the
+  // beat log, and the short hint after each round.
+  late RoundTracker _roundTracker;
+  final List<LadderRound> _rounds = [];
+  int _roundLogStart = 0;
+  int? _roundOfLogStart;
+  bool _nailed = false;
+  String? _roundChip;
+  Timer? _roundChipTimer;
+  LessonVoice? _voice;
+  LessonVoice get _lessonVoice =>
+      _voice ??= widget.lessonVoice ?? AssetLessonVoice();
 
   // Beat log for mic correlation: recorded in build via ref.listen
   final List<BeatRecord> _beatLog = [];
@@ -263,8 +281,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
   void _buildUnit(Rudiment rudiment) {
     _kitExercise = rudiment.isKit;
+    // A room round is ONE pass through the selected lines.
     _plan = SheetPlan.sequence(rudiment, _selection,
-        repeats: SettingsService.sequenceRepeats, start: _start);
+        repeats: widget.room ? 1 : SettingsService.sequenceRepeats,
+        start: _start);
     _unit = rudiment.withSticking(_plan.beats);
     // A kit unit mixes its voices; the cursor then steps per column.
     _playback = _plan.isKit
@@ -275,6 +295,14 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         : const [];
     _kitPatternSound =
         _plan.isKit ? kitPatternSound(_plan.voices, rudiment.gridUnit) : null;
+    _freshRounds();
+  }
+
+  /// Round counting starts over: a new unit, or playback (re)started.
+  void _freshRounds() {
+    _roundTracker = RoundTracker(beatsPerRound: _playback.totalTicks);
+    _roundLogStart = _beatLog.length;
+    _roundOfLogStart = null;
   }
 
   /// Line or start change: new unit, new loop, fresh beat log, line
@@ -285,6 +313,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final playing = ref.read(metronomeNotifierProvider).isPlaying;
     setState(() => _buildUnit(rudiment));
     _beatLog.clear();
+    _roundLogStart = 0;
+    // Until the new loop's first downbeat ([_consumeStaleTick]) nothing
+    // counts as a round.
+    if (playing) _roundTracker.reset();
     _metronomeNotifier.setPatternVolumes(_playback.tickVolumes);
     _applyExtras();
     if (playing) {
@@ -319,6 +351,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     }
     _unitChangedAt = null;
     _beatLog.clear();
+    // The new unit's loop starts here, on its "1": a fresh first round.
+    _freshRounds();
     return false;
   }
 
@@ -343,8 +377,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _applyUnitChange();
   }
 
-  // Result sheet inputs that arrive after it opened (K2 step 3).
-  final _ladderResult = ValueNotifier<String?>(null);
+  // Result sheet inputs that arrive after it opened (K2 step 3); the
+  // first carries the room's round summary.
+  final _roomResult = ValueNotifier<String?>(null);
   final _sessionLogN = ValueNotifier<SessionLog?>(null);
   final _coachFeedback = ValueNotifier<String?>(null);
   final _coachLoading = ValueNotifier<bool>(false);
@@ -368,11 +403,6 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
     if (widget.targetMinutes != null) {
       _goalSeconds = widget.targetMinutes! * 60;
-    }
-    _gateBpm = widget.targetBpm;
-    if (_ladderActive) {
-      _ladderPlan = buildLadderPlan(
-          startBpm: _gateBpm!, totalSeconds: _goalSeconds ?? 240);
     }
 
     // Restore a session interrupted by the app going to background (e.g. a
@@ -403,9 +433,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         ..setBackingLevel(SettingsService.backingLevel);
       _applyExtras();
       unawaited(_refreshHeadphones());
-      if (_ladderActive) {
-        metronome.setBpm(_ladderPlan!.bpmAt(_elapsedSeconds));
-      } else if (widget.targetBpm != null) {
+      if (widget.targetBpm != null) {
         metronome.setBpm(widget.targetBpm!);
       } else {
         _presetExerciseBpm();
@@ -485,6 +513,40 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     // no source, no number; sheet, click and cursor run (Leitprinzip: no
     // number is better than a wrong one).
     if (rudiment.isKit) return;
+    final injected = widget.strokeSource;
+    if (injected != null) {
+      _source = injected();
+    } else {
+      await _openPlannedSource();
+    }
+    final src = _source;
+    if (src == null) return;
+    if (!mounted) {
+      // dispose() already ran and missed this source.
+      src.dispose();
+      _source = null;
+      _midiDeviceName = null;
+      _openedMapping = null;
+      return;
+    }
+    // Sensor level (Brief A.6): an exercise above the source's level is
+    // played without numbers.
+    if (!rudiment.requiredSensor.satisfiedBy(src.kind)) {
+      src.dispose();
+      _source = null;
+      _midiDeviceName = null;
+      _openedMapping = null;
+      return;
+    }
+    _sourceStatusSub = src.statusChanges.listen((s) {
+      if (s == StrokeSourceStatus.notMeasurable && mounted) {
+        setState(() => _sourceLost = true);
+      }
+    });
+  }
+
+  /// The source the settings and devices call for (MIDI, mic or none).
+  Future<void> _openPlannedSource() async {
     final ports = widget.ports ?? MidiPortService();
     final devices = await ports.inputDevices();
     final chosen =
@@ -525,30 +587,6 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       case MeasurementPlan.none:
         return;
     }
-    final src = _source;
-    if (src == null) return;
-    if (!mounted) {
-      // dispose() already ran and missed this source.
-      src.dispose();
-      _source = null;
-      _midiDeviceName = null;
-      _openedMapping = null;
-      return;
-    }
-    // Sensor level (Brief A.6): an exercise above the source's level is
-    // played without numbers.
-    if (!rudiment.requiredSensor.satisfiedBy(src.kind)) {
-      src.dispose();
-      _source = null;
-      _midiDeviceName = null;
-      _openedMapping = null;
-      return;
-    }
-    _sourceStatusSub = src.statusChanges.listen((s) {
-      if (s == StrokeSourceStatus.notMeasurable && mounted) {
-        setState(() => _sourceLost = true);
-      }
-    });
   }
 
   @override
@@ -556,7 +594,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     WidgetsBinding.instance.removeObserver(this);
     WakelockPlus.disable();
     _ticker?.cancel();
-    _ladderResult.dispose();
+    _roomResult.dispose();
+    _roundChipTimer?.cancel();
+    final voice = _voice;
+    if (voice != null) unawaited(voice.stop());
     _sessionLogN.dispose();
     _coachFeedback.dispose();
     _coachLoading.dispose();
@@ -581,26 +622,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
   void _startTicker() {
     _ticker?.cancel();
-    if (_ladderActive) {
-      // Rebuild against the actually chosen session length and (re)apply the
-      // step tempo — covers both a changed goal chip and a restored session.
-      _ladderPlan = buildLadderPlan(
-          startBpm: _gateBpm!,
-          totalSeconds: _goalSeconds ?? widget.targetMinutes ?? 240);
-      _ladderStepIndex = _ladderPlan!.stepIndexAt(_elapsedSeconds);
-      _metronomeNotifier.setBpm(_ladderPlan!.bpms[_ladderStepIndex]);
-    }
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() => _elapsedSeconds++);
-      final plan = _ladderPlan;
-      if (plan != null) {
-        final step = plan.stepIndexAt(_elapsedSeconds);
-        if (step != _ladderStepIndex) {
-          _ladderStepIndex = step;
-          _metronomeNotifier.setBpm(plan.bpms[step]);
-        }
-      }
       if (_goalSeconds != null && _elapsedSeconds >= _goalSeconds!) {
         _finishSession();
       }
@@ -613,22 +637,108 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   }
 
   /// All manual tempo input (slider, ±buttons, dialog) funnels through here.
-  /// In ladder mode a manual choice rebases the whole ladder: the current
-  /// step becomes the chosen tempo, later steps keep the same +4 spacing,
-  /// and the clean-pass gate shifts along with it — the program's stored
-  /// tempo never overrides what the player actually dialed in.
+  /// In room mode the round in progress then does not count.
   void _onUserBpmChanged(int bpm) {
+    final changed = bpm != ref.read(metronomeNotifierProvider).bpm;
     _metronomeNotifier.setBpm(bpm);
-    final plan = _ladderPlan;
-    if (!_ladderActive || plan == null) return;
-    final step = plan.stepIndexAt(_elapsedSeconds);
-    if (plan.bpms[step] == bpm) return;
-    setState(() {
-      _gateBpm = _gateBpm! + (bpm - plan.bpms[step]);
-      _ladderPlan =
-          buildLadderPlan(startBpm: _gateBpm!, totalSeconds: plan.totalSeconds);
-      _ladderStepIndex = _ladderPlan!.stepIndexAt(_elapsedSeconds);
+    if (widget.room && changed) _roundTracker.reset();
+  }
+
+  /// Room mode, one beat of the running loop: at a round boundary the
+  /// finished round is judged from its own window and the tempo steps.
+  void _onRoomBeat(int globalTick, DateTime plannedAt) {
+    final ended = _roundTracker.onBeat(globalTick);
+    final round = _roundTracker.currentRound;
+    if (round == _roundOfLogStart) return;
+    final from = _roundLogStart.clamp(0, _beatLog.length);
+    final roundLog = _beatLog.sublist(from);
+    _roundLogStart = _beatLog.length;
+    final first = _roundOfLogStart == null;
+    _roundOfLogStart = round;
+    if (ended == null || first) return;
+    final verdict = verdictOf(_analyzeRound(roundLog, plannedAt));
+    if (verdict == null) return; // not measurable: no verdict, no step
+    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    final bpm = ref.read(metronomeNotifierProvider).bpm;
+    _rounds.add(LadderRound(bpm: bpm, verdict: verdict));
+    final nailedNow = !_nailed && sitsAt(_rounds, rudiment.targetBpm);
+    if (nailedNow) _nailed = true;
+    final next = nextLadderBpm(bpm, verdict, minBpm: rudiment.minBpm);
+    if (next != bpm) {
+      _metronomeNotifier.setBpm(next);
+      // The engine restarts the loop on its next "1" at the new tempo; the
+      // round begun meanwhile is cut short and does not count.
+      _roundTracker.reset();
+    }
+    _showRoundChip(nailedNow ? 'Nailed it' : roundChipText(verdict, bpm, next));
+  }
+
+  void _showRoundChip(String text) {
+    _roundChipTimer?.cancel();
+    setState(() => _roundChip = text);
+    _roundChipTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _roundChip = null);
     });
+  }
+
+  /// One round's analysis: the strokes inside its window, against the beat
+  /// log entries of that round. Null = nothing measurable.
+  SessionAnalysis? _analyzeRound(List<BeatRecord> log, DateTime endAt) {
+    final src = _source;
+    if (src == null || !_measuring || log.isEmpty) return null;
+    if (_sourceLost || src.status == StrokeSourceStatus.notMeasurable) {
+      return null;
+    }
+    // Window: half a note before the round's first note up to half a note
+    // before the next round's "1", shifted by the latency the strokes
+    // carry (the analysis subtracts it again).
+    final firstMs = log.first.timestamp.microsecondsSinceEpoch / 1000.0;
+    final lastMs = log.last.timestamp.microsecondsSinceEpoch / 1000.0;
+    final gap =
+        log.length >= 2 ? (lastMs - firstMs) / (log.length - 1) : 200.0;
+    final latency = _latencyOffsetMs(src);
+    final lo = firstMs - gap / 2 + latency;
+    final hi = endAt.microsecondsSinceEpoch / 1000.0 - gap / 2 + latency;
+    final events = [
+      for (final e in src.events)
+        if (e.timeMs >= lo && e.timeMs < hi) e,
+    ];
+    try {
+      return _analyze(src, events, log);
+    } catch (e) {
+      debugPrint('round analysis failed: $e');
+      return null;
+    }
+  }
+
+  double _latencyOffsetMs(StrokeSource src) =>
+      src.kind == StrokeSourceKind.midi
+          ? (SettingsService.midiLatencyOffsetMsFor(_midiDeviceName ?? '') ??
+              0)
+          : (SettingsService.latencyOffsetMs ?? 0);
+
+  /// [analyzeStrokes] with this session's source settings.
+  SessionAnalysis _analyze(
+      StrokeSource src, List<StrokeEvent> events, List<BeatRecord> log) {
+    final isMidi = src.kind == StrokeSourceKind.midi;
+    final midiOffset = isMidi
+        ? SettingsService.midiLatencyOffsetMsFor(_midiDeviceName ?? '')
+        : null;
+    final analysis = analyzeStrokes(
+      events: events,
+      beatLog: log,
+      sticking: _unit.sticking,
+      source: src.kind,
+      expectedInstrument:
+          isMidi ? SettingsService.padRoleInstrument : KitInstrument.pad,
+      latencyOffsetMs: _latencyOffsetMs(src),
+      analysisMode: _analysisMode,
+      recordingSetup: src.describeSetup(),
+    );
+    // Brief A.4: warn, do not withhold — numbers stay.
+    return isMidi && midiOffset == null
+        ? analysis.withLatencyUncalibrated()
+        : analysis;
   }
 
   Future<void> _startMeasuring() async {
@@ -836,27 +946,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
             ],
           );
         } else {
-          final isMidi = src.kind == StrokeSourceKind.midi;
-          final midiOffset = isMidi
-              ? SettingsService.midiLatencyOffsetMsFor(_midiDeviceName ?? '')
-              : null;
-          analysis = analyzeStrokes(
-            events: src.events,
-            beatLog: _beatLog,
-            sticking: _unit.sticking,
-            source: src.kind,
-            expectedInstrument:
-                isMidi ? SettingsService.padRoleInstrument : KitInstrument.pad,
-            latencyOffsetMs: isMidi
-                ? (midiOffset ?? 0)
-                : (SettingsService.latencyOffsetMs ?? 0),
-            analysisMode: _analysisMode,
-            recordingSetup: src.describeSetup(),
-          );
-          // Brief A.4: warn, do not withhold — numbers stay.
-          if (isMidi && midiOffset == null) {
-            analysis = analysis.withLatencyUncalibrated();
-          }
+          analysis = _analyze(src, src.events, _beatLog);
         }
       } catch (e) {
         // A broken analysis must not block saving the session.
@@ -864,6 +954,11 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       }
     }
     _pendingAnalysis = analysis;
+    if (widget.room) {
+      _roundChipTimer?.cancel();
+      setState(() => _roundChip = null);
+      if (_rounds.isNotEmpty) _roomResult.value = _roomSummary(_rounds);
+    }
     final announcement = analysis == null
         ? null
         : analysisAnnouncement(analysis, analysisMode: _analysisMode);
@@ -894,7 +989,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               analysisMode: _analysisMode,
               analysis: analysis,
               announcement: announcement,
-              ladderResult: _ladderResult,
+              ladderResult: _roomResult,
               sessionLog: _sessionLogN,
               coachFeedback: _coachFeedback,
               coachLoading: _coachLoading,
@@ -939,14 +1034,37 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     // Flag "loading" before the first await so the card never shows an
     // error for a request that has not been sent yet.
     if (apiKey.isNotEmpty) _coachLoading.value = true;
+    // Room: the measured rounds decide; without any, the rating is one
+    // round at the tempo played.
+    final rounds = !widget.room
+        ? null
+        : _rounds.isNotEmpty
+            ? List<LadderRound>.of(_rounds)
+            : [
+                LadderRound(
+                    bpm: metState.bpm, verdict: verdictOfRating(rating)),
+              ];
     try {
-      await ref.read(practiceNotifierProvider.notifier).saveSession(
-            rudimentId: widget.rudimentId,
-            durationSeconds: _elapsedSeconds,
-            achievedBpm: metState.bpm,
-            rating: rating,
-            targetBpm: rudiment.targetBpm,
-          );
+      final practice = ref.read(practiceNotifierProvider.notifier);
+      if (rounds != null) {
+        await practice.saveRoomSession(
+          rudimentId: widget.rudimentId,
+          durationSeconds: _elapsedSeconds,
+          achievedBpm: metState.bpm,
+          rating: rating,
+          rounds: rounds,
+          targetBpm: rudiment.targetBpm,
+          minBpm: rudiment.minBpm,
+        );
+      } else {
+        await practice.saveSession(
+          rudimentId: widget.rudimentId,
+          durationSeconds: _elapsedSeconds,
+          achievedBpm: metState.bpm,
+          rating: rating,
+          targetBpm: rudiment.targetBpm,
+        );
+      }
     } catch (e) {
       _sessionFinished = false;
       if (mounted) _coachLoading.value = false;
@@ -955,10 +1073,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     await SettingsService.clearPracticeSnapshot();
     if (!mounted) return;
 
-    if (_ladderActive) {
-      final line = await _askCleanPass();
-      if (!mounted) return;
-      _ladderResult.value = line;
+    if (rounds != null && _rounds.isEmpty) {
+      _roomResult.value = _roomSummary(rounds);
     }
     unawaited(_afterSave(
       rating: rating,
@@ -1029,46 +1145,44 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _coachLoading.value = false;
   }
 
-  /// §6 gate, asked right after a ladder session: a clean pass lifts the
-  /// stored clean tempo to gate + 4 and may unlock the next stage. Returns
-  /// the result line for the feedback sheet (null when dismissed).
-  Future<String?> _askCleanPass() async {
-    final gate = _gateBpm!;
-    final ok = await showDialog<bool>(
+  /// The room's line on the result sheet.
+  String _roomSummary(List<LadderRound> rounds) {
+    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    if (sitsInSession(rounds, rudiment.targetBpm)) {
+      return 'Nailed it · two clean rounds at ${rudiment.targetBpm} BPM';
+    }
+    final last = rounds.last;
+    final next =
+        nextLadderBpm(last.bpm, last.verdict, minBpm: rudiment.minBpm);
+    final n = rounds.length;
+    return '$n ${n == 1 ? 'round' : 'rounds'} · next time from $next BPM';
+  }
+
+  /// "How to play": the lesson text and, if recorded, its voice — only
+  /// ever on this button, never by itself.
+  Future<void> _showHowTo() async {
+    final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
+    final voice = _lessonVoice;
+    final clipId = lessonClipId(rudiment.id);
+    final hasClip = voice.has(clipId);
+    await showModalBottomSheet<void>(
       context: context,
-      // Shown over the light result sheet with the light app theme (the
-      // dialog uses the screen's context, above the dark practice theme).
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Text('Clean & relaxed?'),
-        content: Text(
-          'Did the tempo ladder run evenly and relaxed all the way to '
-          '${gate + 4} BPM? Yes makes ${gate + 4} BPM your new clean tempo.',
-          style: const TextStyle(color: AppColors.textSecondary),
+      isScrollControlled: true,
+      backgroundColor: PracticeColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+      ),
+      builder: (sheetContext) => Theme(
+        data: drumCoachPracticeTheme,
+        child: _HowToSheet(
+          rudiment: rudiment,
+          hasClip: hasClip,
+          onPlay: () => voice.play(clipId),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('No'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Yes'),
-          ),
-        ],
       ),
     );
-    if (ok == null) return null;
-    if (!ok) return 'Clean tempo stays at $gate BPM — try again tomorrow.';
-    await ref
-        .read(cleanTempoNotifierProvider.notifier)
-        .recordCleanPass(widget.rudimentId, gate);
-    final advanced = await ref
-        .read(programControllerProvider.notifier)
-        .advanceStageIfReady();
-    return advanced
-        ? 'Clean tempo now ${gate + 4} BPM · Level up: new stage!'
-        : 'Clean tempo now ${gate + 4} BPM.';
+    unawaited(voice.stop());
   }
 
   @override
@@ -1104,6 +1218,12 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       // nothing — neither the beat log nor (via _unitChangedAt) the cursor.
       final stale = newTick &&
           _consumeStaleTick(next.currentBeatIndex, next.lastBeatPlannedAt);
+      // Room rounds: the boundary beat closes the round before it joins
+      // the log of the next one.
+      if (widget.room && newTick && !stale) {
+        _onRoomBeat(
+            next.currentBeatIndex, next.lastBeatPlannedAt ?? DateTime.now());
+      }
       // Record beat timestamps for mic correlation — only main-note onsets
       // (silent grid ticks and flam/drag grace ticks are not expected
       // strokes), logged as note index so the sticking maps hits to hands.
@@ -1121,6 +1241,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
 
       // Start/stop ticker and mic with metronome
       if (next.isPlaying && !(prev?.isPlaying ?? false)) {
+        // A (re)start plays the loop from its "1": rounds count afresh.
+        _freshRounds();
         _startTicker();
         _startMeasuring();
         _sessionTimerNotifier.resume();
@@ -1171,7 +1293,6 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
         : 0.0;
 
     final paused = !isPlaying && _elapsedSeconds > 0;
-    final showLadder = _ladderActive && _ladderPlan != null;
 
     final scaffold = Scaffold(
       backgroundColor: PracticeColors.base,
@@ -1320,13 +1441,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
                   child: Column(
                     children: [
-                      if (showLadder) ...[
-                        _LadderStepRow(
-                          bpms: _ladderPlan!.bpms,
-                          currentStep:
-                              _ladderPlan!.stepIndexAt(_elapsedSeconds),
-                        ),
-                        const SizedBox(height: 14),
+                      if (widget.room) ...[
+                        _RoomBar(chip: _roundChip, onHowTo: _showHowTo),
+                        const SizedBox(height: 10),
                       ],
                       TempoRow(bpm: bpm, onChanged: _onUserBpmChanged),
                       const SizedBox(height: 14),
@@ -1458,38 +1575,125 @@ class _LineBar extends StatelessWidget {
   }
 }
 
-// ── Ladder step row ────────────────────────────────────────────────────────────
+// ── Room bar ────────────────────────────────────────────────────────────────────
 
-/// Read-only view of the tempo-ladder steps with the active one highlighted.
-class _LadderStepRow extends StatelessWidget {
-  final List<int> bpms;
-  final int currentStep;
+/// The hint after a room round: what the verdict did to the tempo.
+String roundChipText(RoundVerdict verdict, int bpm, int nextBpm) {
+  if (nextBpm > bpm) return 'Clean · +${nextBpm - bpm}';
+  if (nextBpm < bpm) return 'Slower · −${bpm - nextBpm}';
+  return verdict == RoundVerdict.clean ? 'Clean' : 'Hold';
+}
 
-  const _LadderStepRow({required this.bpms, required this.currentStep});
+/// Room mode, above the tempo row: "How to play" and the round hint.
+class _RoomBar extends StatelessWidget {
+  final String? chip;
+  final VoidCallback onHowTo;
+
+  const _RoomBar({required this.chip, required this.onHowTo});
 
   @override
   Widget build(BuildContext context) {
-    // Wrap, not Row — on narrow phones the label plus four chips can exceed
-    // the line and must break instead of overflowing.
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 6,
-      runSpacing: 6,
-      children: [
-        const Text('LADDER',
-            style: TextStyle(
-                color: PracticeColors.textMuted,
-                fontSize: 11,
-                letterSpacing: 0.9,
-                fontWeight: FontWeight.w600)),
-        for (var i = 0; i < bpms.length; i++)
-          AppSelectableChip(
-            label: '${bpms[i]}',
-            selected: i == currentStep,
-            onTap: () {},
+    final text = chip;
+    return SizedBox(
+      height: 36,
+      child: Row(
+        children: [
+          TextButton.icon(
+            key: const Key('room-how-to'),
+            onPressed: onHowTo,
+            style: TextButton.styleFrom(
+                foregroundColor: PracticeColors.textSecondary),
+            icon: const Icon(Icons.menu_book_outlined, size: 18),
+            label: const Text('How to play'),
           ),
-      ],
+          const Spacer(),
+          if (text != null)
+            Container(
+              key: const Key('room-round-chip'),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: text == 'Nailed it'
+                    ? PracticeColors.solidStreak
+                    : PracticeColors.raised,
+                borderRadius: BorderRadius.circular(AppRadius.chip),
+              ),
+              child: Text(text,
+                  style: PracticeTypography.label.copyWith(
+                      color: PracticeColors.textPrimary,
+                      fontWeight: FontWeight.w600)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "How to play": the exercise's lesson sections, and a play button when
+/// a spoken version exists.
+class _HowToSheet extends StatelessWidget {
+  final Rudiment rudiment;
+  final Future<bool> hasClip;
+  final VoidCallback onPlay;
+
+  const _HowToSheet({
+    required this.rudiment,
+    required this.hasClip,
+    required this.onPlay,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = rudiment.technique;
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text('How to play',
+                        style: PracticeTypography.title
+                            .copyWith(color: PracticeColors.textPrimary)),
+                  ),
+                  FutureBuilder<bool>(
+                    future: hasClip,
+                    builder: (_, snap) => snap.data == true
+                        ? IconButton(
+                            key: const Key('room-how-to-play'),
+                            tooltip: 'Listen',
+                            color: PracticeColors.accent,
+                            icon: const Icon(Icons.volume_up_rounded),
+                            onPressed: onPlay,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (sections.isEmpty)
+                Text(rudiment.description,
+                    style: PracticeTypography.body
+                        .copyWith(color: PracticeColors.textSecondary)),
+              for (final s in sections) ...[
+                Text(s.title,
+                    style: PracticeTypography.subtitle
+                        .copyWith(color: PracticeColors.textPrimary)),
+                const SizedBox(height: 6),
+                Text(s.body,
+                    style: PracticeTypography.body
+                        .copyWith(color: PracticeColors.textSecondary)),
+                const SizedBox(height: 16),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

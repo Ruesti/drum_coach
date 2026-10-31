@@ -169,7 +169,7 @@ final router = GoRouter(
         isFromRoutine: false,
         targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
         targetMinutes: int.tryParse(state.uri.queryParameters['min'] ?? ''),
-        isLadder: state.uri.queryParameters['ladder'] == '1',
+        room: state.uri.queryParameters['room'] == '1',
         contextLine: state.uri.queryParameters['ctx'],
         phase: int.tryParse(state.uri.queryParameters['phase'] ?? ''),
         lines: state.uri.queryParameters['lines'],

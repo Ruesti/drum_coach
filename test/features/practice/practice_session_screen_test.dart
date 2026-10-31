@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:drum_coach/app/platform_support.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
+import 'package:drum_coach/features/coaching/midi/kit_instrument.dart';
 import 'package:drum_coach/features/coaching/services/stroke_source.dart';
 import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/lessons/lessons_provider.dart';
@@ -18,6 +19,9 @@ import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:drum_coach/features/practice/widgets/pulse_bar.dart';
 import 'package:drum_coach/features/practice/widgets/line_view.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
+import 'package:drum_coach/features/room/lesson_voice.dart';
+import 'package:drum_coach/features/room/round_verdict.dart';
+import 'package:drum_coach/features/room/tempo_ladder.dart';
 import 'package:drum_coach/shared/widgets/app_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -106,8 +110,23 @@ class _TickingMetronomeNotifier extends MetronomeNotifier {
 /// the notifier instance is thrown away right after the screen's call and a
 /// later `container.read` would hand back a fresh, empty one.
 class _FakePracticeNotifier extends PracticeNotifier {
-  _FakePracticeNotifier(this.saves);
+  _FakePracticeNotifier(this.saves, [this.roomSaves]);
   final List<int> saves;
+  final List<List<LadderRound>>? roomSaves;
+  @override
+  Future<void> saveRoomSession({
+    required String rudimentId,
+    required int durationSeconds,
+    required int achievedBpm,
+    required int rating,
+    required List<LadderRound> rounds,
+    required int targetBpm,
+    required int minBpm,
+  }) async {
+    saves.add(rating);
+    roomSaves?.add(rounds);
+  }
+
   @override
   Future<void> saveSession({
     required String rudimentId,
@@ -120,18 +139,66 @@ class _FakePracticeNotifier extends PracticeNotifier {
   }
 }
 
+/// A stroke source the test fills by hand (Trainingsraum rounds).
+class _FakeStrokeSource implements StrokeSource {
+  _FakeStrokeSource(this.kind);
+  @override
+  final StrokeSourceKind kind;
+  @override
+  final List<StrokeEvent> events = [];
+  @override
+  bool get velocityExact => kind == StrokeSourceKind.midi;
+  @override
+  StrokeSourceStatus get status => StrokeSourceStatus.ready;
+  @override
+  Stream<StrokeSourceStatus> get statusChanges => const Stream.empty();
+  @override
+  String? get deviceName => null;
+  @override
+  Future<void> start() async {}
+  @override
+  Future<void> stop() async {}
+  @override
+  Map<String, Object>? describeSetup() => null;
+  @override
+  void dispose() {}
+}
+
+/// Idle until Start; the test then moves it tick by tick with planned
+/// instants (the beat log takes those as the expected times).
+class _RoomMetronomeNotifier extends MetronomeNotifier {
+  @override
+  MetronomeState build() => const MetronomeState();
+  void tickTo(int tick, DateTime at) =>
+      state = state.copyWith(currentBeatIndex: tick, lastBeatPlannedAt: at);
+}
+
+/// Records what "How to play" asks of the voice.
+class _FakeLessonVoice implements LessonVoice {
+  _FakeLessonVoice({this.clips = const {}});
+  final Set<String> clips;
+  final played = <String>[];
+  @override
+  Future<bool> has(String clipId) async => clips.contains(clipId);
+  @override
+  Future<void> play(String clipId) async => played.add(clipId);
+  @override
+  Future<void> stop() async {}
+}
+
 Future<ProviderContainer> _pumpScreen(
   WidgetTester tester, {
   required PracticeSessionScreen screen,
   MetronomeNotifier Function()? metronome,
   List<int>? saves,
+  List<List<LadderRound>>? roomSaves,
   List<Override> extraOverrides = const [],
 }) async {
   final container = ProviderContainer(overrides: [
     metronomeNotifierProvider
         .overrideWith(metronome ?? () => _IdleMetronomeNotifier()),
-    practiceNotifierProvider
-        .overrideWith(() => _FakePracticeNotifier(saves ?? <int>[])),
+    practiceNotifierProvider.overrideWith(
+        () => _FakePracticeNotifier(saves ?? <int>[], roomSaves)),
     ...extraOverrides,
   ]);
   addTearDown(container.dispose);
@@ -149,22 +216,26 @@ PracticeSessionScreen _screen({
   String? id,
   int? targetBpm,
   int? targetMinutes,
-  bool isLadder = false,
+  bool room = false,
   String? contextLine,
   int? phase,
   int? line,
   String? lines,
+  StrokeSource Function()? strokeSource,
+  LessonVoice? lessonVoice,
 }) =>
     PracticeSessionScreen(
       rudimentId: id ?? rudimentsSeedData.first.id,
       isFromRoutine: false,
       targetBpm: targetBpm,
       targetMinutes: targetMinutes,
-      isLadder: isLadder,
+      room: room,
       contextLine: contextLine,
       phase: phase,
       line: line,
       lines: lines,
+      strokeSource: strokeSource,
+      lessonVoice: lessonVoice,
     );
 
 String _backdropOf(WidgetTester tester) => (tester
@@ -616,34 +687,6 @@ void main() {
     expect(find.text('Finish'), findsNothing);
   });
 
-  testWidgets('ladder mode shows the steps and starts on the lowest',
-      (tester) async {
-    await _pumpScreen(tester,
-        screen: _screen(targetBpm: 80, targetMinutes: 4, isLadder: true));
-    expect(find.text('LADDER'), findsOneWidget);
-    for (final bpm in ['76', '80', '84']) {
-      expect(find.text(bpm), findsOneWidget);
-    }
-    // Lowest step both in the tempo display and its chip.
-    expect(find.text('72'), findsNWidgets(2));
-  });
-
-  testWidgets('manual +4 rebases the ladder instead of the program tempo',
-      (tester) async {
-    await _pumpScreen(tester,
-        screen: _screen(targetBpm: 60, targetMinutes: 4, isLadder: true));
-    // Gate 60 → steps 52/56/60/64, metronome on the lowest (52).
-    expect(find.text('52'), findsNWidgets(2));
-    expect(find.text('64'), findsOneWidget);
-
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-    // Current step becomes 56, the ladder follows (56/60/64/68).
-    expect(find.text('56'), findsNWidgets(2));
-    expect(find.text('68'), findsOneWidget);
-    expect(find.text('52'), findsNothing);
-  });
-
   testWidgets('mode chip only with mic analysis, tap toggles it',
       (tester) async {
     final withoutMic = await _pumpScreen(tester, screen: _screen());
@@ -678,7 +721,7 @@ void main() {
   testWidgets('no overflow in ready, running and paused state',
       (tester) async {
     final container = await _pumpScreen(tester,
-        screen: _screen(targetBpm: 60, targetMinutes: 8, isLadder: true));
+        screen: _screen(targetBpm: 60, targetMinutes: 8, room: true));
     expect(tester.takeException(), isNull);
     await tester.tap(find.text('Start'));
     await tester.pump();
@@ -1334,6 +1377,264 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Click only'), findsOneWidget);
       expect(SettingsService.backingEnabled, isFalse);
+    });
+  });
+
+  group('Trainingsraum mode (?room=1)', () {
+    final rudiment = rudimentsSeedData.first;
+    // The room plays the selected lines once per round.
+    final playback = PatternPlayback.forRudiment(rudiment.withSticking(
+        SheetPlan.sequence(rudiment, const [0], repeats: 1, start: 0).beats));
+    final base = DateTime(2026, 10, 31, 12);
+
+    DateTime at(int globalTick, int bpm) => base.add(Duration(
+        microseconds:
+            (globalTick * 60000000 / bpm / playback.ticksPerQuarter).round()));
+
+    /// Plays round [round] note by note; [hit] puts a stroke on every note.
+    Future<void> playRound(
+      WidgetTester tester,
+      _RoomMetronomeNotifier met,
+      _FakeStrokeSource? src,
+      int round, {
+      bool hit = true,
+      bool everyOther = false,
+      double velocity = 1.0,
+      int? fromNote,
+      int? toNote,
+    }) async {
+      final bpm = met.state.bpm;
+      final onsets = playback.onsetTicks;
+      for (var i = fromNote ?? 0; i < (toNote ?? onsets.length); i++) {
+        final g = round * playback.totalTicks + onsets[i];
+        final t = at(g, bpm);
+        if (hit && src != null && (!everyOther || i.isEven)) {
+          src.events.add(StrokeEvent(
+            timeMs: t.microsecondsSinceEpoch / 1000.0,
+            instrument: src.kind == StrokeSourceKind.midi
+                ? SettingsService.padRoleInstrument
+                : KitInstrument.pad,
+            velocity: velocity,
+            rawNote: src.kind == StrokeSourceKind.midi ? 38 : null,
+            source: src.kind,
+          ));
+        }
+        met.tickTo(g, t);
+      }
+      await tester.pump();
+    }
+
+    /// The first beat of the next round closes round [round].
+    Future<void> closeRound(
+        WidgetTester tester, _RoomMetronomeNotifier met, int round) async {
+      final g = (round + 1) * playback.totalTicks;
+      met.tickTo(g, at(g, met.state.bpm));
+      await tester.pump();
+    }
+
+    Future<({_RoomMetronomeNotifier met, ProviderContainer c})> start(
+      WidgetTester tester, {
+      required bool room,
+      _FakeStrokeSource? src,
+      List<int>? saves,
+      List<List<LadderRound>>? roomSaves,
+      LessonVoice? voice,
+      int bpm = 80,
+    }) async {
+      _mockHeadphones(tester, 'none');
+      final met = _RoomMetronomeNotifier();
+      final c = await _pumpScreen(tester,
+          screen: _screen(
+              targetBpm: bpm,
+              room: room,
+              strokeSource: src == null ? null : () => src,
+              lessonVoice: voice ?? _FakeLessonVoice()),
+          metronome: () => met,
+          saves: saves,
+          roomSaves: roomSaves);
+      await tester.pump();
+      await tester.tap(find.text('Start'));
+      await tester.pump();
+      await tester.pump();
+      return (met: met, c: c);
+    }
+
+    Future<void> tearDownScreen(WidgetTester tester) async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+    }
+
+    String chipText(WidgetTester tester) => tester
+        .widget<Text>(find.descendant(
+            of: find.byKey(const Key('room-round-chip')),
+            matching: find.byType(Text)))
+        .data!;
+
+    testWidgets('room mode raises tempo by 4 after a clean measured round',
+        (tester) async {
+      final src = _FakeStrokeSource(StrokeSourceKind.midi);
+      final s = await start(tester, room: true, src: src);
+      await playRound(tester, s.met, src, 0);
+      await closeRound(tester, s.met, 0);
+      expect(s.c.read(metronomeNotifierProvider).bpm, 84);
+      expect(chipText(tester), 'Clean · +4');
+      await tearDownScreen(tester);
+    });
+
+    testWidgets('room mode keeps tempo when signal too weak', (tester) async {
+      final src = _FakeStrokeSource(StrokeSourceKind.mic);
+      final s = await start(tester, room: true, src: src);
+      await playRound(tester, s.met, src, 0, velocity: 0.001);
+      await closeRound(tester, s.met, 0);
+      expect(s.c.read(metronomeNotifierProvider).bpm, 80);
+      expect(chipText(tester), 'Hold');
+      await tearDownScreen(tester);
+    });
+
+    testWidgets('a missed round steps down by 4', (tester) async {
+      final src = _FakeStrokeSource(StrokeSourceKind.midi);
+      final s = await start(tester, room: true, src: src);
+      // Every other note missed: hit rate far below 80 %.
+      await playRound(tester, s.met, src, 0, everyOther: true);
+      await closeRound(tester, s.met, 0);
+      expect(s.c.read(metronomeNotifierProvider).bpm, 76);
+      expect(chipText(tester), 'Slower · −4');
+      await tearDownScreen(tester);
+    });
+
+    testWidgets(
+        'room mode without measurement asks rating at the end and stores '
+        'one round', (tester) async {
+      final saves = <int>[];
+      final roomSaves = <List<LadderRound>>[];
+      final s = await start(tester,
+          room: true, saves: saves, roomSaves: roomSaves);
+      await playRound(tester, s.met, null, 0);
+      await closeRound(tester, s.met, 0);
+      await playRound(tester, s.met, null, 1);
+      await closeRound(tester, s.met, 1);
+      // No measurement: no verdict per round, the tempo stays.
+      expect(find.byKey(const Key('room-round-chip')), findsNothing);
+      expect(s.c.read(metronomeNotifierProvider).bpm, 80);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.tap(find.text('Stop'));
+      await tester.pump();
+      await tester.tap(find.text('Finish'));
+      await tester.pumpAndSettle();
+      expect(find.text('HOW DID IT FEEL?'), findsOneWidget);
+      await tester.tap(find.text('Solid'));
+      await tester.pumpAndSettle();
+      expect(saves, [3]);
+      expect(roomSaves.single.length, 1);
+      expect(roomSaves.single.single.bpm, 80);
+      expect(roomSaves.single.single.verdict, RoundVerdict.clean);
+      await tearDownScreen(tester);
+    });
+
+    testWidgets('measured rounds are stored, not the rating', (tester) async {
+      final roomSaves = <List<LadderRound>>[];
+      final src = _FakeStrokeSource(StrokeSourceKind.midi);
+      final s =
+          await start(tester, room: true, src: src, roomSaves: roomSaves);
+      await playRound(tester, s.met, src, 0);
+      await closeRound(tester, s.met, 0);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.tap(find.text('Stop'));
+      await tester.pump();
+      await tester.tap(find.text('Finish'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Struggled'));
+      await tester.pumpAndSettle();
+      expect(roomSaves.single.single.bpm, 80);
+      expect(roomSaves.single.single.verdict, RoundVerdict.clean);
+      await tearDownScreen(tester);
+    });
+
+    testWidgets('manual tempo change mid-round does not count the round',
+        (tester) async {
+      final src = _FakeStrokeSource(StrokeSourceKind.midi);
+      final s = await start(tester, room: true, src: src);
+      final half = playback.onsetTicks.length ~/ 2;
+      await playRound(tester, s.met, src, 0, toNote: half);
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pump();
+      final manual = s.c.read(metronomeNotifierProvider).bpm;
+      expect(manual, greaterThan(80));
+      await playRound(tester, s.met, src, 0, fromNote: half);
+      await closeRound(tester, s.met, 0);
+      expect(find.byKey(const Key('room-round-chip')), findsNothing);
+      expect(s.c.read(metronomeNotifierProvider).bpm, manual);
+      // The next full round counts again.
+      await playRound(tester, s.met, src, 1);
+      await closeRound(tester, s.met, 1);
+      expect(chipText(tester), 'Clean · +4');
+      expect(s.c.read(metronomeNotifierProvider).bpm, manual + 4);
+      await tearDownScreen(tester);
+    });
+
+    testWidgets('two clean rounds at the target: Nailed it', (tester) async {
+      final src = _FakeStrokeSource(StrokeSourceKind.midi);
+      final s = await start(tester,
+          room: true, src: src, bpm: rudiment.targetBpm);
+      await playRound(tester, s.met, src, 0);
+      await closeRound(tester, s.met, 0);
+      expect(chipText(tester), 'Clean · +4');
+      // The engine restarts the loop at the new tempo on the next "1": the
+      // round begun meanwhile (1) is cut short and does not count.
+      await playRound(tester, s.met, src, 2);
+      await closeRound(tester, s.met, 2);
+      expect(chipText(tester), 'Nailed it');
+      await tester.pump(const Duration(seconds: 2));
+      await tester.tap(find.text('Stop'));
+      await tester.pump();
+      await tester.tap(find.text('Finish'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Nailed it'), findsOneWidget);
+      await tearDownScreen(tester);
+    });
+
+    testWidgets('how to play never opens by itself', (tester) async {
+      final voice = _FakeLessonVoice(clips: {lessonClipId(rudiment.id)});
+      final src = _FakeStrokeSource(StrokeSourceKind.midi);
+      final s = await start(tester, room: true, src: src, voice: voice);
+      final title = rudiment.technique.first.title;
+      await playRound(tester, s.met, src, 0);
+      await closeRound(tester, s.met, 0);
+      await tester.pump(const Duration(seconds: 5));
+      expect(find.text(title), findsNothing);
+      expect(voice.played, isEmpty);
+
+      await tester.tap(find.byKey(const Key('room-how-to')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text(title), findsOneWidget);
+      expect(voice.played, isEmpty, reason: 'the voice waits for its button');
+      await tester.tap(find.byKey(const Key('room-how-to-play')));
+      await tester.pump();
+      expect(voice.played, [lessonClipId(rudiment.id)]);
+      await tearDownScreen(tester);
+    });
+
+    testWidgets('how to play without a clip shows only the text',
+        (tester) async {
+      await start(tester, room: true);
+      await tester.tap(find.byKey(const Key('room-how-to')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text(rudiment.technique.first.title), findsOneWidget);
+      expect(find.byKey(const Key('room-how-to-play')), findsNothing);
+      await tearDownScreen(tester);
+    });
+
+    testWidgets('normal mode has no round chip', (tester) async {
+      final src = _FakeStrokeSource(StrokeSourceKind.midi);
+      final s = await start(tester, room: false, src: src);
+      await playRound(tester, s.met, src, 0);
+      await closeRound(tester, s.met, 0);
+      expect(find.byKey(const Key('room-round-chip')), findsNothing);
+      expect(find.byKey(const Key('room-how-to')), findsNothing);
+      expect(s.c.read(metronomeNotifierProvider).bpm, 80);
+      await tearDownScreen(tester);
     });
   });
 }
