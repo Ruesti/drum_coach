@@ -62,13 +62,12 @@ String _formatDuration(int seconds) {
 
 class PracticeSessionScreen extends ConsumerStatefulWidget {
   final String rudimentId;
-  final bool isFromRoutine;
 
   /// Optional tempo to preset the metronome to. Null presets the exercise's
   /// own suggested tempo instead.
   final int? targetBpm;
 
-  /// Suggested session length (e.g. a program block's duration). Presets the
+  /// Suggested session length (`?min=`). Presets the
   /// countdown; the user can still pick another length before starting.
   final int? targetMinutes;
 
@@ -78,14 +77,9 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   /// the end decides one round. "How to play" explains on request only.
   final bool room;
 
-  /// Second header line under the exercise name, e.g. the path position
-  /// "Day 9 · Step 2 of 3 · 84 BPM". Null shows the exercise's difficulty.
+  /// Second header line under the exercise name (`?ctx=`). Null shows the
+  /// exercise's difficulty.
   final String? contextLine;
-
-  /// Program phase 1–4 handed over by Today. Since 28.09. the backdrop photo
-  /// is random (`backdrop.dart`), so this only travels with the route.
-  /// Null (free practice) picks it by the exercise's difficulty.
-  final int? phase;
 
   /// Lines to play, raw from `?lines=` (`all` or 1-based `1,3,5`; see
   /// [initialLineSelection]) and the single-line alias `?line=` (1-based).
@@ -105,12 +99,10 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   const PracticeSessionScreen({
     super.key,
     required this.rudimentId,
-    required this.isFromRoutine,
     this.targetBpm,
     this.targetMinutes,
     this.room = false,
     this.contextLine,
-    this.phase,
     this.lines,
     this.line,
     this.ports,
@@ -1328,9 +1320,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     final scaffold = Scaffold(
       backgroundColor: PracticeColors.base,
       // A dimmed photo behind the whole screen, like a stage (decided
-      // 27.09.): Today's phase picture continues here; free practice
-      // picks one by difficulty. The gradient keeps sheet, tempo and
-      // buttons readable from the pad.
+      // 27.09.; random from the pool since 28.09.). The gradient keeps
+      // sheet, tempo and buttons readable from the pad.
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -1546,8 +1537,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   }
 
   /// Backdrop: a random photo from the pool each time the screen opens
-  /// (28.09., Uli), never the one shown last on any screen. The program
-  /// phase from Today no longer picks it.
+  /// (28.09., Uli), never the one shown last on any screen.
   late final String _backdrop = nextBackdrop();
 }
 

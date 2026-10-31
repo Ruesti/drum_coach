@@ -223,7 +223,6 @@ PracticeSessionScreen _screen({
   int? targetMinutes,
   bool room = false,
   String? contextLine,
-  int? phase,
   int? line,
   String? lines,
   StrokeSource Function()? strokeSource,
@@ -231,12 +230,10 @@ PracticeSessionScreen _screen({
 }) =>
     PracticeSessionScreen(
       rudimentId: id ?? rudimentsSeedData.first.id,
-      isFromRoutine: false,
       targetBpm: targetBpm,
       targetMinutes: targetMinutes,
       room: room,
       contextLine: contextLine,
-      phase: phase,
       line: line,
       lines: lines,
       strokeSource: strokeSource,
@@ -429,7 +426,6 @@ void main() {
       final b = await _pumpScreen(tester,
           screen: const PracticeSessionScreen(
               rudimentId: sheetId,
-              isFromRoutine: false,
               lines: null,
               line: null));
       expect(find.text('Line 5 of 8'), findsOneWidget);
@@ -577,7 +573,7 @@ void main() {
       (tester) async {
     // Decided 27.09.: a dimmed photo behind the whole screen, like a stage.
     // 28.09. (Uli): random from a big pool instead of the program phase.
-    final fromToday = await _pumpScreen(tester, screen: _screen(phase: 3));
+    final fromToday = await _pumpScreen(tester, screen: _screen());
     expect(practiceBackdrops, contains(_backdropOf(tester)));
     final rect = tester.getRect(find.byType(Image).first);
     expect(rect.width, 360);
@@ -622,7 +618,7 @@ void main() {
     await _pumpScreen(
         tester,
         screen: const PracticeSessionScreen(
-            rudimentId: 'six_stroke_roll', isFromRoutine: false));
+            rudimentId: 'six_stroke_roll'));
     // The one-line view's paper card is what the eye sees.
     final sheet = tester.getRect(find.byType(LineView));
     final header = tester.getRect(find.text('Six Stroke Roll'));
@@ -941,7 +937,7 @@ void main() {
         .firstWhere((r) => r.gridUnit == NoteGrid.sixteenth);
     final container = await _pumpScreen(tester,
         screen: PracticeSessionScreen(
-            rudimentId: sixteenths.id, isFromRoutine: false, targetBpm: 100));
+            rudimentId: sixteenths.id, targetBpm: 100));
     await tester.pump();
     expect(container.read(metronomeNotifierProvider).backingStyleId, 'rock16');
     container.read(metronomeNotifierProvider.notifier).setBpm(150);
@@ -1147,7 +1143,6 @@ void main() {
     PracticeSessionScreen midiScreen(FakeMidiPorts ports) =>
         PracticeSessionScreen(
           rudimentId: rudimentsSeedData.first.id,
-          isFromRoutine: false,
           ports: ports,
         );
 
@@ -1317,7 +1312,7 @@ void main() {
         final rec = _BackingFlagsMetronomeNotifier();
         await _pumpScreen(tester,
             screen: PracticeSessionScreen(
-                rudimentId: id, isFromRoutine: false, ports: FakeMidiPorts()),
+                rudimentId: id, ports: FakeMidiPorts()),
             metronome: () => rec,
             extraOverrides: kitCatalog());
         await tester.pump();
@@ -1351,7 +1346,7 @@ void main() {
       final ports = FakeMidiPorts(port: port);
       await _pumpScreen(tester,
           screen: PracticeSessionScreen(
-              rudimentId: 'kit_showcase', isFromRoutine: false, ports: ports),
+              rudimentId: 'kit_showcase', ports: ports),
           extraOverrides: kitCatalog());
       await tester.pump();
       expect(ports.opened, 0);

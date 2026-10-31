@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../data/local/settings_service.dart';
 import 'design_tokens.dart';
-import '../features/learning/daily_routine_screen.dart';
 import '../features/lessons/collection_screen.dart';
 import '../features/lessons/lesson_detail_screen.dart';
 import '../features/lessons/lessons_screen.dart';
@@ -14,8 +13,7 @@ import '../features/metronome/metronome_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/practice/practice_session_screen.dart';
 import '../features/practice/session_timer_provider.dart';
-import '../features/program/program_screen.dart';
-import '../features/program/program_setup_screen.dart';
+import '../features/room/room_screen.dart';
 import '../features/coaching/exercise_generator_screen.dart';
 import '../features/guided/debug_guided_screen.dart';
 import '../features/settings/credits_screen.dart';
@@ -28,7 +26,7 @@ import '../features/settings/settings_screen.dart';
 import '../features/stats/stats_screen.dart';
 import '../features/today/today_screen.dart';
 
-// /program, /metronome, /settings, /coaching/exercise-generator etc. are
+// /room, /metronome, /settings, /coaching/exercise-generator etc. are
 // top-level GoRoutes declared as siblings of the StatefulShellRoute, meant
 // to push on top of the whole shell (covering the bottom nav bar). Without
 // an explicit navigatorKey on GoRouter + a matching parentNavigatorKey on
@@ -87,26 +85,6 @@ final router = GoRouter(
         ]),
       ],
     ),
-    // The daily routine lost its tab (K2: the path step on Today covers it)
-    // but stays reachable as a full-screen route, deep links included.
-    GoRoute(
-      path: '/routine',
-      parentNavigatorKey: _rootNavigatorKey,
-      builder: (_, __) => const DailyRoutineScreen(),
-      routes: [
-        GoRoute(
-          path: ':rudimentId',
-          parentNavigatorKey: _rootNavigatorKey,
-          builder: (_, state) => PracticeSessionScreen(
-            rudimentId: state.pathParameters['rudimentId']!,
-            isFromRoutine: true,
-            targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
-            lines: state.uri.queryParameters['lines'],
-            line: int.tryParse(state.uri.queryParameters['line'] ?? ''),
-          ),
-        ),
-      ],
-    ),
     // Old tab paths keep working (bookmarks, notifications, habit).
     GoRoute(path: '/lessons', redirect: (_, __) => '/library'),
     GoRoute(
@@ -114,15 +92,12 @@ final router = GoRouter(
       redirect: (_, state) => '/library/${state.pathParameters['id']}',
     ),
     GoRoute(path: '/stats', redirect: (_, __) => '/progress'),
+    // Today's session (Trainingsraum): replaces the training program and
+    // the daily routine; Today's "Continue" opens it.
     GoRoute(
-      path: '/program',
+      path: '/room',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (_, __) => const ProgramScreen(),
-    ),
-    GoRoute(
-      path: '/program/setup',
-      parentNavigatorKey: _rootNavigatorKey,
-      builder: (_, __) => const ProgramSetupScreen(),
+      builder: (_, __) => const RoomScreen(),
     ),
     GoRoute(
       path: '/collection/:name',
@@ -158,7 +133,7 @@ final router = GoRouter(
           state.pathParameters['id']!, state.uri.queryParameters),
     ),
     // Top-level (outside the bottom-nav shell) so it can be pushed from any
-    // route — collection, program, lessons — without go_router raising a
+    // route — collection, room, lessons — without go_router raising a
     // duplicate page-key assertion for a shell-branch route pushed from the
     // root navigator. Runs as a focused full-screen session.
     GoRoute(
@@ -166,12 +141,10 @@ final router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (_, state) => PracticeSessionScreen(
         rudimentId: state.pathParameters['rudimentId']!,
-        isFromRoutine: false,
         targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
         targetMinutes: int.tryParse(state.uri.queryParameters['min'] ?? ''),
         room: state.uri.queryParameters['room'] == '1',
         contextLine: state.uri.queryParameters['ctx'],
-        phase: int.tryParse(state.uri.queryParameters['phase'] ?? ''),
         lines: state.uri.queryParameters['lines'],
         line: int.tryParse(state.uri.queryParameters['line'] ?? ''),
       ),

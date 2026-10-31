@@ -4,21 +4,12 @@ import '../../data/local/isar_service.dart';
 import '../../data/local/models/practice_session.dart';
 import '../../data/local/models/rudiment_progress.dart';
 import '../../data/local/settings_service.dart';
-import '../program/program_provider.dart';
 
 part 'stats_provider.g.dart';
 
-/// Current streak with a one-day grace, made rest-day-aware: a scheduled
-/// training-program rest day (see [isScheduledRestDay]) is *skipped* when
-/// walking backward — it neither counts toward the streak nor breaks it nor
-/// consumes the freeze. A non-rest missed day consumes the single freeze; a
-/// second consecutive non-rest gap ends the streak. Pure for testability.
-int computeCurrentStreak(
-  Set<DateTime> practicedDays,
-  DateTime now, {
-  DateTime? programStart,
-  int totalDays = programTotalDays,
-}) {
+/// Current streak with a one-day grace: a missed day consumes the single
+/// freeze; a second gap ends the streak. Pure for testability.
+int computeCurrentStreak(Set<DateTime> practicedDays, DateTime now) {
   if (practicedDays.isEmpty) return 0;
   final earliest = practicedDays.reduce((a, b) => a.isBefore(b) ? a : b);
 
@@ -29,9 +20,6 @@ int computeCurrentStreak(
     final d = DateTime(day.year, day.month, day.day);
     if (practicedDays.contains(d)) {
       streak++;
-    } else if (programStart != null &&
-        isScheduledRestDay(programStart, d, totalDays)) {
-      // scheduled rest day: skip — does not count, break, or spend the freeze.
     } else if (freezes > 0) {
       freezes--;
     } else {
@@ -42,31 +30,16 @@ int computeCurrentStreak(
   return streak;
 }
 
-/// Longest consecutive-day run (no grace), made rest-day-aware: a gap between
-/// two practiced days that consists *entirely* of scheduled rest days is
-/// bridged (treated as continuous). Pure for testability. Expects [sortedDays]
-/// ascending, date-only, deduplicated.
-int computeLongestStreak(
-  List<DateTime> sortedDays, {
-  DateTime? programStart,
-  int totalDays = programTotalDays,
-}) {
+/// Longest consecutive-day run (no grace). Pure for testability. Expects
+/// [sortedDays] ascending, date-only, deduplicated.
+int computeLongestStreak(List<DateTime> sortedDays) {
   if (sortedDays.isEmpty) return 0;
-  bool onlyRestBetween(DateTime a, DateTime b) {
-    if (programStart == null) return false;
-    for (var d = a.add(const Duration(days: 1));
-        d.isBefore(b);
-        d = d.add(const Duration(days: 1))) {
-      if (!isScheduledRestDay(programStart, d, totalDays)) return false;
-    }
-    return true;
-  }
 
   var best = 1;
   var run = 1;
   for (var i = 1; i < sortedDays.length; i++) {
     final gap = sortedDays[i].difference(sortedDays[i - 1]).inDays;
-    if (gap == 1 || (gap > 1 && onlyRestBetween(sortedDays[i - 1], sortedDays[i]))) {
+    if (gap == 1) {
       run++;
       if (run > best) best = run;
     } else if (gap > 1) {
@@ -124,24 +97,18 @@ Future<List<DailyMinutes>> last14DaysMinutes(Last14DaysMinutesRef ref) async {
   });
 }
 
-/// Current streak with a one-day grace, skipping scheduled program rest days.
-/// See [computeCurrentStreak].
+/// Current streak with a one-day grace. See [computeCurrentStreak].
 @riverpod
 Future<int> streakDays(StreakDaysRef ref) async {
   final sessions = await ref.watch(allSessionsProvider.future);
   final practicedDays = sessions
       .map((s) => DateTime(s.date.year, s.date.month, s.date.day))
       .toSet();
-  return computeCurrentStreak(
-    practicedDays,
-    DateTime.now(),
-    programStart: SettingsService.programStartDate,
-    totalDays: SettingsService.programConfig?.totalDays ?? programTotalDays,
-  );
+  return computeCurrentStreak(practicedDays, DateTime.now());
 }
 
-/// The longest consecutive-day run ever recorded (no grace), bridging
-/// scheduled program rest days. See [computeLongestStreak].
+/// The longest consecutive-day run ever recorded (no grace). See
+/// [computeLongestStreak].
 @riverpod
 Future<int> longestStreak(LongestStreakRef ref) async {
   final sessions = await ref.watch(allSessionsProvider.future);
@@ -150,11 +117,7 @@ Future<int> longestStreak(LongestStreakRef ref) async {
       .toSet()
       .toList()
     ..sort();
-  return computeLongestStreak(
-    days,
-    programStart: SettingsService.programStartDate,
-    totalDays: SettingsService.programConfig?.totalDays ?? programTotalDays,
-  );
+  return computeLongestStreak(days);
 }
 
 /// Today's minutes vs. the user's daily goal.

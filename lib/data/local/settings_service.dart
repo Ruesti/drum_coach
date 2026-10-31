@@ -1,8 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/coaching/midi/kit_instrument.dart';
-import '../../features/lessons/models/rudiment.dart';
-import '../../features/program/models/program_config.dart';
 
 /// Which stroke source may measure (Brief Etappe 2, A.6). `auto` = MIDI when
 /// a device is connected, otherwise the microphone where allowed.
@@ -30,24 +28,29 @@ class SettingsService {
 
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    await clearLegacyProgramKeys();
+  }
+
+  /// Keys the training program left behind (replaced by the Trainingsraum,
+  /// 31.10.). Nothing reads them; removed at every start, which is a no-op
+  /// once they are gone.
+  static const _legacyProgramKeys = [
+    'program_start_date',
+    'program_duration_weeks',
+    'program_start_difficulty',
+    'program_pool',
+    'program_stage_index',
+  ];
+
+  static Future<void> clearLegacyProgramKeys() async {
+    for (final key in _legacyProgramKeys) {
+      if (_prefs.containsKey(key)) await _prefs.remove(key);
+    }
   }
 
   static bool get isOnboardingDone => _prefs.getBool('onboarding_done') ?? false;
   static Future<void> setOnboardingDone() => _prefs.setBool('onboarding_done', true);
   static Future<void> resetOnboarding() => _prefs.setBool('onboarding_done', false);
-
-  /// Day 1 anchor of the training program. `null` = program not started.
-  /// Stored as an ISO-8601 string (matching the string-value style here).
-  static DateTime? get programStartDate {
-    final s = _prefs.getString('program_start_date');
-    return s == null ? null : DateTime.tryParse(s);
-  }
-
-  static Future<void> setProgramStartDate(DateTime d) =>
-      _prefs.setString('program_start_date', d.toIso8601String());
-
-  static Future<void> clearProgramStartDate() =>
-      _prefs.remove('program_start_date');
 
   static int get practiceTargetMinutes => _prefs.getInt('practice_target_min') ?? 20;
   static Future<void> setPracticeTargetMinutes(int v) =>
@@ -152,39 +155,6 @@ class SettingsService {
       _prefs.getBool('analysis_mode_$exerciseId') ?? false;
   static Future<void> setAnalysisModeFor(String exerciseId, bool v) =>
       _prefs.setBool('analysis_mode_$exerciseId', v);
-
-  /// Adaptive training program configuration. `null` = not configured.
-  static ProgramConfig? get programConfig {
-    final weeks = _prefs.getInt('program_duration_weeks');
-    final diff = _prefs.getString('program_start_difficulty');
-    final pool = _prefs.getString('program_pool');
-    if (weeks == null || diff == null || pool == null) return null;
-    return ProgramConfig(
-      durationWeeks: weeks,
-      startDifficulty: Difficulty.values.firstWhere((d) => d.name == diff,
-          orElse: () => Difficulty.beginner),
-      pool: ProgramPool.values.firstWhere((p) => p.name == pool,
-          orElse: () => ProgramPool.mixed),
-    );
-  }
-
-  static Future<void> setProgramConfig(ProgramConfig c) async {
-    await _prefs.setInt('program_duration_weeks', c.durationWeeks);
-    await _prefs.setString('program_start_difficulty', c.startDifficulty.name);
-    await _prefs.setString('program_pool', c.pool.name);
-  }
-
-  static Future<void> clearProgramConfig() async {
-    await _prefs.remove('program_duration_weeks');
-    await _prefs.remove('program_start_difficulty');
-    await _prefs.remove('program_pool');
-    await _prefs.remove('program_stage_index');
-  }
-
-  /// Index into the effective difficulty stages of the current program run.
-  static int get programStageIndex => _prefs.getInt('program_stage_index') ?? 0;
-  static Future<void> setProgramStageIndex(int i) =>
-      _prefs.setInt('program_stage_index', i);
 
   // ── Sheet (Blattform, 30.09.) ────────────────────────────────────────────
   static bool get showSticking => _prefs.getBool('show_sticking') ?? true;

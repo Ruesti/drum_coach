@@ -21,12 +21,8 @@ Widget _app({
         path: '/library',
         builder: (_, __) => const Scaffold(body: Text('LIBRARY STUB'))),
     GoRoute(
-        path: '/practice/:id',
-        builder: (_, s) =>
-            Scaffold(body: Text('PRACTICE ${s.pathParameters['id']}'))),
-    GoRoute(
-        path: '/program/setup',
-        builder: (_, __) => const Scaffold(body: Text('SETUP STUB'))),
+        path: '/room',
+        builder: (_, __) => const Scaffold(body: Text('ROOM STUB'))),
     GoRoute(
         path: '/settings',
         builder: (_, __) => const Scaffold(body: Text('SETTINGS STUB'))),
@@ -43,11 +39,10 @@ Widget _app({
 }
 
 const _exercise = PathStep(
-  kind: PathStepKind.exercise,
-  title: 'Single Paradiddle',
-  detail: 'Day 9 · Step 2 of 3 · 84 BPM',
-  minutes: 8,
-  route: '/practice/single_paradiddle?bpm=84&min=8',
+  title: "Today's session",
+  detail: 'Warm-up + Rudiments',
+  minutes: 30,
+  route: '/room',
 );
 
 void main() {
@@ -68,10 +63,10 @@ void main() {
   testWidgets('shows the two doors and compact stats', (tester) async {
     await tester.pumpWidget(_app(step: _exercise));
     await tester.pumpAndSettle();
-    expect(find.text('CONTINUE THE PATH'), findsOneWidget);
-    expect(find.text('Single Paradiddle'), findsOneWidget);
-    expect(find.text('Day 9 · Step 2 of 3 · 84 BPM'), findsOneWidget);
-    expect(find.text('Start · 8 min'), findsOneWidget);
+    expect(find.text('CONTINUE'), findsOneWidget);
+    expect(find.text("Today's session"), findsOneWidget);
+    expect(find.text('Warm-up + Rudiments'), findsOneWidget);
+    expect(find.text('Start · 30 min'), findsOneWidget);
     expect(find.text('PRACTICE FREELY'), findsOneWidget);
     expect(find.text('Open library'), findsOneWidget);
     expect(find.text('6'), findsOneWidget);
@@ -82,12 +77,12 @@ void main() {
     expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
   });
 
-  testWidgets('Start opens the practice route', (tester) async {
+  testWidgets('today continue opens /room', (tester) async {
     await tester.pumpWidget(_app(step: _exercise));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Start · 8 min'));
+    await tester.tap(find.text('Start · 30 min'));
     await tester.pumpAndSettle();
-    expect(find.text('PRACTICE single_paradiddle'), findsOneWidget);
+    expect(find.text('ROOM STUB'), findsOneWidget);
   });
 
   testWidgets('Open library goes to the library', (tester) async {
@@ -96,36 +91,6 @@ void main() {
     await tester.tap(find.text('Open library'));
     await tester.pumpAndSettle();
     expect(find.text('LIBRARY STUB'), findsOneWidget);
-  });
-
-  testWidgets('setup state offers the program setup', (tester) async {
-    const setup = PathStep(
-      kind: PathStepKind.setup,
-      title: 'Set up your path',
-      detail: 'Pick duration and level — the path does the rest.',
-      route: '/program/setup',
-    );
-    await tester.pumpWidget(_app(
-        step: setup,
-        streak: 0,
-        today: const TodayStatus(minutes: 0, goalMinutes: 20)));
-    await tester.pumpAndSettle();
-    expect(find.text('Set up your path'), findsWidgets);
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Set up your path'));
-    await tester.pumpAndSettle();
-    expect(find.text('SETUP STUB'), findsOneWidget);
-  });
-
-  testWidgets('rest day shows no start button', (tester) async {
-    const rest = PathStep(
-      kind: PathStepKind.restDay,
-      title: 'Rest day',
-      detail: 'Day 7 · nothing to play, the streak keeps.',
-    );
-    await tester.pumpWidget(_app(step: rest));
-    await tester.pumpAndSettle();
-    expect(find.text('Rest day'), findsOneWidget);
-    expect(find.byType(ElevatedButton), findsNothing);
   });
 
   testWidgets('status bar icons are light over the full-screen photo',
@@ -161,7 +126,7 @@ void main() {
     expect(rect.height, 780);
     expect(find.byType(AspectRatio), findsNothing);
     // The doors still sit on paper below the photo.
-    expect(find.text('CONTINUE THE PATH'), findsOneWidget);
+    expect(find.text('CONTINUE'), findsOneWidget);
     expect(find.text('Open library'), findsOneWidget);
   });
 }

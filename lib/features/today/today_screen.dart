@@ -16,8 +16,8 @@ const _photoShadow = [
   Shadow(color: Color(0x99000000), blurRadius: 8, offset: Offset(0, 1)),
 ];
 
-/// Start screen (K2): two doors — continue the path, or practice freely —
-/// then streak and minutes, compact. Replaces the dashboard card stack.
+/// Start screen (K2): two doors — continue (today's room session), or
+/// practice freely — then streak and minutes, compact. Replaces the dashboard card stack.
 /// Since 29.09. (Uli) a random photo fills the whole screen; the greeting
 /// sits on it, the doors on paper below.
 class TodayScreen extends ConsumerStatefulWidget {
@@ -144,26 +144,17 @@ class _Eyebrow extends StatelessWidget {
       );
 }
 
-class _PathDoor extends StatelessWidget {
+/// "Continue": today's room session (warm-up + one area).
+class _PathDoor extends ConsumerWidget {
   const _PathDoor({required this.step});
   final PathStep step;
 
-  String? get _buttonLabel => switch (step.kind) {
-        PathStepKind.exercise =>
-          step.minutes > 0 ? 'Start · ${step.minutes} min' : 'Start',
-        PathStepKind.setup => 'Set up your path',
-        PathStepKind.dayDone || PathStepKind.programComplete => 'Open program',
-        PathStepKind.restDay => null,
-      };
-
   @override
-  Widget build(BuildContext context) {
-    final label = _buttonLabel;
-    final route = step.route;
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _Eyebrow('Continue the path', color: AppColors.paperAccent),
+        const _Eyebrow('Continue', color: AppColors.paperAccent),
         const SizedBox(height: AppSpacing.xs),
         Text(step.title, style: AppTypography.title),
         const SizedBox(height: AppSpacing.xs),
@@ -171,16 +162,18 @@ class _PathDoor extends StatelessWidget {
           step.detail,
           style: AppTypography.body.copyWith(color: AppColors.textSecondary),
         ),
-        if (label != null && route != null) ...[
-          const SizedBox(height: AppSpacing.lg),
-          ElevatedButton(
-            onPressed: () => context.push(route),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 56),
-            ),
-            child: Text(label),
+        const SizedBox(height: AppSpacing.lg),
+        ElevatedButton(
+          onPressed: () async {
+            await context.push(step.route);
+            // The suggested area may have moved after practising.
+            if (context.mounted) ref.invalidate(allProgressProvider);
+          },
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 56),
           ),
-        ],
+          child: Text('Start · ${step.minutes} min'),
+        ),
       ],
     );
   }

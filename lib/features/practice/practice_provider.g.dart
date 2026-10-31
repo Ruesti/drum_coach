@@ -201,7 +201,7 @@ final recentSessionsProvider =
 );
 
 typedef RecentSessionsRef = AutoDisposeFutureProviderRef<List<PracticeSession>>;
-String _$practiceNotifierHash() => r'd137557a4124b3da88cd7a877068a52e9ebaad8b';
+String _$practiceNotifierHash() => r'c66e0425855e394a6380de5e35b85132bda549f2';
 
 /// See also [PracticeNotifier].
 @ProviderFor(PracticeNotifier)

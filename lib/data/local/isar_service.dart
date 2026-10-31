@@ -16,6 +16,8 @@ class IsarService {
       [
         PracticeSessionSchema,
         RudimentProgressSchema,
+        // Unused since the Trainingsraum replaced the training program
+        // (31.10.); stays registered so existing databases open unchanged.
         CleanTempoSchema,
         SessionLogSchema,
       ],

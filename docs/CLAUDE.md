@@ -87,13 +87,11 @@ lib/
 │   │   ├── stats_screen.dart
 │   │   └── stats_provider.dart
 │   ├── learning/
-│   │   ├── daily_routine_screen.dart
-│   │   ├── routine_provider.dart         # generates today's plan
 │   │   ├── spaced_repetition_service.dart
 │   │   └── bpm_progression_service.dart
 │   └── today/                        # start screen (K2): path step + library door
 │       ├── today_screen.dart
-│       ├── next_step.dart            # pure: first open program block / routine item
+│       ├── next_step.dart            # pure: "Continue" = today's room session
 │       └── next_step_provider.dart
 ├── shared/
 │   ├── widgets/             # Reusable UI components
@@ -335,34 +333,20 @@ Rating 3 (Solid)     → repetitions++
 - Update `RudimentProgress.srInterval`, `srRepetitions`, `nextReviewDate` after session
 - A rudiment is **due for review** when `nextReviewDate <= today`
 
-### Daily Routine Generator
-`routine_provider.dart` generates today's plan at app launch:
-
-**Selection algorithm (in priority order):**
-1. All rudiments with `nextReviewDate <= today` (overdue reviews first)
-2. Active rudiments (started but not mastered, not yet due for review)
-3. 1 new rudiment (lowest difficulty not yet started), if total time < target
-
-**Time budgeting:**
-- Default target: 20–30 min (user can set in settings)
-- Each rudiment slot: 5–8 min depending on difficulty
-- Cap at 5 rudiments per day to avoid overwhelm
-
-**Output – `DailyRoutine` model:**
-```dart
-class DailyRoutineItem {
-  final String rudimentId;
-  final RoutineItemType type;   // enum: review, progression, newRudiment
-  final int suggestedBpm;
-  final int suggestedDurationMinutes;
-}
-```
+### Today's session (Trainingsraum, 31.10.)
+The Trainingsraum replaced the training program (`features/program`) and the
+daily routine (`routine_provider`). `features/room/session_planner.dart`
+plans warm-up (one per hand technique / rudiments / feet) + one focus area
+(due reviews first, then the next exercise that doesn't sit yet);
+`room_screen.dart` (`/room`) shows it with an area picker. Old
+`program_*` SharedPreferences keys are deleted at start
+(`SettingsService.clearLegacyProgramKeys`); `CleanTempo` stays registered in
+Isar but is unused.
 
 ### Navigation (K2, 2026-09)
 ```
 Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
-/routine              → DailyRoutineScreen   (top-level, no tab anymore)
-/routine/:rudimentId  → PracticeSessionScreen (from routine context)
+/room                 → RoomScreen           (today's session, top-level)
 /exercise/:rudimentId → LineListScreen       (line list, ?lines= into practice)
 /lessons, /lessons/:id, /stats → redirect to /library, /library/:id, /progress
 ```
@@ -371,8 +355,8 @@ Bottom nav: /  Today  ·  /library  Library  ·  /progress  Progress
 - A random portrait photo (`nextBackdrop()`, the practice pool) filling the
   whole screen; "TODAY" and the greeting in white on it, the doors on paper
   below a fade (29.09.). Status bar icons light.
-- "Continue the path": the next step — first open block of today's program
-  day, or the first routine item without a program — with one Start button
+- "Continue": today's session (warm-up + the suggested area), one Start
+  button into `/room`
 - "Practice freely": one button into the Library
 - Streak and minutes today, compact
 - Library: borderless photo header (a third of the screen, title on it),
