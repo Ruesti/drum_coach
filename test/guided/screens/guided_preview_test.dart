@@ -7,18 +7,14 @@ import 'package:drum_coach/features/guided/data/demo_exercise.dart';
 import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/data/guided_lookup.dart';
 import 'package:drum_coach/features/guided/guided_format.dart';
+import 'package:drum_coach/features/guided/guided_pages.dart';
 import 'package:drum_coach/features/guided/guided_rig_provider.dart';
 import 'package:drum_coach/features/guided/guided_shortcuts.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/screens/guided_play_screen.dart';
 import 'package:drum_coach/features/guided/screens/guided_preview_screen.dart';
-import 'package:drum_coach/features/guided/widgets/guided_backdrop.dart';
-import 'package:drum_coach/features/guided/widgets/guided_layout.dart';
-import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
-import 'package:drum_coach/features/practice/widgets/line_view.dart';
+import 'package:drum_coach/features/guided/widgets/guided_page_view.dart';
 import 'package:drum_coach/features/practice/widgets/tempo_row.dart';
-import 'package:drum_coach/features/guided/widgets/guided_panel.dart';
-import 'package:drum_coach/shared/widgets/kit_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -33,6 +29,9 @@ import '../fake_guided_player.dart';
 const _photo = 'assets/illustrations/practice/p07_rooftop_dusk_s5.jpg';
 
 GuidedExercise get _kit => guidedCatalog.first;
+
+String _variationLabel(int n, GuidedSection s) =>
+    'Variation $n${s.titleEn == null ? '' : ' · ${s.titleEn}'} · ${s.bars} bars';
 
 Future<GoRouter> _pump(WidgetTester t, String id, Size size,
     {bool desktop = false}) async {
@@ -143,26 +142,53 @@ void main() {
     expect(find.text('Ending'), findsNothing);
   });
 
-  testWidgets(
-      'preview shows one staff per section kind (groove + each variation)',
-      (t) async {
-    await _pump(t, _kit.id, const Size(1280, 800), desktop: true);
-    // The cards sit in a Column inside a scroll view, so even off-screen
-    // cards are built (hence skipOffstage: false).
-    expect(find.byType(GuidedLineView, skipOffstage: false),
-        findsNWidgets(1 + _kit.variationCount));
-    expect(
-        find.textContaining('GROOVE · ', skipOffstage: false), findsOneWidget);
-    for (var n = 1; n <= _kit.variationCount; n++) {
-      expect(
-          find.textContaining('V$n · ', skipOffstage: false), findsOneWidget);
+  GuidedExercise exWithVariations(int n) =>
+      guidedCatalog.firstWhere((e) => e.variationCount >= n);
+
+  Finder sheetText(String s) => find.descendant(
+      of: find.byKey(const Key('guided-preview-sheet')),
+      matching: find.textContaining(s, skipOffstage: false));
+
+  testWidgets('preview sheet lists groove and every variation once', (t) async {
+    for (final (size, desktop) in [
+      (const Size(1280, 800), true),
+      (const Size(412, 915), false),
+    ]) {
+      final ex = exWithVariations(3);
+      await _pump(t, ex.id, size, desktop: desktop);
+      expect(t.takeException(), isNull);
+      final pageBars = desktop ? 4 : 2;
+      final pages = guidedPreviewPages(ex, pageBars: pageBars);
+      expect(pages.length, 1 + ex.variationCount);
+      expect(find.byType(GuidedPageView, skipOffstage: false),
+          findsNWidgets(pages.length),
+          reason: '$size');
+      expect(sheetText('Groove · '), findsOneWidget);
+      for (var n = 1; n <= ex.variationCount; n++) {
+        expect(sheetText('Variation $n · '), findsOneWidget, reason: '$size');
+      }
+      for (final v in find
+          .byType(GuidedPageView, skipOffstage: false)
+          .evaluate()
+          .map((e) => e.widget as GuidedPageView)) {
+        expect(v.activeTick, isNull);
+        expect(v.fullPageBars, pageBars);
+      }
     }
-    for (final w in find
-        .byType(GuidedLineView, skipOffstage: false)
-        .evaluate()
-        .map((e) => e.widget as GuidedLineView)) {
-      expect(w.cursorStyle, CursorStyle.none);
+  });
+
+  testWidgets('variation label shows title and bars', (t) async {
+    final ex = exWithVariations(2);
+    await _pump(t, ex.id, const Size(1280, 800), desktop: true);
+    final groove = ex.sections.firstWhere((s) => s.kind == SectionKind.groove);
+    expect(sheetText('Groove · ${groove.bars} bars'), findsOneWidget);
+    var n = 0;
+    for (final s in ex.sections.where((s) => s.kind == SectionKind.variation)) {
+      n++;
+      expect(sheetText(_variationLabel(n, s)), findsOneWidget);
     }
+    // Never the word null for a variation without a title.
+    expect(sheetText('null'), findsNothing);
   });
 
   testWidgets('no explanation text in the preview', (t) async {
@@ -174,95 +200,72 @@ void main() {
     expect(find.text('SEQUENCE'), findsNothing);
   });
 
-  testWidgets('4 variations fit and scroll at 1280x720 desktop', (t) async {
-    final ex = guidedCatalog.firstWhere((e) => e.variationCount >= 4);
-    await _pump(t, ex.id, const Size(1280, 720), desktop: true);
+  testWidgets('sheet scrolls, stage stays', (t) async {
+    final ex = guidedCatalog.firstWhere((e) => e.variationCount >= 5,
+        orElse: () => exWithVariations(4));
+    await _pump(t, ex.id, const Size(1366, 768), desktop: true);
     expect(t.takeException(), isNull);
+    final stage = find.byKey(const Key('guided-stage'));
+    final sheet = find.byKey(const Key('guided-preview-sheet'));
+    final stageBefore = t.getRect(stage);
+    expect(stageBefore.height, greaterThanOrEqualTo(0.45 * 768 - 0.5));
+    expect(t.getRect(sheet).top, closeTo(stageBefore.bottom, 0.5));
+    expect(t.getRect(sheet).bottom, closeTo(768, 0.5));
+    final startBefore = t.getRect(find.byKey(const Key('guided-start')));
+    expect(startBefore.bottom, lessThanOrEqualTo(stageBefore.bottom));
+
+    var n = 0;
+    GuidedSection? lastSection;
+    for (final s in ex.sections.where((s) => s.kind == SectionKind.variation)) {
+      n++;
+      lastSection = s;
+    }
     final last =
-        find.textContaining('V${ex.variationCount} · ', skipOffstage: false);
+        find.text(_variationLabel(n, lastSection!), skipOffstage: false);
     expect(last, findsOneWidget);
-    await t.scrollUntilVisible(last, 200,
-        scrollable: find
-            .ancestor(
-                of: find.byKey(const Key('guided-cards')),
-                matching: find.byType(Scrollable))
-            .first);
+    final scrollable =
+        find.descendant(of: sheet, matching: find.byType(Scrollable)).first;
+    await t.scrollUntilVisible(last, 200, scrollable: scrollable);
+    await t.pumpAndSettle();
     expect(t.takeException(), isNull);
     expect(last.hitTestable(), findsOneWidget);
+    expect(t.getRect(stage), stageBefore);
+    expect(t.getRect(find.byKey(const Key('guided-start'))), startBefore);
   });
 
-  testWidgets('2-bar lines get a fully visible, unclipped card', (t) async {
-    final cases = {
-      'guided_kit_backbeat_walk': 3,
-      'guided_pad_fives_and_sixes': 2,
-    };
-    for (final e in cases.entries) {
-      final ex = guidedExerciseById(e.key)!;
-      var v = 0;
-      final sec = ex.sections
-          .firstWhere((s) => s.kind == SectionKind.variation && ++v == e.value);
-      final lineBars = ticksOf(sec.line.beats, ex.gridUnit) ~/
-          (guidedBeatsPerBar * kitTicksPerQuarter);
-      expect(lineBars, 2, reason: '${e.key} V${e.value} is a 2-bar line');
-      for (final (size, desktop) in [
-        (const Size(1280, 720), true),
-        (const Size(412, 915), false),
-      ]) {
-        await _pump(t, ex.id, size, desktop: desktop);
-        expect(t.takeException(), isNull);
-        final label =
-            find.textContaining('V${e.value} · ', skipOffstage: false);
-        expect(label, findsOneWidget);
-        await t.scrollUntilVisible(label, 200,
-            scrollable: find
-                .ancestor(
-                    of: find.byKey(const Key('guided-cards')),
-                    matching: find.byType(Scrollable))
-                .first);
-        await t.pumpAndSettle();
-        expect(t.takeException(), isNull);
-        final card =
-            find.ancestor(of: label, matching: find.byType(GuidedPanel));
-        final view =
-            find.descendant(of: card, matching: find.byType(GuidedLineView));
-        final staff =
-            find.descendant(of: view, matching: find.byType(LineView));
-        await t.ensureVisible(card.first);
-        await t.pumpAndSettle();
-        final cardRect = t.getRect(card.first);
-        final viewRect = t.getRect(view);
-        final staffRect = t.getRect(staff);
-        // Natural staff height at the card width vs the 220 cap: when it
-        // does not fit, the staff must be scaled down whole, not cut to a
-        // window of rows.
-        final natural = GuidedLineView.naturalHeightAt(
-            rudimentForGuidedLine(ex, sec.line), viewRect.width, true);
-        if (natural > 220) {
-          expect(viewRect.height, lessThanOrEqualTo(220.5));
-          // The drawn staff shows every row: its scaled content is the
-          // complete natural height at the (wider) layout width.
-          final fitted =
-              find.descendant(of: view, matching: find.byType(FittedBox));
-          expect(fitted, findsOneWidget,
-              reason: '${e.key} natural $natural > cap: must scale down');
-          final inner = t.getSize(staff);
-          expect(
-              inner.height,
-              GuidedLineView.naturalHeightAt(
-                  rudimentForGuidedLine(ex, sec.line), inner.width, true));
-        }
-        final screen = Offset.zero & size;
-        expect(
-            screen.contains(cardRect.topLeft) &&
-                cardRect.bottom <= size.height + 0.5,
-            isTrue,
-            reason: '${e.key} card reachable: $cardRect in $size');
-        // The staff is not cut off by the card's cap.
-        expect(staffRect.height, lessThanOrEqualTo(viewRect.height + 0.5),
-            reason: '${e.key} staff $staffRect vs view $viewRect');
-        // The card is the staff plus header and padding, nothing more.
-        expect(cardRect.height, lessThan(viewRect.height + 90));
-      }
+  testWidgets('settings panel fits the low stage at 1280x720', (t) async {
+    await _pump(t, _kit.id, const Size(1280, 720), desktop: true);
+    expect(t.takeException(), isNull);
+    final stage = t.getRect(find.byKey(const Key('guided-stage')));
+    final panel = t.getRect(find
+        .ancestor(
+            of: find.byKey(const Key('guided-start')),
+            matching: find.byType(Container))
+        .first);
+    expect(panel.top, greaterThanOrEqualTo(stage.top));
+    expect(panel.bottom, lessThanOrEqualTo(stage.bottom));
+    // The key hint is inside the panel, under Start.
+    expect(t.getRect(find.byKey(const Key('guided-key-hint'))).bottom,
+        lessThanOrEqualTo(panel.bottom));
+  });
+
+  testWidgets('phone: sheet pages show every variation without clipping',
+      (t) async {
+    for (final id in [
+      'guided_kit_backbeat_walk',
+      'guided_pad_fives_and_sixes'
+    ]) {
+      final ex = guidedExerciseById(id)!;
+      await _pump(t, ex.id, const Size(412, 915));
+      expect(t.takeException(), isNull);
+      final last = find.byType(GuidedPageView, skipOffstage: false).last;
+      await t.ensureVisible(last);
+      await t.pumpAndSettle();
+      expect(t.takeException(), isNull);
+      final r = t.getRect(last);
+      expect(r.left, greaterThanOrEqualTo(0));
+      expect(r.right, lessThanOrEqualTo(412 + 0.5));
+      expect(r.bottom, lessThanOrEqualTo(915 + 0.5));
     }
   });
 
@@ -440,21 +443,23 @@ void main() {
       expect(start.bottom, greaterThan(915 - 80));
       expect(start.width, greaterThan(300));
 
-      // Tablet portrait: two columns.
-      await _pump(t, ex.id, const Size(820, 1180));
-      expect(t.takeException(), isNull);
-      final tl = t.getRect(find.byKey(const Key('guided-cards')));
-      final st = t.getRect(find.byKey(const Key('guided-start')));
-      expect(st.left, greaterThan(tl.right - 1));
-
-      // Desktop: not in the 900 cap any more, two columns.
-      await _pump(t, ex.id, const Size(1280, 800), desktop: true);
-      expect(t.takeException(), isNull);
-      final tl2 = t.getRect(find.byKey(const Key('guided-cards')));
-      final st2 = t.getRect(find.byKey(const Key('guided-start')));
-      expect(st2.left, greaterThan(tl2.right - 1));
-      expect(tl2.left, AppSpacing.xxl);
-      expect(st2.right, 1280 - AppSpacing.xxl);
+      // Tablet portrait and desktop: stage on top with Start at its right,
+      // the sheet below.
+      for (final (size, desktop) in [
+        (const Size(820, 1180), false),
+        (const Size(1280, 800), true),
+      ]) {
+        await _pump(t, ex.id, size, desktop: desktop);
+        expect(t.takeException(), isNull);
+        final stage = t.getRect(find.byKey(const Key('guided-stage')));
+        final sheet = t.getRect(find.byKey(const Key('guided-preview-sheet')));
+        final st = t.getRect(find.byKey(const Key('guided-start')));
+        expect(stage.top, 0);
+        expect(sheet.top, closeTo(stage.bottom, 0.5));
+        expect(st.bottom, lessThanOrEqualTo(stage.bottom));
+        expect(st.right, size.width - AppSpacing.screenPadding - AppSpacing.md);
+        expect(st.left, greaterThan(size.width / 2));
+      }
 
       // Small landscape phone: still no overflow.
       await _pump(t, ex.id, const Size(700, 360));
@@ -462,31 +467,28 @@ void main() {
     }
   });
 
-  testWidgets('photo fills the window, content up to 1440 centred',
-      (t) async {
+  testWidgets('stage and sheet fill the window width', (t) async {
     for (final size in [const Size(2560, 1440), const Size(1920, 1080)]) {
       await _pump(t, _kit.id, size, desktop: true);
       expect(t.takeException(), isNull);
-      final photo = t.getRect(find.byType(GuidedBackdrop));
-      expect(photo.width, size.width, reason: '$size');
-      expect(photo.left, 0, reason: '$size');
-      final cards = t.getRect(find.byKey(const Key('guided-cards')));
-      final start = t.getRect(find.byKey(const Key('guided-start')));
-      final left = (size.width - guidedMaxWidth) / 2 + AppSpacing.xxl;
-      expect(cards.left, closeTo(left, 0.5), reason: '$size');
-      expect(start.right, closeTo(size.width - left, 0.5), reason: '$size');
+      for (final k in ['guided-stage', 'guided-preview-sheet']) {
+        final r = t.getRect(find.byKey(Key(k)));
+        expect(r.left, 0, reason: '$size $k');
+        expect(r.width, size.width, reason: '$size $k');
+      }
     }
   });
 
   testWidgets('home behind the preview keeps the 900 cap', (t) async {
-    final router = await _pump(t, _kit.id, const Size(2560, 1440),
-        desktop: true);
+    final router =
+        await _pump(t, _kit.id, const Size(2560, 1440), desktop: true);
     router.pop();
     await t.pumpAndSettle();
     expect(
         t
             .getSize(find
-                .ancestor(of: find.text('home'), matching: find.byType(Scaffold))
+                .ancestor(
+                    of: find.text('home'), matching: find.byType(Scaffold))
                 .first)
             .width,
         900);
