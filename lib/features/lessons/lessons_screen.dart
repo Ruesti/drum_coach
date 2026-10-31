@@ -73,81 +73,121 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
       value: SystemUiOverlayStyle.light
           .copyWith(statusBarColor: Colors.transparent),
       child: Scaffold(
-        body: Column(
-          children: [
-            _LibraryHero(asset: _hero),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: SegmentedButton<String>(
-                key: const ValueKey('library-mode'),
-                showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(value: 'exercises', label: Text('Exercises')),
-                  ButtonSegment(value: 'guided', label: Text('Guided')),
+        body: _mode == 'guided'
+            ? Column(
+                children: [
+                  _LibraryHero(asset: _hero),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: SegmentedButton<String>(
+                      key: const ValueKey('library-mode'),
+                      showSelectedIcon: false,
+                      segments: const [
+                        ButtonSegment(
+                            value: 'exercises', label: Text('Exercises')),
+                        ButtonSegment(value: 'guided', label: Text('Guided')),
+                      ],
+                      selected: {_mode},
+                      onSelectionChanged: (v) => _setMode(v.first),
+                    ),
+                  ),
+                  const Expanded(child: GuidedList()),
                 ],
-                selected: {_mode},
-                onSelectionChanged: (v) => _setMode(v.first),
-              ),
-            ),
-            if (_mode == 'guided')
-              const Expanded(child: GuidedList())
-            else ...[
-              _FilterAxisRow<Skill>(
-                label: 'Skill',
-                values: Skill.values,
-                selected: _selectedSkills,
-                labelOf: (s) => s.label,
-                onChanged: (v) => setState(() => _selectedSkills = v),
-              ),
-              if (presentGenres.isNotEmpty)
-                _FilterAxisRow<Genre>(
-                  label: 'Genre',
-                  values: Genre.values.where(presentGenres.contains).toList(),
-                  selected: _selectedGenres,
-                  labelOf: (g) => g.label,
-                  onChanged: (v) => setState(() => _selectedGenres = v),
-                ),
-              if (presentAreas.isNotEmpty)
-                _FilterAxisRow<TrainingArea>(
-                  label: 'Area',
-                  values:
-                      TrainingArea.values.where(presentAreas.contains).toList(),
-                  selected: _selectedAreas,
-                  labelOf: (a) => a.label,
-                  onChanged: (v) => setState(() => _selectedAreas = v),
-                ),
-              _FilterAxisRow<Limb>(
-                label: 'Limbs',
-                values: Limb.values,
-                selected: _selectedLimbs,
-                labelOf: (l) => l.label,
-                onChanged: (v) => setState(() => _selectedLimbs = v),
-              ),
-              if (presentSubdivisions.isNotEmpty)
-                _FilterAxisRow<NoteGrid>(
-                  label: 'Subdivision',
-                  values: NoteGrid.values
-                      .where(presentSubdivisions.contains)
-                      .toList(),
-                  selected: _selectedSubdivisions,
-                  labelOf: (g) => g.label,
-                  onChanged: (v) => setState(() => _selectedSubdivisions = v),
-                ),
-              const Divider(height: 1, color: AppColors.textFaint),
-              Expanded(
-                child: filtered.isEmpty
-                    ? const _EmptyFilterState()
-                    : ListView(
-                        padding: const EdgeInsets.only(bottom: 24, top: 8),
-                        children: [
-                          for (final rudiment in filtered)
-                            _RudimentTile(rudiment: rudiment),
-                        ],
+              )
+            // One scroll view: hero, toggle and filter rows scroll away
+            // together with the list, so a short window still reaches it.
+            : CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _LibraryHero(asset: _hero)),
+                  SliverToBoxAdapter(
+                      child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: SegmentedButton<String>(
+                      key: const ValueKey('library-mode'),
+                      showSelectedIcon: false,
+                      segments: const [
+                        ButtonSegment(
+                            value: 'exercises', label: Text('Exercises')),
+                        ButtonSegment(value: 'guided', label: Text('Guided')),
+                      ],
+                      selected: {_mode},
+                      onSelectionChanged: (v) => _setMode(v.first),
+                    ),
+                  )),
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _FilterAxisRow<Skill>(
+                          label: 'Skill',
+                          values: Skill.values,
+                          selected: _selectedSkills,
+                          labelOf: (s) => s.label,
+                          onChanged: (v) => setState(() => _selectedSkills = v),
+                        ),
+                        if (presentGenres.isNotEmpty)
+                          _FilterAxisRow<Genre>(
+                            label: 'Genre',
+                            values: Genre.values
+                                .where(presentGenres.contains)
+                                .toList(),
+                            selected: _selectedGenres,
+                            labelOf: (g) => g.label,
+                            onChanged: (v) =>
+                                setState(() => _selectedGenres = v),
+                          ),
+                        if (presentAreas.isNotEmpty)
+                          _FilterAxisRow<TrainingArea>(
+                            label: 'Area',
+                            values: TrainingArea.values
+                                .where(presentAreas.contains)
+                                .toList(),
+                            selected: _selectedAreas,
+                            labelOf: (a) => a.label,
+                            onChanged: (v) =>
+                                setState(() => _selectedAreas = v),
+                          ),
+                        _FilterAxisRow<Limb>(
+                          label: 'Limbs',
+                          values: Limb.values,
+                          selected: _selectedLimbs,
+                          labelOf: (l) => l.label,
+                          onChanged: (v) => setState(() => _selectedLimbs = v),
+                        ),
+                        if (presentSubdivisions.isNotEmpty)
+                          _FilterAxisRow<NoteGrid>(
+                            label: 'Subdivision',
+                            values: NoteGrid.values
+                                .where(presentSubdivisions.contains)
+                                .toList(),
+                            selected: _selectedSubdivisions,
+                            labelOf: (g) => g.label,
+                            onChanged: (v) =>
+                                setState(() => _selectedSubdivisions = v),
+                          ),
+                        const Divider(height: 1, color: AppColors.textFaint),
+                      ],
+                    ),
+                  ),
+                  if (filtered.isEmpty)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 48),
+                        child: _EmptyFilterState(),
                       ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.only(bottom: 24, top: 8),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) => _RudimentTile(rudiment: filtered[i]),
+                          childCount: filtered.length,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ],
-          ],
-        ),
       ),
     );
   }

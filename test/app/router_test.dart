@@ -55,6 +55,13 @@ void main() {
     // the tab label plus the header title.
     expect(find.byType(AppBar), findsNothing);
     expect(find.text('Library'), findsNWidgets(2));
+    // The header scrolls with the list: scroll down to the first tile.
+    await tester.scrollUntilVisible(find.text('Single Stroke Roll'), 200,
+        scrollable: find
+            .descendant(
+                of: find.byType(CustomScrollView),
+                matching: find.byType(Scrollable))
+            .first);
     expect(find.text('Single Stroke Roll'), findsOneWidget);
   });
 

@@ -74,23 +74,55 @@ void main() {
 
   testWidgets('tapping the info icon opens the explanation on demand',
       (tester) async {
-    // The Area filter row pushes the list down; give the viewport room.
-    tester.view.physicalSize = const Size(800, 1200);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
     final router = buildRouter();
     await tester.pumpWidget(
       ProviderScope(child: MaterialApp.router(routerConfig: router)),
     );
     await tester.pumpAndSettle();
 
+    // The header scrolls with the list; bring the first tile into view.
+    await tester.scrollUntilVisible(find.byIcon(Icons.info_outline).first, 200,
+        scrollable: _list);
+    await tester.ensureVisible(find.byIcon(Icons.info_outline).first);
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.info_outline).first);
     await tester.pumpAndSettle();
 
     expect(_textStartingWith('explanation:'), findsOneWidget);
+  });
+
+  testWidgets(
+      'short window: header scrolls with the list, first tile reachable',
+      (tester) async {
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(child: MaterialApp.router(routerConfig: buildRouter())),
+    );
+    await tester.pumpAndSettle();
+
+    // All filter rows are shown (areas are assigned now).
+    expect(find.text('AREA'), findsOneWidget);
+    expect(find.text('SKILL'), findsOneWidget);
+    expect(find.text('SUBDIVISION'), findsOneWidget);
+
+    final tile = find.text('Single Stroke Roll');
+    await tester.scrollUntilVisible(tile, 200, scrollable: _list);
+    await tester.ensureVisible(tile);
+    await tester.pumpAndSettle();
+    final rect = tester.getRect(tile);
+    expect(rect.height, greaterThan(0));
+    expect(rect.bottom, lessThanOrEqualTo(600));
+    expect(rect.top, greaterThanOrEqualTo(0));
   });
 }
 
 Finder _textStartingWith(String prefix) => find.byWidgetPredicate(
       (w) => w is Text && (w.data?.startsWith(prefix) ?? false),
     );
+
+final _list = find
+    .descendant(
+        of: find.byType(CustomScrollView), matching: find.byType(Scrollable))
+    .first;
