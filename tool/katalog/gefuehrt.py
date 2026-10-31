@@ -101,11 +101,11 @@ FS_SN_2E = '-4 L16> L16g -8 -4 L4>'
 FS_SN_2E_4A = '-4 L16> L16g -8 -4 L16> -8 L16g'
 FS_BD = 'K4 -8 K8 -8 K8 -4'  # 1, „2 +", „3 +"
 FS_BD_3A = 'K4 -8 K8 -8 K16 K16 -4'  # dazu „3 a"
-# Takt 4: Groove + V3 Kick auf „4 +" · V1 Ghost auf „4 e" · V2 Ghost auf „3 e" ·
-# V4 Sechzehntel-Fill R L R L auf der Snare (Zählzeit 4).
+# Takt 4 (die Ansage bleibt für alle vier Takte wahr): Groove + V3 Kick auf „4 +" ·
+# V1 Kick auf „4 a" · V2 Kick auf „1 a" · V4 Sechzehntel-Fill R L R L auf der Snare (Zählzeit 4).
 FS_BD_4AND = 'K4 -8 K8 -8 K8 -8 K8'
-FS_SN_2E_4E = '-4 L16> L16g -8 -4 L16> L16g -8'
-FS_SN_2E_3E_4A = '-4 L16> L16g -8 -16 L16g -8 L16> -8 L16g'
+FS_BD_4A = 'K4 -8 K8 -8 K8 -8. K16'
+FS_BD_1A = 'K8. K16 -8 K8 -8 K8 -4'
 FS_HH_FILL = ' '.join(['R16> R16'] * 6) + ' -4'
 FS_SN_FILL = '-4 L16> L16g -8 -4 R16> L16 R16> L16'
 
@@ -117,9 +117,9 @@ FUNK_SIXTEENTHS = GuidedSheet(
     default_bpm=95, min_bpm=70, max_bpm=120, grid='sixteenth',
     groove=rise(dict(HH=FS_HH, SN=FS_SN, BD=FS_BD), BD=FS_BD_4AND),
     variations=(
-        Variation(rise(dict(HH=FS_HH, SN=FS_SN_2E, BD=FS_BD), SN=FS_SN_2E_4E),
+        Variation(rise(dict(HH=FS_HH, SN=FS_SN_2E, BD=FS_BD), BD=FS_BD_4A),
                   'Next up: a soft ghost note on the snare, on the e of two.', title='Ghost note on two'),
-        Variation(rise(dict(HH=FS_HH, SN=FS_SN_2E_4A, BD=FS_BD), SN=FS_SN_2E_3E_4A),
+        Variation(rise(dict(HH=FS_HH, SN=FS_SN_2E_4A, BD=FS_BD), BD=FS_BD_1A),
                   'Now add a second ghost note, on the a of four.', title='Second ghost on four'),
         Variation(rise(dict(HH=FS_HH_O4, HO=FS_HO, SN=FS_SN_2E_4A, BD=FS_BD), BD=FS_BD_4AND),
                   'Now open the hi-hat on the and of four.', title='Open hat on four'),
@@ -142,14 +142,14 @@ HT_SN_GHOST = '3(-8 L8g -8) 3(-8 L8g -8) 3(L8> -8 -8) 3(-8 L8g -8)'
 HT_BD = 'K4 -4 3(-8 -8 K8) -4'  # 1, „3 let"
 HT_BD_1L = '3(K8 -8 K8) -4 3(-8 -8 K8) -4'  # dazu „1 let"
 HT_BD_4L = '3(K8 -8 K8) -4 3(-8 -8 K8) 3(-8 -8 K8)'  # dazu „4 let"
-# Takt 4: Groove Tom-Triole auf 4 (Hängetom R L, Standtom R) · V1 Ghost-Doppel „4 trip" „4 let" ·
-# V2 Kick auf „2 let" · V3 Hängetom R L, Kick „4 let" · V4 offene Hat auch auf „2 let", mit Kick.
+# Takt 4: Groove Tom-Triole auf 4 (Hängetom R L, Standtom R) · V1 Kick auf „2 let" ·
+# V2 Kick-Triole auf 1 (1, „1 trip", „1 let") · V3 Hängetom R L, Kick „4 let" · V4 offene Hat auch auf „2 let", mit Kick.
 HT_HH_FILL = ' '.join(['3(R8 -8 R8)'] * 3) + ' -4'
 HT_T1_FILL = '-2. 3(R8 L8 -8)'
 HT_F1_FILL = '-2. 3(-8 -8 R8)'
-HT_SN_GHOST_4 = '3(-8 L8g -8) 3(-8 L8g -8) 3(L8> -8 -8) 3(-8 L8g L8g)'
+HT_BD_2L = 'K4 3(-8 -8 K8) 3(-8 -8 K8) -4'
 HT_SN_GHOST_FILL = '3(-8 L8g -8) 3(-8 L8g -8) 3(L8> -8 -8) -4'
-HT_BD_1L_2L = '3(K8 -8 K8) 3(-8 -8 K8) 3(-8 -8 K8) -4'
+HT_BD_1T = '3(K8 K8 K8) -4 3(-8 -8 K8) -4'
 HT_HH_O24 = '3(R8 -8 R8) 3(R8 -8 -8) 3(R8 -8 R8) 3(R8 -8 -8)'
 HT_HO_24 = '-4 3(-8 -8 R8) -4 3(-8 -8 R8)'
 HT_BD_2L_4L = '3(K8 -8 K8) 3(-8 -8 K8) 3(-8 -8 K8) 3(-8 -8 K8)'
@@ -162,9 +162,9 @@ HALFTIME_SHUFFLE = GuidedSheet(
     default_bpm=80, min_bpm=60, max_bpm=100, grid='triplet',
     groove=rise(dict(HH=HT_HH, SN=HT_SN, BD=HT_BD), HH=HT_HH_FILL, T1=HT_T1_FILL, F1=HT_F1_FILL),
     variations=(
-        Variation(rise(dict(HH=HT_HH, SN=HT_SN_GHOST, BD=HT_BD), SN=HT_SN_GHOST_4),
+        Variation(rise(dict(HH=HT_HH, SN=HT_SN_GHOST, BD=HT_BD), BD=HT_BD_2L),
                   'Next up: ghosts on the middle note of every triplet, except beat three.', title='Triplet ghost notes'),
-        Variation(rise(dict(HH=HT_HH, SN=HT_SN_GHOST, BD=HT_BD_1L), BD=HT_BD_1L_2L),
+        Variation(rise(dict(HH=HT_HH, SN=HT_SN_GHOST, BD=HT_BD_1L), BD=HT_BD_1T),
                   'Now add a kick on the let of one.', title='Kick on let of one'),
         Variation(rise(dict(HH=HT_HH, SN=HT_SN_GHOST, BD=HT_BD_4L),
                        HH=HT_HH_FILL, SN=HT_SN_GHOST_FILL, T1=HT_T1_FILL),
@@ -218,7 +218,7 @@ def lin(pattern: str) -> str:
 
 def lin_rise(base: str, beat3: str | None = None, beat4: str | None = None) -> str:
     """Vier lineare Takte: dreimal `base`, in Takt 4 Zählzeit 3 und/oder 4 ersetzt (je 4 Zeichen)."""
-    beats = [b for b in base.split('|')]
+    beats = base.split('|')
     if beat3 is not None:
         beats[2] = beat3
     if beat4 is not None:
@@ -257,8 +257,8 @@ LINEAR_SHIFT = GuidedSheet(
 
 # ══ Pad · beginner: Accent Walk ═══════════════════════════════════════════════
 # Achtel R L; Akzent auf 1 → auf 1 und 3 → auf die „und" → 3-3-2 (1, „2 +", 4).
-# Takt 4: Groove + V2 + V4 Sechzehntel R L R L auf Zählzeit 4 (Mini-Fill in die Eins) ·
-# V1 Auftakt-Akzent auf „4 +" · V3 Akzent auch auf 4.
+# Takt 4 nur in Achteln, die Ansage bleibt wahr: Groove Akzente auf 4 und „4 +" ·
+# V1–V4 dieselben Akzente, alle übrigen Noten als Ghost Notes (größerer Lautstärke-Abstand).
 AW_8 = 'R8 L8 R8 L8 R8 L8 R8 L8'
 ACCENT_WALK = GuidedSheet(
     id='guided_pad_accent_walk',
@@ -266,15 +266,15 @@ ACCENT_WALK = GuidedSheet(
     description='Alternating eighths with an accent that walks from the beat onto the offbeats.',
     package='pad', difficulty='beginner',
     default_bpm=90, min_bpm=60, max_bpm=130, grid='eighth',
-    groove=rise_pad(AW_8, 'R8 L8 R8 L8 R8 L8 R16 L16 R16 L16'),
+    groove=rise_pad(AW_8, 'R8 L8 R8 L8 R8 L8 R8> L8>'),
     variations=(
-        Variation(rise_pad('R8> L8 R8 L8 R8 L8 R8 L8', 'R8> L8 R8 L8 R8 L8 R8 L8>'),
+        Variation(rise_pad('R8> L8 R8 L8 R8 L8 R8 L8', 'R8> L8g R8g L8g R8g L8g R8g L8g'),
                   'Next up: accent beat one, keep the other notes soft.', title='Accent on one'),
-        Variation(rise_pad('R8> L8 R8 L8 R8> L8 R8 L8', 'R8> L8 R8 L8 R8> L8 R16 L16 R16 L16'),
+        Variation(rise_pad('R8> L8 R8 L8 R8> L8 R8 L8', 'R8> L8g R8g L8g R8> L8g R8g L8g'),
                   'Now accent beats one and three.', title='Accents on one and three'),
-        Variation(rise_pad('R8 L8> R8 L8> R8 L8> R8 L8>', 'R8 L8> R8 L8> R8 L8> R8> L8>'),
+        Variation(rise_pad('R8 L8> R8 L8> R8 L8> R8 L8>', 'R8g L8> R8g L8> R8g L8> R8g L8>'),
                   'Now accent every and, with your left hand.', title='Left hand accents the ands'),
-        Variation(rise_pad('R8> L8 R8 L8> R8 L8 R8> L8', 'R8> L8 R8 L8> R8 L8 R16> L16 R16 L16'),
+        Variation(rise_pad('R8> L8 R8 L8> R8 L8 R8> L8', 'R8> L8g R8g L8> R8g L8g R8> L8g'),
                   'Last one: accents on one, the and of two, and four.', title='Mixed accent pattern',
                   after=None),
     ),
@@ -283,9 +283,8 @@ ACCENT_WALK = GuidedSheet(
 
 # ══ Pad · intermediate: Paradiddle Builder ════════════════════════════════════
 # Sechzehntel-Singles → Doubles auf 4 → Paradiddle → Akzent vorn → Akzent hinten.
-# Takt 4: Groove Akzente auf 4 und „4 +" · V1 Doubles schon ab Zählzeit 3 ·
-# V2 Akzent auf 4 · V3 zusätzlich Akzent auf der letzten Note (Brücke zu V4) ·
-# V4 Zählzeit 4 ganz akzentuiert.
+# Takt 4: Groove Akzente auf 4 und „4 +" · V1 Doubles auf 4 akzentuiert (R> R L> L) ·
+# V2 Akzent auf 4 · V3 der Akzent auf 4 als Flam · V4 unbetonte Noten als Ghost Notes.
 PD = 'R16 L16 R16 R16 L16 R16 L16 L16'  # zwei Paradiddles = zwei Zählzeiten
 PARADIDDLE_BUILDER = GuidedSheet(
     id='guided_pad_paradiddle_builder',
@@ -296,15 +295,15 @@ PARADIDDLE_BUILDER = GuidedSheet(
     groove=rise_pad(' '.join(['R16 L16'] * 8), ' '.join(['R16 L16'] * 6) + ' R16> L16 R16> L16'),
     variations=(
         Variation(rise_pad('R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 R16 L16 L16',
-                           'R16 L16 R16 L16 R16 L16 R16 L16 R16 R16 L16 L16 R16 R16 L16 L16'),
+                           'R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16 L16 R16> R16 L16> L16'),
                   'Next up: doubles on beat four. Right right, left left.', title='Doubles on beat four'),
         Variation(rise_pad(f'{PD} {PD}', f'{PD} R16 L16 R16 R16 L16> R16 L16 L16'),
                   'Now paradiddles: right left right right, left right left left.', title='Full paradiddles'),
         Variation(rise_pad(' '.join(['R16> L16 R16 R16 L16> R16 L16 L16'] * 2),
-                           'R16> L16 R16 R16 L16> R16 L16 L16 R16> L16 R16 R16 L16> R16 L16 L16>'),
+                           'R16> L16 R16 R16 L16> R16 L16 L16 R16> L16 R16 R16 L16f> R16 L16 L16'),
                   'Now accent the first note of every paradiddle.', title='Accent the first note'),
         Variation(rise_pad(' '.join(['R16 L16 R16 R16> L16 R16 L16 L16>'] * 2),
-                           'R16 L16 R16 R16> L16 R16 L16 L16> R16 L16 R16 R16> L16> R16> L16> L16>'),
+                           ' '.join(['R16g L16g R16g R16> L16g R16g L16g L16>'] * 2)),
                   'Last one: move the accent to the last note of each paradiddle.', title='Accent the last note',
                   after=None),
     ),
@@ -314,8 +313,8 @@ PARADIDDLE_BUILDER = GuidedSheet(
 # ══ Pad · advanced: Triplet Flams and Drags ═══════════════════════════════════
 # Achteltriolen; Akzent auf der Zählzeit → auf der letzten Triolennote →
 # Flams auf der Zählzeit (Flam Accent) → jeder zweite Flam wird ein Drag.
-# Takt 4: Groove + V2 Akzent auch auf der letzten Triolennote · V1 Akzent auch auf 4 ·
-# V3 Drags auf allen vier Zählzeiten.
+# Takt 4: Groove Akzent auch auf der letzten Triolennote · V1 die Akzente als Flams ·
+# V2 + V3 die unbetonten Triolennoten als Ghost Notes.
 TRIPLET_FLAMS = GuidedSheet(
     id='guided_pad_triplet_flams',
     name='Triplet Flams and Drags',
@@ -326,13 +325,13 @@ TRIPLET_FLAMS = GuidedSheet(
                     '3(R8> L8 R8) 3(L8> R8 L8) 3(R8> L8 R8) 3(L8> R8 L8>)'),
     variations=(
         Variation(rise_pad('3(R8 L8 R8>) 3(L8 R8 L8>) 3(R8 L8 R8>) 3(L8 R8 L8>)',
-                           '3(R8 L8 R8>) 3(L8 R8 L8>) 3(R8 L8 R8>) 3(L8> R8 L8>)'),
+                           '3(R8 L8 R8f>) 3(L8 R8 L8f>) 3(R8 L8 R8f>) 3(L8 R8 L8f>)'),
                   'Next up: move the accent to the last note of every triplet.', title='Accent the last note'),
         Variation(rise_pad('3(R8f> L8 R8) 3(L8f> R8 L8) 3(R8f> L8 R8) 3(L8f> R8 L8)',
-                           '3(R8f> L8 R8) 3(L8f> R8 L8) 3(R8f> L8 R8) 3(L8f> R8 L8>)'),
+                           '3(R8f> L8g R8g) 3(L8f> R8g L8g) 3(R8f> L8g R8g) 3(L8f> R8g L8g)'),
                   'Now back to accents on the beat, and play them as flams.', title='Flam accents'),
         Variation(rise_pad('3(R8f> L8 R8) 3(L8d> R8 L8) 3(R8f> L8 R8) 3(L8d> R8 L8)',
-                           '3(R8d> L8 R8) 3(L8d> R8 L8) 3(R8d> L8 R8) 3(L8d> R8 L8)'),
+                           '3(R8f> L8g R8g) 3(L8d> R8g L8g) 3(R8f> L8g R8g) 3(L8d> R8g L8g)'),
                   'Last one: turn the flams on two and four into drags.', title='Drags on two and four',
                   after=None),
     ),
@@ -342,19 +341,20 @@ TRIPLET_FLAMS = GuidedSheet(
 # ══ Pad · professional: Fives and Sixes ═══════════════════════════════════════
 # Sechzehntel-Singles mit Akzent auf der Zählzeit; Fünfer- und Sechsergruppen über
 # zwei Takte, Flam Taps, zuletzt die Fünfer mit Flams auf den Akzenten.
-# Takt 4: Groove Akzent auch auf „4 +" · V1 + V4 Gruppen gedreht 6-5-5 (Akzentverschiebung) ·
-# V2 die beiden Vierer als Flams · V3 Pataflafla auf Zählzeit 4.
+# Takt 4 (5-5-6 bleibt in jedem Takt): Groove Akzent auch auf „4 +" · V1 der Sechser-Akzent als Flam ·
+# V2 die beiden Vierer als Flams · V3 die Taps als Ghost Notes · V4 dazu ein Flam auf der letzten Note.
 
 
 FIVES = (5, 5, 6)  # je Takt: 16 = 5 + 5 + 6, schließt bei der Wiederholung sauber
-FIVES_LIFT = (6, 5, 5)  # Takt 4: dieselben Gruppen, gedreht
 SIXES = (6, 6, 6, 6, 4, 4)  # zwei Takte: 32 = 4 × 6 + 2 × 4, läuft über den Taktstrich
 
 
-def grouped(groups: tuple[int, ...], *, flam: bool = False, flam_from: int | None = None) -> str:
+def grouped(groups: tuple[int, ...], *, flam: bool = False, flam_from: int | None = None,
+            last_flam: bool = False) -> str:
     """Sechzehntel R L, Akzent auf der ersten Note jeder Gruppe; Summe = ganze Takte.
 
-    Flam auf den Akzenten: alle (`flam`) oder ab Gruppe Nr. `flam_from`.
+    Flam auf den Akzenten: alle (`flam`) oder ab Gruppe Nr. `flam_from`; `last_flam`: die
+    letzte Note der Zeile (unbetont) zusätzlich als Flam.
     """
     n = sum(groups)
     if n % 16:
@@ -366,6 +366,8 @@ def grouped(groups: tuple[int, ...], *, flam: bool = False, flam_from: int | Non
         t = ('R' if i % 2 == 0 else 'L') + '16'
         if i in starts:
             t += 'f>' if starts[i] else '>'
+        elif last_flam and i == n - 1:
+            t += 'f'
         toks.append(t)
         if i % 16 == 15 and i + 1 < n:
             toks.append('|')
@@ -373,7 +375,7 @@ def grouped(groups: tuple[int, ...], *, flam: bool = False, flam_from: int | Non
 
 
 F6_FLAM_TAPS = ' '.join(['R16f> R16 L16f> L16'] * 4)
-F6_PATAFLAFLA = ' '.join(['R16f> R16 L16f> L16'] * 3) + ' R16f> L16 R16 L16f>'
+F6_FLAM_TAPS_GHOST = ' '.join(['R16f> R16g L16f> L16g'] * 4)
 
 FIVES_AND_SIXES = GuidedSheet(
     id='guided_pad_fives_and_sixes',
@@ -383,13 +385,13 @@ FIVES_AND_SIXES = GuidedSheet(
     default_bpm=80, min_bpm=60, max_bpm=110, grid='sixteenth',
     groove=rise_pad(' '.join(['R16> L16 R16 L16'] * 4), ' '.join(['R16> L16 R16 L16'] * 3) + ' R16> L16 R16> L16'),
     variations=(
-        Variation(grouped(FIVES * 3 + FIVES_LIFT), 'Next up: accents in groups of five, five, six, every bar.',
+        Variation(grouped(FIVES * 4, flam_from=len(FIVES) * 4 - 1), 'Next up: accents in groups of five, five, six, every bar.',
                   title='Groups of five and six'),
         Variation(grouped(SIXES * 2, flam_from=2 * len(SIXES) - 2),
                   'Now across two bars: four groups of six, then two of four.', title='Groups across two bars'),
-        Variation(' | '.join([F6_FLAM_TAPS] * 3 + [F6_PATAFLAFLA]),
+        Variation(' | '.join([F6_FLAM_TAPS] * 3 + [F6_FLAM_TAPS_GHOST]),
                   'Now flam taps: a flam, then a tap with the same hand.', title='Flam taps'),
-        Variation(grouped(FIVES * 3 + FIVES_LIFT, flam=True),
+        Variation(grouped(FIVES * 4, flam=True, last_flam=True),
                   'Last one: back to the five five six accents, now as flams.', title='Fives and sixes as flams',
                   after=None),
     ),
