@@ -27,6 +27,27 @@ void main() {
     }
   });
 
+  test('every catalog section is a whole phrase', () {
+    for (final ex in guidedCatalog) {
+      for (final s in ex.sections) {
+        if (s.kind != SectionKind.groove && s.kind != SectionKind.variation) {
+          continue;
+        }
+        expect(s.bars % guidedPhraseBars, 0, reason: '${ex.id}: ${s.kind}');
+      }
+    }
+  });
+
+  test('every variation has a short title of 2-5 words', () {
+    for (final ex in guidedCatalog) {
+      for (final s in ex.sections) {
+        if (s.kind != SectionKind.variation) continue;
+        final words = s.titleEn!.trim().split(RegExp(r'\s+')).length;
+        expect(words, inInclusiveRange(2, 5), reason: '${ex.id}: ${s.titleEn}');
+      }
+    }
+  });
+
   test('ids are unique and not demo ids', () {
     final ids = guidedCatalog.map((e) => e.id).toList();
     expect(ids.toSet().length, ids.length);

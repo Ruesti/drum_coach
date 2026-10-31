@@ -18,7 +18,8 @@ const _variationBars = 24;
 
 List<GuidedSection> _sections({
   required ExerciseLine groove,
-  required List<({ExerciseLine line, String clip, String text})> variations,
+  required List<({ExerciseLine line, String clip, String text, String title})>
+      variations,
 }) {
   final out = <GuidedSection>[
     GuidedSection(
@@ -34,6 +35,7 @@ List<GuidedSection> _sections({
         line: v.line,
         bars: _variationBars,
         textEn: v.text,
+        titleEn: v.title,
         speechClipId: v.clip,
         // "Nice — back to the groove." after every variation but the last.
         afterClipId: i < variations.length - 1 ? 'after_good' : null,
@@ -96,11 +98,13 @@ final demoKitExercise = GuidedExercise(
         line: kitLine([_hihat(), _snare(), _kick(on3and: true)]),
         clip: 'demo_kit_v1',
         text: 'Next up: add the bass drum on the and of three.',
+        title: 'Kick on and of three',
       ),
       (
         line: kitLine([_hihat(), _snare(ghostOn2e: true), _kick(on3and: true)]),
         clip: 'demo_kit_v2',
         text: 'Now add a soft ghost note on the snare, on the e of two.',
+        title: 'Ghost note on two',
       ),
       (
         line: kitLine([
@@ -111,6 +115,7 @@ final demoKitExercise = GuidedExercise(
         ]),
         clip: 'demo_kit_v3',
         text: 'Last one: open the hi-hat on the and of four.',
+        title: 'Open hat on four',
       ),
     ],
   ),
@@ -135,17 +140,20 @@ final demoPadExercise = GuidedExercise(
         line: line(eighths([R, L, R, L, R, L, R, L], accents: {0, 2, 4, 6})),
         clip: 'demo_pad_v1',
         text: 'Next up: accent the first note of every beat.',
+        title: 'Accent on every beat',
       ),
       (
         line: line(eighths([R, R, L, L, R, R, L, L])),
         clip: 'demo_pad_v2',
         text: 'Now switch to doubles: right right, left left.',
+        title: 'Switch to doubles',
       ),
       (
         line: line(eighths([R, L, R, R, L, R, L, L], accents: {0, 4})),
         clip: 'demo_pad_v3',
         text: 'Last one: play paradiddles. '
             'Right left right right, left right left left.',
+        title: 'Paradiddles with accents',
       ),
     ],
   ),

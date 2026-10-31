@@ -22,6 +22,7 @@ GuidedSection _v(int bars, String clip) => GuidedSection(
     line: _varLine(),
     bars: bars,
     textEn: 'Now accent every quarter.',
+    titleEn: 'Accent every quarter',
     speechClipId: clip,
     afterClipId: 'good');
 
@@ -390,7 +391,7 @@ void main() {
       sections: [
         const GuidedSection(
             kind: SectionKind.intro, line: ExerciseLine([]), bars: 0),
-        GuidedSection(kind: SectionKind.groove, line: line, bars: 2),
+        GuidedSection(kind: SectionKind.groove, line: line, bars: 4),
         GuidedSection(kind: SectionKind.outro, line: line, bars: 1),
       ],
     );
@@ -534,7 +535,7 @@ void main() {
         sections: [
           const GuidedSection(
               kind: SectionKind.intro, line: ExerciseLine([]), bars: 0),
-          GuidedSection(kind: SectionKind.groove, line: line, bars: 2),
+          GuidedSection(kind: SectionKind.groove, line: line, bars: 4),
           GuidedSection(kind: SectionKind.outro, line: line, bars: 1),
         ],
       );

@@ -11,12 +11,13 @@ ExerciseLine _line(int n) => ExerciseLine([
     ]);
 
 GuidedSection _s(SectionKind k, int bars,
-        {int cells = 8, String? text, String? clip}) =>
+        {int cells = 8, String? text, String? clip, String? title}) =>
     GuidedSection(
         kind: k,
         line: _line(cells),
         bars: bars,
         textEn: text,
+        titleEn: title,
         speechClipId: clip);
 
 GuidedExercise _ex(List<GuidedSection> sections) => GuidedExercise(
@@ -32,11 +33,11 @@ GuidedExercise _ex(List<GuidedSection> sections) => GuidedExercise(
       sections: sections,
     );
 
-GuidedSection _var() =>
-    _s(SectionKind.variation, 8, text: 'Now the kick moves.', clip: 'v1');
+GuidedSection _var() => _s(SectionKind.variation, 8,
+    text: 'Now the kick moves.', clip: 'v1', title: 'Kick moves');
 
 GuidedSection _var16() =>
-    _s(SectionKind.variation, 16, text: 'Now.', clip: 'v');
+    _s(SectionKind.variation, 16, text: 'Now.', clip: 'v', title: 'Next step');
 
 void main() {
   test('validate accepts groove/variation alternation', () {
@@ -87,8 +88,8 @@ void main() {
 
   test('validate rejects variation without speechClipId or textEn', () {
     for (final v in [
-      _s(SectionKind.variation, 8, text: 'Hi'),
-      _s(SectionKind.variation, 8, clip: 'v1'),
+      _s(SectionKind.variation, 8, text: 'Hi', title: 'Say hi'),
+      _s(SectionKind.variation, 8, clip: 'v1', title: 'Say hi'),
     ]) {
       final e = _ex([
         _s(SectionKind.intro, 0, cells: 0),
@@ -99,6 +100,55 @@ void main() {
       ]);
       expect(e.validate, throwsArgumentError);
     }
+  });
+
+  test('validate rejects groove bars not multiple of 4', () {
+    final e = _ex([
+      _s(SectionKind.intro, 0, cells: 0),
+      _s(SectionKind.groove, 6),
+      _s(SectionKind.outro, 1),
+    ]);
+    expect(e.validate, throwsArgumentError);
+    final v = _ex([
+      _s(SectionKind.intro, 0, cells: 0),
+      _s(SectionKind.groove, 8),
+      _s(SectionKind.variation, 10,
+          text: 'Now.', clip: 'v', title: 'Next step'),
+      _s(SectionKind.groove, 8),
+      _s(SectionKind.outro, 1),
+    ]);
+    expect(v.validate, throwsArgumentError);
+  });
+
+  test('validate rejects variation without titleEn', () {
+    for (final title in [null, '', '  ']) {
+      final e = _ex([
+        _s(SectionKind.intro, 0, cells: 0),
+        _s(SectionKind.groove, 8),
+        _s(SectionKind.variation, 8, text: 'Now.', clip: 'v', title: title),
+        _s(SectionKind.groove, 8),
+        _s(SectionKind.outro, 1),
+      ]);
+      expect(e.validate, throwsArgumentError, reason: '$title');
+    }
+  });
+
+  test('validate rejects a 3-bar line', () {
+    final e = _ex([
+      _s(SectionKind.intro, 0, cells: 0),
+      _s(SectionKind.groove, 12, cells: 24),
+      _s(SectionKind.outro, 1),
+    ]);
+    expect(e.validate, throwsArgumentError);
+  });
+
+  test('validate accepts a 4-bar line', () {
+    final e = _ex([
+      _s(SectionKind.intro, 0, cells: 0),
+      _s(SectionKind.groove, 8, cells: 32),
+      _s(SectionKind.outro, 1, cells: 32),
+    ]);
+    e.validate();
   });
 
   test('validate rejects non-whole-bar lines', () {

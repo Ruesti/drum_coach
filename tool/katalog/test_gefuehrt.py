@@ -10,14 +10,18 @@ PAD_G = 'R8 L8 R8 L8 R8 L8 R8 L8'
 PAD_V = 'R8 L8 L8 R8 R8 L8 L8 R8'
 
 
+def V(line, text, after='after_good', title='Adds a note'):
+    return Variation(line, text, after, title=title)
+
+
 def mk(package='kit', **kw):
     g, v = (KIT_G, KIT_V) if package == 'kit' else (PAD_G, PAD_V)
     base = dict(
         id=f'guided_{package}_x', name='X', description='d', package=package,
         difficulty='beginner', default_bpm=80, min_bpm=60, max_bpm=100, grid='eighth',
         groove=g,
-        variations=(Variation(v, 'Add a kick.'), Variation(v, 'Again.'),
-                    Variation(v, 'Last one.', after=None)))
+        variations=(V(v, 'Add a kick.'), V(v, 'Again.'),
+                    V(v, 'Last one.', after=None)))
     base.update(kw)
     return GuidedSheet(**base)
 
@@ -30,7 +34,7 @@ class Guided(unittest.TestCase):
             self.assertEqual(len(vs), 3)
 
     def test_rejects_two_variations_rule(self):
-        vs = tuple(Variation(KIT_V, 'Ok.', after='after_good') for _ in range(4))
+        vs = tuple(V(KIT_V, 'Ok.', after='after_good') for _ in range(4))
         with self.assertRaisesRegex(ValueError, 'after'):
             mk(variations=vs).parsed()
         with self.assertRaises(ValueError):
@@ -46,14 +50,14 @@ class Guided(unittest.TestCase):
             mk(groove=bad).parsed()
 
     def test_rejects_long_text(self):
-        vs = (Variation(KIT_V, ' '.join(['w'] * 17)), Variation(KIT_V, 'a.'),
-              Variation(KIT_V, 'b.', after=None))
+        vs = (V(KIT_V, ' '.join(['w'] * 17)), V(KIT_V, 'a.'),
+              V(KIT_V, 'b.', after=None))
         with self.assertRaisesRegex(ValueError, 'text'):
             mk(variations=vs).parsed()
 
     def test_rejects_non_ascii_and_empty_text(self):
         for t in ('Nice — go', 'Hi \U0001F600', ' '):
-            vs = (Variation(KIT_V, t), Variation(KIT_V, 'a.'), Variation(KIT_V, 'b.', after=None))
+            vs = (V(KIT_V, t), V(KIT_V, 'a.'), V(KIT_V, 'b.', after=None))
             with self.assertRaises(ValueError):
                 mk(variations=vs).parsed()
 
@@ -69,21 +73,70 @@ class Guided(unittest.TestCase):
         with self.assertRaises(ValueError):
             mk(groove=two).parsed()
         two = PAD_V + ' | ' + PAD_V
-        vs = (Variation(two, 'a.'), Variation(PAD_V, 'b.'), Variation(PAD_V, 'c.', after=None))
+        vs = (V(two, 'a.'), V(PAD_V, 'b.'), V(PAD_V, 'c.', after=None))
         self.assertEqual(mk('pad', variations=vs).parsed()[1][0].bars, 2)
         with self.assertRaises(ValueError):
             mk('pad', groove=' | '.join([PAD_G] * 3)).parsed()
 
-    def test_rejects_two_bar_groove(self):
-        with self.assertRaisesRegex(ValueError, 'groove'):
-            mk('pad', groove=PAD_G + ' | ' + PAD_G).parsed()
+    def test_two_bar_groove_accepted(self):
+        self.assertEqual(mk('pad', groove=PAD_G + ' | ' + PAD_G).parsed()[0].bars, 2)
 
     def test_rejects_two_bar_variation_with_odd_bars(self):
         two = PAD_V + ' | ' + PAD_V
-        vs = (Variation(two, 'a.'), Variation(PAD_V, 'b.'), Variation(PAD_V, 'c.', after=None))
-        mk('pad', variations=vs).parsed()  # even 24 bars: fine
-        with self.assertRaisesRegex(ValueError, 'even'):
-            mk('pad', variations=vs, variation_bars=23).parsed()
+        vs = (V(two, 'a.'), V(PAD_V, 'b.'), V(PAD_V, 'c.', after=None))
+        mk('pad', variations=vs).parsed()  # 24 bars: fine
+        with self.assertRaisesRegex(ValueError, 'multiple of'):
+            mk('pad', variations=vs, variation_bars=22).parsed()
+
+    def test_variation_needs_title(self):
+        for kw in ({}, {'title': ''}, {'title': '  '}):
+            vs = (Variation(KIT_V, 'a.', **kw), V(KIT_V, 'b.'), V(KIT_V, 'c.', after=None))
+            with self.assertRaisesRegex(ValueError, 'title'):
+                mk(variations=vs).parsed()
+
+    def test_title_word_limit(self):
+        for title, ok in (('One', False), ('Two words', True), ('a b c d e', True),
+                          ('a b c d e f', False), ('Caf\u00e9 au lait', False)):
+            vs = (V(KIT_V, 'a.', title=title), V(KIT_V, 'b.'), V(KIT_V, 'c.', after=None))
+            if ok:
+                mk(variations=vs).parsed()
+            else:
+                with self.assertRaisesRegex(ValueError, 'title'):
+                    mk(variations=vs).parsed()
+
+    def test_section_bars_multiple_of_four(self):
+        mk(variation_bars=20, groove_bars=8).parsed()
+        with self.assertRaisesRegex(ValueError, 'multiple of 4'):
+            mk(variation_bars=18).parsed()
+        with self.assertRaisesRegex(ValueError, 'multiple of 4'):
+            mk(groove_bars=10).parsed()
+
+    def test_four_bar_line_accepted(self):
+        four = ' | '.join([PAD_G] * 4)
+        groove, _ = mk('pad', groove=four).parsed()
+        self.assertEqual(groove.bars, 4)
+        vs = (V(' | '.join([PAD_V] * 4), 'a.'), V(PAD_V, 'b.'), V(PAD_V, 'c.', after=None))
+        self.assertEqual(mk('pad', variations=vs).parsed()[1][0].bars, 4)
+
+    def test_three_bar_line_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'bars'):
+            mk('pad', groove=' | '.join([PAD_G] * 3)).parsed()
+
+    # bars(s) * 240 / default_bpm of the 8 exercises BEFORE the 4-bar rounding (seconds)
+    OLD_SECONDS = {
+        'guided_kit_backbeat_walk': 325.3, 'guided_kit_funk_sixteenths': 308.2,
+        'guided_kit_halftime_shuffle': 318.0, 'guided_kit_linear_shift': 304.0,
+        'guided_pad_accent_walk': 304.0, 'guided_pad_paradiddle_builder': 299.3,
+        'guided_pad_triplet_flams': 306.0, 'guided_pad_fives_and_sixes': 318.0,
+    }
+
+    def test_catalog_durations_within_ten_percent(self):
+        from gefuehrt import SHEETS, bars
+        self.assertEqual({s.id for s in SHEETS}, set(self.OLD_SECONDS))
+        for s in SHEETS:
+            secs = bars(s) * 240 / s.default_bpm
+            old = self.OLD_SECONDS[s.id]
+            self.assertLessEqual(abs(secs - old) / old, 0.10, (s.id, secs, old))
 
     def test_check_catalog_rejects_duplicate_ids(self):
         check_catalog([mk('kit'), mk('pad')])
