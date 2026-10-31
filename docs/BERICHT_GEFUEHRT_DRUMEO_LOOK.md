@@ -6,8 +6,8 @@ Branch `spec-trainingsraum` (aufgesetzt auf `spec-gefuehrte-uebungen`), Stand fc
 - **Bühne oben, weißes Notenblatt darunter, Bedienleiste**: Beim Üben steht oben ein Foto (die „Bühne"), darunter ein weißes Blatt mit Seiten zu je vier Takten. Der Abspielzeiger läuft in Blau über die Noten. Unten die Bedienleiste.
 - **Vier-Takt-Seiten**: Das Blatt zeigt eine Zeile = vier Takte. Die Notenlinien sind so groß wie möglich (ca. 57 px Höhe bei 1920 Breite, 39 px bei 1366, 78 px bei 2560); das Blatt nimmt bis zu 50 % der Höhe, das Foto wird entsprechend kleiner.
 - **Vorschau**: Die ganze Übung als Notenblatt, die Einstellungen liegen auf der Bühne. Auf schmalen Fenstern gibt es Zwei-Takt-Seiten.
-- **Zeit und Dauer**: Zeilen können länger als ein Takt sein, der Ablauf (run plan) spielt sie richtig. Dauer der Übungen blieb unverändert.
-- **Inhalte**: Acht Übungen (Backbeat Walk, Funk Sixteenths, Half-Time Shuffle, Linear Shift, Accent Walk, Fives & Sixes, Paradiddle, Triplet Flams u. a.) sind jetzt Vier-Takt-Zeilen: Takt 1–3 wie bisher, Takt 4 eine Steigerung. Gesprochene Ansagen wurden geprüft und passen zu allen vier Takten (kein Neu-Rendern nötig). Variationen haben jetzt einen Titel (zwei bis fünf Wörter, deutsch und englisch).
+- **Zeit und Dauer**: Zeilen können länger als ein Takt sein, der Ablauf (run plan) spielt sie richtig. Die Dauer der Übungen änderte sich leicht: Das Runden auf volle Vier-Takt-Abschnitte machte einige Übungen länger, alle innerhalb von ±10 % (bis etwa +8 %, z. B. Triplet Flams 5:06 → 5:30, Linear Shift und Accent Walk 5:04 → 5:25).
+- **Inhalte**: Acht Übungen (Backbeat Walk, Funk Sixteenths, Half-Time Shuffle, Linear Shift, Accent Walk, Fives & Sixes, Paradiddle, Triplet Flams) sind jetzt Vier-Takt-Zeilen: Takt 1–3 wie bisher, Takt 4 eine Steigerung. Gesprochene Ansagen wurden geprüft und passen zu allen vier Takten (kein Neu-Rendern nötig). Variationen haben jetzt einen Titel (zwei bis fünf Wörter, nur englisch als `titleEn`).
 - Fotos: Kontaktbogen `~/drum-coach-fotos-4zu3.png`. Kurationsseite: https://claude.ai/artifact/KRzCx2Jdmqfh7gjAxUAXG7
 
 ## Wo läuft es
