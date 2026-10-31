@@ -47,9 +47,20 @@ void main() {
       expect(p.mastery, MasteryLevel.beginner);
     });
 
-    test('bestBpm at 100% → mastered', () {
+    test('bestBpm at 100% → proficient, never mastered (only "sits" masters)',
+        () {
       final p = _makeProgress(currentBpm: 120, bestBpm: 120);
       svc.updateProgress(p, 120, 3, 120);
+      expect(p.mastery, MasteryLevel.proficient);
+      final fast = _makeProgress(currentBpm: 150, bestBpm: 150);
+      svc.updateProgress(fast, 160, 3, 120);
+      expect(fast.mastery, MasteryLevel.proficient);
+    });
+
+    test('a mastered row stays mastered', () {
+      final p = _makeProgress(currentBpm: 120, bestBpm: 120)
+        ..mastery = MasteryLevel.mastered;
+      svc.updateProgress(p, 90, 1, 120);
       expect(p.mastery, MasteryLevel.mastered);
     });
 

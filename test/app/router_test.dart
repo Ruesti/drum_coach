@@ -4,6 +4,7 @@ import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/screens/guided_preview_screen.dart';
 import 'package:drum_coach/features/lessons/line_list_screen.dart';
+import 'package:drum_coach/features/practice/practice_session_screen.dart';
 import 'package:drum_coach/features/room/room_provider.dart';
 import 'package:drum_coach/features/room/room_screen.dart';
 import 'package:drum_coach/features/stats/stats_provider.dart';
@@ -114,5 +115,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(GuidedPreviewScreen), findsOneWidget);
     expect(find.text(guidedCatalog.first.name), findsOneWidget);
+  });
+
+  testWidgets('/practice passes room and warm-up flags', (tester) async {
+    await tester.pumpWidget(_app());
+    await tester.pumpAndSettle();
+    router.push('/practice/single_paradiddle?bpm=60&warmup=1');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    var screen = tester
+        .widget<PracticeSessionScreen>(find.byType(PracticeSessionScreen));
+    expect(screen.warmup, isTrue);
+    expect(screen.room, isFalse);
+    router.pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    router.push('/practice/single_paradiddle?bpm=60&room=1');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    screen = tester
+        .widget<PracticeSessionScreen>(find.byType(PracticeSessionScreen));
+    expect(screen.warmup, isFalse);
+    expect(screen.room, isTrue);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 5));
   });
 }

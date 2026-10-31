@@ -77,6 +77,10 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
   /// the end decides one round. "How to play" explains on request only.
   final bool room;
 
+  /// The room's warm-up (`?warmup=1`): the session and its spaced
+  /// repetition are saved, tempo, best tempo and mastery stay untouched.
+  final bool warmup;
+
   /// Second header line under the exercise name (`?ctx=`). Null shows the
   /// exercise's difficulty.
   final String? contextLine;
@@ -102,6 +106,7 @@ class PracticeSessionScreen extends ConsumerStatefulWidget {
     this.targetBpm,
     this.targetMinutes,
     this.room = false,
+    this.warmup = false,
     this.contextLine,
     this.lines,
     this.line,
@@ -1084,6 +1089,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
           achievedBpm: metState.bpm,
           rating: rating,
           targetBpm: rudiment.targetBpm,
+          warmup: widget.warmup,
+          minBpm: rudiment.minBpm,
         );
       }
     } catch (e) {

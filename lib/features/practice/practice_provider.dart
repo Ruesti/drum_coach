@@ -10,6 +10,26 @@ import '../room/tempo_ladder.dart';
 
 part 'practice_provider.g.dart';
 
+/// Progress after an ordinary (non-room) session: spaced repetition from
+/// the rating; the tempo and best tempo move by [BpmProgressionService],
+/// which never masters. [warmup] (the room's warm-up, spec 4.6.3 "one
+/// notion of progress"): only spaced repetition — tempo, best tempo and
+/// mastery stay as they are. Mutates [p] and returns it.
+RudimentProgress applyPracticeSession(
+  RudimentProgress p, {
+  required int achievedBpm,
+  required int rating,
+  required int targetBpm,
+  bool warmup = false,
+}) {
+  const SpacedRepetitionService().updateAfterSession(p, rating);
+  if (!warmup) {
+    const BpmProgressionService()
+        .updateProgress(p, achievedBpm, rating, targetBpm);
+  }
+  return p;
+}
+
 @riverpod
 class PracticeNotifier extends _$PracticeNotifier {
   @override
@@ -21,14 +41,21 @@ class PracticeNotifier extends _$PracticeNotifier {
     required int achievedBpm,
     required int rating,
     required int targetBpm,
+    bool warmup = false,
+    int? minBpm,
   }) async {
     await _putSession(rudimentId, durationSeconds, achievedBpm, rating);
 
-    final progress = await _progressFor(rudimentId, achievedBpm);
-    const srService = SpacedRepetitionService();
-    const bpmService = BpmProgressionService();
-    srService.updateAfterSession(progress, rating);
-    bpmService.updateProgress(progress, achievedBpm, rating, targetBpm);
+    // A warm-up leaves no tempo: a fresh row starts at the minimum, with no
+    // best tempo yet.
+    final progress = warmup
+        ? await _progressFor(rudimentId, minBpm ?? achievedBpm, bestBpm: 0)
+        : await _progressFor(rudimentId, achievedBpm);
+    applyPracticeSession(progress,
+        achievedBpm: achievedBpm,
+        rating: rating,
+        targetBpm: targetBpm,
+        warmup: warmup);
     await _putProgress(progress);
 
     ref.invalidate(recentSessionsProvider);
@@ -111,7 +138,8 @@ class PracticeNotifier extends _$PracticeNotifier {
 /// the store is unavailable. Practice sessions preset the metronome with
 /// this so tempo never leaks over from a previously played exercise.
 @riverpod
-Future<int?> exerciseStartBpm(ExerciseStartBpmRef ref, String rudimentId) async {
+Future<int?> exerciseStartBpm(
+    ExerciseStartBpmRef ref, String rudimentId) async {
   try {
     final all = await IsarService.instance.rudimentProgress
         .buildQuery<RudimentProgress>()

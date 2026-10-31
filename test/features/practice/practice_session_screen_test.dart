@@ -110,8 +110,10 @@ class _TickingMetronomeNotifier extends MetronomeNotifier {
 /// the notifier instance is thrown away right after the screen's call and a
 /// later `container.read` would hand back a fresh, empty one.
 class _FakePracticeNotifier extends PracticeNotifier {
-  _FakePracticeNotifier(this.saves, [this.roomSaves, this.roomFlags]);
+  _FakePracticeNotifier(this.saves,
+      [this.roomSaves, this.roomFlags, this.warmups]);
   final List<int> saves;
+  final List<({bool warmup, int? minBpm})>? warmups;
   final List<List<LadderRound>>? roomSaves;
   final List<({bool? sits, bool fromRating})>? roomFlags;
   @override
@@ -138,8 +140,11 @@ class _FakePracticeNotifier extends PracticeNotifier {
     required int achievedBpm,
     required int rating,
     required int targetBpm,
+    bool warmup = false,
+    int? minBpm,
   }) async {
     saves.add(rating);
+    warmups?.add((warmup: warmup, minBpm: minBpm));
   }
 }
 
@@ -197,13 +202,15 @@ Future<ProviderContainer> _pumpScreen(
   List<int>? saves,
   List<List<LadderRound>>? roomSaves,
   List<({bool? sits, bool fromRating})>? roomFlags,
+  List<({bool warmup, int? minBpm})>? warmups,
   List<Override> extraOverrides = const [],
 }) async {
   final container = ProviderContainer(overrides: [
     metronomeNotifierProvider
         .overrideWith(metronome ?? () => _IdleMetronomeNotifier()),
     practiceNotifierProvider.overrideWith(
-        () => _FakePracticeNotifier(saves ?? <int>[], roomSaves, roomFlags)),
+        () => _FakePracticeNotifier(
+            saves ?? <int>[], roomSaves, roomFlags, warmups)),
     ...extraOverrides,
   ]);
   addTearDown(container.dispose);
@@ -222,6 +229,7 @@ PracticeSessionScreen _screen({
   int? targetBpm,
   int? targetMinutes,
   bool room = false,
+  bool warmup = false,
   String? contextLine,
   int? line,
   String? lines,
@@ -233,6 +241,7 @@ PracticeSessionScreen _screen({
       targetBpm: targetBpm,
       targetMinutes: targetMinutes,
       room: room,
+      warmup: warmup,
       contextLine: contextLine,
       line: line,
       lines: lines,
@@ -839,6 +848,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(saves, [2]);
     container.dispose();
+  });
+
+  testWidgets('a warm-up session saves with the warm-up flag', (tester) async {
+    final warmups = <({bool warmup, int? minBpm})>[];
+    Future<void> rate(bool warmup) async {
+      final container = await _pumpScreen(tester,
+          screen: _screen(targetBpm: 60, warmup: warmup), warmups: warmups);
+      await tester.tap(find.text('Start'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      await tester.tap(find.text('Stop'));
+      await tester.pump();
+      await tester.tap(find.text('Finish'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Struggled'));
+      await tester.pumpAndSettle();
+      container.dispose();
+      await tester.pumpWidget(const SizedBox());
+    }
+
+    await rate(true);
+    await rate(false);
+    expect(warmups.map((w) => w.warmup), [true, false]);
+    expect(warmups.first.minBpm, rudimentsSeedData.first.minBpm);
   });
 
   testWidgets('click track runs by default and is switchable in the options',

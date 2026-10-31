@@ -40,7 +40,8 @@ final router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   redirect: (context, state) {
-    if (!SettingsService.isOnboardingDone && state.matchedLocation != '/onboarding') {
+    if (!SettingsService.isOnboardingDone &&
+        state.matchedLocation != '/onboarding') {
       return '/onboarding';
     }
     return null;
@@ -144,6 +145,7 @@ final router = GoRouter(
         targetBpm: int.tryParse(state.uri.queryParameters['bpm'] ?? ''),
         targetMinutes: int.tryParse(state.uri.queryParameters['min'] ?? ''),
         room: state.uri.queryParameters['room'] == '1',
+        warmup: state.uri.queryParameters['warmup'] == '1',
         contextLine: state.uri.queryParameters['ctx'],
         lines: state.uri.queryParameters['lines'],
         line: int.tryParse(state.uri.queryParameters['line'] ?? ''),

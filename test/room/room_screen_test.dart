@@ -152,8 +152,29 @@ void main() {
     await tester.tap(find.descendant(
         of: find.byKey(const Key('warmup-h1')), matching: find.text('Start')));
     await tester.pumpAndSettle();
-    // Never played: the exercise's entry tempo, no tempo ladder.
-    expect(find.text('practice:/practice/h1?lines=all&bpm=60'), findsOneWidget);
+    // Never played: the exercise's entry tempo, no tempo ladder; the
+    // warm-up flag keeps tempo and mastery as they are.
+    expect(find.text('practice:/practice/h1?lines=all&bpm=60&warmup=1'),
+        findsOneWidget);
+  });
+
+  testWidgets('warm-up plays 8 BPM below the current tempo, not below min',
+      (tester) async {
+    await tester.pumpWidget(_app(progress: {
+      'h1': _prog('h1', bpm: 90),
+      'r1': _prog('r1', bpm: 64),
+    }));
+    await tester.pumpAndSettle();
+    expect(
+        find.descendant(
+            of: find.byKey(const Key('warmup-h1')),
+            matching: find.textContaining('82 BPM')),
+        findsOneWidget);
+    await tester.tap(find.descendant(
+        of: find.byKey(const Key('warmup-r1')), matching: find.text('Start')));
+    await tester.pumpAndSettle();
+    expect(find.text('practice:/practice/r1?lines=all&bpm=60&warmup=1'),
+        findsOneWidget);
   });
 
   testWidgets('a fully mastered level shows a friendly line', (tester) async {

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -60,11 +62,18 @@ class _PlanView extends ConsumerWidget {
     final session = plan.session;
     final now = DateTime.now();
 
-    Future<void> start(Rudiment r, {required bool room}) async {
+    // Deepen: the ladder's tempo. Warm-up: a comfortable 8 BPM below it,
+    // never below the minimum (never played: the minimum).
+    int tempo(Rudiment r, {required bool room}) {
       final current = progress[r.id]?.currentBpm ?? 0;
-      final bpm = current > 0 ? current : r.minBpm;
-      await context
-          .push('/practice/${r.id}?lines=all&bpm=$bpm${room ? '&room=1' : ''}');
+      if (current <= 0) return r.minBpm;
+      return room ? current : math.max(r.minBpm, current - 8);
+    }
+
+    Future<void> start(Rudiment r, {required bool room}) async {
+      final bpm = tempo(r, room: room);
+      await context.push('/practice/${r.id}?lines=all&bpm=$bpm'
+          '${room ? '&room=1' : '&warmup=1'}');
       // Back from practice: re-plan from the fresh progress rows.
       if (context.mounted) ref.invalidate(allProgressProvider);
     }
@@ -74,7 +83,7 @@ class _PlanView extends ConsumerWidget {
       if (r == null) return const SizedBox.shrink();
       final p = progress[id];
       final due = p != null && !p.nextReviewDate.isAfter(now);
-      final bpm = (p?.currentBpm ?? 0) > 0 ? p!.currentBpm : r.minBpm;
+      final bpm = tempo(r, room: room);
       final detail = [
         if (!room && r.area != null) r.area!.label,
         if (room && due) 'Review',
