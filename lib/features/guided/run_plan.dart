@@ -234,7 +234,12 @@ List<RunBar> buildRun(
           barsFor(clips.durationMs(explanationClip) + explanationGapMs);
       final afterBars =
           afterClip == null ? 0 : barsFor(clips.durationMs(afterClip));
-      bars = math.max(bars, lead + afterBars + 1);
+      // Extend in whole phrases only, so pages and bar lines stay aligned.
+      final needed = lead + afterBars + 1;
+      if (needed > bars) {
+        bars = ((needed + guidedPhraseBars - 1) ~/ guidedPhraseBars) *
+            guidedPhraseBars;
+      }
       explanationBar = bars - 1 - lead;
     }
 

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:drum_coach/features/coaching/midi/kit_instrument.dart';
 import 'package:drum_coach/features/guided/data/guided_catalog.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
@@ -259,7 +262,7 @@ void main() {
 
   test('long after-phrase extends the groove without overlap', () {
     // 100 bpm, bar 2400 ms: explanation needs 2 lead bars (fits 4 bars),
-    // the 2600 ms after-phrase needs 2 more → groove 2 grows to 5 bars.
+    // the 2600 ms after-phrase needs 2 more → groove 2 needs 5 bars → rounded up to 8.
     final clips = ClipManifest.fromJson({
       'clips': [
         {'id': 'v1', 'ms': 3200},
@@ -271,7 +274,7 @@ void main() {
     });
     final bars = buildRun(_fixture(), bpm: 100, options: on, clips: clips);
     expect(bars.where((b) => b.sectionIndex == 1).length, 4);
-    expect(bars.where((b) => b.sectionIndex == 3).length, 5);
+    expect(bars.where((b) => b.sectionIndex == 3).length, 8);
     final spans = _clipSpans(bars, clips);
     final good = spans.firstWhere((c) => c.id == 'good');
     final v2 = spans.singleWhere((c) => c.id == 'v2');
@@ -644,5 +647,56 @@ void main() {
     final bars = buildRun(ex, bpm: 100, options: on, clips: _clips());
     final min = bars.fold<double>(0, (t, b) => t + _barMs(b)) / 60000;
     expect(min, inInclusiveRange(4, 6));
+  });
+
+  test('extension rounds up to whole phrases', () {
+    // lead 3 bars (5000 ms + gap at 2400 ms/bar) + after 1 + 1 = 5 -> 8.
+    final clips = ClipManifest.fromJson({
+      'clips': [
+        {'id': 'v1', 'ms': 5000},
+        {'id': 'v2', 'ms': 5000},
+        {'id': 'good', 'ms': 400},
+        for (final id in [...countdownClipIds, ...countInClipIds])
+          {'id': id, 'ms': 400},
+      ]
+    });
+    final bars = buildRun(_fixture(), bpm: 100, options: on, clips: clips);
+    final sec = [
+      for (final b in bars)
+        if (b.sectionIndex == 3) b
+    ];
+    expect(sec.length, 8);
+    final expl = [
+      for (final b in sec)
+        if (b.events.whereType<ClipEvent>().any((e) => e.clipId == 'v2')) b
+    ];
+    expect(expl.single.barInSection, 8 - 1 - 3);
+    expect(sec.last.isCountdown, isTrue);
+    expect(sec.where((b) => b.isCountdown).length, 1);
+  });
+
+  test('catalog runs keep whole phrases', () {
+    final clips = ClipManifest.fromJson(
+        jsonDecode(File('assets/voice/manifest.json').readAsStringSync())
+            as Map<String, dynamic>);
+    expect(guidedCatalog.length, 8);
+    for (final ex in guidedCatalog) {
+      for (final bpm in [ex.minBpm, ex.defaultBpm, ex.maxBpm]) {
+        for (final teacher in [true, false]) {
+          final bars = buildRun(ex,
+              bpm: bpm, options: RunOptions(teacher: teacher), clips: clips);
+          for (var si = 0; si < ex.sections.length; si++) {
+            final n = bars.where((b) => b.sectionIndex == si).length;
+            final k = ex.sections[si].kind;
+            final why = '${ex.id} @$bpm teacher=$teacher section $si';
+            if (k == SectionKind.groove || k == SectionKind.variation) {
+              expect(n % guidedPhraseBars, 0, reason: why);
+            } else if (k == SectionKind.outro) {
+              expect(n, 1, reason: why);
+            }
+          }
+        }
+      }
+    }
   });
 }
