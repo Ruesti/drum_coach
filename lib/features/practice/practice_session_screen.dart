@@ -180,7 +180,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   /// Judged rounds since the last break: "two clean in a row" may not span
   /// an unmeasured round or one dropped by a manual change.
   final List<LadderRound> _streak = [];
-  String? _roundChip;
+  ({String text, bool nailed})? _roundChip;
   Timer? _roundChipTimer;
   LessonVoice? _voice;
   LessonVoice get _lessonVoice =>
@@ -682,13 +682,13 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       // round begun meanwhile is cut short and does not count.
       _roundTracker.reset();
     }
-    _showRoundChip(
-        nailedNow ? 'Nailed it' : roundChipText(verdict, bpm, next));
+    _showRoundChip(nailedNow ? 'Nailed it' : roundChipText(verdict, bpm, next),
+        nailed: nailedNow);
   }
 
-  void _showRoundChip(String text) {
+  void _showRoundChip(String text, {bool nailed = false}) {
     _roundChipTimer?.cancel();
-    setState(() => _roundChip = text);
+    setState(() => _roundChip = (text: text, nailed: nailed));
     _roundChipTimer = Timer(const Duration(seconds: 3), () {
       if (mounted) setState(() => _roundChip = null);
     });
@@ -1010,7 +1010,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               ratingSubs: !widget.room
                   ? null
                   : _rounds.isEmpty
-                      ? const ['−4 BPM', 'same', '+4 BPM']
+                      ? roomRatingSubs(metState.bpm, minBpm: rudiment.minBpm)
                       : const ['', '', ''],
               sessionLog: _sessionLogN,
               coachFeedback: _coachFeedback,
@@ -1616,16 +1616,28 @@ String roundChipText(RoundVerdict verdict, int bpm, int nextBpm) =>
         nextBpm < bpm ? 'Slower · −${bpm - nextBpm}' : 'Slower',
     };
 
+/// The result sheet's rating hints in room mode without a measured round:
+/// the step each rating causes (Struggled / OK / Solid = off / close /
+/// clean), "same" where the minimum or 240 holds it back.
+List<String> roomRatingSubs(int bpm, {required int minBpm}) => [
+      for (final v in [RoundVerdict.off, RoundVerdict.close, RoundVerdict.clean])
+        switch (nextLadderBpm(bpm, v, minBpm: minBpm) - bpm) {
+          0 => 'same',
+          final d when d > 0 => '+$d BPM',
+          final d => '−${-d} BPM',
+        },
+    ];
+
 /// Room mode, above the tempo row: "How to play" and the round hint.
 class _RoomBar extends StatelessWidget {
-  final String? chip;
+  final ({String text, bool nailed})? chip;
   final VoidCallback onHowTo;
 
   const _RoomBar({required this.chip, required this.onHowTo});
 
   @override
   Widget build(BuildContext context) {
-    final text = chip;
+    final text = chip?.text;
     return SizedBox(
       height: 36,
       child: Row(
@@ -1644,7 +1656,7 @@ class _RoomBar extends StatelessWidget {
               key: const Key('room-round-chip'),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: text == 'Nailed it'
+                color: chip!.nailed
                     ? PracticeColors.solidStreak
                     : PracticeColors.raised,
                 borderRadius: BorderRadius.circular(AppRadius.chip),

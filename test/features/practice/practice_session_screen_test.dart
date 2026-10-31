@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drum_coach/app/design_tokens.dart';
 import 'package:drum_coach/app/platform_support.dart';
 import 'package:drum_coach/data/local/settings_service.dart';
 import 'package:drum_coach/features/coaching/midi/kit_instrument.dart';
@@ -1505,6 +1506,11 @@ void main() {
             matching: find.byType(Text)))
         .data!;
 
+    Color? chipColor(WidgetTester tester) => (tester
+            .widget<Container>(find.byKey(const Key('room-round-chip')))
+            .decoration as BoxDecoration)
+        .color;
+
     testWidgets('room mode raises tempo by 4 after a clean measured round',
         (tester) async {
       final src = _FakeStrokeSource(StrokeSourceKind.midi);
@@ -1626,11 +1632,13 @@ void main() {
       await playRound(tester, s.met, src, 0);
       await closeRound(tester, s.met, 0);
       expect(chipText(tester), 'Clean · +4');
+      expect(chipColor(tester), PracticeColors.raised);
       // The engine restarts the loop at the new tempo on the next "1": the
       // round begun meanwhile (1) is cut short and does not count.
       await playRound(tester, s.met, src, 2);
       await closeRound(tester, s.met, 2);
       expect(chipText(tester), 'Nailed it');
+      expect(chipColor(tester), PracticeColors.solidStreak);
       await tester.pump(const Duration(seconds: 2));
       await tester.tap(find.text('Stop'));
       await tester.pump();
@@ -1678,6 +1686,14 @@ void main() {
       // Dialled below the minimum: the floor lifts the tempo, the verdict
       // still says what happened.
       expect(roundChipText(RoundVerdict.off, 52, 60), 'Slower');
+    });
+
+    test('rating labels without measurement are honest at the bounds', () {
+      expect(roomRatingSubs(80, minBpm: 60), ['−4 BPM', 'same', '+4 BPM']);
+      expect(roomRatingSubs(60, minBpm: 60), ['same', 'same', '+4 BPM']);
+      expect(roomRatingSubs(62, minBpm: 60), ['−2 BPM', 'same', '+4 BPM']);
+      expect(roomRatingSubs(240, minBpm: 60), ['−4 BPM', 'same', 'same']);
+      expect(roomRatingSubs(238, minBpm: 60), ['−4 BPM', 'same', '+2 BPM']);
     });
 
     testWidgets('how to play never opens by itself', (tester) async {
