@@ -121,7 +121,10 @@ class SheetGeometry {
 /// gets them (and the matching start room). [fillWidth] spreads every line
 /// over the whole width ([preferredPxPerQuarterFor]).
 SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
-    {required bool showCounts, int clefLine = 0, bool fillWidth = false}) {
+    {required bool showCounts,
+    int clefLine = 0,
+    bool fillWidth = false,
+    int targetBarsPerRow = 2}) {
   final pxq = preferredPxPerQuarterFor(fillWidth: fillWidth);
   final sheet = r.sheet;
   final counts = showCounts && sheet.any((l) => l.counts);
@@ -154,6 +157,7 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
         systemPad: systemPad,
         barGap: sheetBarGap,
         preferredPxPerQuarter: pxq,
+        targetBarsPerRow: targetBarsPerRow,
       );
       layouts.add(kl.hands);
       kitLayouts.add(kl);
@@ -169,13 +173,18 @@ SheetGeometry computeSheetGeometry(Rudiment r, double maxWidth,
         systemPad: systemPad,
         barGap: sheetBarGap,
         preferredPxPerQuarter: pxq,
+        targetBarsPerRow: targetBarsPerRow,
       );
       layouts.add(layout);
       kitLayouts.add(null);
       rows += layout.rowCount;
     }
   }
-  final base = feet ? kitRowPitchWithFeet : kit ? kitRowPitch : sheetRowPitch;
+  final base = feet
+      ? kitRowPitchWithFeet
+      : kit
+          ? kitRowPitch
+          : sheetRowPitch;
   return SheetGeometry(
       layouts, counts ? base + sheetCountBand : base, starts, rows,
       kitLayouts: kitLayouts);

@@ -34,10 +34,12 @@ def _line(ln, indent: str) -> str:
 
 
 def _section(kind: str, line: str, bars: int, *, text: str | None = None,
-             clip: str | None = None, after: str | None = None) -> str:
+             title: str | None = None, clip: str | None = None, after: str | None = None) -> str:
     args = [f'kind: SectionKind.{kind}', f'line: {line}', f'bars: {bars}']
     if text is not None:
         args.append(f'textEn: {dart_str(text)}')
+    if title is not None:
+        args.append(f'titleEn: {dart_str(title)}')
     if clip is not None:
         args.append(f'speechClipId: {dart_str(clip)}')
     if after is not None:
@@ -52,7 +54,7 @@ def render_exercise(s: GuidedSheet) -> str:
     for n, (v, ln) in enumerate(zip(s.variations, variations), 1):
         sections.append(_section('groove', g, s.groove_bars))
         sections.append(_section('variation', _line(ln, '        '), s.variation_bars,
-                                 text=v.text, clip=s.clip_id(n), after=v.after))
+                                 text=v.text, title=v.title, clip=s.clip_id(n), after=v.after))
     sections.append(_section('groove', g, s.groove_bars))
     sections.append(_section('outro', g, 1))
     body = '\n'.join(sections)

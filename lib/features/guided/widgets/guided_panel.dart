@@ -52,13 +52,13 @@ class GuidedSwitchRow extends StatelessWidget {
   const GuidedSwitchRow({
     super.key,
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     required this.value,
     required this.onChanged,
   });
 
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
 
@@ -75,11 +75,12 @@ class GuidedSwitchRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: PracticeTypography.subtitle),
-                  Text(subtitle,
-                      style: PracticeTypography.body.copyWith(
-                          fontSize: 13,
-                          height: 1.3,
-                          color: PracticeColors.textMuted)),
+                  if (subtitle != null)
+                    Text(subtitle!,
+                        style: PracticeTypography.body.copyWith(
+                            fontSize: 13,
+                            height: 1.3,
+                            color: PracticeColors.textMuted)),
                 ],
               ),
             ),

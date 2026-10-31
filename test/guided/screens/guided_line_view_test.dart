@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drum_coach/app/design_tokens.dart';
 import 'package:drum_coach/app/theme.dart';
 import 'package:drum_coach/features/guided/data/guided_catalog.dart';
+import 'package:drum_coach/features/guided/guided_pages.dart';
 import 'package:drum_coach/features/guided/models/guided_exercise.dart';
 import 'package:drum_coach/features/guided/run_clock.dart';
 import 'package:drum_coach/features/guided/widgets/guided_line_view.dart';
@@ -196,7 +197,8 @@ void main() {
         await t.binding.setSurfaceSize(const Size(2560, 1000));
         addTearDown(() => t.binding.setSurfaceSize(null));
         final ex = _first(package);
-        final line = _v1(ex);
+        // One bar = one row, so the playhead row is the last row drawn.
+        final line = pageLine(_v1(ex), ex.gridUnit, firstBar: 0, bars: 1);
         // Wide (scaled up) and narrow (natural size).
         for (final width in [2400.0, 380.0]) {
           final xs = <double>[];

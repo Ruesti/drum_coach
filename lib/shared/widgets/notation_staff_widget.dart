@@ -156,6 +156,16 @@ class SheetStaffWidget extends StatelessWidget {
   /// that scales the staff passes [playheadLineWidth] / scale.
   final double playheadWidth;
 
+  /// Colour of the [CursorStyle.line] playhead.
+  final Color playheadColor;
+
+  /// Bars per row the layout aims for; must match the [geometry] passed in.
+  final int targetBarsPerRow;
+
+  /// Bare ink on whatever is behind: no paper card, accents in plain ink
+  /// (the guided page on the white sheet).
+  final bool plain;
+
   const SheetStaffWidget({
     super.key,
     required this.rudiment,
@@ -170,6 +180,9 @@ class SheetStaffWidget extends StatelessWidget {
     this.fillWidth = false,
     this.cursorStyle = CursorStyle.box,
     this.playheadWidth = playheadLineWidth,
+    this.playheadColor = AppColors.accent,
+    this.targetBarsPerRow = 2,
+    this.plain = false,
   });
 
   static const hPad = 4.0;
@@ -193,7 +206,8 @@ class SheetStaffWidget extends StatelessWidget {
           computeSheetGeometry(rudiment, contentWidth,
               showCounts: showCounts,
               clefLine: only ?? 0,
-              fillWidth: fillWidth);
+              fillWidth: fillWidth,
+              targetBarsPerRow: targetBarsPerRow);
       final footLetters = rudiment.hasFootSides;
       final sheet = rudiment.sheet;
       final shown =
@@ -201,7 +215,7 @@ class SheetStaffWidget extends StatelessWidget {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
-        decoration: cardDecoration,
+        decoration: plain ? null : cardDecoration,
         child: Column(
           children: [
             for (final i in shown)
@@ -225,6 +239,9 @@ class SheetStaffWidget extends StatelessWidget {
                   activeTick: activeLine == i ? activeTick : null,
                   cursorStyle: cursorStyle,
                   playheadWidth: playheadWidth,
+                  playheadColor: playheadColor,
+                  targetBarsPerRow: targetBarsPerRow,
+                  plain: plain,
                   lineNumber: showLineNumber ? i + 1 : null,
                   repeat: sheet[i].repeat,
                   finalBar: only != null || i == sheet.length - 1,
@@ -314,6 +331,15 @@ class _StaffPainter extends CustomPainter {
   /// Stroke of the [CursorStyle.line] playhead (layout units).
   final double playheadWidth;
 
+  /// Colour of the [CursorStyle.line] playhead.
+  final Color playheadColor;
+
+  /// Bars per row of the layout ([computeStaffLayout]).
+  final int targetBarsPerRow;
+
+  /// Accents in plain ink instead of the accent colour.
+  final bool plain;
+
   /// Number in the box at the left of the first row; null = no box.
   final int? lineNumber;
   final bool repeat;
@@ -355,6 +381,9 @@ class _StaffPainter extends CustomPainter {
     this.activeTick,
     this.cursorStyle = CursorStyle.box,
     this.playheadWidth = playheadLineWidth,
+    this.playheadColor = AppColors.accent,
+    this.targetBarsPerRow = 2,
+    this.plain = false,
     this.lineNumber,
     this.repeat = false,
     this.finalBar = true,
@@ -400,6 +429,7 @@ class _StaffPainter extends CustomPainter {
           systemPad: _systemPad,
           barGap: sheetBarGap,
           preferredPxPerQuarter: _preferredPxq,
+          targetBarsPerRow: targetBarsPerRow,
         );
 
   late final double _preferredPxq =
@@ -419,6 +449,7 @@ class _StaffPainter extends CustomPainter {
         systemPad: _systemPad,
         barGap: sheetBarGap,
         preferredPxPerQuarter: _preferredPxq,
+        targetBarsPerRow: targetBarsPerRow,
       );
 
   // ── Layout metrics ────────────────────────────────────────────────────────
@@ -462,10 +493,9 @@ class _StaffPainter extends CustomPainter {
   // ── Colors — black ink on warm off-white paper ──────────────────────────
   static const _staffColor = Color(0x2E17181A); // ink @ 18%
   static const _inkColor = AppColors.ink;
-  static const _accentColor = AppColors.paperAccent;
+  Color get _accentColor => plain ? _inkColor : AppColors.paperAccent;
   static const _cursorField = AppColors.live; // amber field behind active note
   static const _cursorLine = AppColors.paperCursorLine;
-  static const _playheadColor = AppColors.accent;
   static const _ghostColor = Color(0x7317181A); // ink @ 45%
   static const _letterColor = Color(0x9917181A); // ink @ 60%
 
@@ -610,7 +640,7 @@ class _StaffPainter extends CustomPainter {
         Offset(x, y0 + 4),
         Offset(x, y0 + _staffBandH - 4),
         Paint()
-          ..color = _playheadColor
+          ..color = playheadColor
           ..strokeWidth = playheadWidth);
   }
 
@@ -1030,5 +1060,8 @@ class _StaffPainter extends CustomPainter {
       old.voices != voices ||
       old.activeTick != activeTick ||
       old.cursorStyle != cursorStyle ||
-      old.playheadWidth != playheadWidth;
+      old.playheadWidth != playheadWidth ||
+      old.playheadColor != playheadColor ||
+      old.targetBarsPerRow != targetBarsPerRow ||
+      old.plain != plain;
 }

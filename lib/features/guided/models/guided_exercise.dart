@@ -8,6 +8,9 @@ enum SectionKind { intro, groove, variation, outro }
 /// Fixed meter of guided exercises.
 const int guidedBeatsPerBar = 4;
 
+/// Groove and variation sections are whole phrases of this many bars.
+const int guidedPhraseBars = 4;
+
 /// One part of a guided exercise: a line played for [bars] bars.
 class GuidedSection {
   const GuidedSection({
@@ -15,6 +18,7 @@ class GuidedSection {
     required this.line,
     required this.bars,
     this.textEn,
+    this.titleEn,
     this.speechClipId,
     this.afterClipId,
   });
@@ -25,6 +29,9 @@ class GuidedSection {
 
   /// Explanation: shown (banner / line above the notes) AND spoken.
   final String? textEn;
+
+  /// Short name of a variation (2-5 English words), shown in the UI.
+  final String? titleEn;
 
   /// Clip of [textEn], spoken in the groove before this section.
   final String? speechClipId;
@@ -92,6 +99,17 @@ class GuidedExercise {
       if (ticks % ticksPerBar != 0 || (ticks == 0 && s.bars > 0)) {
         throw ArgumentError('$id: section $i does not span whole bars');
       }
+      final lineBars = ticks ~/ ticksPerBar;
+      if (lineBars != 0 && lineBars != 1 && lineBars != 2 && lineBars != 4) {
+        throw ArgumentError(
+            '$id: section $i line is $lineBars bars, expected 1, 2 or 4');
+      }
+      if ((s.kind == SectionKind.groove || s.kind == SectionKind.variation) &&
+          s.bars % guidedPhraseBars != 0) {
+        throw ArgumentError(
+            '$id: section $i has ${s.bars} bars, expected a multiple of '
+            '$guidedPhraseBars');
+      }
       if (s.kind == SectionKind.variation) {
         if (s.textEn == null ||
             s.textEn!.isEmpty ||
@@ -99,6 +117,9 @@ class GuidedExercise {
             s.speechClipId!.isEmpty) {
           throw ArgumentError(
               '$id: variation $i needs textEn and speechClipId');
+        }
+        if (s.titleEn == null || s.titleEn!.trim().isEmpty) {
+          throw ArgumentError('$id: variation $i needs a titleEn');
         }
         if (sections[i - 1].kind != SectionKind.groove ||
             sections[i + 1].kind != SectionKind.groove) {

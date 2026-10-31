@@ -21,9 +21,12 @@ class StaffCalls {
       calls.where((c) => c.$1 == m);
 
   /// Accent-coloured lines = the playhead.
-  List<Playhead> get playheads => [
+  List<Playhead> get playheads => playheadsIn(AppColors.accent);
+
+  /// Lines in [colour] (the guided page's blue playhead).
+  List<Playhead> playheadsIn(Color colour) => [
         for (final c in _of(#drawLine))
-          if (_is(c.$2[2] as Paint, AppColors.accent))
+          if (_is(c.$2[2] as Paint, colour))
             (
               x: origin.dx + (c.$2[0] as Offset).dx * scale,
               top: (c.$2[0] as Offset).dy * scale,
@@ -31,6 +34,23 @@ class StaffCalls {
               width: (c.$2[2] as Paint).strokeWidth * scale,
             ),
       ];
+
+  /// Drawn height of the five-line staff in screen pixels: the length of a
+  /// barline (staff colour, vertical, top to bottom line).
+  double get staffHeight {
+    for (final c in _of(#drawLine)) {
+      final a = c.$2[0] as Offset;
+      final b = c.$2[1] as Offset;
+      if (a.dx == b.dx &&
+          (c.$2[2] as Paint).color.toARGB32() == staffInk.toARGB32()) {
+        return (b.dy - a.dy).abs() * scale;
+      }
+    }
+    throw StateError('no barline drawn');
+  }
+
+  /// The staff lines' colour (ink at 18 %).
+  static const staffInk = Color(0x2E17181A);
 
   /// The box cursor's amber field behind the active note.
   bool get hasCursorField => _of(#drawRRect)

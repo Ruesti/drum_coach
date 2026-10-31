@@ -104,6 +104,7 @@ GuidedExercise _ex({int minBpm = 40, int maxBpm = 240}) => GuidedExercise(
             line: _varLine(),
             bars: 8,
             textEn: 'Accent every quarter.',
+            titleEn: 'Accent every quarter',
             speechClipId: 'v1',
             afterClipId: 'good'),
         GuidedSection(kind: SectionKind.groove, line: _groove(), bars: 4),

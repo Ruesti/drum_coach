@@ -11,6 +11,8 @@ from sheetlang import KitLine, Line, check_hands, parse_kit_line, parse_line
 PACKAGES = ('kit', 'pad')
 DIFFICULTIES = ('beginner', 'intermediate', 'advanced', 'professional')
 MAX_WORDS = 16
+TITLE_WORDS = (2, 5)
+PHRASE_BARS = 4  # Abschnitte sind ganze Vier-Takt-Phrasen
 
 
 @dataclass(frozen=True)
@@ -18,6 +20,7 @@ class Variation:
     line: str  # Pad-Token oder Kit-Spurentext ("HH: …\nSN: …\nBD: …")
     text: str  # englische Erklärung, angezeigt und gesprochen
     after: str | None = 'after_good'  # Clip nach dieser Variation; None bei der letzten
+    title: str = ''  # Kurzname (2-5 englische Wörter, ASCII), Pflicht; Keyword-Feld wegen Dataclass-Reihenfolge
 
 
 @dataclass(frozen=True)
@@ -33,8 +36,8 @@ class GuidedSheet:
     grid: str  # NoteGrid-Name wie blatt.Sheet.grid (nur gespeichert, Dart prüft)
     groove: str
     variations: tuple[Variation, ...]
-    groove_bars: int = 12
-    variation_bars: int = 24
+    groove_bars: int = 12  # Vielfaches von 4
+    variation_bars: int = 24  # Vielfaches von 4
 
     def _err(self, field: str, msg: str) -> ValueError:
         return ValueError(f'{self.id} {field}: {msg}')
@@ -49,8 +52,8 @@ class GuidedSheet:
         except ValueError as e:
             raise self._err(where, str(e)) from None
         # the parsers already enforce whole 4/4 bars and equal track lengths
-        if ln.bars not in (1, 2):
-            raise self._err(where, f'{ln.bars} bars, expected 1 or 2 whole 4/4 bars')
+        if ln.bars not in (1, 2, 4):
+            raise self._err(where, f'{ln.bars} bars, expected 1, 2 or 4 whole 4/4 bars')
         return ln
 
     def _check_fields(self) -> None:
@@ -66,6 +69,9 @@ class GuidedSheet:
             raise self._err('bpm', 'need 40 <= min <= default <= max <= 240')
         if not 3 <= len(self.variations) <= 5:
             raise self._err('variations', f'{len(self.variations)} variations, expected 3-5')
+        for name, n in (('groove_bars', self.groove_bars), ('variation_bars', self.variation_bars)):
+            if n <= 0 or n % PHRASE_BARS:
+                raise self._err(name, f'{n} bars, must be a positive multiple of {PHRASE_BARS}')
         for i, v in enumerate(self.variations, 1):
             last = i == len(self.variations)
             if last and v.after is not None:
@@ -75,18 +81,25 @@ class GuidedSheet:
             n = len(v.text.split())
             if n == 0 or n > MAX_WORDS:
                 raise self._err(f'variation {i} text', f'{n} words, expected 1-{MAX_WORDS}')
+            nt = len(v.title.split())
+            if not TITLE_WORDS[0] <= nt <= TITLE_WORDS[1]:
+                raise self._err(f'variation {i} title',
+                                f'{nt} words, expected {TITLE_WORDS[0]}-{TITLE_WORDS[1]} (title is required)')
+            if any(ord(c) >= 128 for c in v.title):
+                raise self._err(f'variation {i} title', 'ASCII only')
             if any(ord(c) >= 128 for c in v.text):
                 raise self._err(f'variation {i} text', 'ASCII only (no emojis, no typographic dashes)')
 
     def parsed(self) -> tuple[Line | KitLine, list[Line | KitLine]]:
         self._check_fields()
         groove = self._parse(self.groove, 'groove')
-        if groove.bars != 1:
-            raise self._err('groove', f'{groove.bars} bars, expected exactly 1 (outro plays it for 1 bar)')
+        if self.groove_bars % groove.bars:
+            raise self._err('groove', f'{groove.bars}-bar line does not divide groove_bars={self.groove_bars}')
         vs = [self._parse(v.line, f'variation {i}') for i, v in enumerate(self.variations, 1)]
         for i, ln in enumerate(vs, 1):
-            if ln.bars == 2 and self.variation_bars % 2:
-                raise self._err(f'variation {i}', '2-bar line needs even variation_bars')
+            if self.variation_bars % ln.bars:
+                raise self._err(f'variation {i}',
+                                f'{ln.bars}-bar line does not divide variation_bars={self.variation_bars}')
         return groove, vs
 
     def clip_id(self, n: int) -> str:
