@@ -149,3 +149,14 @@ def test_prune_prefix_removes_stale_clips(tmp_path):
     assert not (tmp_path / "g_old_v1.wav").exists()
     # ids without the prefix are never touched, even if not in saetze
     assert "demo_x" in ids and (tmp_path / "demo_x.wav").exists()
+
+
+def test_raum_sentences_for_the_ten_technique_sheets():
+    from saetze import SAETZE
+    ids = ["tech_grip_rebound", "tech_full_stroke_tap", "tech_even_singles",
+           "tech_accent_basics", "tech_single_hand_control", "tech_down_up_strokes",
+           "tech_moving_accents", "tech_doubles_control", "tech_ghost_accent_contrast",
+           "tech_speed_bursts"]
+    for i in ids:
+        text = SAETZE[f"h_{i}"]
+        assert text.isascii() and 0 < len(text.split()) <= 40

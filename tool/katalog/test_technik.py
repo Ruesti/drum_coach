@@ -44,6 +44,29 @@ class Technik(unittest.TestCase):
         self.assertIs(st.sheets, technik.SHEETS)
         self.assertTrue(st.seed_marker)
 
+    def test_voice_how_covers_every_sheet_in_40_ascii_words(self):
+        self.assertEqual(sorted(technik.VOICE_HOW), sorted(s.id for s in technik.SHEETS))
+        for sid, text in technik.VOICE_HOW.items():
+            with self.subTest(sid):
+                self.assertLessEqual(len(text.split()), 40)
+                self.assertTrue(text.isascii())
+
+    def test_gen_raum_voice_writes_h_clips_deterministically(self):
+        import pathlib
+        import tempfile
+
+        import gen_raum_voice
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            (root / 'tool/stimme').mkdir(parents=True)
+            p = gen_raum_voice.generate(root, technik.SHEETS, technik.VOICE_HOW)
+            first = p.read_bytes()
+            gen_raum_voice.generate(root, technik.SHEETS, technik.VOICE_HOW)
+            self.assertEqual(first, p.read_bytes())
+            ns: dict = {}
+            exec(first.decode(), ns)
+            self.assertEqual(sorted(ns['RAUM']), sorted(f'h_{i}' for i in technik.VOICE_HOW))
+
 
 if __name__ == '__main__':
     unittest.main()

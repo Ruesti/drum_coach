@@ -416,3 +416,39 @@ SHEETS: list[Sheet] = [
 
 if __name__ == '__main__':
     print_table(SHEETS)
+
+
+# Gesprochene Kurzfassung des „How“-Abschnitts (Stimme `h_<id>`, höchstens 40 Wörter, ASCII).
+# Der Text auf dem Bildschirm bleibt der volle Lehrtext in `lesson['How']`.
+VOICE_HOW: dict[str, str] = {
+    'tech_grip_rebound': 'Hold the stick a third from the end, between thumb and index finger, with the other fingers '
+                         'loose. Start high. Let the wrist drop the stick, and let it bounce '
+                         'straight back up. Never press it down.',
+    'tech_full_stroke_tap': 'Full stroke: start high, throw the stick down, and let it rebound all the way back up. '
+                            'Tap: start low, play, and come back to the same low height. Same loose grip, same motion. '
+                            'Only the height changes.',
+    'tech_even_singles': 'Alternate right, left, right, left. Both sticks start from the same height, with the same '
+                         'angle, on the same spot. Each stroke rebounds to where it began. When you play faster, '
+                         'do not tighten up. Just move twice as often.',
+    'tech_accent_basics': 'An accent is a full stroke from high. The notes between are low taps. Count out loud, one '
+                          'and two and, and let the accent land on the number. Lift early, and throw the stick. '
+                          'Do not hit it.',
+    'tech_single_hand_control': 'Play from the wrist, with the stick about ten centimetres high, and let every stroke '
+                                'rebound. Faster notes mean a smaller, quicker wrist motion. Do not squeeze. In the '
+                                'sixteenths, the fingers start to help. The other hand rests still.',
+    'tech_down_up_strokes': 'Down stroke: start high, play the accent, and stop the stick low by closing the back '
+                            'fingers. Up stroke: play a soft tap, and use that motion to lift the stick high '
+                            'again. Every accent is prepared one note earlier.',
+    'tech_moving_accents': 'The accent is a down stroke. The tap just before it is an up stroke. Everything else is a '
+                           'low tap. Keep the sixteenths alternating, right, left, right, left, wherever the accent '
+                           'falls. Then it changes hands by itself.',
+    'tech_doubles_control': 'Slow doubles are two separate wrist strokes, each with a full rebound. Fast doubles are '
+                            'one wrist throw, then the fingers pull the stick back for the second note. Make it '
+                            'as loud as the first. Go slowly in between.',
+    'tech_ghost_accent_contrast': 'A ghost note starts barely one or two centimetres above the pad and just touches '
+                                  'it. An accent starts from full height. After an accent, stop low. After a ghost, '
+                                  'lift the stick. Keep the grip loose. Do not squeeze.',
+    'tech_speed_bursts': 'Keep the sticks low, the grip loose, and let them rebound on every note. At speed, the '
+                         'fingers help the wrists. Start the burst relaxed, not with a jolt. In '
+                         'the rest, drop your shoulders.',
+}
