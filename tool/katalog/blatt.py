@@ -36,6 +36,7 @@ class Sheet:
     limbs: tuple[str, ...] = ('hands',)  # Limb-Tags des Seed-Eintrags
     area: str | None = None  # Trainingsraum-Bereich (Dart-Enum-Name aus AREAS)
     song: str | None = None  # Songhinweis als Text ("Like in: …")
+    room_order: int | None = None  # Reihenfolge im Trainingsraum (zuerst, aufsteigend); None = Katalogreihenfolge
     fill_bar: bool = True  # 4-Takt-Zeile: Takt 4 ist ein Fill-Takt (Kurationsseite); Technik-Blätter: False
 
     def __post_init__(self):

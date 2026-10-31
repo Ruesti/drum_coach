@@ -38,6 +38,15 @@ RoomSession? planSession({
     final a = r.area;
     if (a != null) (inArea[a] ??= []).add(r);
   }
+  // Within an area: exercises with a room order first (ascending), then the
+  // rest in catalog order — the room offers the technique set before older
+  // entries of the same level.
+  for (final a in inArea.keys) {
+    final list = inArea[a]!;
+    final ordered = list.where((r) => r.roomOrder != null).toList()
+      ..sort((x, y) => x.roomOrder!.compareTo(y.roomOrder!));
+    inArea[a] = [...ordered, ...list.where((r) => r.roomOrder == null)];
+  }
 
   // Warm-up: one exercise per basic area, from its current level.
   final warmup = <String>[];

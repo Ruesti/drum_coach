@@ -49,6 +49,16 @@ class Area(unittest.TestCase):
         self.assertIn('songHint: "Like in: B",', out2)
         self.assertEqual(out2.count('songHint:'), 1)
 
+    def test_room_order_default_none_and_written(self):
+        self.assertIsNone(_sheet().room_order)
+        self.assertIn('roomOrder: 3,', patch_seed._entry(_sheet(room_order=3)))
+        self.assertNotIn('roomOrder:', patch_seed._entry(_sheet()))
+        src = "  Rudiment(\n    id: 'x_test',\n    name: 'X',\n    sticking: a,\n  ),\n];\n"
+        out = patch_seed._update(src, src.index("    id: 'x_test',"), 'xTest', _sheet(room_order=2))
+        out = patch_seed._update(out, out.index("    id: 'x_test',"), 'xTest', _sheet(room_order=5))
+        self.assertEqual(out.count('roomOrder:'), 1)
+        self.assertIn('roomOrder: 5,', out)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,11 +1,13 @@
 import 'package:drum_coach/data/local/models/rudiment_progress.dart';
+import 'package:drum_coach/features/lessons/data/etudes.dart';
+import 'package:drum_coach/features/lessons/data/rudiments_seed.dart';
 import 'package:drum_coach/features/lessons/models/rudiment.dart';
 import 'package:drum_coach/features/room/session_planner.dart';
 import 'package:drum_coach/features/room/training_area.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Rudiment ex(String id, TrainingArea? area,
-        [Difficulty d = Difficulty.beginner]) =>
+        [Difficulty d = Difficulty.beginner, int? roomOrder]) =>
     Rudiment(
       id: id,
       name: id,
@@ -15,6 +17,7 @@ Rudiment ex(String id, TrainingArea? area,
       difficulty: d,
       sticking: const [],
       area: area,
+      roomOrder: roomOrder,
     );
 
 final now = DateTime(2026, 10, 31);
@@ -150,5 +153,35 @@ void main() {
     expect(planSession(catalog: cat, progress: {}, now: now), isNull);
     expect(
         planSession(catalog: cat, progress: {}, now: now, chosen: g), isNull);
+  });
+
+  test('exercises with roomOrder come first, ascending, then catalog order',
+      () {
+    const b = Difficulty.beginner;
+    final cat = [
+      ex('old1', h),
+      ex('old2', h),
+      ex('new2', h, b, 2),
+      ex('new1', h, b, 1),
+      ex('r1', ru),
+    ];
+    final s = planSession(catalog: cat, progress: {}, now: now, chosen: h)!;
+    expect(s.deepen, ['new1', 'new2', 'old1', 'old2']);
+    expect(s.warmup.first, 'new1');
+  });
+
+  test('fresh hand-technique beginner deepen starts with tech_grip_rebound',
+      () {
+    final cat = [...rudimentsSeedData, ...allEtudes];
+    final s = planSession(catalog: cat, progress: {}, now: now, chosen: h)!;
+    expect(s.deepen.first, 'tech_grip_rebound');
+    expect(s.deepen.take(5), [
+      'tech_grip_rebound',
+      'tech_full_stroke_tap',
+      'tech_even_singles',
+      'tech_accent_basics',
+      'tech_single_hand_control',
+    ]);
+    expect(s.warmup.first, 'tech_grip_rebound');
   });
 }

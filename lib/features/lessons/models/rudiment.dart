@@ -72,9 +72,12 @@ class ResolvedNote {
 /// Maps an old uniform [NoteGrid] cell to its equivalent note value, so
 /// pre-existing patterns (whose [StrokeBeat.value] is null) resolve unchanged.
 ResolvedNote gridToNote(NoteGrid grid) => switch (grid) {
-      NoteGrid.quarter => const ResolvedNote(NoteValue.quarter, false, Tuplet.none),
-      NoteGrid.eighth => const ResolvedNote(NoteValue.eighth, false, Tuplet.none),
-      NoteGrid.triplet => const ResolvedNote(NoteValue.eighth, false, Tuplet.triplet),
+      NoteGrid.quarter =>
+        const ResolvedNote(NoteValue.quarter, false, Tuplet.none),
+      NoteGrid.eighth =>
+        const ResolvedNote(NoteValue.eighth, false, Tuplet.none),
+      NoteGrid.triplet =>
+        const ResolvedNote(NoteValue.eighth, false, Tuplet.triplet),
       NoteGrid.sixteenth =>
         const ResolvedNote(NoteValue.sixteenth, false, Tuplet.none),
       NoteGrid.sixteenthTriplet =>
@@ -325,6 +328,10 @@ class Rudiment {
   /// Plain-text song reference ("Like in: …"), no transcription. Optional.
   final String? songHint;
 
+  /// Place in the training room's offer within its area and level: set
+  /// exercises come first (ascending), the rest follow in catalog order.
+  final int? roomOrder;
+
   const Rudiment({
     required this.id,
     required this.name,
@@ -350,6 +357,7 @@ class Rudiment {
     this.patternVoices = const [],
     this.area,
     this.songHint,
+    this.roomOrder,
   });
 
   /// The sheet: [lines] when authored, else the plain [sticking] as one
@@ -392,5 +400,6 @@ class Rudiment {
         patternVoices: patternVoices,
         area: area,
         songHint: songHint,
+        roomOrder: roomOrder,
       );
 }

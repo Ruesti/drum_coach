@@ -2347,6 +2347,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techGripReboundPattern,
     technique: techGripReboundLesson,
     lines: techGripReboundSheet,
+    roomOrder: 1,
   ),
 
   Rudiment(
@@ -2363,6 +2364,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techFullStrokeTapPattern,
     technique: techFullStrokeTapLesson,
     lines: techFullStrokeTapSheet,
+    roomOrder: 2,
   ),
 
   Rudiment(
@@ -2379,6 +2381,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techEvenSinglesPattern,
     technique: techEvenSinglesLesson,
     lines: techEvenSinglesSheet,
+    roomOrder: 3,
   ),
 
   Rudiment(
@@ -2395,6 +2398,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techAccentBasicsPattern,
     technique: techAccentBasicsLesson,
     lines: techAccentBasicsSheet,
+    roomOrder: 4,
   ),
 
   Rudiment(
@@ -2411,6 +2415,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techSingleHandControlPattern,
     technique: techSingleHandControlLesson,
     lines: techSingleHandControlSheet,
+    roomOrder: 5,
   ),
 
   Rudiment(
@@ -2427,6 +2432,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techDownUpStrokesPattern,
     technique: techDownUpStrokesLesson,
     lines: techDownUpStrokesSheet,
+    roomOrder: 6,
   ),
 
   Rudiment(
@@ -2443,6 +2449,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techMovingAccentsPattern,
     technique: techMovingAccentsLesson,
     lines: techMovingAccentsSheet,
+    roomOrder: 7,
   ),
 
   Rudiment(
@@ -2459,6 +2466,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techDoublesControlPattern,
     technique: techDoublesControlLesson,
     lines: techDoublesControlSheet,
+    roomOrder: 8,
   ),
 
   Rudiment(
@@ -2476,6 +2484,7 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techGhostAccentContrastPattern,
     technique: techGhostAccentContrastLesson,
     lines: techGhostAccentContrastSheet,
+    roomOrder: 9,
   ),
 
   Rudiment(
@@ -2492,5 +2501,6 @@ final List<Rudiment> rudimentsSeedData = <Rudiment>[
     sticking: techSpeedBurstsPattern,
     technique: techSpeedBurstsLesson,
     lines: techSpeedBurstsSheet,
+    roomOrder: 10,
   ),
 ];

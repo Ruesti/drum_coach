@@ -35,7 +35,8 @@ def _scalar(src: str, start: int, key: str) -> tuple[int, int] | None:
 
 def _area_lines(s) -> str:
     return ((f"    area: TrainingArea.{s.area},\n" if s.area else '')
-            + (f"    songHint: {dart_str(s.song)},\n" if s.song else ''))
+            + (f"    songHint: {dart_str(s.song)},\n" if s.song else '')
+            + (f"    roomOrder: {s.room_order},\n" if s.room_order is not None else ''))
 
 
 def _entry(s) -> str:
@@ -75,7 +76,8 @@ def _update(src: str, at: int, c: str, s=None) -> str:
         src = src[:end] + f'\n    lines: {c}Sheet,' + src[end:]
     if s is not None:
         for key, val in (('area', f'TrainingArea.{s.area}' if s.area else None),
-                         ('songHint', dart_str(s.song) if s.song else None)):
+                         ('songHint', dart_str(s.song) if s.song else None),
+                         ('roomOrder', str(s.room_order) if s.room_order is not None else None)):
             if val is None:
                 continue
             line = f'    {key}: {val},'

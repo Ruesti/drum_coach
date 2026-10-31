@@ -413,6 +413,10 @@ SHEETS: list[Sheet] = [
     ),
 ]
 
+# Im Trainingsraum zuerst angeboten, in Blattreihenfolge (vor älteren Hände-Übungen).
+for _i, _s in enumerate(SHEETS, 1):
+    _s.room_order = _i
+
 
 if __name__ == '__main__':
     print_table(SHEETS)

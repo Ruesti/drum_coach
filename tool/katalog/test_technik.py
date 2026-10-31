@@ -17,6 +17,9 @@ class Technik(unittest.TestCase):
         self.assertEqual(by['intermediate'], INTERMEDIATE)
         self.assertEqual(len(technik.SHEETS), 10)
 
+    def test_technik_sheets_carry_room_order_1_to_10_in_sheet_order(self):
+        self.assertEqual([s.room_order for s in technik.SHEETS], list(range(1, 11)))
+
     def test_every_technik_sheet_has_area_hand_technique_8_lines_of_4_bars_and_a_lesson(self):
         for s in technik.SHEETS:
             with self.subTest(s.id):
