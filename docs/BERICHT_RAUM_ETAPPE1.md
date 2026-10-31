@@ -1,13 +1,15 @@
 # Bericht: Trainingsraum, Etappe 1
 
 Branch `trainingsraum-etappe1` (aufgesetzt auf `spec-trainingsraum`), Draft-PR #38: https://github.com/Ruesti/drum_coach/pull/38
-Tests: 1011 grün (1 übersprungen), `flutter analyze`: 8 Hinweise, alle schon vorher da.
+Tests: 1022 grün (1 übersprungen), `flutter analyze`: 8 Hinweise, alle schon vorher da.
 
 ## Was gebaut wurde
 - **Bereich je Übung**: Jede Übung gehört jetzt zu einem von sieben Bereichen (Hände-Technik, Rudimente, Füße, Koordination, Groove, Fills, Metal). In der Bibliothek gibt es dafür eine neue Filterzeile. Der Kopf der Bibliothek scrollt mit der Liste, damit er auf kleinen Fenstern nicht die Liste erdrückt.
 - **Alle vorhandenen Übungen sind eingeordnet** (Python-Katalog, Seed und Étüden). Schwierigkeiten blieben unverändert.
-- **Tempo-Leiter pro Runde**: Nach jeder Runde gibt es eine Bewertung. Das Tempo geht danach um +4, 0 oder −4 BPM. „Sitzt" heißt: zwei saubere Runden hintereinander im Zieltempo. Nur so wird eine Übung „gemeistert", nicht mehr über das Verhältnis zum besten Tempo.
+- **Tempo-Leiter pro Runde**: Nach jeder Runde gibt es eine Bewertung. Das Tempo geht danach um +4, 0 oder −4 BPM. „Sitzt" heißt: zwei saubere Runden hintereinander im Zieltempo. Nur so wird eine Übung „gemeistert", nicht mehr über das Verhältnis zum besten Tempo — das gilt jetzt auch fürs freie Üben aus der Bibliothek (dort höchstens „proficient"). Schon gemeisterte Übungen bleiben gemeistert.
 - **Einheit auf /room**: Aufwärmen plus Vertiefen, ersetzt Programm und Tagesplan (alte Programm-Seiten sind entfernt). Auf Today steht „Today's session", darunter der Start-Knopf.
+- **Aufwärmen ändert nichts am Fortschritt**: Es läuft 8 BPM unter dem gespeicherten Tempo (nie unter dem Mindesttempo). Gespeichert werden nur die Sitzung und die Wiederholungs-Planung; Tempo, bestes Tempo und Stufe bleiben, wie sie sind.
+- **Neue Blätter zuerst**: In der Hände-Technik bietet der Raum die 10 neuen `tech_*`-Blätter vor den älteren Übungen gleicher Stufe an (neues Feld `roomOrder`, gesetzt vom Katalog-Werkzeug). Ein neuer Spieler beginnt mit „Grip & Rebound".
 - **10 neue Hände-Technik-Übungen** (5 Anfänger, 5 Mittel), je 8 Zeilen à 4 Takte, mit englischem Lehrtext (Why / How / Tips / Song examples) und gesprochener Erklärung (Stimme).
 - Kuration aller neuen Übungen: https://claude.ai/artifact/WjtQHeFseTsQPr4CAKcBYU
 
@@ -40,7 +42,7 @@ App läuft: Bundle `~/drum-coach-trainingsraum/build/linux/x64/release/bundle/dr
 - **Gerätetest nötig**: Ruckeln beim automatischen Tempo-Schritt, und späte Mikrofon-Schläge auf der letzten Note können das Rundenfenster verpassen.
 - **Songbeispiele** in den neuen Lehrtexten stammen aus allgemeinem Wissen. Bitte bei der Kuration gegenlesen.
 - Entscheidungen der Bauphase: „sitzt" bei Übungen ohne Messung = diese Runde „Solid" im Zieltempo und vorher schon bestes Tempo ≥ Ziel (genähert). Aufwärmen nutzt je Bereich die eigene Stufe.
-- **Zurückgestellte Kleinigkeiten** (aus progress.md): Formatierungs-Umbrüche in einigen Testdateien, Import-Reihenfolge in Étüden und lessons_screen; `patch_seed` entfernt weggefallene `area`/`song` nicht; veraltete Zeilen in docs/CLAUDE.md (alte Navigation, „Daily Routine"); kein Zurück-Test für /room; Pause/Resume behält die Sauber-Serie; bei der reinen Bewertung ohne Mikrofon erscheint „Nailed it" nicht, wenn über Sitzungen gemeistert; leere Vertiefen-Liste, wenn die Bereichsstufe komplett gemeistert ist (UI muss das abfangen); Gleichstand bei fälligen Übungen nach Enum-Reihenfolge ungetestet; Geister-Ansage „just touches" könnte als stumm gelesen werden (besser „softer than a tap"); Programm-Route sendet noch `ladder=1` (mit Task 6 entfernt).
+- **Zurückgestellte Kleinigkeiten** (aus progress.md): Formatierungs-Umbrüche in einigen Testdateien, Import-Reihenfolge in Étüden und lessons_screen; `patch_seed` entfernt weggefallene `area`/`song`/`roomOrder` nicht; kein Zurück-Test für /room; Pause/Resume behält die Sauber-Serie; bei der reinen Bewertung ohne Mikrofon erscheint „Nailed it" nicht, wenn über Sitzungen gemeistert; Gleichstand bei fälligen Übungen nach Enum-Reihenfolge ungetestet; Geister-Ansage „just touches" könnte als stumm gelesen werden (besser „softer than a tap").
 
 ## Bildschirmfoto
 `/home/uli/drum-coach-raum-etappe1-start.png`: Startbildschirm Today mit „Today's session, Warm-up + Hand technique, Start · 30 min". Ohne xdotool nicht weiter navigiert.
