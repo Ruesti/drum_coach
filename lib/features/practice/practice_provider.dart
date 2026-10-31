@@ -37,7 +37,8 @@ class PracticeNotifier extends _$PracticeNotifier {
 
   /// Trainingsraum session: the same session row, but the progress follows
   /// the tempo ladder's rounds ([RoomProgressService]) instead of the
-  /// rating's +5 / +2.
+  /// rating's +5 / +2. [sits] / [fromRating]: see
+  /// [RoomProgressService.applyRounds].
   Future<void> saveRoomSession({
     required String rudimentId,
     required int durationSeconds,
@@ -46,14 +47,19 @@ class PracticeNotifier extends _$PracticeNotifier {
     required List<LadderRound> rounds,
     required int targetBpm,
     required int minBpm,
+    bool? sits,
+    bool fromRating = false,
   }) async {
     await _putSession(rudimentId, durationSeconds, achievedBpm, rating);
     if (rounds.isNotEmpty) {
       // A fresh row has no clean tempo yet: only clean rounds lift it.
       final progress =
           await _progressFor(rudimentId, rounds.first.bpm, bestBpm: 0);
-      const RoomProgressService()
-          .applyRounds(progress, rounds, targetBpm: targetBpm, minBpm: minBpm);
+      const RoomProgressService().applyRounds(progress, rounds,
+          targetBpm: targetBpm,
+          minBpm: minBpm,
+          sits: sits,
+          fromRating: fromRating);
       await _putProgress(progress);
     }
     ref.invalidate(recentSessionsProvider);

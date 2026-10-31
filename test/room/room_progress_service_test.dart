@@ -41,6 +41,55 @@ void main() {
     expect(p.lastPracticed.isAfter(DateTime(2026, 10, 2)), isTrue);
   });
 
+  test('one clean round at the target is not mastered', () {
+    final p = s.applyRounds(fresh(100)..bestBpm = 0,
+        [r(100, RoundVerdict.clean)],
+        targetBpm: 100, minBpm: 60);
+    expect(p.bestBpm, 100);
+    expect(p.mastery, MasteryLevel.proficient);
+    expect(p.srRepetitions, 0, reason: 'not sitting: rating 2');
+  });
+
+  test('a broken streak (sits: false) does not master', () {
+    final p = s.applyRounds(
+        fresh(100),
+        [r(100, RoundVerdict.clean), r(104, RoundVerdict.clean)],
+        targetBpm: 100,
+        minBpm: 60,
+        sits: false);
+    expect(p.mastery, MasteryLevel.proficient);
+  });
+
+  test('unmeasured: Solid at the target sits only in the second session',
+      () {
+    final row = fresh(100)..bestBpm = 0;
+    s.applyRounds(row, [r(100, RoundVerdict.clean)],
+        targetBpm: 100, minBpm: 60, fromRating: true);
+    expect(row.mastery, MasteryLevel.proficient);
+    expect(row.bestBpm, 100);
+    s.applyRounds(row, [r(100, RoundVerdict.clean)],
+        targetBpm: 100, minBpm: 60, fromRating: true);
+    expect(row.mastery, MasteryLevel.mastered);
+    expect(row.srRepetitions, 1);
+  });
+
+  test('unmeasured: OK at the target after a best at target does not sit',
+      () {
+    final row = fresh(100);
+    s.applyRounds(row, [r(100, RoundVerdict.close)],
+        targetBpm: 100, minBpm: 60, fromRating: true);
+    expect(row.mastery, MasteryLevel.proficient);
+  });
+
+  test('a mastered row stays mastered', () {
+    final row = fresh(80)
+      ..bestBpm = 120
+      ..mastery = MasteryLevel.mastered;
+    s.applyRounds(row, [r(80, RoundVerdict.off)],
+        targetBpm: 100, minBpm: 60);
+    expect(row.mastery, MasteryLevel.mastered);
+  });
+
   test('applyRounds keeps old rows valid', () {
     // A row written by the old +5 progression: clean tempo 85, best 90,
     // two solid reviews behind it.

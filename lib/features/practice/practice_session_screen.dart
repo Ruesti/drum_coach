@@ -42,7 +42,6 @@ import '../metronome/loop_voices.dart' show KitSoundTrack;
 import '../metronome/metronome_engine.dart';
 import '../metronome/metronome_provider.dart';
 import '../room/lesson_voice.dart';
-import '../room/room_progress_service.dart';
 import '../room/round_tracker.dart';
 import '../room/round_verdict.dart';
 import '../room/tempo_ladder.dart';
@@ -180,6 +179,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   int _roundLogStart = 0;
   int? _roundOfLogStart;
   bool _nailed = false;
+
+  /// Judged rounds since the last break: "two clean in a row" may not span
+  /// an unmeasured round or one dropped by a manual change.
+  final List<LadderRound> _streak = [];
   String? _roundChip;
   Timer? _roundChipTimer;
   LessonVoice? _voice;
@@ -316,7 +319,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _roundLogStart = 0;
     // Until the new loop's first downbeat ([_consumeStaleTick]) nothing
     // counts as a round.
-    if (playing) _roundTracker.reset();
+    if (playing) {
+      _roundTracker.reset();
+      _streak.clear();
+    }
     _metronomeNotifier.setPatternVolumes(_playback.tickVolumes);
     _applyExtras();
     if (playing) {
@@ -641,7 +647,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   void _onUserBpmChanged(int bpm) {
     final changed = bpm != ref.read(metronomeNotifierProvider).bpm;
     _metronomeNotifier.setBpm(bpm);
-    if (widget.room && changed) _roundTracker.reset();
+    if (widget.room && changed) {
+      _roundTracker.reset();
+      _streak.clear();
+    }
   }
 
   /// Room mode, one beat of the running loop: at a round boundary the
@@ -657,11 +666,17 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     _roundOfLogStart = round;
     if (ended == null || first) return;
     final verdict = verdictOf(_analyzeRound(roundLog, plannedAt));
-    if (verdict == null) return; // not measurable: no verdict, no step
+    if (verdict == null) {
+      // Not measurable: no verdict, no step — and the streak breaks.
+      _streak.clear();
+      return;
+    }
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
     final bpm = ref.read(metronomeNotifierProvider).bpm;
-    _rounds.add(LadderRound(bpm: bpm, verdict: verdict));
-    final nailedNow = !_nailed && sitsAt(_rounds, rudiment.targetBpm);
+    final done = LadderRound(bpm: bpm, verdict: verdict);
+    _rounds.add(done);
+    _streak.add(done);
+    final nailedNow = !_nailed && sitsAt(_streak, rudiment.targetBpm);
     if (nailedNow) _nailed = true;
     final next = nextLadderBpm(bpm, verdict, minBpm: rudiment.minBpm);
     if (next != bpm) {
@@ -670,7 +685,8 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       // round begun meanwhile is cut short and does not count.
       _roundTracker.reset();
     }
-    _showRoundChip(nailedNow ? 'Nailed it' : roundChipText(verdict, bpm, next));
+    _showRoundChip(
+        nailedNow ? 'Nailed it' : roundChipText(verdict, bpm, next));
   }
 
   void _showRoundChip(String text) {
@@ -957,7 +973,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     if (widget.room) {
       _roundChipTimer?.cancel();
       setState(() => _roundChip = null);
-      if (_rounds.isNotEmpty) _roomResult.value = _roomSummary(_rounds);
+      if (_rounds.isNotEmpty) {
+        _roomResult.value = _roomSummary(_rounds, sat: _nailed);
+      }
     }
     final announcement = analysis == null
         ? null
@@ -990,6 +1008,13 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
               analysis: analysis,
               announcement: announcement,
               ladderResult: _roomResult,
+              // Room: the rating moves the tempo only when no round was
+              // measured (−4 / same / +4); otherwise the rounds decided.
+              ratingSubs: !widget.room
+                  ? null
+                  : _rounds.isEmpty
+                      ? const ['−4 BPM', 'same', '+4 BPM']
+                      : const ['', '', ''],
               sessionLog: _sessionLogN,
               coachFeedback: _coachFeedback,
               coachLoading: _coachLoading,
@@ -1055,6 +1080,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
           rounds: rounds,
           targetBpm: rudiment.targetBpm,
           minBpm: rudiment.minBpm,
+          // Measured: the screen's streak-aware verdict. Rating: the
+          // service checks "sits" across sessions.
+          sits: _rounds.isNotEmpty ? _nailed : null,
+          fromRating: _rounds.isEmpty,
         );
       } else {
         await practice.saveSession(
@@ -1074,7 +1103,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
     if (!mounted) return;
 
     if (rounds != null && _rounds.isEmpty) {
-      _roomResult.value = _roomSummary(rounds);
+      _roomResult.value = _roomSummary(rounds, sat: false);
     }
     unawaited(_afterSave(
       rating: rating,
@@ -1146,9 +1175,9 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
   }
 
   /// The room's line on the result sheet.
-  String _roomSummary(List<LadderRound> rounds) {
+  String _roomSummary(List<LadderRound> rounds, {required bool sat}) {
     final rudiment = ref.read(rudimentByIdProvider(widget.rudimentId));
-    if (sitsInSession(rounds, rudiment.targetBpm)) {
+    if (sat) {
       return 'Nailed it · two clean rounds at ${rudiment.targetBpm} BPM';
     }
     final last = rounds.last;
@@ -1218,6 +1247,10 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       // nothing — neither the beat log nor (via _unitChangedAt) the cursor.
       final stale = newTick &&
           _consumeStaleTick(next.currentBeatIndex, next.lastBeatPlannedAt);
+      // A (re)start plays the loop from its "1": rounds count afresh —
+      // before the first beat of the run is looked at.
+      final started = next.isPlaying && !(prev?.isPlaying ?? false);
+      if (started) _freshRounds();
       // Room rounds: the boundary beat closes the round before it joins
       // the log of the next one.
       if (widget.room && newTick && !stale) {
@@ -1240,9 +1273,7 @@ class _PracticeSessionScreenState extends ConsumerState<PracticeSessionScreen>
       }
 
       // Start/stop ticker and mic with metronome
-      if (next.isPlaying && !(prev?.isPlaying ?? false)) {
-        // A (re)start plays the loop from its "1": rounds count afresh.
-        _freshRounds();
+      if (started) {
         _startTicker();
         _startMeasuring();
         _sessionTimerNotifier.resume();
@@ -1577,12 +1608,16 @@ class _LineBar extends StatelessWidget {
 
 // ── Room bar ────────────────────────────────────────────────────────────────────
 
-/// The hint after a room round: what the verdict did to the tempo.
-String roundChipText(RoundVerdict verdict, int bpm, int nextBpm) {
-  if (nextBpm > bpm) return 'Clean · +${nextBpm - bpm}';
-  if (nextBpm < bpm) return 'Slower · −${bpm - nextBpm}';
-  return verdict == RoundVerdict.clean ? 'Clean' : 'Hold';
-}
+/// The hint after a room round: the verdict, with the step it caused (a
+/// step held back by the 240 / minimum bounds is not claimed).
+String roundChipText(RoundVerdict verdict, int bpm, int nextBpm) =>
+    switch (verdict) {
+      RoundVerdict.clean =>
+        nextBpm > bpm ? 'Clean · +${nextBpm - bpm}' : 'Clean',
+      RoundVerdict.close => 'Hold',
+      RoundVerdict.off =>
+        nextBpm < bpm ? 'Slower · −${bpm - nextBpm}' : 'Slower',
+    };
 
 /// Room mode, above the tempo row: "How to play" and the round hint.
 class _RoomBar extends StatelessWidget {

@@ -110,9 +110,10 @@ class _TickingMetronomeNotifier extends MetronomeNotifier {
 /// the notifier instance is thrown away right after the screen's call and a
 /// later `container.read` would hand back a fresh, empty one.
 class _FakePracticeNotifier extends PracticeNotifier {
-  _FakePracticeNotifier(this.saves, [this.roomSaves]);
+  _FakePracticeNotifier(this.saves, [this.roomSaves, this.roomFlags]);
   final List<int> saves;
   final List<List<LadderRound>>? roomSaves;
+  final List<({bool? sits, bool fromRating})>? roomFlags;
   @override
   Future<void> saveRoomSession({
     required String rudimentId,
@@ -122,9 +123,12 @@ class _FakePracticeNotifier extends PracticeNotifier {
     required List<LadderRound> rounds,
     required int targetBpm,
     required int minBpm,
+    bool? sits,
+    bool fromRating = false,
   }) async {
     saves.add(rating);
     roomSaves?.add(rounds);
+    roomFlags?.add((sits: sits, fromRating: fromRating));
   }
 
   @override
@@ -192,13 +196,14 @@ Future<ProviderContainer> _pumpScreen(
   MetronomeNotifier Function()? metronome,
   List<int>? saves,
   List<List<LadderRound>>? roomSaves,
+  List<({bool? sits, bool fromRating})>? roomFlags,
   List<Override> extraOverrides = const [],
 }) async {
   final container = ProviderContainer(overrides: [
     metronomeNotifierProvider
         .overrideWith(metronome ?? () => _IdleMetronomeNotifier()),
     practiceNotifierProvider.overrideWith(
-        () => _FakePracticeNotifier(saves ?? <int>[], roomSaves)),
+        () => _FakePracticeNotifier(saves ?? <int>[], roomSaves, roomFlags)),
     ...extraOverrides,
   ]);
   addTearDown(container.dispose);
@@ -1438,6 +1443,7 @@ void main() {
       _FakeStrokeSource? src,
       List<int>? saves,
       List<List<LadderRound>>? roomSaves,
+      List<({bool? sits, bool fromRating})>? roomFlags,
       LessonVoice? voice,
       int bpm = 80,
     }) async {
@@ -1451,7 +1457,8 @@ void main() {
               lessonVoice: voice ?? _FakeLessonVoice()),
           metronome: () => met,
           saves: saves,
-          roomSaves: roomSaves);
+          roomSaves: roomSaves,
+          roomFlags: roomFlags);
       await tester.pump();
       await tester.tap(find.text('Start'));
       await tester.pump();
@@ -1507,8 +1514,9 @@ void main() {
         'one round', (tester) async {
       final saves = <int>[];
       final roomSaves = <List<LadderRound>>[];
+      final flags = <({bool? sits, bool fromRating})>[];
       final s = await start(tester,
-          room: true, saves: saves, roomSaves: roomSaves);
+          room: true, saves: saves, roomSaves: roomSaves, roomFlags: flags);
       await playRound(tester, s.met, null, 0);
       await closeRound(tester, s.met, 0);
       await playRound(tester, s.met, null, 1);
@@ -1522,12 +1530,19 @@ void main() {
       await tester.tap(find.text('Finish'));
       await tester.pumpAndSettle();
       expect(find.text('HOW DID IT FEEL?'), findsOneWidget);
+      // The rating decides the tempo here: the ladder's steps, not +5.
+      for (final t in ['−4 BPM', 'same', '+4 BPM']) {
+        expect(find.text(t), findsOneWidget);
+      }
+      expect(find.text('+5 BPM'), findsNothing);
       await tester.tap(find.text('Solid'));
       await tester.pumpAndSettle();
       expect(saves, [3]);
       expect(roomSaves.single.length, 1);
       expect(roomSaves.single.single.bpm, 80);
       expect(roomSaves.single.single.verdict, RoundVerdict.clean);
+      expect(flags.single.fromRating, isTrue);
+      expect(flags.single.sits, isNull);
       await tearDownScreen(tester);
     });
 
@@ -1543,6 +1558,10 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Finish'));
       await tester.pumpAndSettle();
+      // Measured rounds decided: no BPM promise under the chips.
+      for (final t in ['same BPM', '+2 BPM', '+5 BPM', '+4 BPM', '−4 BPM']) {
+        expect(find.text(t), findsNothing);
+      }
       await tester.tap(find.text('Struggled'));
       await tester.pumpAndSettle();
       expect(roomSaves.single.single.bpm, 80);
@@ -1591,6 +1610,46 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Nailed it'), findsOneWidget);
       await tearDownScreen(tester);
+    });
+
+    testWidgets('a manual tempo change breaks the clean streak',
+        (tester) async {
+      final src = _FakeStrokeSource(StrokeSourceKind.midi);
+      final flags = <({bool? sits, bool fromRating})>[];
+      final s = await start(tester,
+          room: true, src: src, bpm: rudiment.targetBpm, roomFlags: flags);
+      await playRound(tester, s.met, src, 0);
+      await closeRound(tester, s.met, 0);
+      expect(chipText(tester), 'Clean · +4');
+      // Back to the target by hand during the cut-short round 1.
+      await tester.tap(find.byIcon(Icons.remove));
+      await tester.pump();
+      expect(s.c.read(metronomeNotifierProvider).bpm, rudiment.targetBpm);
+      await playRound(tester, s.met, src, 2);
+      await closeRound(tester, s.met, 2);
+      // Two clean rounds at the target — but not in a row.
+      expect(chipText(tester), 'Clean · +4');
+      await tester.pump(const Duration(seconds: 2));
+      await tester.tap(find.text('Stop'));
+      await tester.pump();
+      await tester.tap(find.text('Finish'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Nailed it'), findsNothing);
+      await tester.tap(find.text('Solid'));
+      await tester.pumpAndSettle();
+      expect(flags.single.sits, isFalse);
+      await tearDownScreen(tester);
+    });
+
+    test('round chip text follows the verdict', () {
+      expect(roundChipText(RoundVerdict.clean, 80, 84), 'Clean · +4');
+      expect(roundChipText(RoundVerdict.clean, 240, 240), 'Clean');
+      expect(roundChipText(RoundVerdict.close, 80, 80), 'Hold');
+      expect(roundChipText(RoundVerdict.off, 80, 76), 'Slower · −4');
+      expect(roundChipText(RoundVerdict.off, 60, 60), 'Slower');
+      // Dialled below the minimum: the floor lifts the tempo, the verdict
+      // still says what happened.
+      expect(roundChipText(RoundVerdict.off, 52, 60), 'Slower');
     });
 
     testWidgets('how to play never opens by itself', (tester) async {

@@ -57,6 +57,7 @@ void main() {
     bool coach = false,
     Future<void> Function(int)? onRate,
     String? exportMessage,
+    List<String>? ratingSubs,
   }) async {
     final rated = <int>[];
     final done = <int>[];
@@ -83,6 +84,7 @@ void main() {
               exported.add(1);
               return exportMessage;
             },
+            ratingSubs: ratingSubs,
           ),
         ),
       ),
@@ -140,6 +142,21 @@ void main() {
     await tester.tap(find.text('Done'));
     await tester.pump();
     expect(r.done.length, 1);
+  });
+
+  testWidgets('rating sub-labels: own lines, or none', (tester) async {
+    await pump(tester,
+        a: analysis, ratingSubs: const ['−4 BPM', 'same', '+4 BPM']);
+    for (final t in ['−4 BPM', 'same', '+4 BPM']) {
+      expect(find.text(t), findsOneWidget);
+    }
+    expect(find.text('+5 BPM'), findsNothing);
+
+    await pump(tester, a: analysis, ratingSubs: const ['', '', '']);
+    for (final t in ['same BPM', '+2 BPM', '+5 BPM', '+4 BPM', 'same']) {
+      expect(find.text(t), findsNothing);
+    }
+    expect(find.text('Solid'), findsOneWidget);
   });
 
   testWidgets('Done stays locked while the save is still running',
