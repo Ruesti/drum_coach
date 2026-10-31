@@ -161,7 +161,7 @@ extension _KitPainting on _StaffPainter {
       if (y < topY) topY = y;
       if (y > bottomY) bottomY = y;
       final color = _dim(n.beat.isAccent
-          ? _StaffPainter._accentColor
+          ? _accentColor
           : n.beat.isGhost
               ? _StaffPainter._ghostColor
               : _StaffPainter._inkColor);
@@ -186,8 +186,7 @@ extension _KitPainting on _StaffPainter {
       if (resolved.dotted) _drawDot(canvas, Offset(x, y), color);
     }
 
-    final stemColor =
-        _dim(anyAccent ? _StaffPainter._accentColor : _StaffPainter._inkColor);
+    final stemColor = _dim(anyAccent ? _accentColor : _StaffPainter._inkColor);
     if (resolved.value != NoteValue.whole) {
       final stemX = up
           ? x + _StaffPainter._headRx - 0.6
@@ -209,7 +208,7 @@ extension _KitPainting on _StaffPainter {
     }
     if (anyAccent) {
       _drawAccent(canvas, Offset(x, up ? y0 + _accentY : stemEndY + 8),
-          _dim(_StaffPainter._accentColor));
+          _dim(_accentColor));
     }
     if (!up) {
       // Foot side (double bass): only for a foot voice that alternates

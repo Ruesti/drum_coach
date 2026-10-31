@@ -40,6 +40,16 @@ class LineView extends StatefulWidget {
   /// Playhead stroke in layout units ([SheetStaffWidget.playheadWidth]).
   final double playheadWidth;
 
+  /// Playhead colour ([SheetStaffWidget.playheadColor]).
+  final Color playheadColor;
+
+  /// Bars per row the geometry aims for (2 = the practice screen; a guided
+  /// four-bar page asks for 4).
+  final int targetBarsPerRow;
+
+  /// No paper card, accents in plain ink ([SheetStaffWidget.plain]).
+  final bool plain;
+
   const LineView({
     super.key,
     required this.rudiment,
@@ -52,6 +62,9 @@ class LineView extends StatefulWidget {
     this.fillWidth = false,
     this.cursorStyle = CursorStyle.box,
     this.playheadWidth = playheadLineWidth,
+    this.playheadColor = AppColors.accent,
+    this.targetBarsPerRow = 2,
+    this.plain = false,
   });
 
   @override
@@ -68,6 +81,7 @@ class _LineViewState extends State<LineView> {
   bool _geoCounts = true;
   int _geoLine = -1;
   bool _geoFill = false;
+  int _geoBars = 2;
 
   SheetGeometry _geometryFor(double contentWidth, int line) {
     final cached = _geo;
@@ -76,19 +90,22 @@ class _LineViewState extends State<LineView> {
         _geoWidth == contentWidth &&
         _geoCounts == widget.showCounts &&
         _geoLine == line &&
-        _geoFill == widget.fillWidth) {
+        _geoFill == widget.fillWidth &&
+        _geoBars == widget.targetBarsPerRow) {
       return cached;
     }
     final geo = computeSheetGeometry(widget.rudiment, contentWidth,
         showCounts: widget.showCounts,
         clefLine: line,
-        fillWidth: widget.fillWidth);
+        fillWidth: widget.fillWidth,
+        targetBarsPerRow: widget.targetBarsPerRow);
     _geo = geo;
     _geoRudiment = widget.rudiment;
     _geoWidth = contentWidth;
     _geoCounts = widget.showCounts;
     _geoLine = line;
     _geoFill = widget.fillWidth;
+    _geoBars = widget.targetBarsPerRow;
     return geo;
   }
 
@@ -143,6 +160,9 @@ class _LineViewState extends State<LineView> {
         fillWidth: widget.fillWidth,
         cursorStyle: widget.cursorStyle,
         playheadWidth: widget.playheadWidth,
+        playheadColor: widget.playheadColor,
+        targetBarsPerRow: widget.targetBarsPerRow,
+        plain: widget.plain,
       );
       if (!c.maxHeight.isFinite || height <= c.maxHeight) {
         return SizedBox(height: height, child: sheet);

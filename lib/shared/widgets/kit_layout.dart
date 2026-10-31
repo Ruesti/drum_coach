@@ -233,6 +233,7 @@ KitLineLayout computeKitLineLayout({
   double systemPad = 26,
   double barGap = 12,
   double preferredPxPerQuarter = 56,
+  int targetBarsPerRow = 2,
 }) {
   if (voices.isEmpty) throw ArgumentError('kit line without voices');
   final lengths = [for (final v in voices) ticksOf(v.beats, grid)];
@@ -259,6 +260,7 @@ KitLineLayout computeKitLineLayout({
     systemPad: systemPad,
     barGap: barGap,
     preferredPxPerQuarter: preferredPxPerQuarter,
+    targetBarsPerRow: targetBarsPerRow,
   );
   final handsLayer = layerTrack([
     for (final v in voices)
