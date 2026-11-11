@@ -23,6 +23,22 @@ void main() {
         throwsFormatException);
   });
 
+  test('decode throws FormatException on missing or wrong-typed fields', () {
+    final good = encodeSessionJsonl(syntheticSession(entryExercise));
+    expect(() => decodeSessionJsonl(good.replaceFirst('"bpm":70,', '')),
+        throwsFormatException);
+    expect(
+        () => decodeSessionJsonl(good.replaceFirst('"bpm":70', '"bpm":"fast"')),
+        throwsFormatException);
+    expect(() => decodeSessionJsonl(good.replaceFirst('"note":', '"nota":')),
+        throwsFormatException);
+    expect(
+        () => decodeSessionJsonl(good.replaceFirst('"vel":100', '"vel":"x"')),
+        throwsFormatException);
+    expect(() => decodeSessionJsonl('{"type":"header","version":1\n'),
+        throwsFormatException);
+  });
+
   test('synthetic +7.0 ms on index 10 → deviation 7.0 ± 0.1 for that target',
       () {
     final a =

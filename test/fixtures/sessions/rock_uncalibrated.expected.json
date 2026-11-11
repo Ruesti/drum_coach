@@ -41,7 +41,7 @@
       },
       {
         "id": "timingMedian",
-        "actual": 0.0,
+        "actual": 12.0,
         "threshold": 15.0,
         "atMost": true,
         "passed": true
@@ -70,7 +70,7 @@
     },
     "wrongRate": 0.0,
     "extraRate": 0.0,
-    "timingMedianMs": 0.0,
+    "timingMedianMs": 12.0,
     "timingSpreadMs": 0.0,
     "snareVelocitySd": 0.0,
     "maxHitGapMs": 375.0,
@@ -85,7 +85,7 @@
       "timeMs": 3000.0,
       "kind": "hit",
       "strokeIndex": 0,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 1,
@@ -94,7 +94,7 @@
       "timeMs": 3000.0,
       "kind": "hit",
       "strokeIndex": 1,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 2,
@@ -103,7 +103,7 @@
       "timeMs": 3375.0,
       "kind": "hit",
       "strokeIndex": 2,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 3,
@@ -112,7 +112,7 @@
       "timeMs": 3750.0,
       "kind": "hit",
       "strokeIndex": 3,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 4,
@@ -121,7 +121,7 @@
       "timeMs": 3750.0,
       "kind": "hit",
       "strokeIndex": 4,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 5,
@@ -130,7 +130,7 @@
       "timeMs": 4125.0,
       "kind": "hit",
       "strokeIndex": 5,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 6,
@@ -139,7 +139,7 @@
       "timeMs": 4500.0,
       "kind": "hit",
       "strokeIndex": 6,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 7,
@@ -148,7 +148,7 @@
       "timeMs": 4500.0,
       "kind": "hit",
       "strokeIndex": 7,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 8,
@@ -157,7 +157,7 @@
       "timeMs": 4875.0,
       "kind": "hit",
       "strokeIndex": 8,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 9,
@@ -166,7 +166,7 @@
       "timeMs": 5250.0,
       "kind": "hit",
       "strokeIndex": 9,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 10,
@@ -175,7 +175,7 @@
       "timeMs": 5250.0,
       "kind": "hit",
       "strokeIndex": 10,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 11,
@@ -184,7 +184,7 @@
       "timeMs": 5625.0,
       "kind": "hit",
       "strokeIndex": 11,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 12,
@@ -193,7 +193,7 @@
       "timeMs": 6000.0,
       "kind": "hit",
       "strokeIndex": 12,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 13,
@@ -202,7 +202,7 @@
       "timeMs": 6000.0,
       "kind": "hit",
       "strokeIndex": 13,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 14,
@@ -211,7 +211,7 @@
       "timeMs": 6375.0,
       "kind": "hit",
       "strokeIndex": 14,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 15,
@@ -220,7 +220,7 @@
       "timeMs": 6750.0,
       "kind": "hit",
       "strokeIndex": 15,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 16,
@@ -229,7 +229,7 @@
       "timeMs": 6750.0,
       "kind": "hit",
       "strokeIndex": 16,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 17,
@@ -238,7 +238,7 @@
       "timeMs": 7125.0,
       "kind": "hit",
       "strokeIndex": 17,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 18,
@@ -247,7 +247,7 @@
       "timeMs": 7500.0,
       "kind": "hit",
       "strokeIndex": 18,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 19,
@@ -256,7 +256,7 @@
       "timeMs": 7500.0,
       "kind": "hit",
       "strokeIndex": 19,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 20,
@@ -265,7 +265,7 @@
       "timeMs": 7875.0,
       "kind": "hit",
       "strokeIndex": 20,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 21,
@@ -274,7 +274,7 @@
       "timeMs": 8250.0,
       "kind": "hit",
       "strokeIndex": 21,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 22,
@@ -283,7 +283,7 @@
       "timeMs": 8250.0,
       "kind": "hit",
       "strokeIndex": 22,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 23,
@@ -292,7 +292,7 @@
       "timeMs": 8625.0,
       "kind": "hit",
       "strokeIndex": 23,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 24,
@@ -301,7 +301,7 @@
       "timeMs": 9000.0,
       "kind": "hit",
       "strokeIndex": 24,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 25,
@@ -310,7 +310,7 @@
       "timeMs": 9000.0,
       "kind": "hit",
       "strokeIndex": 25,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 26,
@@ -319,7 +319,7 @@
       "timeMs": 9375.0,
       "kind": "hit",
       "strokeIndex": 26,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 27,
@@ -328,7 +328,7 @@
       "timeMs": 9750.0,
       "kind": "hit",
       "strokeIndex": 27,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 28,
@@ -337,7 +337,7 @@
       "timeMs": 9750.0,
       "kind": "hit",
       "strokeIndex": 28,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 29,
@@ -346,7 +346,7 @@
       "timeMs": 10125.0,
       "kind": "hit",
       "strokeIndex": 29,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 30,
@@ -355,7 +355,7 @@
       "timeMs": 10500.0,
       "kind": "hit",
       "strokeIndex": 30,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 31,
@@ -364,7 +364,7 @@
       "timeMs": 10500.0,
       "kind": "hit",
       "strokeIndex": 31,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 32,
@@ -373,7 +373,7 @@
       "timeMs": 10875.0,
       "kind": "hit",
       "strokeIndex": 32,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 33,
@@ -382,7 +382,7 @@
       "timeMs": 11250.0,
       "kind": "hit",
       "strokeIndex": 33,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 34,
@@ -391,7 +391,7 @@
       "timeMs": 11250.0,
       "kind": "hit",
       "strokeIndex": 34,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 35,
@@ -400,7 +400,7 @@
       "timeMs": 11625.0,
       "kind": "hit",
       "strokeIndex": 35,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 36,
@@ -409,7 +409,7 @@
       "timeMs": 12000.0,
       "kind": "hit",
       "strokeIndex": 36,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 37,
@@ -418,7 +418,7 @@
       "timeMs": 12000.0,
       "kind": "hit",
       "strokeIndex": 37,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 38,
@@ -427,7 +427,7 @@
       "timeMs": 12375.0,
       "kind": "hit",
       "strokeIndex": 38,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 39,
@@ -436,7 +436,7 @@
       "timeMs": 12750.0,
       "kind": "hit",
       "strokeIndex": 39,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 40,
@@ -445,7 +445,7 @@
       "timeMs": 12750.0,
       "kind": "hit",
       "strokeIndex": 40,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 41,
@@ -454,7 +454,7 @@
       "timeMs": 13125.0,
       "kind": "hit",
       "strokeIndex": 41,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 42,
@@ -463,7 +463,7 @@
       "timeMs": 13500.0,
       "kind": "hit",
       "strokeIndex": 42,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 43,
@@ -472,7 +472,7 @@
       "timeMs": 13500.0,
       "kind": "hit",
       "strokeIndex": 43,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 44,
@@ -481,7 +481,7 @@
       "timeMs": 13875.0,
       "kind": "hit",
       "strokeIndex": 44,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 45,
@@ -490,7 +490,7 @@
       "timeMs": 14250.0,
       "kind": "hit",
       "strokeIndex": 45,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 46,
@@ -499,7 +499,7 @@
       "timeMs": 14250.0,
       "kind": "hit",
       "strokeIndex": 46,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 47,
@@ -508,7 +508,7 @@
       "timeMs": 14625.0,
       "kind": "hit",
       "strokeIndex": 47,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 48,
@@ -517,7 +517,7 @@
       "timeMs": 15000.0,
       "kind": "hit",
       "strokeIndex": 48,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 49,
@@ -526,7 +526,7 @@
       "timeMs": 15000.0,
       "kind": "hit",
       "strokeIndex": 49,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 50,
@@ -535,7 +535,7 @@
       "timeMs": 15375.0,
       "kind": "hit",
       "strokeIndex": 50,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 51,
@@ -544,7 +544,7 @@
       "timeMs": 15750.0,
       "kind": "hit",
       "strokeIndex": 51,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 52,
@@ -553,7 +553,7 @@
       "timeMs": 15750.0,
       "kind": "hit",
       "strokeIndex": 52,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 53,
@@ -562,7 +562,7 @@
       "timeMs": 16125.0,
       "kind": "hit",
       "strokeIndex": 53,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 54,
@@ -571,7 +571,7 @@
       "timeMs": 16500.0,
       "kind": "hit",
       "strokeIndex": 54,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 55,
@@ -580,7 +580,7 @@
       "timeMs": 16500.0,
       "kind": "hit",
       "strokeIndex": 55,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 56,
@@ -589,7 +589,7 @@
       "timeMs": 16875.0,
       "kind": "hit",
       "strokeIndex": 56,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 57,
@@ -598,7 +598,7 @@
       "timeMs": 17250.0,
       "kind": "hit",
       "strokeIndex": 57,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 58,
@@ -607,7 +607,7 @@
       "timeMs": 17250.0,
       "kind": "hit",
       "strokeIndex": 58,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 59,
@@ -616,7 +616,7 @@
       "timeMs": 17625.0,
       "kind": "hit",
       "strokeIndex": 59,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 60,
@@ -625,7 +625,7 @@
       "timeMs": 18000.0,
       "kind": "hit",
       "strokeIndex": 60,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 61,
@@ -634,7 +634,7 @@
       "timeMs": 18000.0,
       "kind": "hit",
       "strokeIndex": 61,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 62,
@@ -643,7 +643,7 @@
       "timeMs": 18375.0,
       "kind": "hit",
       "strokeIndex": 62,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 63,
@@ -652,7 +652,7 @@
       "timeMs": 18750.0,
       "kind": "hit",
       "strokeIndex": 63,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 64,
@@ -661,7 +661,7 @@
       "timeMs": 18750.0,
       "kind": "hit",
       "strokeIndex": 64,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 65,
@@ -670,7 +670,7 @@
       "timeMs": 19125.0,
       "kind": "hit",
       "strokeIndex": 65,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 66,
@@ -679,7 +679,7 @@
       "timeMs": 19500.0,
       "kind": "hit",
       "strokeIndex": 66,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 67,
@@ -688,7 +688,7 @@
       "timeMs": 19500.0,
       "kind": "hit",
       "strokeIndex": 67,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 68,
@@ -697,7 +697,7 @@
       "timeMs": 19875.0,
       "kind": "hit",
       "strokeIndex": 68,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 69,
@@ -706,7 +706,7 @@
       "timeMs": 20250.0,
       "kind": "hit",
       "strokeIndex": 69,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 70,
@@ -715,7 +715,7 @@
       "timeMs": 20250.0,
       "kind": "hit",
       "strokeIndex": 70,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 71,
@@ -724,7 +724,7 @@
       "timeMs": 20625.0,
       "kind": "hit",
       "strokeIndex": 71,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 72,
@@ -733,7 +733,7 @@
       "timeMs": 21000.0,
       "kind": "hit",
       "strokeIndex": 72,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 73,
@@ -742,7 +742,7 @@
       "timeMs": 21000.0,
       "kind": "hit",
       "strokeIndex": 73,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 74,
@@ -751,7 +751,7 @@
       "timeMs": 21375.0,
       "kind": "hit",
       "strokeIndex": 74,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 75,
@@ -760,7 +760,7 @@
       "timeMs": 21750.0,
       "kind": "hit",
       "strokeIndex": 75,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 76,
@@ -769,7 +769,7 @@
       "timeMs": 21750.0,
       "kind": "hit",
       "strokeIndex": 76,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 77,
@@ -778,7 +778,7 @@
       "timeMs": 22125.0,
       "kind": "hit",
       "strokeIndex": 77,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 78,
@@ -787,7 +787,7 @@
       "timeMs": 22500.0,
       "kind": "hit",
       "strokeIndex": 78,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 79,
@@ -796,7 +796,7 @@
       "timeMs": 22500.0,
       "kind": "hit",
       "strokeIndex": 79,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 80,
@@ -805,7 +805,7 @@
       "timeMs": 22875.0,
       "kind": "hit",
       "strokeIndex": 80,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 81,
@@ -814,7 +814,7 @@
       "timeMs": 23250.0,
       "kind": "hit",
       "strokeIndex": 81,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 82,
@@ -823,7 +823,7 @@
       "timeMs": 23250.0,
       "kind": "hit",
       "strokeIndex": 82,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 83,
@@ -832,7 +832,7 @@
       "timeMs": 23625.0,
       "kind": "hit",
       "strokeIndex": 83,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 84,
@@ -841,7 +841,7 @@
       "timeMs": 24000.0,
       "kind": "hit",
       "strokeIndex": 85,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 85,
@@ -850,7 +850,7 @@
       "timeMs": 24000.0,
       "kind": "hit",
       "strokeIndex": 84,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 86,
@@ -859,7 +859,7 @@
       "timeMs": 24375.0,
       "kind": "hit",
       "strokeIndex": 86,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 87,
@@ -868,7 +868,7 @@
       "timeMs": 24750.0,
       "kind": "hit",
       "strokeIndex": 87,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 88,
@@ -877,7 +877,7 @@
       "timeMs": 24750.0,
       "kind": "hit",
       "strokeIndex": 88,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 89,
@@ -886,7 +886,7 @@
       "timeMs": 25125.0,
       "kind": "hit",
       "strokeIndex": 89,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 90,
@@ -895,7 +895,7 @@
       "timeMs": 25500.0,
       "kind": "hit",
       "strokeIndex": 90,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 91,
@@ -904,7 +904,7 @@
       "timeMs": 25500.0,
       "kind": "hit",
       "strokeIndex": 91,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 92,
@@ -913,7 +913,7 @@
       "timeMs": 25875.0,
       "kind": "hit",
       "strokeIndex": 92,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 93,
@@ -922,7 +922,7 @@
       "timeMs": 26250.0,
       "kind": "hit",
       "strokeIndex": 93,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 94,
@@ -931,7 +931,7 @@
       "timeMs": 26250.0,
       "kind": "hit",
       "strokeIndex": 94,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 95,
@@ -940,7 +940,7 @@
       "timeMs": 26625.0,
       "kind": "hit",
       "strokeIndex": 95,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 96,
@@ -949,7 +949,7 @@
       "timeMs": 27000.0,
       "kind": "hit",
       "strokeIndex": 96,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 97,
@@ -958,7 +958,7 @@
       "timeMs": 27000.0,
       "kind": "hit",
       "strokeIndex": 97,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 98,
@@ -967,7 +967,7 @@
       "timeMs": 27375.0,
       "kind": "hit",
       "strokeIndex": 98,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 99,
@@ -976,7 +976,7 @@
       "timeMs": 27750.0,
       "kind": "hit",
       "strokeIndex": 99,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 100,
@@ -985,7 +985,7 @@
       "timeMs": 27750.0,
       "kind": "hit",
       "strokeIndex": 100,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 101,
@@ -994,7 +994,7 @@
       "timeMs": 28125.0,
       "kind": "hit",
       "strokeIndex": 101,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 102,
@@ -1003,7 +1003,7 @@
       "timeMs": 28500.0,
       "kind": "hit",
       "strokeIndex": 102,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 103,
@@ -1012,7 +1012,7 @@
       "timeMs": 28500.0,
       "kind": "hit",
       "strokeIndex": 103,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 104,
@@ -1021,7 +1021,7 @@
       "timeMs": 28875.0,
       "kind": "hit",
       "strokeIndex": 104,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 105,
@@ -1030,7 +1030,7 @@
       "timeMs": 29250.0,
       "kind": "hit",
       "strokeIndex": 106,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 106,
@@ -1039,7 +1039,7 @@
       "timeMs": 29250.0,
       "kind": "hit",
       "strokeIndex": 105,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 107,
@@ -1048,7 +1048,7 @@
       "timeMs": 29625.0,
       "kind": "hit",
       "strokeIndex": 107,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 108,
@@ -1057,7 +1057,7 @@
       "timeMs": 30000.0,
       "kind": "hit",
       "strokeIndex": 108,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 109,
@@ -1066,7 +1066,7 @@
       "timeMs": 30000.0,
       "kind": "hit",
       "strokeIndex": 109,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 110,
@@ -1075,7 +1075,7 @@
       "timeMs": 30375.0,
       "kind": "hit",
       "strokeIndex": 110,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 111,
@@ -1084,7 +1084,7 @@
       "timeMs": 30750.0,
       "kind": "hit",
       "strokeIndex": 111,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 112,
@@ -1093,7 +1093,7 @@
       "timeMs": 30750.0,
       "kind": "hit",
       "strokeIndex": 112,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 113,
@@ -1102,7 +1102,7 @@
       "timeMs": 31125.0,
       "kind": "hit",
       "strokeIndex": 113,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 114,
@@ -1111,7 +1111,7 @@
       "timeMs": 31500.0,
       "kind": "hit",
       "strokeIndex": 114,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 115,
@@ -1120,7 +1120,7 @@
       "timeMs": 31500.0,
       "kind": "hit",
       "strokeIndex": 115,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 116,
@@ -1129,7 +1129,7 @@
       "timeMs": 31875.0,
       "kind": "hit",
       "strokeIndex": 116,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 117,
@@ -1138,7 +1138,7 @@
       "timeMs": 32250.0,
       "kind": "hit",
       "strokeIndex": 117,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 118,
@@ -1147,7 +1147,7 @@
       "timeMs": 32250.0,
       "kind": "hit",
       "strokeIndex": 118,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 119,
@@ -1156,7 +1156,7 @@
       "timeMs": 32625.0,
       "kind": "hit",
       "strokeIndex": 119,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 120,
@@ -1165,7 +1165,7 @@
       "timeMs": 33000.0,
       "kind": "hit",
       "strokeIndex": 120,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 121,
@@ -1174,7 +1174,7 @@
       "timeMs": 33000.0,
       "kind": "hit",
       "strokeIndex": 121,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 122,
@@ -1183,7 +1183,7 @@
       "timeMs": 33375.0,
       "kind": "hit",
       "strokeIndex": 122,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 123,
@@ -1192,7 +1192,7 @@
       "timeMs": 33750.0,
       "kind": "hit",
       "strokeIndex": 123,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 124,
@@ -1201,7 +1201,7 @@
       "timeMs": 33750.0,
       "kind": "hit",
       "strokeIndex": 124,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 125,
@@ -1210,7 +1210,7 @@
       "timeMs": 34125.0,
       "kind": "hit",
       "strokeIndex": 125,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 126,
@@ -1219,7 +1219,7 @@
       "timeMs": 34500.0,
       "kind": "hit",
       "strokeIndex": 126,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 127,
@@ -1228,7 +1228,7 @@
       "timeMs": 34500.0,
       "kind": "hit",
       "strokeIndex": 127,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 128,
@@ -1237,7 +1237,7 @@
       "timeMs": 34875.0,
       "kind": "hit",
       "strokeIndex": 128,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 129,
@@ -1246,7 +1246,7 @@
       "timeMs": 35250.0,
       "kind": "hit",
       "strokeIndex": 129,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 130,
@@ -1255,7 +1255,7 @@
       "timeMs": 35250.0,
       "kind": "hit",
       "strokeIndex": 130,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 131,
@@ -1264,7 +1264,7 @@
       "timeMs": 35625.0,
       "kind": "hit",
       "strokeIndex": 131,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 132,
@@ -1273,7 +1273,7 @@
       "timeMs": 36000.0,
       "kind": "hit",
       "strokeIndex": 132,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 133,
@@ -1282,7 +1282,7 @@
       "timeMs": 36000.0,
       "kind": "hit",
       "strokeIndex": 133,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 134,
@@ -1291,7 +1291,7 @@
       "timeMs": 36375.0,
       "kind": "hit",
       "strokeIndex": 134,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 135,
@@ -1300,7 +1300,7 @@
       "timeMs": 36750.0,
       "kind": "hit",
       "strokeIndex": 135,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 136,
@@ -1309,7 +1309,7 @@
       "timeMs": 36750.0,
       "kind": "hit",
       "strokeIndex": 136,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 137,
@@ -1318,7 +1318,7 @@
       "timeMs": 37125.0,
       "kind": "hit",
       "strokeIndex": 137,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 138,
@@ -1327,7 +1327,7 @@
       "timeMs": 37500.0,
       "kind": "hit",
       "strokeIndex": 138,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 139,
@@ -1336,7 +1336,7 @@
       "timeMs": 37500.0,
       "kind": "hit",
       "strokeIndex": 139,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 140,
@@ -1345,7 +1345,7 @@
       "timeMs": 37875.0,
       "kind": "hit",
       "strokeIndex": 140,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 141,
@@ -1354,7 +1354,7 @@
       "timeMs": 38250.0,
       "kind": "hit",
       "strokeIndex": 141,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 142,
@@ -1363,7 +1363,7 @@
       "timeMs": 38250.0,
       "kind": "hit",
       "strokeIndex": 142,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 143,
@@ -1372,7 +1372,7 @@
       "timeMs": 38625.0,
       "kind": "hit",
       "strokeIndex": 143,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 144,
@@ -1381,7 +1381,7 @@
       "timeMs": 39000.0,
       "kind": "hit",
       "strokeIndex": 144,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 145,
@@ -1390,7 +1390,7 @@
       "timeMs": 39000.0,
       "kind": "hit",
       "strokeIndex": 145,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 146,
@@ -1399,7 +1399,7 @@
       "timeMs": 39375.0,
       "kind": "hit",
       "strokeIndex": 146,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 147,
@@ -1408,7 +1408,7 @@
       "timeMs": 39750.0,
       "kind": "hit",
       "strokeIndex": 147,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 148,
@@ -1417,7 +1417,7 @@
       "timeMs": 39750.0,
       "kind": "hit",
       "strokeIndex": 148,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 149,
@@ -1426,7 +1426,7 @@
       "timeMs": 40125.0,
       "kind": "hit",
       "strokeIndex": 149,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 150,
@@ -1435,7 +1435,7 @@
       "timeMs": 40500.0,
       "kind": "hit",
       "strokeIndex": 150,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 151,
@@ -1444,7 +1444,7 @@
       "timeMs": 40500.0,
       "kind": "hit",
       "strokeIndex": 151,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 152,
@@ -1453,7 +1453,7 @@
       "timeMs": 40875.0,
       "kind": "hit",
       "strokeIndex": 152,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 153,
@@ -1462,7 +1462,7 @@
       "timeMs": 41250.0,
       "kind": "hit",
       "strokeIndex": 153,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 154,
@@ -1471,7 +1471,7 @@
       "timeMs": 41250.0,
       "kind": "hit",
       "strokeIndex": 154,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 155,
@@ -1480,7 +1480,7 @@
       "timeMs": 41625.0,
       "kind": "hit",
       "strokeIndex": 155,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 156,
@@ -1489,7 +1489,7 @@
       "timeMs": 42000.0,
       "kind": "hit",
       "strokeIndex": 156,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 157,
@@ -1498,7 +1498,7 @@
       "timeMs": 42000.0,
       "kind": "hit",
       "strokeIndex": 157,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 158,
@@ -1507,7 +1507,7 @@
       "timeMs": 42375.0,
       "kind": "hit",
       "strokeIndex": 158,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 159,
@@ -1516,7 +1516,7 @@
       "timeMs": 42750.0,
       "kind": "hit",
       "strokeIndex": 159,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 160,
@@ -1525,7 +1525,7 @@
       "timeMs": 42750.0,
       "kind": "hit",
       "strokeIndex": 160,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 161,
@@ -1534,7 +1534,7 @@
       "timeMs": 43125.0,
       "kind": "hit",
       "strokeIndex": 161,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 162,
@@ -1543,7 +1543,7 @@
       "timeMs": 43500.0,
       "kind": "hit",
       "strokeIndex": 162,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 163,
@@ -1552,7 +1552,7 @@
       "timeMs": 43500.0,
       "kind": "hit",
       "strokeIndex": 163,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 164,
@@ -1561,7 +1561,7 @@
       "timeMs": 43875.0,
       "kind": "hit",
       "strokeIndex": 164,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 165,
@@ -1570,7 +1570,7 @@
       "timeMs": 44250.0,
       "kind": "hit",
       "strokeIndex": 165,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 166,
@@ -1579,7 +1579,7 @@
       "timeMs": 44250.0,
       "kind": "hit",
       "strokeIndex": 166,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 167,
@@ -1588,7 +1588,7 @@
       "timeMs": 44625.0,
       "kind": "hit",
       "strokeIndex": 167,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 168,
@@ -1597,7 +1597,7 @@
       "timeMs": 45000.0,
       "kind": "hit",
       "strokeIndex": 168,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 169,
@@ -1606,7 +1606,7 @@
       "timeMs": 45000.0,
       "kind": "hit",
       "strokeIndex": 169,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 170,
@@ -1615,7 +1615,7 @@
       "timeMs": 45375.0,
       "kind": "hit",
       "strokeIndex": 170,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 171,
@@ -1624,7 +1624,7 @@
       "timeMs": 45750.0,
       "kind": "hit",
       "strokeIndex": 171,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 172,
@@ -1633,7 +1633,7 @@
       "timeMs": 45750.0,
       "kind": "hit",
       "strokeIndex": 172,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 173,
@@ -1642,7 +1642,7 @@
       "timeMs": 46125.0,
       "kind": "hit",
       "strokeIndex": 173,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 174,
@@ -1651,7 +1651,7 @@
       "timeMs": 46500.0,
       "kind": "hit",
       "strokeIndex": 174,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 175,
@@ -1660,7 +1660,7 @@
       "timeMs": 46500.0,
       "kind": "hit",
       "strokeIndex": 175,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 176,
@@ -1669,7 +1669,7 @@
       "timeMs": 46875.0,
       "kind": "hit",
       "strokeIndex": 176,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 177,
@@ -1678,7 +1678,7 @@
       "timeMs": 47250.0,
       "kind": "hit",
       "strokeIndex": 177,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 178,
@@ -1687,7 +1687,7 @@
       "timeMs": 47250.0,
       "kind": "hit",
       "strokeIndex": 178,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 179,
@@ -1696,7 +1696,7 @@
       "timeMs": 47625.0,
       "kind": "hit",
       "strokeIndex": 179,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 180,
@@ -1705,7 +1705,7 @@
       "timeMs": 48000.0,
       "kind": "hit",
       "strokeIndex": 180,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 181,
@@ -1714,7 +1714,7 @@
       "timeMs": 48000.0,
       "kind": "hit",
       "strokeIndex": 181,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 182,
@@ -1723,7 +1723,7 @@
       "timeMs": 48375.0,
       "kind": "hit",
       "strokeIndex": 182,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 183,
@@ -1732,7 +1732,7 @@
       "timeMs": 48750.0,
       "kind": "hit",
       "strokeIndex": 183,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 184,
@@ -1741,7 +1741,7 @@
       "timeMs": 48750.0,
       "kind": "hit",
       "strokeIndex": 184,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 185,
@@ -1750,7 +1750,7 @@
       "timeMs": 49125.0,
       "kind": "hit",
       "strokeIndex": 185,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 186,
@@ -1759,7 +1759,7 @@
       "timeMs": 49500.0,
       "kind": "hit",
       "strokeIndex": 186,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 187,
@@ -1768,7 +1768,7 @@
       "timeMs": 49500.0,
       "kind": "hit",
       "strokeIndex": 187,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 188,
@@ -1777,7 +1777,7 @@
       "timeMs": 49875.0,
       "kind": "hit",
       "strokeIndex": 188,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 189,
@@ -1786,7 +1786,7 @@
       "timeMs": 50250.0,
       "kind": "hit",
       "strokeIndex": 189,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 190,
@@ -1795,7 +1795,7 @@
       "timeMs": 50250.0,
       "kind": "hit",
       "strokeIndex": 190,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     },
     {
       "index": 191,
@@ -1804,7 +1804,7 @@
       "timeMs": 50625.0,
       "kind": "hit",
       "strokeIndex": 191,
-      "deviationMs": 0.0
+      "deviationMs": 12.0
     }
   ],
   "extraStrokeIndices": [],

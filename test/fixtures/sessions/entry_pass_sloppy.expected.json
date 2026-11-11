@@ -6,21 +6,21 @@
     "criteria": [
       {
         "id": "hitRate.hiHat",
-        "actual": 1.0,
+        "actual": 0.813,
         "threshold": 0.8,
         "atMost": false,
         "passed": true
       },
       {
         "id": "hitRate.kick",
-        "actual": 0.938,
+        "actual": 0.813,
         "threshold": 0.8,
         "atMost": false,
         "passed": true
       },
       {
         "id": "hitGap",
-        "actual": 0.25,
+        "actual": 0.5,
         "threshold": 1.0,
         "atMost": true,
         "passed": true
@@ -29,17 +29,17 @@
   },
   "metrics": {
     "hitRate": {
-      "hiHat": 1.0,
-      "kick": 0.938
+      "hiHat": 0.813,
+      "kick": 0.813
     },
     "wrongRate": 0.0,
     "extraRate": 0.0,
     "timingMedianMs": 40.0,
-    "timingSpreadMs": 47.343,
+    "timingSpreadMs": 52.034,
     "snareVelocitySd": null,
-    "maxHitGapMs": 857.143,
+    "maxHitGapMs": 1714.286,
     "targetCount": 48,
-    "countedStrokes": 47
+    "countedStrokes": 39
   },
   "targets": [
     {
@@ -58,7 +58,7 @@
       "timeMs": 3000.0,
       "kind": "hit",
       "strokeIndex": 0,
-      "deviationMs": -47.0
+      "deviationMs": -60.0
     },
     {
       "index": 2,
@@ -67,25 +67,25 @@
       "timeMs": 3857.143,
       "kind": "hit",
       "strokeIndex": 2,
-      "deviationMs": 54.0
+      "deviationMs": 50.0
     },
     {
       "index": 3,
       "voice": "hiHat",
       "bar": 0,
       "timeMs": 4714.286,
-      "kind": "hit",
-      "strokeIndex": 3,
-      "deviationMs": -40.0
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
     },
     {
       "index": 4,
       "voice": "kick",
       "bar": 0,
       "timeMs": 4714.286,
-      "kind": "hit",
-      "strokeIndex": 4,
-      "deviationMs": 47.0
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
     },
     {
       "index": 5,
@@ -93,8 +93,8 @@
       "bar": 0,
       "timeMs": 5571.429,
       "kind": "hit",
-      "strokeIndex": 5,
-      "deviationMs": -54.0
+      "strokeIndex": 3,
+      "deviationMs": -60.0
     },
     {
       "index": 6,
@@ -102,7 +102,7 @@
       "bar": 1,
       "timeMs": 6428.571,
       "kind": "hit",
-      "strokeIndex": 7,
+      "strokeIndex": 5,
       "deviationMs": 40.0
     },
     {
@@ -111,8 +111,8 @@
       "bar": 1,
       "timeMs": 6428.571,
       "kind": "hit",
-      "strokeIndex": 6,
-      "deviationMs": -47.0
+      "strokeIndex": 4,
+      "deviationMs": -60.0
     },
     {
       "index": 8,
@@ -120,8 +120,8 @@
       "bar": 1,
       "timeMs": 7285.714,
       "kind": "hit",
-      "strokeIndex": 8,
-      "deviationMs": 54.0
+      "strokeIndex": 6,
+      "deviationMs": 50.0
     },
     {
       "index": 9,
@@ -129,8 +129,8 @@
       "bar": 1,
       "timeMs": 8142.857,
       "kind": "hit",
-      "strokeIndex": 9,
-      "deviationMs": -40.0
+      "strokeIndex": 7,
+      "deviationMs": -45.0
     },
     {
       "index": 10,
@@ -138,17 +138,17 @@
       "bar": 1,
       "timeMs": 8142.857,
       "kind": "hit",
-      "strokeIndex": 10,
-      "deviationMs": 47.0
+      "strokeIndex": 8,
+      "deviationMs": 55.0
     },
     {
       "index": 11,
       "voice": "hiHat",
       "bar": 1,
       "timeMs": 9000.0,
-      "kind": "hit",
-      "strokeIndex": 11,
-      "deviationMs": -54.0
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
     },
     {
       "index": 12,
@@ -156,7 +156,7 @@
       "bar": 2,
       "timeMs": 9857.143,
       "kind": "hit",
-      "strokeIndex": 13,
+      "strokeIndex": 10,
       "deviationMs": 40.0
     },
     {
@@ -165,8 +165,8 @@
       "bar": 2,
       "timeMs": 9857.143,
       "kind": "hit",
-      "strokeIndex": 12,
-      "deviationMs": -47.0
+      "strokeIndex": 9,
+      "deviationMs": -60.0
     },
     {
       "index": 14,
@@ -174,8 +174,8 @@
       "bar": 2,
       "timeMs": 10714.286,
       "kind": "hit",
-      "strokeIndex": 14,
-      "deviationMs": 54.0
+      "strokeIndex": 11,
+      "deviationMs": 50.0
     },
     {
       "index": 15,
@@ -183,8 +183,8 @@
       "bar": 2,
       "timeMs": 11571.429,
       "kind": "hit",
-      "strokeIndex": 15,
-      "deviationMs": -40.0
+      "strokeIndex": 12,
+      "deviationMs": -45.0
     },
     {
       "index": 16,
@@ -192,8 +192,8 @@
       "bar": 2,
       "timeMs": 11571.429,
       "kind": "hit",
-      "strokeIndex": 16,
-      "deviationMs": 47.0
+      "strokeIndex": 13,
+      "deviationMs": 55.0
     },
     {
       "index": 17,
@@ -201,26 +201,26 @@
       "bar": 2,
       "timeMs": 12428.571,
       "kind": "hit",
-      "strokeIndex": 17,
-      "deviationMs": -54.0
+      "strokeIndex": 14,
+      "deviationMs": -60.0
     },
     {
       "index": 18,
       "voice": "hiHat",
       "bar": 3,
       "timeMs": 13285.714,
-      "kind": "hit",
-      "strokeIndex": 19,
-      "deviationMs": 40.0
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
     },
     {
       "index": 19,
       "voice": "kick",
       "bar": 3,
       "timeMs": 13285.714,
-      "kind": "hit",
-      "strokeIndex": 18,
-      "deviationMs": -47.0
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
     },
     {
       "index": 20,
@@ -228,8 +228,8 @@
       "bar": 3,
       "timeMs": 14142.857,
       "kind": "hit",
-      "strokeIndex": 20,
-      "deviationMs": 54.0
+      "strokeIndex": 15,
+      "deviationMs": 50.0
     },
     {
       "index": 21,
@@ -237,8 +237,8 @@
       "bar": 3,
       "timeMs": 15000.0,
       "kind": "hit",
-      "strokeIndex": 21,
-      "deviationMs": -40.0
+      "strokeIndex": 16,
+      "deviationMs": -45.0
     },
     {
       "index": 22,
@@ -246,8 +246,8 @@
       "bar": 3,
       "timeMs": 15000.0,
       "kind": "hit",
-      "strokeIndex": 22,
-      "deviationMs": 47.0
+      "strokeIndex": 17,
+      "deviationMs": 55.0
     },
     {
       "index": 23,
@@ -255,8 +255,8 @@
       "bar": 3,
       "timeMs": 15857.143,
       "kind": "hit",
-      "strokeIndex": 23,
-      "deviationMs": -54.0
+      "strokeIndex": 18,
+      "deviationMs": -60.0
     },
     {
       "index": 24,
@@ -264,7 +264,7 @@
       "bar": 4,
       "timeMs": 16714.286,
       "kind": "hit",
-      "strokeIndex": 25,
+      "strokeIndex": 20,
       "deviationMs": 40.0
     },
     {
@@ -273,17 +273,17 @@
       "bar": 4,
       "timeMs": 16714.286,
       "kind": "hit",
-      "strokeIndex": 24,
-      "deviationMs": -47.0
+      "strokeIndex": 19,
+      "deviationMs": -60.0
     },
     {
       "index": 26,
       "voice": "hiHat",
       "bar": 4,
       "timeMs": 17571.429,
-      "kind": "hit",
-      "strokeIndex": 26,
-      "deviationMs": 54.0
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
     },
     {
       "index": 27,
@@ -291,8 +291,8 @@
       "bar": 4,
       "timeMs": 18428.571,
       "kind": "hit",
-      "strokeIndex": 27,
-      "deviationMs": -40.0
+      "strokeIndex": 21,
+      "deviationMs": -45.0
     },
     {
       "index": 28,
@@ -300,8 +300,8 @@
       "bar": 4,
       "timeMs": 18428.571,
       "kind": "hit",
-      "strokeIndex": 28,
-      "deviationMs": 47.0
+      "strokeIndex": 22,
+      "deviationMs": 55.0
     },
     {
       "index": 29,
@@ -309,8 +309,8 @@
       "bar": 4,
       "timeMs": 19285.714,
       "kind": "hit",
-      "strokeIndex": 29,
-      "deviationMs": -54.0
+      "strokeIndex": 23,
+      "deviationMs": -60.0
     },
     {
       "index": 30,
@@ -318,7 +318,7 @@
       "bar": 5,
       "timeMs": 20142.857,
       "kind": "hit",
-      "strokeIndex": 30,
+      "strokeIndex": 25,
       "deviationMs": 40.0
     },
     {
@@ -326,9 +326,9 @@
       "voice": "kick",
       "bar": 5,
       "timeMs": 20142.857,
-      "kind": "missed",
-      "strokeIndex": null,
-      "deviationMs": null
+      "kind": "hit",
+      "strokeIndex": 24,
+      "deviationMs": -60.0
     },
     {
       "index": 32,
@@ -336,26 +336,26 @@
       "bar": 5,
       "timeMs": 21000.0,
       "kind": "hit",
-      "strokeIndex": 31,
-      "deviationMs": 54.0
+      "strokeIndex": 26,
+      "deviationMs": 50.0
     },
     {
       "index": 33,
       "voice": "hiHat",
       "bar": 5,
       "timeMs": 21857.143,
-      "kind": "hit",
-      "strokeIndex": 32,
-      "deviationMs": -40.0
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
     },
     {
       "index": 34,
       "voice": "kick",
       "bar": 5,
       "timeMs": 21857.143,
-      "kind": "hit",
-      "strokeIndex": 33,
-      "deviationMs": 47.0
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
     },
     {
       "index": 35,
@@ -363,8 +363,8 @@
       "bar": 5,
       "timeMs": 22714.286,
       "kind": "hit",
-      "strokeIndex": 34,
-      "deviationMs": -54.0
+      "strokeIndex": 27,
+      "deviationMs": -60.0
     },
     {
       "index": 36,
@@ -372,7 +372,7 @@
       "bar": 6,
       "timeMs": 23571.429,
       "kind": "hit",
-      "strokeIndex": 36,
+      "strokeIndex": 29,
       "deviationMs": 40.0
     },
     {
@@ -381,8 +381,8 @@
       "bar": 6,
       "timeMs": 23571.429,
       "kind": "hit",
-      "strokeIndex": 35,
-      "deviationMs": -47.0
+      "strokeIndex": 28,
+      "deviationMs": -60.0
     },
     {
       "index": 38,
@@ -390,8 +390,8 @@
       "bar": 6,
       "timeMs": 24428.571,
       "kind": "hit",
-      "strokeIndex": 37,
-      "deviationMs": 54.0
+      "strokeIndex": 30,
+      "deviationMs": 50.0
     },
     {
       "index": 39,
@@ -399,8 +399,8 @@
       "bar": 6,
       "timeMs": 25285.714,
       "kind": "hit",
-      "strokeIndex": 38,
-      "deviationMs": -40.0
+      "strokeIndex": 31,
+      "deviationMs": -45.0
     },
     {
       "index": 40,
@@ -408,17 +408,17 @@
       "bar": 6,
       "timeMs": 25285.714,
       "kind": "hit",
-      "strokeIndex": 39,
-      "deviationMs": 47.0
+      "strokeIndex": 32,
+      "deviationMs": 55.0
     },
     {
       "index": 41,
       "voice": "hiHat",
       "bar": 6,
       "timeMs": 26142.857,
-      "kind": "hit",
-      "strokeIndex": 40,
-      "deviationMs": -54.0
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
     },
     {
       "index": 42,
@@ -426,7 +426,7 @@
       "bar": 7,
       "timeMs": 27000.0,
       "kind": "hit",
-      "strokeIndex": 42,
+      "strokeIndex": 34,
       "deviationMs": 40.0
     },
     {
@@ -435,8 +435,8 @@
       "bar": 7,
       "timeMs": 27000.0,
       "kind": "hit",
-      "strokeIndex": 41,
-      "deviationMs": -47.0
+      "strokeIndex": 33,
+      "deviationMs": -60.0
     },
     {
       "index": 44,
@@ -444,8 +444,8 @@
       "bar": 7,
       "timeMs": 27857.143,
       "kind": "hit",
-      "strokeIndex": 43,
-      "deviationMs": 54.0
+      "strokeIndex": 35,
+      "deviationMs": 50.0
     },
     {
       "index": 45,
@@ -453,8 +453,8 @@
       "bar": 7,
       "timeMs": 28714.286,
       "kind": "hit",
-      "strokeIndex": 44,
-      "deviationMs": -40.0
+      "strokeIndex": 36,
+      "deviationMs": -45.0
     },
     {
       "index": 46,
@@ -462,8 +462,8 @@
       "bar": 7,
       "timeMs": 28714.286,
       "kind": "hit",
-      "strokeIndex": 45,
-      "deviationMs": 47.0
+      "strokeIndex": 37,
+      "deviationMs": 55.0
     },
     {
       "index": 47,
@@ -471,8 +471,8 @@
       "bar": 7,
       "timeMs": 29571.429,
       "kind": "hit",
-      "strokeIndex": 46,
-      "deviationMs": -54.0
+      "strokeIndex": 38,
+      "deviationMs": -60.0
     }
   ],
   "extraStrokeIndices": [],

@@ -64,6 +64,16 @@ String encodeSessionJsonl(SessionRecord r) {
 }
 
 SessionRecord decodeSessionJsonl(String text) {
+  try {
+    return _decode(text);
+  } on FormatException {
+    rethrow;
+  } on TypeError catch (e) {
+    throw FormatException('Malformed session file: $e');
+  }
+}
+
+SessionRecord _decode(String text) {
   final lines = text.split('\n').where((l) => l.trim().isNotEmpty).toList();
   if (lines.isEmpty) throw const FormatException('Empty session file');
   final header = jsonDecode(lines.first);
