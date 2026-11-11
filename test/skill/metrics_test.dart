@@ -6,28 +6,13 @@ import 'package:drum_coach/measure/targets.dart';
 import 'package:drum_coach/skill/metrics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _gmNote = {Voice.hiHat: 42, Voice.snare: 38, Voice.kick: 36};
-const _gmInstrument = {
-  Voice.hiHat: KitInstrument.hiHatClosed,
-  Voice.snare: KitInstrument.snare,
-  Voice.kick: KitInstrument.kick,
-};
-
-/// A stroke for [t] on its own voice, or on voice [as] when given.
-Stroke strokeFor(TargetTime t,
-        {double shiftMs = 0, int velocity = 100, Voice? as}) =>
-    Stroke(
-      timeMs: t.timeMs + shiftMs,
-      note: _gmNote[as ?? t.voice]!,
-      velocity: velocity,
-      instrument: _gmInstrument[as ?? t.voice]!,
-    );
+import '../support/strokes.dart';
 
 SessionMetrics metricsFor(
     Exercise e, List<TargetTime> targets, List<Stroke> strokes) {
   final match =
       matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
-  return computeMetrics(match: match, strokes: strokes, exercise: e);
+  return computeMetrics(match: match, strokes: strokes);
 }
 
 void main() {

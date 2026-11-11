@@ -15,8 +15,8 @@ void main() {
   test('entry: 8 bars x (4 hh + 2 kick) = 48 targets, bar 1 at 70 BPM', () {
     final t = entryExercise.targetTimes(firstBeatMs: 0);
     expect(t.length, 48);
-    expect(t.where((x) => x.bar == 1).first.timeMs,
-        closeTo(4 * 60000 / 70, 1e-9));
+    expect(
+        t.where((x) => x.bar == 1).first.timeMs, closeTo(4 * 60000 / 70, 1e-9));
   });
   test('simultaneous targets sorted hiHat, snare, kick', () {
     final t = basicRockBeat.targetTimes(firstBeatMs: 0);

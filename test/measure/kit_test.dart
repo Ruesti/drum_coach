@@ -27,7 +27,8 @@ void main() {
       expect(KitInstrument.unknown.label, 'Unknown note');
     });
 
-    test('learn order starts with snare and kick and never contains unknown', () {
+    test('learn order starts with snare and kick and never contains unknown',
+        () {
       expect(KitInstrument.learnOrder.first, KitInstrument.snare);
       expect(KitInstrument.learnOrder[1], KitInstrument.kick);
       expect(KitInstrument.learnOrder, isNot(contains(KitInstrument.unknown)));

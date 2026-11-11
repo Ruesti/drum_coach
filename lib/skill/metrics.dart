@@ -3,7 +3,6 @@ library;
 
 import 'dart:math' as math;
 
-import '../content/exercises.dart';
 import '../measure/hit_matcher.dart';
 import '../measure/kit.dart';
 import '../measure/stroke.dart';
@@ -63,7 +62,6 @@ double _median(List<double> v) {
 SessionMetrics computeMetrics({
   required MatchResult match,
   required List<Stroke> strokes,
-  required Exercise exercise,
 }) {
   final outcomes = match.targets;
   final n = outcomes.length;

@@ -89,7 +89,10 @@ class KitMapping {
   KitMapping assign(KitInstrument instrument, int note) {
     final next = {
       for (final e in _notes.entries)
-        e.key: {for (final n in e.value) if (n != note) n},
+        e.key: {
+          for (final n in e.value)
+            if (n != note) n
+        },
     };
     next[instrument] = {...(next[instrument] ?? const <int>{}), note};
     return KitMapping._(next);
@@ -116,7 +119,10 @@ class KitMapping {
           raw is! List) {
         continue;
       }
-      notes[instrument] = {for (final n in raw) if (n is int) n};
+      notes[instrument] = {
+        for (final n in raw)
+          if (n is int) n
+      };
     }
     return KitMapping._(notes);
   }

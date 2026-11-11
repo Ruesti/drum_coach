@@ -83,9 +83,7 @@ void main() {
     test('steady player 18 ms late: offset 18, small spread, sure', () {
       final r = estimateMidiLatency(
         clickMs: midiClicks,
-        strokeMs: [
-          for (final c in midiClicks) c + 18 + (c % 2 == 0 ? 1 : -1)
-        ],
+        strokeMs: [for (final c in midiClicks) c + 18 + (c % 2 == 0 ? 1 : -1)],
       )!;
       expect(r.offsetMs, closeTo(18, 1.5));
       expect(r.spreadMs, lessThan(10));

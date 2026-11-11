@@ -1,7 +1,6 @@
 /// Gate thresholds per exercise and their evaluation against session metrics.
 library;
 
-import '../content/exercises.dart';
 import '../measure/kit.dart';
 import 'metrics.dart';
 
@@ -65,6 +64,7 @@ const _voiceCriteria = {
   Voice.kick: ('hitRate.kick', 'Kick hit rate'),
 };
 
+/// [voices] are the voices present in the exercise, [barMs] its bar length.
 /// Evaluates [metrics] against [spec]. All thresholds are inclusive. Without
 /// any counted stroke the run is not measurable (`no-strokes`), else without
 /// calibration it is not measurable (`uncalibrated`); the criteria are listed
@@ -72,7 +72,8 @@ const _voiceCriteria = {
 GateResult evaluateGate({
   required GateSpec spec,
   required SessionMetrics metrics,
-  required Exercise exercise,
+  required Set<Voice> voices,
+  required double barMs,
   required bool calibrated,
 }) {
   final criteria = <GateCriterion>[];
@@ -91,7 +92,6 @@ GateResult evaluateGate({
     ));
   }
 
-  final voices = {for (final h in exercise.barHits) h.voice};
   for (final v in Voice.values) {
     if (!voices.contains(v)) continue;
     final (id, label) = _voiceCriteria[v]!;
@@ -122,7 +122,7 @@ GateResult evaluateGate({
         atMost: true);
   }
   if (spec.maxHitGapBars != null) {
-    add('hitGap', 'Longest gap (bars)', metrics.maxHitGapMs / exercise.barMs,
+    add('hitGap', 'Longest gap (bars)', metrics.maxHitGapMs / barMs,
         spec.maxHitGapBars!,
         atMost: true);
   }

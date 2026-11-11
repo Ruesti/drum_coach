@@ -57,8 +57,8 @@ LatencyEstimate? estimateLatencyOffset({
   final rough = _median([
     for (final onset in onsetMs)
       onset -
-          plannedClickMs.reduce((a, b) =>
-              (onset - a).abs() <= (onset - b).abs() ? a : b),
+          plannedClickMs
+              .reduce((a, b) => (onset - a).abs() <= (onset - b).abs() ? a : b),
   ]);
 
   final aligned = alignSequences(
@@ -83,7 +83,9 @@ LatencyEstimate? estimateLatencyOffset({
 double _median(List<double> v) {
   final sorted = List<double>.of(v)..sort();
   final mid = sorted.length ~/ 2;
-  return sorted.length.isOdd ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  return sorted.length.isOdd
+      ? sorted[mid]
+      : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 /// Result of "play along to the click" (Brief A.4): the systematic
@@ -113,8 +115,7 @@ MidiLatencyResult? estimateMidiLatency({
   required List<double> strokeMs,
   double unsureAboveMs = 10,
 }) {
-  final est =
-      estimateLatencyOffset(plannedClickMs: clickMs, onsetMs: strokeMs);
+  final est = estimateLatencyOffset(plannedClickMs: clickMs, onsetMs: strokeMs);
   if (est == null) return null;
   return MidiLatencyResult(
     offsetMs: est.offsetMs,

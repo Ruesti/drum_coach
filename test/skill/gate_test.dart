@@ -7,7 +7,7 @@ import 'package:drum_coach/skill/gate.dart';
 import 'package:drum_coach/skill/metrics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'metrics_test.dart' show strokeFor;
+import '../support/strokes.dart';
 
 GateResult gateFor(
   Exercise e,
@@ -17,9 +17,13 @@ GateResult gateFor(
 }) {
   final match =
       matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
-  final metrics = computeMetrics(match: match, strokes: strokes, exercise: e);
+  final metrics = computeMetrics(match: match, strokes: strokes);
   return evaluateGate(
-      spec: e.gate, metrics: metrics, exercise: e, calibrated: calibrated);
+      spec: e.gate,
+      metrics: metrics,
+      voices: {for (final h in e.barHits) h.voice},
+      barMs: e.barMs,
+      calibrated: calibrated);
 }
 
 Set<String> failedIds(GateResult r) => {
