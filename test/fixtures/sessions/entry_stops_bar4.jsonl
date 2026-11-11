@@ -1,0 +1,25 @@
+{"type":"header","version":1,"exerciseId":"entry","bpm":70,"firstBeatMs":3000.0,"latencyOffsetMs":12.0,"deviceName":"Test Kit","mapping":{"kick":[36],"snare":[38,40],"snareRim":[37],"hiHatClosed":[42],"hiHatOpen":[46],"hiHatPedal":[44],"tom1":[48],"tom2":[47],"floorTom1":[45],"floorTom2":[43],"crash1":[49],"crash2":[57],"ride":[51],"rideBell":[53],"china":[52],"splash":[55]},"platform":"test","recordedAt":"2026-11-12T10:00:00.000Z"}
+{"type":"stroke","t":3012.0,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":3012.0,"note":36,"vel":100,"instrument":"kick"}
+{"type":"stroke","t":3869.143,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":4726.286,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":4726.286,"note":36,"vel":100,"instrument":"kick"}
+{"type":"stroke","t":5583.429,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":6440.571,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":6440.571,"note":36,"vel":100,"instrument":"kick"}
+{"type":"stroke","t":7297.714,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":8154.857,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":8154.857,"note":36,"vel":100,"instrument":"kick"}
+{"type":"stroke","t":9012.0,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":9869.143,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":9869.143,"note":36,"vel":100,"instrument":"kick"}
+{"type":"stroke","t":10726.286,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":11583.429,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":11583.429,"note":36,"vel":100,"instrument":"kick"}
+{"type":"stroke","t":12440.571,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":13297.714,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":13297.714,"note":36,"vel":100,"instrument":"kick"}
+{"type":"stroke","t":14154.857,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":15012.0,"note":42,"vel":100,"instrument":"hiHatClosed"}
+{"type":"stroke","t":15012.0,"note":36,"vel":100,"instrument":"kick"}
+{"type":"stroke","t":15869.143,"note":42,"vel":100,"instrument":"hiHatClosed"}
