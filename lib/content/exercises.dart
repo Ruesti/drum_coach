@@ -1,5 +1,6 @@
 import '../measure/kit.dart';
 import '../measure/targets.dart';
+import '../skill/gate.dart';
 
 class Exercise {
   const Exercise({
@@ -9,6 +10,7 @@ class Exercise {
     required this.bars,
     required this.beatsPerBar,
     required this.barHits,
+    required this.gate,
   });
 
   final String id;
@@ -17,6 +19,7 @@ class Exercise {
   final int bars;
   final int beatsPerBar;
   final List<TargetHit> barHits;
+  final GateSpec gate;
 
   double get barMs => beatsPerBar * 60000 / bpm;
 
@@ -65,6 +68,7 @@ const entryExercise = Exercise(
     TargetHit(Voice.kick, 0),
     TargetHit(Voice.kick, 48),
   ],
+  gate: GateSpec(minHitRatePerVoice: 0.80, maxHitGapBars: 1),
 );
 
 const basicRockBeat = Exercise(
@@ -87,6 +91,14 @@ const basicRockBeat = Exercise(
     TargetHit(Voice.kick, 0),
     TargetHit(Voice.kick, 48),
   ],
+  gate: GateSpec(
+    minHitRatePerVoice: 0.95,
+    maxWrongRate: 0.02,
+    maxExtraRate: 0.05,
+    maxAbsMedianMs: 15,
+    maxSpreadMs: 20,
+    maxSnareVelocitySd: 12,
+  ),
 );
 
 const exercises = [entryExercise, basicRockBeat];
