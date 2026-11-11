@@ -1,6 +1,7 @@
 # Bericht: Etappe 1 (Kit-Messkern + ein Gate) — §0 Bestandsaufnahme
 
-**Datum:** 11.11.2026 · **Bezug:** `docs/KONZEPT.md` Abschnitt 6 · **Stand:** zur Entscheidung
+**Datum:** 11.11.2026 · **Bezug:** `docs/KONZEPT.md` Abschnitt 6 · **Stand:** entschieden
+12.11. (E1, E3, E4), E2 offen bis zur Prüfung am Set
 
 Laut Konzept ist der bestehende Code Steinbruch, nicht Basis. Dieser Bericht
 listet je Modul Zweck, Zustand und Wiederverwendung auf. Er schlägt außerdem die
@@ -198,6 +199,28 @@ die Übung prüft nur, ob jemand durchhalten kann.
 - **E3 — Zahlen aus Abschnitt 4** so übernehmen oder ändern.
 - **E4 — Plattform Etappe 1:** nur Linux-Desktop (wie seit 23.10. beim
   Drum-Coach üblich) oder Android mitziehen?
+
+### Entschieden (Uli, 12.11.2026)
+
+- **E1:** wie empfohlen. Etappe 1 baut neu ab main, die „ja“-Module werden vom
+  Stapel herübergeholt. Der Tag `legacy-v0-stapel` (`6c754a9`) ist gesetzt, und
+  die PRs #33–#38 sind ohne Merge geschlossen.
+- **E2:** offen. Ob das Loopback-Kabel funktioniert, wird am Set geprüft. Bis
+  dahin gilt der Rückfall „Mitspielen, 3 ms“.
+- **E3:** Die Zahlen aus Abschnitt 4 sind so übernommen.
+- **E4:** **Linux, Android und Windows.** Was das für die Zeitstempel heißt:
+  - **Linux:** Stempel im Empfangs-Isolate, µs, gemessen p95 0,05 ms.
+  - **Android:** Systemstempel aus `android.media.midi` (ns, monotone Uhr), vom
+    Umrechner schon unterstützt. Gemessen ist er nie.
+  - **Windows:** `flutter_midi_command_windows` 1.4.0 reicht den Treiberstempel
+    von WinMM durch (`dwParam2` bei `MM_MIM_DATA`, ms seit `midiInStart`). Die
+    Quelle ist gut, aber **nur auf 1 ms genau**. Der Umrechner braucht eine
+    neue Einheit dafür. Gemessen ist das nie. Windows hat kein virmidi, deshalb
+    braucht der Reproduzierbarkeitstest dort einen eigenen Weg, z. B. loopMIDI,
+    oder er läuft nur auf Linux und den Referenzdateien.
+  - Abnahme der Zeitstempel je Plattform: ein Lauf mit dem MegaDrum, die
+    Streuung der Stempel liegt unter 1 ms (Windows: unter 1,5 ms wegen der
+    ms-Auflösung).
 
 ## 6. Was Etappe 1 neu bauen muss
 
