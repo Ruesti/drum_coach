@@ -1,5 +1,7 @@
 # DrumCoach – Claude Code Context
 
+> **Konzept:** Gültig ist nur `docs/KONZEPT.md`. `docs/archive/` ist Referenz, kein Auftrag.
+
 ## Project Overview
 Android app for training and improving drum rudiments on a practice pad.
 Flutter, Android-first. iOS support may follow later.
@@ -166,7 +168,7 @@ enum Hand { right, left }
 ## Rudiment Tag Axes & Seed Data
 Rudiments are no longer organized in a single category tree — a rudiment can
 carry multiple tags across independent axes (see
-`docs/superpowers/specs/2026-07-28-category-to-tag-axes-design.md`):
+`docs/archive/superpowers/specs/2026-07-28-category-to-tag-axes-design.md`):
 - **Skill**: control, coordination, endurance, groove, fill, independence
 - **Genre**: rock, funk, jazz, latin, metal, drumCorps
 - **Gliedmaßen (Limb)**: hands, feet, doubleBass, allFour

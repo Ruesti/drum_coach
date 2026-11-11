@@ -11,8 +11,11 @@ for the design rationale ("60cm": legibility at a glance beats subtlety).
 ## Stack
 
 Flutter + Riverpod + go_router + Isar (local storage). See `docs/CLAUDE.md`
-for the current architecture and `docs/AUDIT.md` / `docs/PHASES.md` for
-project history.
+for the current architecture.
+
+## Konzept
+
+Gültig ist nur [`docs/KONZEPT.md`](docs/KONZEPT.md). `docs/archive/` ist Referenz, kein Auftrag.
 
 ## Development
 
