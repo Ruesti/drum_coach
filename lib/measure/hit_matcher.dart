@@ -117,7 +117,11 @@ MatchResult matchHits({
     final strokeIdx = [
       for (final i in inWindow)
         if (voiceOf(strokes[i].instrument) == entry.key) i,
-    ];
+    ]..sort((a, b) {
+        // alignSequences is monotone: onsets must be in time order.
+        final c = corrected[a].compareTo(corrected[b]);
+        return c != 0 ? c : a.compareTo(b);
+      });
     final aligned = alignSequences(
       expectedMs: [for (final t in targetIdx) targets[t].timeMs],
       onsetMs: [for (final s in strokeIdx) corrected[s]],

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:drum_coach/content/exercises.dart';
 import 'package:drum_coach/measure/hit_matcher.dart';
 import 'package:drum_coach/measure/kit.dart';
@@ -35,8 +37,8 @@ void main() {
   // 80 BPM: bar = 3000 ms, hi-hat 8ths 375 ms apart → w = 187.5 ms.
 
   /// Index of the [voice] target in 0-based [bar] at [offsetMs] into the bar.
-  int indexOf(Voice voice, int bar, double offsetMs) => targets.indexWhere(
-      (t) =>
+  int indexOf(Voice voice, int bar, double offsetMs) =>
+      targets.indexWhere((t) =>
           t.voice == voice &&
           t.bar == bar &&
           t.timeMs == firstBeatMs + bar * 3000 + offsetMs);
@@ -87,8 +89,7 @@ void main() {
     final missing = indexOf(Voice.snare, 2, 750); // bar 3 = 0-based 2
     expect(missing, isNonNegative);
     final strokes = strokesFor(targets)..removeAt(missing);
-    final r =
-        matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
+    final r = matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
     for (var i = 0; i < targets.length; i++) {
       final o = r.targets[i];
       if (i == missing) {
@@ -112,8 +113,7 @@ void main() {
     expect(i, isNonNegative);
     final strokes = strokesFor(targets);
     strokes[i] = _stroke(targets[i].timeMs + 4, 49, KitInstrument.crash1);
-    final r =
-        matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
+    final r = matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
     expect(r.targets[i].kind, HitKind.wrongInstrument);
     expect(r.targets[i].strokeIndex, i);
     expect(r.targets[i].deviationMs, 4);
@@ -126,8 +126,7 @@ void main() {
     expect(i, isNonNegative);
     final strokes = strokesFor(targets)
       ..add(_stroke(targets[i].timeMs + 3, 38, KitInstrument.snare));
-    final r =
-        matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
+    final r = matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
     for (final o in r.targets) {
       expect(o.kind, HitKind.hit);
     }
@@ -141,8 +140,8 @@ void main() {
       'unmapped raw note 99 between targets → extra; on a target → wrongInstrument',
       () {
     // Between: halfway between two hi-hat 8ths of bar 2 (no snare/kick near).
-    final between = _stroke(
-        firstBeatMs + 3000 + 375 + 187.5, 99, KitInstrument.unknown);
+    final between =
+        _stroke(firstBeatMs + 3000 + 375 + 187.5, 99, KitInstrument.unknown);
     var strokes = strokesFor(targets)..add(between);
     var r = matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
     for (final o in r.targets) {
@@ -171,8 +170,7 @@ void main() {
     ];
     final after = _stroke(targets.last.timeMs + 2000, 38, KitInstrument.snare);
     final strokes = [...countIn, ...strokesFor(targets), after];
-    final r =
-        matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
+    final r = matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
     expect(r.ignoredStrokeIndices, [0, 1, 2, 3, strokes.length - 1]);
     expect(r.extraStrokeIndices, isEmpty);
     for (var i = 0; i < targets.length; i++) {
@@ -182,13 +180,56 @@ void main() {
     }
   });
 
+  test('shuffled stroke order gives the same result as in-order input', () {
+    final missing = indexOf(Voice.snare, 2, 750);
+    final inOrder = strokesFor(targets, voiceShiftMs: {Voice.kick: -5})
+      ..[indexOf(Voice.hiHat, 5, 375)] = _stroke(
+          targets[indexOf(Voice.hiHat, 5, 375)].timeMs + 4,
+          49,
+          KitInstrument.crash1)
+      ..add(_stroke(targets[indexOf(Voice.snare, 4, 2250)].timeMs + 3, 38,
+          KitInstrument.snare))
+      ..removeAt(missing);
+    final perm = List.generate(inOrder.length, (i) => i)
+      ..shuffle(math.Random(42));
+    final shuffled = [for (final p in perm) inOrder[p]];
+
+    final a = matchHits(targets: targets, strokes: inOrder, latencyOffsetMs: 0);
+    final b =
+        matchHits(targets: targets, strokes: shuffled, latencyOffsetMs: 0);
+    for (var i = 0; i < targets.length; i++) {
+      expect(b.targets[i].kind, a.targets[i].kind);
+      expect(b.targets[i].deviationMs, a.targets[i].deviationMs);
+      final sa = a.targets[i].strokeIndex;
+      final sb = b.targets[i].strokeIndex;
+      expect(sb == null ? null : perm[sb], sa);
+    }
+    expect(([for (final s in b.extraStrokeIndices) perm[s]]..sort()),
+        a.extraStrokeIndices);
+    expect(a.targets[missing].kind, HitKind.missed);
+  });
+
+  test('two snare strokes given in reverse order both hit', () {
+    final snares =
+        targets.where((t) => t.voice == Voice.snare).take(2).toList();
+    final strokes = [
+      _stroke(snares[1].timeMs, 38, KitInstrument.snare),
+      _stroke(snares[0].timeMs, 38, KitInstrument.snare),
+    ];
+    final r = matchHits(targets: snares, strokes: strokes, latencyOffsetMs: 0);
+    expect(r.targets[0].kind, HitKind.hit);
+    expect(r.targets[0].strokeIndex, 1);
+    expect(r.targets[1].kind, HitKind.hit);
+    expect(r.targets[1].strokeIndex, 0);
+    expect(r.extraStrokeIndices, isEmpty);
+  });
+
   test('hi-hat open counts as hi-hat hit', () {
     final i = indexOf(Voice.hiHat, 3, 1875);
     expect(i, isNonNegative);
     final strokes = strokesFor(targets);
     strokes[i] = _stroke(targets[i].timeMs, 46, KitInstrument.hiHatOpen);
-    final r =
-        matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
+    final r = matchHits(targets: targets, strokes: strokes, latencyOffsetMs: 0);
     expect(r.targets[i].kind, HitKind.hit);
     expect(r.targets[i].strokeIndex, i);
     expect(r.targets[i].deviationMs, 0);
