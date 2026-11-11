@@ -33,7 +33,7 @@ SessionRecord _sloppyEntry() {
   const mags = [40.0, 60.0, 50.0, 45.0, 55.0, 60.0];
   final shift = <int, double>{
     for (final t in targets)
-      t.index: t.index.isEven ? mags[t.index % 6] : -mags[t.index % 6],
+      t.index: (t.index ~/ 2).isEven ? mags[t.index % 6] : -mags[t.index % 6],
   };
   return syntheticSession(entryExercise,
       latencyMs: 12, shiftMs: shift, drop: drop);

@@ -35,7 +35,7 @@
     "wrongRate": 0.0,
     "extraRate": 0.0,
     "timingMedianMs": 40.0,
-    "timingSpreadMs": 52.034,
+    "timingSpreadMs": 51.943,
     "snareVelocitySd": null,
     "maxHitGapMs": 1714.286,
     "targetCount": 48,
@@ -48,7 +48,7 @@
       "bar": 0,
       "timeMs": 3000.0,
       "kind": "hit",
-      "strokeIndex": 1,
+      "strokeIndex": 0,
       "deviationMs": 40.0
     },
     {
@@ -57,8 +57,8 @@
       "bar": 0,
       "timeMs": 3000.0,
       "kind": "hit",
-      "strokeIndex": 0,
-      "deviationMs": -60.0
+      "strokeIndex": 1,
+      "deviationMs": 60.0
     },
     {
       "index": 2,
@@ -67,7 +67,7 @@
       "timeMs": 3857.143,
       "kind": "hit",
       "strokeIndex": 2,
-      "deviationMs": 50.0
+      "deviationMs": -50.0
     },
     {
       "index": 3,
@@ -94,7 +94,7 @@
       "timeMs": 5571.429,
       "kind": "hit",
       "strokeIndex": 3,
-      "deviationMs": -60.0
+      "deviationMs": 60.0
     },
     {
       "index": 6,
@@ -103,7 +103,7 @@
       "timeMs": 6428.571,
       "kind": "hit",
       "strokeIndex": 5,
-      "deviationMs": 40.0
+      "deviationMs": -40.0
     },
     {
       "index": 7,
@@ -129,8 +129,8 @@
       "bar": 1,
       "timeMs": 8142.857,
       "kind": "hit",
-      "strokeIndex": 7,
-      "deviationMs": -45.0
+      "strokeIndex": 8,
+      "deviationMs": 45.0
     },
     {
       "index": 10,
@@ -138,8 +138,8 @@
       "bar": 1,
       "timeMs": 8142.857,
       "kind": "hit",
-      "strokeIndex": 8,
-      "deviationMs": 55.0
+      "strokeIndex": 7,
+      "deviationMs": -55.0
     },
     {
       "index": 11,
@@ -156,7 +156,7 @@
       "bar": 2,
       "timeMs": 9857.143,
       "kind": "hit",
-      "strokeIndex": 10,
+      "strokeIndex": 9,
       "deviationMs": 40.0
     },
     {
@@ -165,8 +165,8 @@
       "bar": 2,
       "timeMs": 9857.143,
       "kind": "hit",
-      "strokeIndex": 9,
-      "deviationMs": -60.0
+      "strokeIndex": 10,
+      "deviationMs": 60.0
     },
     {
       "index": 14,
@@ -175,7 +175,7 @@
       "timeMs": 10714.286,
       "kind": "hit",
       "strokeIndex": 11,
-      "deviationMs": 50.0
+      "deviationMs": -50.0
     },
     {
       "index": 15,
@@ -202,7 +202,7 @@
       "timeMs": 12428.571,
       "kind": "hit",
       "strokeIndex": 14,
-      "deviationMs": -60.0
+      "deviationMs": 60.0
     },
     {
       "index": 18,
@@ -237,8 +237,8 @@
       "bar": 3,
       "timeMs": 15000.0,
       "kind": "hit",
-      "strokeIndex": 16,
-      "deviationMs": -45.0
+      "strokeIndex": 17,
+      "deviationMs": 45.0
     },
     {
       "index": 22,
@@ -246,8 +246,8 @@
       "bar": 3,
       "timeMs": 15000.0,
       "kind": "hit",
-      "strokeIndex": 17,
-      "deviationMs": 55.0
+      "strokeIndex": 16,
+      "deviationMs": -55.0
     },
     {
       "index": 23,
@@ -264,7 +264,7 @@
       "bar": 4,
       "timeMs": 16714.286,
       "kind": "hit",
-      "strokeIndex": 20,
+      "strokeIndex": 19,
       "deviationMs": 40.0
     },
     {
@@ -273,8 +273,8 @@
       "bar": 4,
       "timeMs": 16714.286,
       "kind": "hit",
-      "strokeIndex": 19,
-      "deviationMs": -60.0
+      "strokeIndex": 20,
+      "deviationMs": 60.0
     },
     {
       "index": 26,
@@ -310,7 +310,7 @@
       "timeMs": 19285.714,
       "kind": "hit",
       "strokeIndex": 23,
-      "deviationMs": -60.0
+      "deviationMs": 60.0
     },
     {
       "index": 30,
@@ -319,7 +319,7 @@
       "timeMs": 20142.857,
       "kind": "hit",
       "strokeIndex": 25,
-      "deviationMs": 40.0
+      "deviationMs": -40.0
     },
     {
       "index": 31,
@@ -372,7 +372,7 @@
       "bar": 6,
       "timeMs": 23571.429,
       "kind": "hit",
-      "strokeIndex": 29,
+      "strokeIndex": 28,
       "deviationMs": 40.0
     },
     {
@@ -381,8 +381,8 @@
       "bar": 6,
       "timeMs": 23571.429,
       "kind": "hit",
-      "strokeIndex": 28,
-      "deviationMs": -60.0
+      "strokeIndex": 29,
+      "deviationMs": 60.0
     },
     {
       "index": 38,
@@ -391,7 +391,7 @@
       "timeMs": 24428.571,
       "kind": "hit",
       "strokeIndex": 30,
-      "deviationMs": 50.0
+      "deviationMs": -50.0
     },
     {
       "index": 39,
@@ -427,7 +427,7 @@
       "timeMs": 27000.0,
       "kind": "hit",
       "strokeIndex": 34,
-      "deviationMs": 40.0
+      "deviationMs": -40.0
     },
     {
       "index": 43,
@@ -453,8 +453,8 @@
       "bar": 7,
       "timeMs": 28714.286,
       "kind": "hit",
-      "strokeIndex": 36,
-      "deviationMs": -45.0
+      "strokeIndex": 37,
+      "deviationMs": 45.0
     },
     {
       "index": 46,
@@ -462,8 +462,8 @@
       "bar": 7,
       "timeMs": 28714.286,
       "kind": "hit",
-      "strokeIndex": 37,
-      "deviationMs": 55.0
+      "strokeIndex": 36,
+      "deviationMs": -55.0
     },
     {
       "index": 47,
