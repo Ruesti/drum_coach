@@ -10,8 +10,9 @@ for the design rationale ("60cm": legibility at a glance beats subtlety).
 
 ## Stack
 
-Flutter + Riverpod + go_router + Isar (local storage). See `docs/CLAUDE.md`
-for the current architecture.
+Flutter + Riverpod + go_router + flutter_soloud (audio) + flutter_midi_command
+(E-drum MIDI input, patched Linux plugin in `packages/`) + shared_preferences +
+path_provider. See `docs/CLAUDE.md` for the current architecture.
 
 ## Konzept
 
