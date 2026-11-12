@@ -76,14 +76,4 @@ class MidiTimestampMapper {
         return arrivalEpochUs / 1000.0;
     }
   }
-
-  /// Running conversion: learn from this event, convert with the minimum
-  /// so far (good for live use; the logged events use [toEpochMsWith]).
-  double toEpochMs({required int libTimestamp, required int arrivalEpochUs}) {
-    observe(libTimestamp: libTimestamp, arrivalEpochUs: arrivalEpochUs);
-    return toEpochMsWith(
-        libTimestamp: libTimestamp,
-        arrivalEpochUs: arrivalEpochUs,
-        offsetUs: _offsetUs);
-  }
 }

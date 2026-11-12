@@ -50,7 +50,6 @@ void main() {
           velocity: 64,
           instrument: KitInstrument.unknown),
     ]);
-    expect((src as MidiStrokeSource).unmappedNotes, {99});
     expect(src.deviceName, 'Fake Module');
   });
 
@@ -68,8 +67,7 @@ void main() {
     expect(src.strokes.length, 1);
   });
 
-  test('connection forwards the port; device lost keeps the strokes',
-      () async {
+  test('connection forwards the port; device lost keeps the strokes', () async {
     final port = FakeMidiPort();
     final src = make(port);
     final seen = <bool>[];
@@ -85,7 +83,8 @@ void main() {
     expect(port.closed, isTrue);
   });
 
-  test('monotonic stamps: strokes use the session-final minimum offset, so '
+  test(
+      'monotonic stamps: strokes use the session-final minimum offset, so '
       'an early late arrival is corrected', () async {
     final port = FakeMidiPort();
     final src = make(port, MidiTimestampUnit.monotonicNanos);

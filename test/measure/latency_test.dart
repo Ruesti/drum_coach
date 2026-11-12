@@ -2,11 +2,11 @@ import 'package:drum_coach/measure/latency.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // 8 loopback clicks, 500 ms apart.
+  // 8 clicks, 500 ms apart, played along on the kit via MIDI.
   final clicks = [for (var i = 0; i < 8; i++) i * 500.0];
 
   group('estimateLatencyOffset', () {
-    test('recovers a constant output+input latency from clean loopback', () {
+    test('recovers a constant offset from strokes played exactly along', () {
       final e = estimateLatencyOffset(
         plannedClickMs: clicks,
         onsetMs: clicks.map((c) => c + 120).toList(),
@@ -17,14 +17,14 @@ void main() {
       expect(e.totalClicks, 8);
     });
 
-    test('survives one undetected click', () {
+    test('survives one missed stroke', () {
       final onsets = clicks.map((c) => c + 120).toList()..removeAt(3);
       final e = estimateLatencyOffset(plannedClickMs: clicks, onsetMs: onsets);
       expect(e!.offsetMs, closeTo(120, 0.001));
       expect(e.matchedClicks, 7);
     });
 
-    test('is robust against a spurious extra onset (median)', () {
+    test('is robust against a stray extra stroke (median)', () {
       final onsets = [...clicks.map((c) => c + 120), 1234.0]..sort();
       final e = estimateLatencyOffset(plannedClickMs: clicks, onsetMs: onsets);
       expect(e!.offsetMs, closeTo(120, 0.001));
@@ -39,7 +39,7 @@ void main() {
       expect(e!.offsetMs, closeTo(120, 3));
     });
 
-    test('returns null when nothing was recorded', () {
+    test('returns null when nothing was played', () {
       expect(
           estimateLatencyOffset(plannedClickMs: clicks, onsetMs: []), isNull);
     });
@@ -57,8 +57,7 @@ void main() {
   });
 
   group('blockOffsets', () {
-    test('splits per-click offsets into block medians within one recording',
-        () {
+    test('splits per-click offsets into block medians within one run', () {
       // 12 clicks: first block sits at 100 ms, second at 102, third at 101.
       final planned = [for (var i = 0; i < 12; i++) i * 500.0];
       final offsets = [

@@ -23,7 +23,6 @@ void main() {
     expect(again.mappingFor('A').instrumentFor(35), KitInstrument.kick);
     expect(again.mappingFor('B').instrumentFor(35), isNull);
     expect(again.latencyFor('A'), (offsetMs: 23.0, spreadMs: 4.0));
-    expect(again.previousLatencyFor('A'), (offsetMs: 21.0, spreadMs: 3.0));
     expect(again.latencyFor('B'), isNull);
   });
 

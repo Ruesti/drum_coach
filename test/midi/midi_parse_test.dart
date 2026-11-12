@@ -25,16 +25,13 @@ void main() {
     expect(parse([]), isNull);
   });
 
-  test('chooseMidiDevice: single input wins, last id preferred, else first',
-      () {
+  test('chooseMidiDevice: first device with an input wins', () {
     final one = [(id: '20:0', name: 'Millenium', hasInput: true)];
     expect(chooseMidiDevice(one), '20:0');
     final two = [
       (id: '20:0', name: 'Millenium', hasInput: true),
       (id: '24:0', name: 'Keyboard', hasInput: true),
     ];
-    expect(chooseMidiDevice(two, lastId: '24:0'), '24:0');
-    expect(chooseMidiDevice(two, lastId: '99:0'), '20:0');
     expect(chooseMidiDevice(two), '20:0');
     final outputOnly = [(id: '1:0', name: 'Synth', hasInput: false)];
     expect(chooseMidiDevice(outputOnly), isNull);

@@ -26,14 +26,8 @@ class DeviceSettings {
   ({double offsetMs, double spreadMs})? latencyFor(String device) =>
       _readLatency(_k('latency', device));
 
-  /// The calibration that was current before the latest [saveLatency].
-  ({double offsetMs, double spreadMs})? previousLatencyFor(String device) =>
-      _readLatency(_k('latencyPrev', device));
-
   Future<void> saveLatency(
       String device, double offsetMs, double spreadMs) async {
-    final current = _p.getString(_k('latency', device));
-    if (current != null) await _p.setString(_k('latencyPrev', device), current);
     await _p.setString(
         _k('latency', device), jsonEncode({'o': offsetMs, 's': spreadMs}));
   }

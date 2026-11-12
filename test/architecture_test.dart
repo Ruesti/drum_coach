@@ -25,18 +25,23 @@ void main() {
   });
 
   test('layer direction is content → skill → measure', () {
-    void forbid(String dir, List<String> parts) {
+    void forbid(String dir, List<String> layers) {
       for (final f in _files(dir)) {
         for (final line in _imports(f)) {
-          for (final p in parts) {
-            expect(line.contains(p), isFalse,
-                reason: '${f.path} must not import $p: $line');
+          for (final layer in layers) {
+            // Matches '../run/x.dart', 'run/x.dart' and
+            // 'package:drum_coach/run/x.dart'.
+            final hit = RegExp("['/]$layer/").hasMatch(line);
+            expect(hit, isFalse,
+                reason: '${f.path} must not import $layer/: $line');
           }
         }
       }
     }
 
-    forbid('lib/measure', ['content/', 'skill/']);
-    forbid('lib/skill', ['content/']);
+    const outer = ['run', 'ui', 'midi', 'audio', 'app'];
+    forbid('lib/measure', ['content', 'skill', ...outer]);
+    forbid('lib/skill', ['content', ...outer]);
+    forbid('lib/content', outer);
   });
 }

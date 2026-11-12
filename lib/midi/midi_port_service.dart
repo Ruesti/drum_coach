@@ -42,19 +42,13 @@ MidiNoteOn? parseNoteOn(
   );
 }
 
-/// Port choice (Brief A.3): exactly one input → that one; several → the
-/// last used if still present, else the first; none → null.
+/// Port choice: the first device with an input; none → null.
 String? chooseMidiDevice(
-  List<({String id, String name, bool hasInput})> devices, {
-  String? lastId,
-}) {
-  final inputs = [for (final d in devices) if (d.hasInput) d];
-  if (inputs.isEmpty) return null;
-  if (inputs.length == 1) return inputs.single.id;
-  for (final d in inputs) {
-    if (d.id == lastId) return d.id;
+    List<({String id, String name, bool hasInput})> devices) {
+  for (final d in devices) {
+    if (d.hasInput) return d.id;
   }
-  return inputs.first.id;
+  return null;
 }
 
 /// After a MIDI setup change: is [deviceId] still there? Asks [deviceIds]
@@ -97,8 +91,7 @@ class _CommandPort implements MidiPort {
     _setup = _midi.onMidiSetupChanged?.listen((_) async {
       final still = await devicePresentAfterSetupChange(
         deviceIds: () async => [
-          for (final d in await _midi.devices ?? const <fmc.MidiDevice>[])
-            d.id,
+          for (final d in await _midi.devices ?? const <fmc.MidiDevice>[]) d.id,
         ],
         deviceId: _device.id,
       );
