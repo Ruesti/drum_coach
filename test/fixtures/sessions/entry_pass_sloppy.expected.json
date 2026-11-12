@@ -1,0 +1,480 @@
+{
+  "exercise": "entry",
+  "gate": {
+    "status": "passed",
+    "reason": null,
+    "criteria": [
+      {
+        "id": "hitRate.hiHat",
+        "actual": 0.813,
+        "threshold": 0.8,
+        "atMost": false,
+        "passed": true
+      },
+      {
+        "id": "hitRate.kick",
+        "actual": 0.813,
+        "threshold": 0.8,
+        "atMost": false,
+        "passed": true
+      },
+      {
+        "id": "hitGap",
+        "actual": 0.5,
+        "threshold": 1.0,
+        "atMost": true,
+        "passed": true
+      }
+    ]
+  },
+  "metrics": {
+    "hitRate": {
+      "hiHat": 0.813,
+      "kick": 0.813
+    },
+    "wrongRate": 0.0,
+    "extraRate": 0.0,
+    "timingMedianMs": 40.0,
+    "timingSpreadMs": 51.943,
+    "snareVelocitySd": null,
+    "maxHitGapMs": 1714.286,
+    "targetCount": 48,
+    "countedStrokes": 39
+  },
+  "targets": [
+    {
+      "index": 0,
+      "voice": "hiHat",
+      "bar": 0,
+      "timeMs": 3000.0,
+      "kind": "hit",
+      "strokeIndex": 0,
+      "deviationMs": 40.0
+    },
+    {
+      "index": 1,
+      "voice": "kick",
+      "bar": 0,
+      "timeMs": 3000.0,
+      "kind": "hit",
+      "strokeIndex": 1,
+      "deviationMs": 60.0
+    },
+    {
+      "index": 2,
+      "voice": "hiHat",
+      "bar": 0,
+      "timeMs": 3857.143,
+      "kind": "hit",
+      "strokeIndex": 2,
+      "deviationMs": -50.0
+    },
+    {
+      "index": 3,
+      "voice": "hiHat",
+      "bar": 0,
+      "timeMs": 4714.286,
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
+    },
+    {
+      "index": 4,
+      "voice": "kick",
+      "bar": 0,
+      "timeMs": 4714.286,
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
+    },
+    {
+      "index": 5,
+      "voice": "hiHat",
+      "bar": 0,
+      "timeMs": 5571.429,
+      "kind": "hit",
+      "strokeIndex": 3,
+      "deviationMs": 60.0
+    },
+    {
+      "index": 6,
+      "voice": "hiHat",
+      "bar": 1,
+      "timeMs": 6428.571,
+      "kind": "hit",
+      "strokeIndex": 5,
+      "deviationMs": -40.0
+    },
+    {
+      "index": 7,
+      "voice": "kick",
+      "bar": 1,
+      "timeMs": 6428.571,
+      "kind": "hit",
+      "strokeIndex": 4,
+      "deviationMs": -60.0
+    },
+    {
+      "index": 8,
+      "voice": "hiHat",
+      "bar": 1,
+      "timeMs": 7285.714,
+      "kind": "hit",
+      "strokeIndex": 6,
+      "deviationMs": 50.0
+    },
+    {
+      "index": 9,
+      "voice": "hiHat",
+      "bar": 1,
+      "timeMs": 8142.857,
+      "kind": "hit",
+      "strokeIndex": 8,
+      "deviationMs": 45.0
+    },
+    {
+      "index": 10,
+      "voice": "kick",
+      "bar": 1,
+      "timeMs": 8142.857,
+      "kind": "hit",
+      "strokeIndex": 7,
+      "deviationMs": -55.0
+    },
+    {
+      "index": 11,
+      "voice": "hiHat",
+      "bar": 1,
+      "timeMs": 9000.0,
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
+    },
+    {
+      "index": 12,
+      "voice": "hiHat",
+      "bar": 2,
+      "timeMs": 9857.143,
+      "kind": "hit",
+      "strokeIndex": 9,
+      "deviationMs": 40.0
+    },
+    {
+      "index": 13,
+      "voice": "kick",
+      "bar": 2,
+      "timeMs": 9857.143,
+      "kind": "hit",
+      "strokeIndex": 10,
+      "deviationMs": 60.0
+    },
+    {
+      "index": 14,
+      "voice": "hiHat",
+      "bar": 2,
+      "timeMs": 10714.286,
+      "kind": "hit",
+      "strokeIndex": 11,
+      "deviationMs": -50.0
+    },
+    {
+      "index": 15,
+      "voice": "hiHat",
+      "bar": 2,
+      "timeMs": 11571.429,
+      "kind": "hit",
+      "strokeIndex": 12,
+      "deviationMs": -45.0
+    },
+    {
+      "index": 16,
+      "voice": "kick",
+      "bar": 2,
+      "timeMs": 11571.429,
+      "kind": "hit",
+      "strokeIndex": 13,
+      "deviationMs": 55.0
+    },
+    {
+      "index": 17,
+      "voice": "hiHat",
+      "bar": 2,
+      "timeMs": 12428.571,
+      "kind": "hit",
+      "strokeIndex": 14,
+      "deviationMs": 60.0
+    },
+    {
+      "index": 18,
+      "voice": "hiHat",
+      "bar": 3,
+      "timeMs": 13285.714,
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
+    },
+    {
+      "index": 19,
+      "voice": "kick",
+      "bar": 3,
+      "timeMs": 13285.714,
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
+    },
+    {
+      "index": 20,
+      "voice": "hiHat",
+      "bar": 3,
+      "timeMs": 14142.857,
+      "kind": "hit",
+      "strokeIndex": 15,
+      "deviationMs": 50.0
+    },
+    {
+      "index": 21,
+      "voice": "hiHat",
+      "bar": 3,
+      "timeMs": 15000.0,
+      "kind": "hit",
+      "strokeIndex": 17,
+      "deviationMs": 45.0
+    },
+    {
+      "index": 22,
+      "voice": "kick",
+      "bar": 3,
+      "timeMs": 15000.0,
+      "kind": "hit",
+      "strokeIndex": 16,
+      "deviationMs": -55.0
+    },
+    {
+      "index": 23,
+      "voice": "hiHat",
+      "bar": 3,
+      "timeMs": 15857.143,
+      "kind": "hit",
+      "strokeIndex": 18,
+      "deviationMs": -60.0
+    },
+    {
+      "index": 24,
+      "voice": "hiHat",
+      "bar": 4,
+      "timeMs": 16714.286,
+      "kind": "hit",
+      "strokeIndex": 19,
+      "deviationMs": 40.0
+    },
+    {
+      "index": 25,
+      "voice": "kick",
+      "bar": 4,
+      "timeMs": 16714.286,
+      "kind": "hit",
+      "strokeIndex": 20,
+      "deviationMs": 60.0
+    },
+    {
+      "index": 26,
+      "voice": "hiHat",
+      "bar": 4,
+      "timeMs": 17571.429,
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
+    },
+    {
+      "index": 27,
+      "voice": "hiHat",
+      "bar": 4,
+      "timeMs": 18428.571,
+      "kind": "hit",
+      "strokeIndex": 21,
+      "deviationMs": -45.0
+    },
+    {
+      "index": 28,
+      "voice": "kick",
+      "bar": 4,
+      "timeMs": 18428.571,
+      "kind": "hit",
+      "strokeIndex": 22,
+      "deviationMs": 55.0
+    },
+    {
+      "index": 29,
+      "voice": "hiHat",
+      "bar": 4,
+      "timeMs": 19285.714,
+      "kind": "hit",
+      "strokeIndex": 23,
+      "deviationMs": 60.0
+    },
+    {
+      "index": 30,
+      "voice": "hiHat",
+      "bar": 5,
+      "timeMs": 20142.857,
+      "kind": "hit",
+      "strokeIndex": 25,
+      "deviationMs": -40.0
+    },
+    {
+      "index": 31,
+      "voice": "kick",
+      "bar": 5,
+      "timeMs": 20142.857,
+      "kind": "hit",
+      "strokeIndex": 24,
+      "deviationMs": -60.0
+    },
+    {
+      "index": 32,
+      "voice": "hiHat",
+      "bar": 5,
+      "timeMs": 21000.0,
+      "kind": "hit",
+      "strokeIndex": 26,
+      "deviationMs": 50.0
+    },
+    {
+      "index": 33,
+      "voice": "hiHat",
+      "bar": 5,
+      "timeMs": 21857.143,
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
+    },
+    {
+      "index": 34,
+      "voice": "kick",
+      "bar": 5,
+      "timeMs": 21857.143,
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
+    },
+    {
+      "index": 35,
+      "voice": "hiHat",
+      "bar": 5,
+      "timeMs": 22714.286,
+      "kind": "hit",
+      "strokeIndex": 27,
+      "deviationMs": -60.0
+    },
+    {
+      "index": 36,
+      "voice": "hiHat",
+      "bar": 6,
+      "timeMs": 23571.429,
+      "kind": "hit",
+      "strokeIndex": 28,
+      "deviationMs": 40.0
+    },
+    {
+      "index": 37,
+      "voice": "kick",
+      "bar": 6,
+      "timeMs": 23571.429,
+      "kind": "hit",
+      "strokeIndex": 29,
+      "deviationMs": 60.0
+    },
+    {
+      "index": 38,
+      "voice": "hiHat",
+      "bar": 6,
+      "timeMs": 24428.571,
+      "kind": "hit",
+      "strokeIndex": 30,
+      "deviationMs": -50.0
+    },
+    {
+      "index": 39,
+      "voice": "hiHat",
+      "bar": 6,
+      "timeMs": 25285.714,
+      "kind": "hit",
+      "strokeIndex": 31,
+      "deviationMs": -45.0
+    },
+    {
+      "index": 40,
+      "voice": "kick",
+      "bar": 6,
+      "timeMs": 25285.714,
+      "kind": "hit",
+      "strokeIndex": 32,
+      "deviationMs": 55.0
+    },
+    {
+      "index": 41,
+      "voice": "hiHat",
+      "bar": 6,
+      "timeMs": 26142.857,
+      "kind": "missed",
+      "strokeIndex": null,
+      "deviationMs": null
+    },
+    {
+      "index": 42,
+      "voice": "hiHat",
+      "bar": 7,
+      "timeMs": 27000.0,
+      "kind": "hit",
+      "strokeIndex": 34,
+      "deviationMs": -40.0
+    },
+    {
+      "index": 43,
+      "voice": "kick",
+      "bar": 7,
+      "timeMs": 27000.0,
+      "kind": "hit",
+      "strokeIndex": 33,
+      "deviationMs": -60.0
+    },
+    {
+      "index": 44,
+      "voice": "hiHat",
+      "bar": 7,
+      "timeMs": 27857.143,
+      "kind": "hit",
+      "strokeIndex": 35,
+      "deviationMs": 50.0
+    },
+    {
+      "index": 45,
+      "voice": "hiHat",
+      "bar": 7,
+      "timeMs": 28714.286,
+      "kind": "hit",
+      "strokeIndex": 37,
+      "deviationMs": 45.0
+    },
+    {
+      "index": 46,
+      "voice": "kick",
+      "bar": 7,
+      "timeMs": 28714.286,
+      "kind": "hit",
+      "strokeIndex": 36,
+      "deviationMs": -55.0
+    },
+    {
+      "index": 47,
+      "voice": "hiHat",
+      "bar": 7,
+      "timeMs": 29571.429,
+      "kind": "hit",
+      "strokeIndex": 38,
+      "deviationMs": -60.0
+    }
+  ],
+  "extraStrokeIndices": [],
+  "ignoredStrokeIndices": []
+}

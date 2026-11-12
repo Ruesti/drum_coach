@@ -1,0 +1,3 @@
+tags:
+  alsa:
+    description: Needs ALSA virmidi and DRUM_COACH_ALSA_TEST=1 (tool/midi/virtual_port_test.sh).

@@ -1,0 +1,93 @@
+## 1.4.0
+
+ - No functional change. Versioned alongside the rest of the federated packages to keep the set aligned; this package is byte-for-byte unchanged since 1.3.0. The work in this release is in `flutter_midi_command_ble` 1.4.0.
+ - Update the platform interface dependency constraint to `^1.4.0`.
+
+## 1.3.0
+
+ - FIX: devices sharing an ALSA endpoint each receive their own copy of the incoming bytes. The receive fan-out handed every device the same instance, so one listener mutating its packet corrupted another's.
+ - Update the platform interface dependency constraint to `^1.3.0`.
+
+## 1.2.0
+
+ - FIX: widen `addVirtualDevice`, `removeVirtualDevice` and `setNetworkSessionEnabled` to `Future<void>`, matching the platform interface.
+ - Bump "flutter_midi_command_linux" to `1.2.0` and update the platform interface dependency constraint to `^1.2.0`.
+
+## 1.1.2
+
+ - Bump "flutter_midi_command_linux" to `1.1.2` and update the platform interface dependency constraint to `^1.1.2`.
+
+## 1.1.1
+
+ - Bump "flutter_midi_command_linux" to `1.1.1` and update the platform interface dependency constraint to `^1.1.1`.
+
+## 1.1.0
+
+ - Bump "flutter_midi_command_linux" to `1.1.0` and update the platform interface dependency constraint to `^1.1.0`.
+
+## 1.0.9
+
+ - Bump "flutter_midi_command_linux" to `1.0.9` and update the platform interface dependency constraint.
+
+## 1.0.8
+
+ - Bump "flutter_midi_command_linux" to `1.0.8` and update the platform interface dependency constraint.
+
+## 1.0.7
+
+ - Bump "flutter_midi_command_linux" to `1.0.7` and update the platform interface dependency constraint.
+
+## 1.0.6
+
+ - Bump "flutter_midi_command_linux" to `1.0.6`.
+
+## 1.0.5
+
+ - Bump "flutter_midi_command_linux" to `1.0.5`.
+
+## 1.0.4
+
+ - **FIX**(ci): track pubspec_overrides.yaml so melos bootstrap works on clean checkouts.
+
+## 1.0.3
+
+ - Update a dependency to the latest release.
+
+## 1.0.2
+
+## 1.0.1
+
+ - Update a dependency to the latest release.
+
+## Unreleased
+- Fixed Linux connection lifecycle handling, including stale-wrapper disconnects and received-message subscription cleanup.
+- Fixed targeted sends so `deviceId` sends only to the requested connected Linux device.
+- Added deterministic Linux unit tests for discovery refresh, targeted sends, disconnects, stream teardown, and optional platform APIs.
+- Removed stale native Linux C++/CMake scaffold; the package is Dart-only via `dartPluginClass`.
+- Documented the current Linux virtual MIDI limitation.
+
+## 1.0.0
+- Major release aligned with the federated monorepo architecture.
+- Updated to the 1.x platform interface and typed host models.
+
+## 0.3.0
+- Updated to Flutter 3.10, Dart 3
+- Added error messages for missing functionality
+
+## 0.1.4
+Updated to latest platform interface
+
+## 0.1.3
+Fixed buffer allocation
+
+## 0.1.2
+Isolate port close
+
+## 0.1.1
+Fixed notification on device disconnect
+
+## 0.1.0
+First release with linux support
+
+## 0.0.1
+Initial Linux support
