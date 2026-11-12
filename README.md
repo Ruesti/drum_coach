@@ -1,12 +1,7 @@
 # DrumCoach
 
-An Android app for practicing drum rudiments on a practice pad. Metronome,
-sticking notation, spaced-repetition routine, a 12-week Stick Control
-program, and optional AI coaching feedback from a phone microphone.
-
-Built for practicing at arm's length from the phone — read
-[`docs/design/60-cm-kontext-und-startpunkt`](docs/design/60-cm-kontext-und-startpunkt)
-for the design rationale ("60cm": legibility at a glance beats subtlety).
+E-drum trainer (Linux/Android/Windows) that measures every hit via MIDI and
+decides gates from the numbers.
 
 ## Stack
 

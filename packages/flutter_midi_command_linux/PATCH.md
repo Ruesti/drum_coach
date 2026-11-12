@@ -12,6 +12,8 @@ Grund: docs/BERICHT_ETAPPE2_§0.md. Zwei Änderungen in
    wenn sie `SND_SEQ_PORT_TYPE_MIDI_GENERIC` tragen (virtuelle Ports für den
    Integrationstest).
 
-Beim Update der Bibliothek beide Stellen neu anwenden
-(`tool/midi/spike/patch_plugin.py`, `patch_plugin2.py`) oder den
-Upstream-Stand prüfen.
+Beim Update der Bibliothek beide Stellen neu anwenden oder den
+Upstream-Stand prüfen. Die Patch-Skripte liegen nicht mehr im Baum, sondern
+im Tag `legacy-v0-stapel` unter `tool/midi/spike/` (`patch_plugin.py`,
+`patch_plugin2.py`; holen mit
+`git show legacy-v0-stapel:tool/midi/spike/patch_plugin.py`).

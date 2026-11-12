@@ -17,7 +17,10 @@ E-drum trainer: every hit is measured via MIDI, gates are decided from the numbe
 - `lib/audio/` – sound output (platform code)
 - `lib/measure/` – timing/velocity measurement core
 - `lib/skill/` – skill model and gates
-- `lib/content/` – exercise content
+- `lib/content/` – exercise content; `analysis.dart` (`analyzeSession`: session → match, metrics, gate)
+- `lib/run/` – latency calibration, practice run, per-device settings (mapping, latency), session store
+- `lib/ui/` – screens (home, setup, kit learn, calibration, run, feedback) and the lane view
+- `lib/app/` – wiring: router and Riverpod providers
 - `packages/flutter_midi_command_linux/` – patched Linux MIDI plugin
 - `test/architecture_test.dart` – enforces the layer rule
 

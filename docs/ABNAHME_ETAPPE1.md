@@ -11,23 +11,28 @@
 | Linux-Bundle fuer den Laptop | **offen** (Laptop war offline; muss dort gebaut werden wegen glibc) | auf dem Laptop im Repo: `flutter build linux --release` |
 | Windows (Release) | **offen** (laptop-win war offline) | auf laptop-win im Repo-Checkout: `flutter build windows --release` |
 
+**Vorsicht:** Den ALSA-Test (`tool/midi/virtual_port_test.sh`) nicht unter hoher CPU-Last starten (p95-Jitter kann dann reissen).
+
 Automatische Pruefungen auf dem NUC: `flutter test` (150 gruen), `flutter analyze` (keine Meldungen), `bash tool/midi/virtual_port_test.sh` (gruen).
 
 ## 1. MegaDrum wird erkannt, Kit anlernen
 
 | Erwartung | Befund | Datum |
 |---|---|---|
-| MegaDrum per USB wird unter Linux erkannt |  |  |
-| MegaDrum per USB-OTG wird unter Android erkannt |  |  |
-| MegaDrum per USB wird unter Windows erkannt |  |  |
-| Kit anlernen fuer Kick, Snare, Hi-Hat dauert unter 2 Minuten |  |  |
-| Die Zuordnung (Mapping) ueberlebt einen Neustart der App |  |  |
+| MegaDrum per USB wird unter Linux erkannt | Plattform: Linux. |  |
+| MegaDrum per USB-OTG wird unter Android erkannt | Plattform: Android. |  |
+| MegaDrum per USB wird unter Windows erkannt | Plattform: Windows. |  |
+| Der Startbildschirm (Home) zeigt den Namen der MegaDrum als Geraet (bei mehreren MIDI-Eingaengen nimmt die App den ersten; andere MIDI-Geraete vorher abziehen) | Plattform: |  |
+| Kit anlernen fuer Kick, Snare, Hi-Hat dauert unter 2 Minuten | Plattform: |  |
+| Die Zuordnung (Mapping) ueberlebt einen Neustart der App | Plattform: |  |
 
-## 2. Zeitstempel-Streuung
+## 2. Zeitstempel-Streuung (haengt an E2, Punkt 7)
+
+Methode: das Loopback-Kabel aus Punkt 7 (Klick-Ausgang in einen Trigger-Eingang der MegaDrum). Nur so kommen 64 Schlaege mit bekanntem, gleichmaessigem Abstand ins Modul; ein Mensch spielt nicht auf 1 ms genau. Feuert der Trigger nicht sauber (Punkt 7 = nein), ist dieser Punkt **nicht pruefbar** und bleibt offen. Die Auswertung (Streuung der Abstaende zwischen Klick und Zeitstempel) gehoert zum Folgeplan aus Punkt 7.
 
 | Erwartung | Befund | Datum |
 |---|---|---|
-| Linux: 64 Viertelnoten von der MegaDrum (oder gleichmaessiger Pad-Wirbel): Streuung der Zeitstempel unter 1 ms |  |  |
+| Linux: 64 Viertelnoten per Loopback-Kabel in die MegaDrum: Streuung der Zeitstempel unter 1 ms |  |  |
 | Android: dasselbe, Streuung unter 1 ms |  |  |
 | Windows: dasselbe, Streuung unter 1,5 ms |  |  |
 
@@ -35,8 +40,8 @@ Automatische Pruefungen auf dem NUC: `flutter test` (150 gruen), `flutter analyz
 
 | Erwartung | Befund | Datum |
 |---|---|---|
-| Zwei Kalibrierungen direkt nacheinander weichen hoechstens 3 ms voneinander ab |  |  |
-| Wert, Geraet und Audio-Ausgang sind hier notiert |  |  |
+| Zwei Kalibrierungen direkt nacheinander weichen hoechstens 3 ms voneinander ab. Das prueft auch die Schaetzung des Klickstarts: weichen zwei Kalibrierungen um mehr als 3 ms ab, zuerst den Klickstart verdaechtigen |  |  |
+| Wert, Geraet, Audio-Ausgang und Puffergroesse (SoLoud-Standard 2048 Samples, falls nicht geaendert) sind hier notiert (Bericht Abschnitt 4.1) |  |  |
 
 ## 4. Echte Sitzungen als Testdaten
 
@@ -51,6 +56,8 @@ Automatische Pruefungen auf dem NUC: `flutter test` (150 gruen), `flutter analyz
 |---|---|---|
 | Bestanden/Durchgefallen ist aus der Huerden-Tabelle nachvollziehbar |  |  |
 | Ein absichtlich schlampiger Durchlauf faellt am erwarteten Kriterium durch |  |  |
+
+Hinweis: Das Hi-Hat-Pedal (Note 44) zaehlt im Rock Beat als Extraschlag. Also keine Fuss-Chicks mitspielen, sonst steigt die Extra-Rate.
 
 ## 6. Einstiegsuebung
 
