@@ -9,7 +9,9 @@ import '../midi/stroke_source.dart';
 import 'device_settings.dart';
 
 /// Plays 4 count-in + 20 quarter clicks at 100 BPM and measures the offset
-/// between the player's strokes and the clicks after the count-in.
+/// between the player's strokes and the clicks after the count-in. Strokes
+/// earlier than half a beat before the first counted click (count-in
+/// playing) are ignored.
 ///
 /// Use a fresh [StrokeSource] per run (the caller's job). [nowMs] and [wait]
 /// are injectable for tests.
@@ -23,6 +25,8 @@ class CalibrationController extends ChangeNotifier {
         _wait = wait ?? Future.delayed;
 
   static double _realNowMs() => DateTime.now().microsecondsSinceEpoch / 1000.0;
+
+  static const bpm = 100;
 
   final StrokeSource source;
   final ClickOut out;
@@ -48,7 +52,7 @@ class CalibrationController extends ChangeNotifier {
     _result = null;
     notifyListeners();
     try {
-      final track = renderClickTrack(bpm: 100, bars: 5, countInBars: 1);
+      final track = renderClickTrack(bpm: bpm, bars: 5, countInBars: 1);
       await source.start();
       if (_cancelled) return await source.stop();
       final startMs = await out.play(track);
@@ -71,9 +75,14 @@ class CalibrationController extends ChangeNotifier {
         for (final o in track.clickOffsetsMs)
           if (o >= track.firstBeatOffsetMs - 1e-6) startMs + o,
       ];
+      const halfBeatMs = 60000 / bpm / 2;
+      final fromMs = startMs + track.firstBeatOffsetMs - halfBeatMs;
       _result = estimateMidiLatency(
         clickMs: clicks,
-        strokeMs: [for (final s in source.strokes) s.timeMs],
+        strokeMs: [
+          for (final s in source.strokes)
+            if (s.timeMs >= fromMs) s.timeMs,
+        ],
       );
     } finally {
       _running = false;

@@ -8,18 +8,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fakes.dart';
 
-Future<CalibrationController> runWith(double lagMs) async {
+Stroke snareAt(double ms) =>
+    Stroke(timeMs: ms, note: 38, velocity: 90, instrument: KitInstrument.snare);
+
+Future<CalibrationController> runWith(double lagMs,
+    {List<double> extraOffsetsMs = const []}) async {
   final clock = FakeClock();
   final t = renderClickTrack(bpm: 100, bars: 5, countInBars: 1);
   expect(t.clickOffsetsMs.length, 24);
   final strokes = [
-    for (final o in t.clickOffsetsMs)
-      Stroke(
-          timeMs: clock.now + o + lagMs,
-          note: 38,
-          velocity: 90,
-          instrument: KitInstrument.snare),
-  ];
+    for (final o in [...extraOffsetsMs, ...t.clickOffsetsMs])
+      snareAt(clock.now + o + lagMs),
+  ]..sort((a, b) => a.timeMs.compareTo(b.timeMs));
   final c = CalibrationController(
       source: FakeSource(strokes: strokes),
       out: FakeOut(clock),
@@ -36,6 +36,17 @@ void main() {
     final c = await runWith(23);
     expect(c.result!.offsetMs, closeTo(23, 0.1));
     expect(c.result!.clicks, 20);
+    expect(c.result!.unsure, isFalse);
+  });
+
+  test(
+      'calibration: a roll during the count-in (64 strokes) is ignored → '
+      'offset 23 ± 0.1', () async {
+    // Count-in = 4 beats of 600 ms; strokes every 37.5 ms from 0 to 2362.5.
+    final c = await runWith(23,
+        extraOffsetsMs: [for (var i = 0; i < 64; i++) i * 37.5 + 10]);
+    expect(c.result!.offsetMs, closeTo(23, 0.1));
+    expect(c.result!.matched, 20);
     expect(c.result!.unsure, isFalse);
   });
 
