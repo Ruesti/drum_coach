@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(const DrumCoachApp());
+import 'app/app.dart';
+import 'run/device_settings.dart';
+import 'run/session_store.dart';
 
-class DrumCoachApp extends StatelessWidget {
-  const DrumCoachApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Drum Coach',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.amber,
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: const Scaffold(body: Center(child: Text('Drum Coach'))),
-    );
-  }
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final dir = await getApplicationSupportDirectory();
+  runApp(ProviderScope(
+    overrides: [
+      deviceSettingsProvider.overrideWithValue(DeviceSettings(prefs)),
+      sessionStoreProvider.overrideWithValue(SessionStore(dir)),
+    ],
+    child: const DrumCoachApp(),
+  ));
 }
