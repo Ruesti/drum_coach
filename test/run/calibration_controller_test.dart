@@ -51,4 +51,28 @@ void main() {
     await c.save(s, 'Fake Module');
     expect(s.latencyFor('Fake Module')!.offsetMs, closeTo(23, 0.1));
   });
+
+  test(
+      'calibration: cancel mid-run → no result, source stopped, click left '
+      'alone', () async {
+    final clock = FakeClock();
+    final src = FakeSource();
+    final out = FakeOut(clock);
+    final c = CalibrationController(
+        source: src, out: out, nowMs: () => clock.now, wait: clock.wait);
+    var polls = 0;
+    clock.onTick = () {
+      polls++;
+      if (clock.now > 1000000 + 3000) {
+        clock.onTick = null;
+        c.cancel();
+      }
+    };
+    await c.run();
+    expect(c.result, isNull);
+    expect(c.running, isFalse);
+    expect(src.stopped, isTrue);
+    expect(out.stopped, isFalse);
+    expect(polls, lessThan(100));
+  });
 }

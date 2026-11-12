@@ -3,9 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../content/analysis.dart';
+import '../content/exercises.dart';
 import '../measure/hit_matcher.dart';
 import '../measure/kit.dart';
 import '../measure/session_record.dart';
+import '../measure/stroke.dart';
 import '../measure/targets.dart';
 
 const laneEarly = Color(0xFF42A5F5);
@@ -24,8 +26,24 @@ Color deviationColor(double deviationMs) => deviationMs < -15
 /// 3 px at velocity 1 up to 8 px at 127.
 double dotRadius(int velocity) => 3 + (velocity.clamp(1, 127) - 1) * 5 / 126;
 
-/// Deviations are drawn this many times larger than the time axis.
-const double deviationScale = 4;
+/// A hit sits at its target's x, shifted by its deviation at this many
+/// pixels per ms, independent of the time axis …
+const double deviationPxPerMs = 0.5;
+
+/// … clamped to ± this many pixels (± 60 ms).
+const double maxDeviationPx = 30;
+
+/// The time axis never gets narrower than this per 8th note; below that the
+/// lane view scrolls horizontally.
+const double minPxPerEighth = 24;
+
+double deviationOffsetPx(double deviationMs) =>
+    (deviationMs * deviationPxPerMs).clamp(-maxDeviationPx, maxDeviationPx);
+
+/// Unmapped notes show their raw note number.
+String strokeLabel(Stroke s) => s.instrument == KitInstrument.unknown
+    ? 'Note ${s.note}'
+    : s.instrument.label;
 
 enum LaneMarkerKind { target, hit, missed, wrongInstrument, extra }
 
@@ -100,8 +118,8 @@ String describeMarker(LaneMarker m) {
 }
 
 /// Pure geometry of the lane view: rows hi-hat / snare / kick, x = time with
-/// the whole exercise across the width (1 bar = width / bars); hits are
-/// shifted by [deviationScale] × their deviation.
+/// the whole exercise across the width (1 bar = width / bars, at least
+/// [minWidth]); hits are shifted from their target by [deviationOffsetPx].
 class LaneLayout {
   LaneLayout._(this.size, this.markers);
 
@@ -109,6 +127,10 @@ class LaneLayout {
 
   final Size size;
   final List<LaneMarker> markers;
+
+  /// Width at which every 8th note gets [minPxPerEighth].
+  static double minWidth(Exercise ex) =>
+      2 * padX + ex.bars * ex.beatsPerBar * 2 * minPxPerEighth;
 
   factory LaneLayout.fromAnalysis(
       SessionAnalysis a, SessionRecord record, Size size) {
@@ -138,8 +160,8 @@ class LaneLayout {
       ));
       final stroke =
           o.strokeIndex == null ? null : record.strokes[o.strokeIndex!];
-      final shifted = Offset(
-          tx + (o.deviationMs ?? 0) * deviationScale * scale, rowY(t.voice));
+      final shifted =
+          Offset(tx + deviationOffsetPx(o.deviationMs ?? 0), rowY(t.voice));
       markers.add(switch (o.kind) {
         HitKind.hit => LaneMarker(
             kind: LaneMarkerKind.hit,
@@ -160,7 +182,7 @@ class LaneLayout {
             bar: t.bar,
             deviationMs: o.deviationMs,
             velocity: stroke!.velocity,
-            label: stroke.instrument.label,
+            label: strokeLabel(stroke),
           ),
         HitKind.missed => LaneMarker(
             kind: LaneMarkerKind.missed,
@@ -183,7 +205,7 @@ class LaneLayout {
         size: 4,
         color: laneExtra,
         velocity: s.velocity,
-        label: s.instrument.label,
+        label: strokeLabel(s),
       ));
     }
     return LaneLayout._(size, markers);
@@ -346,15 +368,22 @@ class _LaneViewState extends State<LaneView> {
             ),
             Expanded(
               child: LayoutBuilder(builder: (context, c) {
-                final layout = _layoutFor(Size(c.maxWidth, LaneView.height));
+                final width = math.max(
+                    c.maxWidth, LaneLayout.minWidth(widget.analysis.exercise));
+                final layout = _layoutFor(Size(width, LaneView.height));
                 return Stack(
                   children: [
-                    GestureDetector(
-                      onTapUp: (d) => setState(
-                          () => _selected = layout.markerAt(d.localPosition)),
-                      child: CustomPaint(
-                        size: layout.size,
-                        painter: LanePainter(layout, selected: _selected),
+                    // Taps land in content coordinates, so hit-testing works
+                    // at any scroll offset.
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: GestureDetector(
+                        onTapUp: (d) => setState(
+                            () => _selected = layout.markerAt(d.localPosition)),
+                        child: CustomPaint(
+                          size: layout.size,
+                          painter: LanePainter(layout, selected: _selected),
+                        ),
                       ),
                     ),
                     if (uncalibrated)

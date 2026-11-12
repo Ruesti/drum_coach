@@ -47,6 +47,18 @@ final platformNameProvider = Provider<String>((ref) => Platform.isAndroid
             ? 'linux'
             : Platform.operatingSystem);
 
+/// Clock for calibration and runs (epoch ms + the controllers' poll wait);
+/// tests override it with a fake clock.
+typedef RunClock = ({
+  double Function() nowMs,
+  Future<void> Function(Duration) wait,
+});
+
+final runClockProvider = Provider<RunClock>((ref) => (
+      nowMs: () => DateTime.now().microsecondsSinceEpoch / 1000.0,
+      wait: (d) => Future<void>.delayed(d),
+    ));
+
 typedef MidiDeviceRef = ({String id, String name});
 
 /// The active MIDI input (one input → that one, several → the first); null

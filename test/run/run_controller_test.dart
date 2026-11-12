@@ -45,8 +45,10 @@ void main() {
     c.addListener(() => phases.add(c.phase));
     await c.start();
     expect(c.phase, RunPhase.finished);
-    expect(phases,
-        containsAllInOrder([RunPhase.countIn, RunPhase.playing, RunPhase.finished]));
+    expect(
+        phases,
+        containsAllInOrder(
+            [RunPhase.countIn, RunPhase.playing, RunPhase.finished]));
     expect(c.record!.firstBeatMs, closeTo(start + 3000, 0.01));
     expect(c.record!.bpm, 80);
     expect(c.record!.latencyOffsetMs, 20);
@@ -128,5 +130,55 @@ void main() {
     src.startError = null;
     await c.start();
     expect(c.phase, RunPhase.finished);
+  });
+
+  test(
+      'run: cancel while playing → no record, source stopped, click left alone',
+      () async {
+    final clock = FakeClock();
+    final src = FakeSource();
+    final out = FakeOut(clock);
+    final c = make(clock, src, out);
+    var polls = 0;
+    clock.onTick = () {
+      polls++;
+      if (clock.now > 1000000 + 6000) {
+        clock.onTick = null;
+        c.cancel();
+      }
+    };
+    await c.start();
+    expect(c.cancelled, isTrue);
+    expect(c.record, isNull);
+    expect(c.phase, isNot(RunPhase.finished));
+    expect(src.stopped, isTrue);
+    expect(out.stopped, isFalse);
+    // Ended at the next poll, not at the run's end (51 s = ~1000 polls).
+    expect(polls, lessThan(200));
+  });
+
+  test('run: cancel during source.start → click never played', () async {
+    final clock = FakeClock();
+    final src = FakeSource();
+    final out = FakeOut(clock);
+    final c = make(clock, src, out);
+    src.onStart = () async => c.cancel();
+    await c.start();
+    expect(out.played, isNull);
+    expect(src.stopped, isTrue);
+    expect(c.record, isNull);
+  });
+
+  test('run: cancel while play() is in flight → its own click is stopped',
+      () async {
+    final clock = FakeClock();
+    final src = FakeSource();
+    final out = FakeOut(clock);
+    final c = make(clock, src, out);
+    out.onPlay = () async => c.cancel();
+    await c.start();
+    expect(out.stopped, isTrue);
+    expect(src.stopped, isTrue);
+    expect(c.record, isNull);
   });
 }

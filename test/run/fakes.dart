@@ -16,6 +16,26 @@ class FakeClock {
   }
 }
 
+/// A clock whose [wait] blocks until [release]; [now] only moves when the
+/// test sets it. Lets a widget test hold runs mid-way.
+class ManualClock extends FakeClock {
+  final _waiters = <Completer<void>>[];
+  @override
+  Future<void> wait(Duration d) {
+    final c = Completer<void>();
+    _waiters.add(c);
+    return c.future;
+  }
+
+  void release() {
+    final w = [..._waiters];
+    _waiters.clear();
+    for (final c in w) {
+      c.complete();
+    }
+  }
+}
+
 class FakeSource implements StrokeSource {
   FakeSource({this.strokes = const []});
   @override
@@ -37,8 +57,9 @@ class FakeSource implements StrokeSource {
   Stream<bool> get connection => conn.stream;
   @override
   String get deviceName => 'Fake Module';
+  int disposed = 0;
   @override
-  void dispose() {}
+  void dispose() => disposed++;
 }
 
 class FakeOut implements ClickOut {

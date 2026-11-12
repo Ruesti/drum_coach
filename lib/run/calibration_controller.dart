@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 
 import '../audio/click_player.dart';
@@ -27,6 +29,13 @@ class CalibrationController extends ChangeNotifier {
   final double Function() _nowMs;
   final Future<void> Function(Duration) _wait;
 
+  bool _cancelled = false;
+
+  /// The screen went away: [run] ends at its next poll without a result and
+  /// never stops [out] (the click is shared; the caller stops it). Only the
+  /// source is stopped.
+  void cancel() => _cancelled = true;
+
   MidiLatencyResult? _result;
   MidiLatencyResult? get result => _result;
 
@@ -41,11 +50,21 @@ class CalibrationController extends ChangeNotifier {
     try {
       final track = renderClickTrack(bpm: 100, bars: 5, countInBars: 1);
       await source.start();
+      if (_cancelled) return await source.stop();
       final startMs = await out.play(track);
-      final remaining = startMs + track.durationMs - _nowMs();
-      if (remaining > 0) {
-        await _wait(Duration(microseconds: (remaining * 1000).round()));
+      if (_cancelled) {
+        // Started after the caller's stop: ours to stop.
+        await out.stop();
+        return await source.stop();
       }
+      final endMs = startMs + track.durationMs;
+      while (!_cancelled) {
+        final remaining = endMs - _nowMs();
+        if (remaining <= 0) break;
+        await _wait(
+            Duration(microseconds: (math.min(remaining, 50) * 1000).round()));
+      }
+      if (_cancelled) return await source.stop();
       await out.stop();
       await source.stop();
       final clicks = [

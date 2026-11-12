@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/app.dart';
+import '../audio/click_player.dart';
 import '../midi/stroke_source.dart';
 import '../run/calibration_controller.dart';
 
@@ -19,12 +20,19 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
   MidiDeviceRef? _device;
   CalibrationController? _controller;
   StrokeSource? _source;
+  ClickOut? _out;
+
+  /// Between tapping Start and the controller running: Start is disabled
+  /// so a double tap cannot open two sources.
+  bool _starting = false;
   double? _differenceMs;
   bool _finished = false;
   String? _error;
 
   Future<void> _start() async {
+    if (_starting) return;
     setState(() {
+      _starting = true;
       _error = null;
       _finished = false;
       _differenceMs = null;
@@ -50,11 +58,18 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
       }
       _source = source;
       final out = ref.read(clickOutProvider);
+      _out = out;
       await out.init();
+      if (!mounted) return; // dispose released the source
+      final clock = ref.read(runClockProvider);
       _controller?.removeListener(_changed);
-      final c = CalibrationController(source: source, out: out);
+      final c = CalibrationController(
+          source: source, out: out, nowMs: clock.nowMs, wait: clock.wait);
       c.addListener(_changed);
-      setState(() => _controller = c);
+      setState(() {
+        _controller = c;
+        _starting = false;
+      });
       await c.run();
       if (!mounted) return;
       setState(() {
@@ -65,8 +80,12 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
       debugPrint('calibration failed: $e');
       if (mounted) setState(() => _error = 'Could not start the calibration.');
     } finally {
-      source?.dispose();
-      if (identical(_source, source)) _source = null;
+      // Dispose the source once: here, unless dispose() already did.
+      if (source != null && identical(_source, source)) {
+        _source = null;
+        source.dispose();
+      }
+      if (mounted && _starting) setState(() => _starting = false);
     }
   }
 
@@ -86,10 +105,19 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
     Navigator.of(context).pop();
   }
 
+  /// Leaving mid-calibration: the controller is cancelled (it will not
+  /// touch the shared click any more), the click is stopped here once, the
+  /// source is disposed once.
   @override
   void dispose() {
-    _controller?.removeListener(_changed);
+    final c = _controller;
+    c?.removeListener(_changed);
+    if (c != null && c.running) {
+      c.cancel();
+      _out?.stop();
+    }
     _source?.dispose();
+    _source = null;
     super.dispose();
   }
 
@@ -132,6 +160,9 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
             if (_differenceMs != null)
               Text('Differs from the stored calibration by '
                   '${_differenceMs!.toStringAsFixed(1)} ms'),
+            if (_differenceMs != null && _differenceMs! > 3)
+              Text('More than 3 ms — repeat the calibration',
+                  style: TextStyle(color: accent)),
             if (r.unsure)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
@@ -143,7 +174,7 @@ class _CalibrationScreenState extends ConsumerState<CalibrationScreen> {
           Row(
             children: [
               OutlinedButton(
-                onPressed: running ? null : _start,
+                onPressed: running || _starting ? null : _start,
                 child: Text(_finished || _error != null ? 'Repeat' : 'Start'),
               ),
               const SizedBox(width: 12),

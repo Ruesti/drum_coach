@@ -44,6 +44,15 @@ class RunController extends ChangeNotifier {
   int _currentBar = 0;
   SessionRecord? _record;
 
+  bool _cancelled = false;
+
+  /// The screen went away: the run ends at its next poll without a record.
+  /// A cancelled run never stops [out] — the click is shared and may already
+  /// belong to the next session; the caller stops it. Only the source is
+  /// stopped.
+  void cancel() => _cancelled = true;
+  bool get cancelled => _cancelled;
+
   RunPhase get phase => _phase;
   int get currentBar => _currentBar;
   SessionRecord? get record => _record;
@@ -70,7 +79,9 @@ class RunController extends ChangeNotifier {
     );
     // Subscribe before starting so no early disconnect is missed.
     final sub = source.connection.listen((ok) {
-      if (!ok && (_phase == RunPhase.countIn || _phase == RunPhase.playing)) {
+      if (!ok &&
+          !_cancelled &&
+          (_phase == RunPhase.countIn || _phase == RunPhase.playing)) {
         _set(RunPhase.deviceLost);
         out.stop();
         source.stop();
@@ -80,11 +91,15 @@ class RunController extends ChangeNotifier {
       _set(RunPhase.countIn);
       await source.start();
       if (_phase == RunPhase.deviceLost) return _abort();
+      if (_cancelled) return source.stop();
       final startMs = await out.play(track);
       if (_phase == RunPhase.deviceLost) return _abort();
+      // Cancelled while play() was in flight: this click was started by us
+      // after the caller's stop, so it is ours to stop.
+      if (_cancelled) return _abort();
       final firstBeatMs = startMs + track.firstBeatOffsetMs;
       final endMs = startMs + track.durationMs;
-      while (_phase != RunPhase.deviceLost && _nowMs() < endMs) {
+      while (!_cancelled && _phase != RunPhase.deviceLost && _nowMs() < endMs) {
         final now = _nowMs();
         if (now >= firstBeatMs) _set(RunPhase.playing);
         final bar = now < firstBeatMs
@@ -99,6 +114,7 @@ class RunController extends ChangeNotifier {
         await _wait(const Duration(milliseconds: 50));
       }
       if (_phase == RunPhase.deviceLost) return;
+      if (_cancelled) return source.stop();
       await out.stop();
       await source.stop();
       _record = SessionRecord(

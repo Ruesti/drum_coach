@@ -54,10 +54,18 @@ class _RunScreenState extends ConsumerState<RunScreen> {
   bool _handled = false;
   String? _error;
 
+  /// Between tapping Start and the controller running: Start is disabled
+  /// so a double tap cannot open two sources.
+  bool _starting = false;
+
   Exercise get _ex => widget.exercise;
 
   Future<void> _start() async {
-    setState(() => _error = null);
+    if (_starting) return;
+    setState(() {
+      _error = null;
+      _starting = true;
+    });
     _handled = false;
     final settings = ref.read(deviceSettingsProvider);
     try {
@@ -80,6 +88,8 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       _source = source;
       final out = _out = _StampingClickOut(ref.read(clickOutProvider));
       await out.init();
+      if (!mounted) return; // dispose released the source
+      final clock = ref.read(runClockProvider);
       final c = RunController(
         exercise: _ex,
         source: source,
@@ -87,11 +97,16 @@ class _RunScreenState extends ConsumerState<RunScreen> {
         mapping: mapping,
         latencyOffsetMs: settings.latencyFor(device.name)?.offsetMs,
         platform: ref.read(platformNameProvider),
+        nowMs: clock.nowMs,
+        wait: clock.wait,
       );
       c.addListener(_changed);
       _ticker =
           Timer.periodic(const Duration(milliseconds: 50), (_) => _changed());
-      setState(() => _controller = c);
+      setState(() {
+        _controller = c;
+        _starting = false;
+      });
       await c.start();
     } catch (e) {
       debugPrint('run failed: $e');
@@ -105,6 +120,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     setState(() {
       _error = message;
       _controller = null;
+      _starting = false;
     });
   }
 
@@ -148,11 +164,17 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     }
   }
 
+  /// Leaving mid-run: the controller is cancelled (it will not touch the
+  /// shared click any more), the click is stopped here once, the source is
+  /// disposed once by [_release].
   @override
   void dispose() {
-    final running = _controller?.phase == RunPhase.countIn ||
-        _controller?.phase == RunPhase.playing;
-    if (running) _out?.stop();
+    final c = _controller;
+    if (c != null &&
+        (c.phase == RunPhase.countIn || c.phase == RunPhase.playing)) {
+      c.cancel();
+      _out?.stop();
+    }
     _release();
     super.dispose();
   }
@@ -187,7 +209,8 @@ class _RunScreenState extends ConsumerState<RunScreen> {
         const SizedBox(height: 32),
         Center(
           child: FilledButton(
-              onPressed: c == null ? _start : null, child: const Text('Start')),
+              onPressed: c == null && !_starting ? _start : null,
+              child: const Text('Start')),
         ),
       ];
     } else if (c.phase == RunPhase.countIn) {
@@ -195,8 +218,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       final quarterMs = 60000 / _ex.bpm;
       final beat = startMs == null
           ? null
-          : ((DateTime.now().microsecondsSinceEpoch / 1000 - startMs) /
-                      quarterMs)
+          : ((ref.read(runClockProvider).nowMs() - startMs) / quarterMs)
                   .floor()
                   .clamp(0, _ex.beatsPerBar - 1) +
               1;
