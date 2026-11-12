@@ -54,6 +54,13 @@ class RunController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The device vanished before the click was running: make sure nothing
+  /// keeps playing.
+  Future<void> _abort() async {
+    await out.stop();
+    await source.stop();
+  }
+
   Future<void> start() async {
     if (_phase != RunPhase.idle) return;
     final track = renderClickTrack(
@@ -72,7 +79,9 @@ class RunController extends ChangeNotifier {
     try {
       _set(RunPhase.countIn);
       await source.start();
+      if (_phase == RunPhase.deviceLost) return _abort();
       final startMs = await out.play(track);
+      if (_phase == RunPhase.deviceLost) return _abort();
       final firstBeatMs = startMs + track.firstBeatOffsetMs;
       final endMs = startMs + track.durationMs;
       while (_phase != RunPhase.deviceLost && _nowMs() < endMs) {
@@ -100,10 +109,18 @@ class RunController extends ChangeNotifier {
         deviceName: source.deviceName,
         mapping: mapping,
         platform: platform,
-        recordedAt: DateTime.now(),
+        recordedAt:
+            DateTime.fromMicrosecondsSinceEpoch((_nowMs() * 1000).round()),
         strokes: List.of(source.strokes),
       );
       _set(RunPhase.finished);
+    } catch (_) {
+      // Allow a retry after a failed start.
+      if (_phase != RunPhase.deviceLost) {
+        _phase = RunPhase.idle;
+        notifyListeners();
+      }
+      rethrow;
     } finally {
       await sub.cancel();
     }

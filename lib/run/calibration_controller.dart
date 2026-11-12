@@ -62,10 +62,11 @@ class CalibrationController extends ChangeNotifier {
     }
   }
 
-  /// |current − previous| offset; null if either is missing.
+  /// |current unsaved result − stored calibration of [device]|; null if
+  /// either is missing. Call it BEFORE [save], which overwrites the stored one.
   double? differenceToPreviousMs(DeviceSettings s, String device) {
     final r = _result;
-    final prev = s.previousLatencyFor(device);
+    final prev = s.latencyFor(device);
     if (r == null || prev == null) return null;
     return (r.offsetMs - prev.offsetMs).abs();
   }

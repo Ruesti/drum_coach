@@ -44,8 +44,9 @@ void main() {
     final s = DeviceSettings(await SharedPreferences.getInstance());
     final c = await runWith(23);
     expect(c.differenceToPreviousMs(s, 'Fake Module'), isNull);
+    await s.saveLatency('Fake Module', 40, 1);
     await s.saveLatency('Fake Module', 21, 1);
-    await s.saveLatency('Fake Module', 21, 1);
+    // stored 21 (previous-of-stored is 40, which must not be used)
     expect(c.differenceToPreviousMs(s, 'Fake Module'), closeTo(2.0, 0.1));
     await c.save(s, 'Fake Module');
     expect(s.latencyFor('Fake Module')!.offsetMs, closeTo(23, 0.1));

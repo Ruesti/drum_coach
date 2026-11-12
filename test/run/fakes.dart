@@ -22,8 +22,15 @@ class FakeSource implements StrokeSource {
   List<Stroke> strokes;
   final conn = StreamController<bool>.broadcast();
   bool started = false, stopped = false;
+  Future<void> Function()? onStart;
+  Object? startError;
   @override
-  Future<void> start() async => started = true;
+  Future<void> start() async {
+    if (startError != null) throw startError!;
+    started = true;
+    await onStart?.call();
+  }
+
   @override
   Future<void> stop() async => stopped = true;
   @override
@@ -39,11 +46,14 @@ class FakeOut implements ClickOut {
   final FakeClock clock;
   ClickTrack? played;
   bool stopped = false;
+  Future<void> Function()? onPlay;
   @override
   Future<void> init() async {}
   @override
   Future<double> play(ClickTrack t) async {
     played = t;
+    await onPlay?.call();
+    stopped = false; // the click only really starts once play() completes
     return clock.now;
   }
 

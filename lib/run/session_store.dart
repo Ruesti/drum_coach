@@ -37,7 +37,8 @@ class SessionStore {
     final out = <SessionRecord>[];
     for (final f in files) {
       try {
-        out.add(decodeSessionJsonl(await f.readAsString()));
+        final r = decodeSessionJsonl(await f.readAsString());
+        if (r.exerciseId == exerciseId) out.add(r);
       } on FormatException {
         continue;
       }

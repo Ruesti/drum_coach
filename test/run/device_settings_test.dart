@@ -50,6 +50,9 @@ void main() {
       expect(f1.path, endsWith('sessions/rock8-20260101-100000.jsonl'));
       final r = await store.recent('rock8');
       expect(r.map((e) => e.recordedAt.day), [2, 1]);
+      await store.save(rec('rock8-x', DateTime(2026, 1, 5, 10)));
+      expect((await store.recent('rock8')).length, 2);
+      expect((await store.recent('rock')), isEmpty);
       expect((await store.recent('rock8', limit: 1)).length, 1);
       expect(
           await SessionStore(Directory('${dir.path}/x')).recent('a'), isEmpty);
