@@ -1,7 +1,7 @@
 Status: Gültiges Konzept. Ersetzt alle früheren Konzeptdokumente.
 BERICHT_NEUKONZEPT.md, BERICHT_NEUKONZEPT_ERGAENZUNG.md, BRIEF_SONG_UEBUNGEN.md,
 BRIEF_ETAPPE1_PAD.md → docs/archive/. Was dort steht und hier fehlt, gilt nicht.
-Stand: 11.11.2026 · Fassung 1
+Stand: 17.11.2026 · Fassung 2
 1. Kern
 Die App hört deine Schläge, vergleicht sie mit dem Soll und sagt dir, was du korrigieren sollst.
 Alles, was dazu nicht beiträgt, steht auf dem Parkplatz (Abschnitt 7).
@@ -53,6 +53,21 @@ Codebasis: Bestehender Code ist Steinbruch, nicht Basis.
 Vor dem Neustart: Stand per Git-Tag legacy-v0 sichern (nichts wird gelöscht).
 §0 enthält eine Bestandsaufnahme des Altcodes: je Modul Zweck, Zustand
 (funktioniert / defekt / unbekannt), Wiederverwendung (ja / nein / später, Parkplatz).
+6a. Kandidaten für Etappe 2 — Übe-Werkzeuge
+Anlass: Übung am Set mit Drumeo (Beat mit Wechsel auf Double Time und Half Time,
+17.11.2026). Normaler Beat und Half Time gingen, Double Time war zu schnell.
+Drumeo bot weder einen Tempo-Regler noch die Möglichkeit, den schweren Teil
+einzeln zu üben. Ergebnis: Schwachstelle erkannt, aber nicht trainierbar.
+Tempo selbst wählen: jede Übung auch langsamer spielbar (z. B. 60 / 80 / 100 %
+des Zieltempos). Messung läuft bei jedem Tempo; das Gate gilt nur beim
+Zieltempo — langsamer üben ist erlaubt, zählt aber nicht als bestanden.
+Abschnitt isolieren: einen Teil einer Übung (z. B. nur die Double-Time-Takte)
+herauslösen und in Schleife spielen, mit Klick und Messung.
+Tempo-Treppe (Ausbau): in der Schleife steigt das Tempo automatisch, sobald
+der Abschnitt bei einem Tempo sauber sitzt (Schwellen aus dem Fähigkeitsmodell).
+Bewertung erst nach Abnahme von Etappe 1. Half-/Double-Time-Varianten selbst
+bleiben auf dem Parkplatz (Abschnitt 7); die Werkzeuge gelten für jede Übung.
+
 7. Parkplatz
 Nicht Teil der aktuellen Arbeit; wird erst nach Etappe 1 neu bewertet.
 Pad-Training mit Handymikrofon (inkl. Lern-/Analysemodus)
@@ -68,4 +83,8 @@ MIDI-Routing neben Superior Drummer: gleicher Rechner? Betriebssystem?
 Abgrenzung zu Melodics: Melodics bietet E-Kit-Feedback via MIDI am
 Desktop. Unterscheidungsmerkmal (Fähigkeitsmodell mit Gates? Linux?)
 konkret prüfen und festhalten — Einschätzung, nicht verifiziert.
+Abgrenzung zu Drumeo: Drumeo bietet inzwischen eine Mikrofon-Option mit
+Feedback (Beobachtung 17.11.2026, nicht im Detail geprüft). Was genau dort
+gemessen wird, ist offen. Mögliche Unterscheidung: Tempo-Regler, Abschnitt-
+Schleife und Tempo-Treppe (Abschnitt 6a), Gates statt konsumierter Inhalte.
 Stufen-Modell: Anzahl Stufen und Gates bis „100"
